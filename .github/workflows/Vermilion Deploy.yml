@@ -65,8 +65,14 @@ jobs:
                                                        && rm bitcoin-*.tar.gz
                                                        && echo "24.0.1" > ~/bitcoin_install/version);'
         
+      - name: Get ord dependencies
+        run: |
+          ssh staging 'git -C ord fetch && git -C ord reset --hard origin/master || git clone git@github.com:casey/ord.git' #ord code
+          ssh staging 'curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y' #rust
+          
       - name: Install ord
-        run: ssh staging 'git -C ord fetch && git -C ord reset --hard origin/master || git clone git@github.com:casey/ord.git'
+        run: ssh staging 'cd ord; cargo build --release' #install
+          
                                         
       - name: Add bitcoin & ord config
         run: ssh staging 'mkdir -p .bitcoin; cp Vermilion/Config/bitcoin.conf .bitcoin/bitcoin.conf;'
