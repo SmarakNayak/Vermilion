@@ -1,7 +1,7 @@
 [Unit]
 Description=Bitcoin daemon
-StartLimitIntervalSec=300
-StartLimitBurst=50
+StartLimitIntervalSec=30
+StartLimitBurst=5
 
 [Service]
 Type=simple
