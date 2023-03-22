@@ -71,7 +71,7 @@ jobs:
           ssh staging 'curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y' #rust
           
       - name: Install ord
-        run: ssh staging 'cd ord; cargo build --release' #install
+        run: ssh staging 'source "/home/ubuntu/.cargo/env"; cd ord; cargo build --release' #install
           
                                         
       - name: Add bitcoin & ord config
