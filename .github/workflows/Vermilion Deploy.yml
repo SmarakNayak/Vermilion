@@ -1,0 +1,82 @@
+# This is a workflow that deploys a fresh vermilion instance
+name: Vermilion Deploy
+
+# Controls when the workflow will run
+on:
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  Personal-Lightning-Node-Deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Configure SSH
+        run: |
+          mkdir -p ~/.ssh/
+          echo "$SSH_KEY" > ~/.ssh/staging.key
+          chmod 600 ~/.ssh/staging.key
+          cat >>~/.ssh/config <<END
+          Host staging
+            HostName $SSH_HOST
+            User $SSH_USER
+            IdentityFile ~/.ssh/staging.key
+            StrictHostKeyChecking no
+          END
+        env:
+          SSH_USER: ${{ variables.SERVER_USER }}
+          SSH_KEY: ${{ secrets.SERVER_SSH_KEY }}
+          SSH_HOST: ${{ variables.SERVER_HOST }}
+
+      - name: Stop the server if running
+        run: |
+          ssh staging 'sudo systemctl is-active bitcoind && sudo systemctl stop bitcoind || echo "bitcoind not running";'
+          ssh staging 'sudo systemctl is-active nginx.service && sudo systemctl stop nginx.service || echo "nginx not running";'
+        
+      - name: Install AWS CLI
+        run: |
+          ssh staging 'sudo apt-get -y update'
+          ssh staging 'sudo apt-get -y install awscli'
+        
+      - name: Create AWS config file
+        run: ssh staging 'mkdir -p .aws; echo "[default]" >  ~/.aws/config;'
+      
+      - name: Create AWS credential file
+        run:  ssh staging 'printf "%s\n" "[default]"
+                                         "aws_access_key_id=${{secrets.S3_ACCESS_KEY}}"
+                                         "aws_secret_access_key=${{secrets.S3_SECRET_ACCESS_KEY}}" > ~/.aws/credentials'
+      
+      # ssh-keygen -t ed25519 -C "miltu.s.nayak@gmail.com"
+      - name: Add Github SSH key and adjust permissions
+        run: |
+          ssh staging 'echo "${{secrets.SERVER_GITHUB_SSH_KEY}}" > ~/.ssh/id_ed25519; chmod 700 ~/.ssh/; chmod 600 ~/.ssh/id_ed25519;' # Doesn't work unless secret is referred to using braces, possibly due to single quotes
+          ssh staging 'set +o noclobber; ssh-keyscan -t ed25519 github.com > ~/.ssh/known_hosts || echo "Known_hosts already exists. Not adding."; set -o noclobber; '        
+      
+      - name: Check out the new code from Github
+        run: ssh staging 'git -C Vermilion fetch && git -C Vermilion reset --hard origin/main || git clone git@github.com:SmarakNayak/Vermilion.git' # This pulls if directory exists, otherwise clones
+      
+      # Installs bitcoin if not already installed
+      - name: Install bitcoin-core 
+        run: ssh staging '[ -d "bitcoin_install" ] && [ "$(cat bitcoin_install/version)" == "24.0.1" ] && echo "Bitcoin core already installed" 
+                                                   || (wget https://bitcoincore.org/bin/bitcoin-core-24.0.1/bitcoin-24.0.1-aarch64-linux-gnu.tar.gz
+                                                       && mkdir -p ~/bitcoin_install 
+                                                       && rm -f ~/bitcoin_install/* 
+                                                       && tar -xzf bitcoin-*.tar.gz -C ~/bitcoin_install --strip-components 1 
+                                                       && rm bitcoin-*.tar.gz
+                                                       && echo "24.0.1" > ~/bitcoin_install/version);'
+        
+      - name: Install ord
+        run: ssh staging 'git -C ord fetch && git -C ord reset --hard origin/main || git clone git@github.com:casey/ord.git'
+                                        
+      - name: Add bitcoin & ord config
+        run: ssh staging 'mkdir -p .bitcoin; cp Vermilion/Config/bitcoin.conf .bitcoin/bitcoin.conf;'
+        
+      - name: Setup backup cronjobs
+        run: ssh staging 'crontab /home/ubuntu/Vermilion/Cronjobs/Vermilion.cron'
+          
+      - name: Set up systemd services
+        run: ssh staging 'sudo cp Vermilion/systemd/bitcoind.service /etc/systemd/system/bitcoind.service; sudo systemctl daemon-reload;' 
+      
+      - name: Start the app
+        if: ${{ always() }}
+        run: ssh staging 'sudo systemctl start bitcoind.service; sudo systemctl start nginx.service;'
