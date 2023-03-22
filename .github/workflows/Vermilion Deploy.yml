@@ -66,7 +66,7 @@ jobs:
                                                        && echo "24.0.1" > ~/bitcoin_install/version);'
         
       - name: Install ord
-        run: ssh staging 'git -C ord fetch && git -C ord reset --hard origin/main || git clone git@github.com:casey/ord.git'
+        run: ssh staging 'git -C ord fetch && git -C ord reset --hard origin/master || git clone git@github.com:casey/ord.git'
                                         
       - name: Add bitcoin & ord config
         run: ssh staging 'mkdir -p .bitcoin; cp Vermilion/Config/bitcoin.conf .bitcoin/bitcoin.conf;'
