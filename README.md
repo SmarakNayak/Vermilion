@@ -1,2 +1,2 @@
 # Vermilion
-Ordinal Explorer
+Open Source Ordinal Explorer available at vermilion.place
