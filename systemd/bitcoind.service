@@ -1,0 +1,15 @@
+[Unit]
+Description=Bitcoin daemon
+StartLimitIntervalSec=300
+StartLimitBurst=50
+
+[Service]
+Type=simple
+User=ubuntu
+ExecStart=/home/ubuntu/bitcoin_install/bin/./bitcoind
+WorkingDirectory=/home/ubuntu/bitcoin_install
+Restart=on-failure
+RestartSec=1s
+
+[Install]
+WantedBy=multi-user.target
