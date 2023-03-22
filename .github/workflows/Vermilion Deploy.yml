@@ -8,7 +8,7 @@ on:
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
-  Personal-Lightning-Node-Deploy:
+  Vermilion-Deploy:
     runs-on: ubuntu-latest
     steps:
       - name: Configure SSH
@@ -24,9 +24,9 @@ jobs:
             StrictHostKeyChecking no
           END
         env:
-          SSH_USER: ${{ variables.SERVER_USER }}
+          SSH_USER: ${{ vars.SERVER_USER }}
           SSH_KEY: ${{ secrets.SERVER_SSH_KEY }}
-          SSH_HOST: ${{ variables.SERVER_HOST }}
+          SSH_HOST: ${{ vars.SERVER_HOST }}
 
       - name: Stop the server if running
         run: |
