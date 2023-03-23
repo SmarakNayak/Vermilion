@@ -32,6 +32,7 @@ jobs:
         run: |
           ssh staging 'sudo systemctl is-active bitcoind && sudo systemctl stop bitcoind || echo "bitcoind not running";'
           ssh staging 'sudo systemctl is-active nginx.service && sudo systemctl stop nginx.service || echo "nginx not running";'
+          ssh staging 'sudo systemctl is-active ordserver.service && sudo systemctl stop ordserver.service || echo "ordserver not running";'
         
       - name: Install AWS CLI
         run: |
@@ -81,8 +82,8 @@ jobs:
         run: ssh staging 'crontab /home/ubuntu/Vermilion/Cronjobs/Vermilion.cron'
           
       - name: Set up systemd services
-        run: ssh staging 'sudo cp Vermilion/systemd/bitcoind.service /etc/systemd/system/bitcoind.service; sudo systemctl daemon-reload;' 
+        run: ssh staging 'sudo cp Vermilion/systemd/bitcoind.service /etc/systemd/system/bitcoind.service; sudo cp Vermilion/systemd/ordserver.service /etc/systemd/system/ordserver.service;sudo systemctl daemon-reload;' 
       
       - name: Start the app
         if: ${{ always() }}
-        run: ssh staging 'sudo systemctl start bitcoind.service; sudo systemctl start nginx.service;'
+        run: ssh staging 'sudo systemctl start bitcoind.service; sudo systemctl start ordserver.service; sudo systemctl start nginx.service;'
