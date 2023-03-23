@@ -1,0 +1,15 @@
+[Unit]
+Description=Ordinal server daemon
+StartLimitIntervalSec=30
+StartLimitBurst=5
+
+[Service]
+Type=simple
+User=ubuntu
+ExecStart=/home/ubuntu/ord cargo run server --http-port 1080
+WorkingDirectory=/home/ubuntu/ord
+Restart=always
+RestartSec=1s
+
+[Install]
+WantedBy=multi-user.target
