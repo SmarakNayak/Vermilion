@@ -6,8 +6,8 @@ StartLimitBurst=5
 [Service]
 Type=simple
 User=ubuntu
-ExecStart=/home/ubuntu/ord cargo run server --http-port 1080
-WorkingDirectory=/home/ubuntu/ord
+ExecStart=/home/ubuntu/ord/target/release/./ord server --address 127.0.0.1 --http-port 1080
+WorkingDirectory=/home/ubuntu/ord/target/release
 Restart=always
 RestartSec=1s
 
