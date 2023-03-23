@@ -73,11 +73,13 @@ jobs:
           
       - name: Install ord
         run: ssh staging 'source /home/ubuntu/.cargo/env; cd ord; cargo build --release' #install
-          
-                                        
+        
       - name: Add bitcoin & ord config
         run: ssh staging 'mkdir -p .bitcoin; cp Vermilion/Config/bitcoin.conf .bitcoin/bitcoin.conf;'
-        
+      
+      - name: Setup nginx config
+        run: ssh staging 'sudo cp Vermilion/nginx/server.conf /etc/nginx/conf.d/server.conf;
+      
       - name: Setup backup cronjobs
         run: ssh staging 'crontab /home/ubuntu/Vermilion/Cronjobs/Vermilion.cron'
           
