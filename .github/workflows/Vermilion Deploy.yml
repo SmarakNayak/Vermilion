@@ -68,7 +68,7 @@ jobs:
         
       - name: Get ord dependencies
         run: |
-          ssh staging 'git -C ord fetch && git -C ord reset --hard origin/master || git clone git@github.com:casey/ord.git' #ord code
+          ssh staging 'git -C ord fetch && git -C ord reset --hard origin/master || git clone git@github.com:SmarakNayak/ord.git' #ord code
           ssh staging 'curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y' #rust
           
       - name: Install ord
