@@ -37,7 +37,7 @@ jobs:
       - name: Install AWS CLI
         run: |
           ssh staging 'sudo apt-get -y update'
-          ssh staging 'sudo apt-get -y install awscli nginx build-essential libssl-dev mysql-server'
+          ssh staging 'sudo apt-get -y install awscli nginx build-essential libssl-dev mysql-server pkg-config'
         
       - name: Create AWS config file
         run: ssh staging 'mkdir -p .aws; echo "[default]" >  ~/.aws/config;'
