@@ -1,7 +1,7 @@
 [Unit]
 Description=Ordinal server daemon
-StartLimitIntervalSec=30
-StartLimitBurst=5
+StartLimitIntervalSec=60
+StartLimitBurst=10
 
 [Service]
 Type=simple
@@ -9,7 +9,7 @@ User=ubuntu
 ExecStart=/home/ubuntu/ord/target/release/./ord --config /home/ubuntu/ord.yaml vermilion --http-port 1080 --api-http-port 1081 --n-threads 1
 WorkingDirectory=/home/ubuntu/ord/target/release
 Restart=always
-RestartSec=1s
+RestartSec=60s
 
 [Install]
 WantedBy=multi-user.target
