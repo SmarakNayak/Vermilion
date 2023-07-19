@@ -87,7 +87,7 @@ jobs:
         run: ssh staging 'cd Vermilion/app; . ~/.nvm/nvm.sh; npm install; npm run build;'
         
       - name: Set up static files
-        run: ssh staging 'sudo rm -r /var/www/html/*; sudo cp -r ~/Vermilion/app/dist/. /var/www/html/;'
+        run: ssh staging 'sudo rm -r /var/www/html/*; sudo cp -r ~/Vermilion/app/build/. /var/www/html/;'
       
       - name: Setup backup cronjobs
         run: ssh staging 'crontab /home/ubuntu/Vermilion/Cronjobs/Vermilion.cron'
