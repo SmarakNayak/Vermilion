@@ -79,6 +79,15 @@ jobs:
       
       - name: Setup nginx config
         run: ssh staging 'sudo cp Vermilion/nginx/server.conf /etc/nginx/conf.d/server.conf;'
+
+      - name: Install node 16.14.2
+        run: ssh staging 'curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.3/install.sh | bash; . ~/.nvm/nvm.sh; nvm install 20.4.0;'
+  
+      - name: Install client node dependencies
+        run: ssh staging 'cd Vermilion/app; . ~/.nvm/nvm.sh; npm install; npm run build;'
+        
+      - name: Set up static files
+        run: ssh staging 'sudo rm -r /var/www/html/*; sudo cp -r ~/Vermilion/app/dist/. /var/www/html/;'
       
       - name: Setup backup cronjobs
         run: ssh staging 'crontab /home/ubuntu/Vermilion/Cronjobs/Vermilion.cron'
