@@ -6,7 +6,7 @@ StartLimitBurst=5
 [Service]
 Type=simple
 User=ubuntu
-ExecStart=/home/ubuntu/ord/target/release/./ord --config /home/ubuntu/ord.yaml vermilion --address 127.0.0.1 --http-port 1080 --api-http-port 1081 --n-threads 10
+ExecStart=/home/ubuntu/ord/target/release/./ord --config /home/ubuntu/ord.yaml vermilion --http-port 1080 --api-http-port 1081 --n-threads 1
 WorkingDirectory=/home/ubuntu/ord/target/release
 Restart=always
 RestartSec=1s
