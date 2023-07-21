@@ -8,7 +8,7 @@ const Navigation = () => {
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<Home />} />
-        <Route path="/inscription" element={<Inscription />} />
+        <Route path="/inscription/:number" element={<Inscription />} />
       </Routes>
     </BrowserRouter>
   )

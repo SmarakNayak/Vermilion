@@ -1,23 +1,31 @@
 import React, { useState, useEffect } from 'react';
+import { useParams } from "react-router-dom";
 import styled from 'styled-components';
 import { lightTheme } from '../styles/themes';
 
 const Inscription = () => {
+  let { number } = useParams();
   const [metadata, setMetadata] = useState(null);
+  const [nextNumber, setNextNumber] = useState(null);
+  const [previousNumber, setPreviousNumber] = useState(null);
+  const [randomNumber, setRandomNumber] = useState(null);
 
   useEffect(() => {
     const fetchData = async () => {
-      const response = await fetch("/api/inscription_number_metadata/0");
+      const response = await fetch("/api/inscription_number_metadata/"+number);
       const json = await response.json();
       console.log(json);
       setMetadata(json);
     }
     fetchData();
+    setNextNumber(parseInt(number)+1);
+    setPreviousNumber(parseInt(number)-1);
+    setRandomNumber(Math.floor(Math.random() * 1000001));
   },[])
 
   return (
     <PageContainer>
-      <Logo src={"/api/inscription_number/0"} />
+      <Logo src={"/api/inscription_number/"+number} />
       <div>
         <p>Number: {metadata?.number}</p>
         <p>Id: {metadata?.id}</p>
@@ -26,8 +34,14 @@ const Inscription = () => {
         <p>Fee: {metadata?.genesis_fee}</p>
         <p>Inscription Blocktime: {metadata?.genesis_height} </p>
         <p>Inscription Clocktime: {metadata?.timestamp} </p>
+        <LinksContainer>
+          <a href={'/inscription/'+previousNumber}> previous </a>
+          <a href={'/inscription/'+randomNumber}> discover </a>
+          <a href={'/inscription/'+nextNumber}> next </a>
+        </LinksContainer>
       </div>
     </PageContainer>
+    
   )
 }
 
@@ -44,6 +58,15 @@ const PageContainer = styled.div`
   @media (max-width: 768px) {
     padding: 0 2rem;
   }
+`;
+
+const LinksContainer = styled.div`
+display: flex;
+flex-direction: row;
+flex: 1;
+align-items: center;
+justify-content: space-between;
+position: relative;
 `;
 
 const Logo = styled.img`

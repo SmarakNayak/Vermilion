@@ -7,8 +7,8 @@ const Home = () => {
 
   return (
     <PageContainer>
-      <a href='/inscription'>
-        <Logo src={"/api/inscription/6fb976ab49dcec017f1e201e84395983204ae1a7c2abf7ced0a85d692e442799i0"} alt='PHNXX spirit logo'/>
+      <a href='/inscription/0'>
+        <Logo src={"/api/inscription_number/0"} alt='Genesis Inscription'/>
       </a>
       <InfoText>A new mythology for Bitcoin</InfoText>
       <FooterContainer>
