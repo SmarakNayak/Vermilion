@@ -48,6 +48,7 @@ const PageContainer = styled.div`
 const Logo = styled.img`
   width: 16rem;
   height: 16rem;
+  image-rendering: pixelated;
 `;
 
 const InfoText = styled.p`

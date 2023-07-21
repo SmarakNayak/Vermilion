@@ -7,7 +7,7 @@ const Inscription = () => {
 
   useEffect(() => {
     const fetchData = async () => {
-      const response = await fetch("/api/inscription_metadata/6fb976ab49dcec017f1e201e84395983204ae1a7c2abf7ced0a85d692e442799i0");
+      const response = await fetch("/api/inscription_number_metadata/0");
       const json = await response.json();
       console.log(json);
       setMetadata(json);
@@ -17,7 +17,7 @@ const Inscription = () => {
 
   return (
     <PageContainer>
-      <Logo src={"/api/inscription/6fb976ab49dcec017f1e201e84395983204ae1a7c2abf7ced0a85d692e442799i0"} />
+      <Logo src={"/api/inscription_number/0"} />
       <div>
         <p>Number: {metadata?.number}</p>
         <p>Id: {metadata?.id}</p>
@@ -49,6 +49,7 @@ const PageContainer = styled.div`
 const Logo = styled.img`
   width: 16rem;
   height: 16rem;
+  image-rendering: pixelated;
 `;
 
 const InfoText = styled.p`
