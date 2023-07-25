@@ -45,17 +45,18 @@ const Inscription = () => {
         case "application/json":
           setContentType("text");
           break;
-        case "text/html;charset=utf-8":
-          setContentType("text");
-          break;
         case "text/plain":
           setContentType("text");
           break;
         case "text/rtf":
           setContentType("text");
           break;
+        //Html types
+        case "text/html;charset=utf-8":
+          setContentType("html");
+          break;
         case "text/html":
-          setContentType("text");
+          setContentType("html");
           break;
         //Video types
         case "video/mp4":
@@ -99,7 +100,7 @@ const Inscription = () => {
       {
         {
           'image': <ImageContainer src={"/api/inscription_number/"+number} />,
-          //'image': <TextContainer>{content}</TextContainer>,
+          'html': <HtmlContainer src={"/api/inscription_number/"+number}/>, //
           'text': <TextContainer>{content}</TextContainer>,
           'video': <video controls loop muted autoplay><source src={"/api/inscription_number/"+number} type={metadata?.content_type}/></video>,
           'audio': <audio controls><source src={"/api/inscription_number/"+number} type={metadata?.content_type}/></audio>,
@@ -143,12 +144,12 @@ const PageContainer = styled.div`
 `;
 
 const LinksContainer = styled.div`
-display: flex;
-flex-direction: row;
-flex: 1;
-align-items: center;
-justify-content: space-between;
-position: relative;
+  display: flex;
+  flex-direction: row;
+  flex: 1;
+  align-items: center;
+  justify-content: space-between;
+  position: relative;
 `;
 
 const ImageContainer = styled.img`
@@ -161,13 +162,9 @@ const TextContainer = styled.p`
   margin-bottom: 100px;
 `;
 
-const InfoText = styled.p`
-  font-family: OptimaRoman;
-  font-size: 1.25rem;
-  margin: 2.5rem 0 0 0;
-  max-width: 50rem;
-  text-align: center;
-  text-transform: uppercase;
-`;
+const HtmlContainer = styled.iframe`
+  width: 45rem;
+  height: 40rem;
+`
 
 export default Inscription;
