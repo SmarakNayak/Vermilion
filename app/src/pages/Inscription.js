@@ -133,7 +133,9 @@ const Inscription = () => {
     }
     updateText();    
   },[contentType])
-
+  
+  
+  //TODO: add tz using moment.js or timeZoneName: "long" 
   return (
     <PageContainer>
       <Heading>Inscription {metadata?.number}</Heading>
@@ -150,13 +152,13 @@ const Inscription = () => {
           'loading': <TextContainer>loading...</TextContainer>
         }[contentType]
       }
-      <div>        
+      <div>
         <p>Id: {metadata?.id}</p>
         <p>Style: {metadata?.content_type}</p>
         <p>Size: {metadata?.content_length}</p>
         <p>Fee: {metadata?.genesis_fee}</p>
-        <p>Inscription Blocktime: {metadata?.genesis_height} </p>
-        <p>Inscription Clocktime: {metadata?.timestamp} </p>
+        <p>Blocktime: {metadata?.genesis_height} </p>
+        <p>Clocktime: {metadata?.timestamp ? new Date(metadata?.timestamp*1000).toLocaleString(undefined, {day:"numeric", month: "short", year:"numeric", hour: 'numeric', minute: 'numeric', hour12: true}) : ""} </p> 
         <p>Edition: {editionNumber} </p>
         <LinksContainer>
           <Link to={'/inscription/' + previousNumber}> previous </Link>
@@ -205,6 +207,7 @@ const ImageContainer = styled.img`
 
 const Heading = styled.h2`
   font-family: monospace;
+  font-weight: normal;
 `
 
 const TextContainer = styled.p`
