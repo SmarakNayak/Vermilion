@@ -167,7 +167,7 @@ const Inscription = () => {
         <p>Blocktime: {metadata?.genesis_height} </p>
         <p>Clocktime: {metadata?.timestamp ? new Date(metadata?.timestamp*1000).toLocaleString(undefined, {day:"numeric", month: "short", year:"numeric", hour: 'numeric', minute: 'numeric', hour12: true}) : ""} </p>
         <MetadataContainer>
-          <StyledP>Edition: </StyledP><Link to={'/edition/' + metadata?.sha256}>{editionNumber ? editionNumber + "/" + editionCount : ""} </Link>
+          <StyledP>{editionNumber ? "Edition: " : ""} </StyledP><Link to={'/edition/' + metadata?.sha256}>{editionNumber ? editionNumber + "/" + editionCount : ""} </Link>
         </MetadataContainer>
         <LinksContainer>
           <Link to={'/inscription/' + previousNumber}> previous </Link>
