@@ -68,7 +68,7 @@ jobs:
         
       - name: Get ord dependencies
         run: |
-          ssh staging 'git -C ord fetch && git -C ord reset --hard origin/vermilion || git clone git@github.com:SmarakNayak/ord.git && git -C ord switch vermilion' #ord code
+          ssh staging 'git -C ord fetch && git -C ord pull origin vermilion || git clone git@github.com:SmarakNayak/ord.git && git -C ord switch vermilion' #ord code
           ssh staging 'curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y' #rust
           
       - name: Install ord
