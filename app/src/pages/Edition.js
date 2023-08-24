@@ -3,19 +3,18 @@ import { useParams, Link } from "react-router-dom";
 import styled from 'styled-components';
 import { lightTheme } from '../styles/themes';
 
-const Inscription = () => {
-  let { number } = useParams();
+const Edition = () => {
+  let { sha256 } = useParams();
   const [binaryContent, setBinaryContent] = useState(null);
   const [blobUrl, setBlobUrl] = useState(null);
   const [textContent, setTextContent] = useState(null);
-  const [metadata, setMetadata] = useState(null);
   const [editions, setEditions] = useState(null);
-  const [editionNumber, setEditionNumber] = useState(null);
+  const [firstEdition, setFirstEdition] = useState(null);
   const [editionCount, setEditionCount] = useState(null);
   const [contentType, setContentType] = useState(null);
-  const [nextNumber, setNextNumber] = useState(null);
-  const [previousNumber, setPreviousNumber] = useState(null);
-  const [randomNumber, setRandomNumber] = useState(null);
+  //Table
+  const [pageNo, setPageNo] = useState(1);
+	const [noOfPages, setNoOfPages] = useState(1);
 
   useEffect(() => {
 
@@ -24,7 +23,7 @@ const Inscription = () => {
       setTextContent(null);
       setContentType("loading");
       //1. Get content
-      const response = await fetch("/api/inscription_number/"+number);
+      const response = await fetch("/api/inscription_sha256/"+sha256);
       //2. Assign local url
       const blob = await response.blob();
       const url = URL.createObjectURL(blob);
@@ -96,39 +95,28 @@ const Inscription = () => {
           break;
       }
     }
-    
-    const fetchMetadata = async () => {
-      const response = await fetch("/api/inscription_metadata_number/"+number);
-      const json = await response.json();
-      setMetadata(json);
-    }
 
     const fetchEditions = async () => {
-      setEditionNumber(null);
-      setEditionCount(null);
-      const response = await fetch("/api/inscription_editions_number/"+number);
+      const response = await fetch("/api/inscription_editions_sha256/"+sha256);
       const json = await response.json();
       setEditions(json);
       var max;
       for (let index = 0; index < json.length; index++) {        
         const element = json[index];
-        if(element.number==number){
-          setEditionNumber(element.edition);
+        if(element.edition==1){
+          setFirstEdition(element.number);
         }
         if (max == null || element.edition > max) {
           max = element.edition;
         }        
       }
       setEditionCount(max);
+      setNoOfPages(Math.max(1,Math.ceil(json.length/10)))
     }
 
     fetchContent();
-    fetchMetadata();
     fetchEditions();
-    setNextNumber(parseInt(number)+1);
-    setPreviousNumber(parseInt(number)-1);
-    setRandomNumber(Math.floor(Math.random() * 1000001));
-  },[number])
+  },[sha256])
 
   useEffect(()=> {
     const updateText = async () => {
@@ -141,39 +129,66 @@ const Inscription = () => {
     updateText();    
   },[contentType])
   
+  const onLeftArrowClick = () => {
+		setPageNo(Math.max(1,pageNo-1))
+	}
+	const onRightArrowClick = () => {
+		setPageNo(Math.min(noOfPages,pageNo+1))
+	}
   
-  //TODO: add tz using moment.js or timeZoneName: "long" 
   return (
     <PageContainer>
-      <Heading>Inscription {metadata?.number}</Heading>
+      <Heading>Inscription {firstEdition}</Heading>
       {
         {
           'image': <ImageContainer src={blobUrl} />,
           'html': <HtmlContainer src={blobUrl}/>, //
           'text': <TextContainer>{textContent}</TextContainer>,
-          'video': <video controls loop muted autoplay><source src={blobUrl} type={metadata?.content_type}/></video>,
-          'audio': <audio controls><source src={blobUrl} type={metadata?.content_type}/></audio>,
+          'video': <video controls loop muted autoplay><source src={blobUrl} type={contentType}/></video>,
+          'audio': <audio controls><source src={blobUrl} type={contentType}/></audio>,
           'pdf': <TextContainer>pdf unsupported'</TextContainer>,
           'model': <TextContainer>gltf model type unsupported</TextContainer>,
-          'unsupported': <TextContainer>{metadata?.content_type} content type unsupported</TextContainer>,
+          'unsupported': <TextContainer>{contentType} content type unsupported</TextContainer>,
           'loading': <TextContainer>loading...</TextContainer>
         }[contentType]
-      }
+      }      
       <div>
-        <p>Id: {metadata?.id}</p>
-        <p>Style: {metadata?.content_type}</p>
-        <p>Size: {metadata?.content_length}</p>
-        <p>Fee: {metadata?.genesis_fee}</p>
-        <p>Blocktime: {metadata?.genesis_height} </p>
-        <p>Clocktime: {metadata?.timestamp ? new Date(metadata?.timestamp*1000).toLocaleString(undefined, {day:"numeric", month: "short", year:"numeric", hour: 'numeric', minute: 'numeric', hour12: true}) : ""} </p>
-        <MetadataContainer>
-          <StyledP>Edition: </StyledP><Link to={'/edition/' + metadata?.sha256}>{editionNumber ? editionNumber + "/" + editionCount : ""} </Link>
-        </MetadataContainer>
-        <LinksContainer>
-          <Link to={'/inscription/' + previousNumber}> previous </Link>
-          <Link to={'/inscription/' + randomNumber}> discover </Link>
-          <Link to={'/inscription/' + nextNumber}> next </Link>
-        </LinksContainer>
+        <p>{editionCount} Edition(s)</p>
+        <p>Sha256: {sha256}</p>
+        <StyledTable>
+          <thead>
+            <tr>
+              <th style={{fontWeight:"normal"}}>Edition</th>
+              <th style={{fontWeight:"normal"}}>Number</th>
+            </tr>
+          </thead>
+          <tbody>
+            {editions ?
+              editions
+              .slice(
+                (pageNo-1)*10,
+								pageNo*10
+              )
+              .map((row) => {
+                const table = (
+                  <>
+                    <tr>
+                      <td>{row.edition}</td>
+                      <td><Link to={'/inscription/' + row.number}>{row.number}</Link></td>
+                    </tr>
+                  </>
+                )
+                return table;
+              }) :
+              <div/>
+            }
+          </tbody>
+        </StyledTable>
+        <StyledTablePaginator>
+          <StyledArrowContainer onClick = {onLeftArrowClick}>←</StyledArrowContainer> 
+          <p>Page {pageNo} of {noOfPages}</p> 
+          <StyledArrowContainer onClick = {onRightArrowClick}>→</StyledArrowContainer>
+        </StyledTablePaginator>
       </div>
     </PageContainer>
     
@@ -195,15 +210,6 @@ const PageContainer = styled.div`
   }
 `;
 
-const LinksContainer = styled.div`
-  display: flex;
-  flex-direction: row;
-  flex: 1;
-  align-items: center;
-  justify-content: space-between;
-  position: relative;
-`;
-
 const ImageContainer = styled.img`
   min-height:16rem;
   min-height:16rem;
@@ -217,16 +223,6 @@ const ImageContainer = styled.img`
 const Heading = styled.h2`
   font-family: monospace;
   font-weight: normal;
-`
-
-const MetadataContainer = styled.div`
-  align-items: baseline;
-  display: flex;
-`
-
-const StyledP = styled.p`
-  margin-block-start: 0em;
-  margin-inline-end: 5px;
 `
 
 const TextContainer = styled.p`
@@ -243,4 +239,32 @@ const HtmlContainer = styled.iframe`
   height: 40rem;
 `
 
-export default Inscription;
+const StyledTable = styled.table`
+  margin-left: auto;
+  margin-right: auto;
+	border-spacing: 20px 4px;
+	white-space: nowrap;
+`
+
+const StyledArrowContainer = styled.p`
+	color: rgb(150,150,150);
+	cursor: pointer;
+	:hover,
+  :focus {
+    color: rgb(0,0,0);
+  }
+
+  &.active {
+    color: rgb(0,0,0);
+    font-weight:550;
+  }
+`
+
+const StyledTablePaginator = styled.div`
+	display: flex;
+	justify-content: center;
+	gap: 10px;
+	padding-top: 10px;
+`
+
+export default Edition;
