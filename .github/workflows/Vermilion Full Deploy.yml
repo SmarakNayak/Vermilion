@@ -30,9 +30,9 @@ jobs:
 
       - name: Stop the server if running
         run: |
-          ssh staging 'sudo systemctl is-active bitcoind && sudo systemctl stop bitcoind || echo "bitcoind not running";'
           ssh staging 'sudo systemctl is-active nginx.service && sudo systemctl stop nginx.service || echo "nginx not running";'
           ssh staging 'sudo systemctl is-active ordserver.service && sudo systemctl stop ordserver.service || echo "ordserver not running";'
+          ssh staging 'sudo systemctl is-active bitcoind && sudo systemctl stop bitcoind || echo "bitcoind not running";'
         
       - name: Install AWS CLI
         run: |
