@@ -1,5 +1,5 @@
 # This is a workflow that deploys a fresh vermilion instance
-name: Vermilion Deploy
+name: Vermilion Full Deploy
 
 # Controls when the workflow will run
 on:
