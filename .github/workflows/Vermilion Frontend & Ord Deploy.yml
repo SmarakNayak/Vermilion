@@ -1,0 +1,67 @@
+# This is a workflow that deploys a fresh vermilion instance
+name: Vermilion Frontend & Ord Deploy
+
+# Controls when the workflow will run
+on:
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  Vermilion-Deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Configure SSH
+        run: |
+          mkdir -p ~/.ssh/
+          echo "$SSH_KEY" > ~/.ssh/staging.key
+          chmod 600 ~/.ssh/staging.key
+          cat >>~/.ssh/config <<END
+          Host staging
+            HostName $SSH_HOST
+            User $SSH_USER
+            IdentityFile ~/.ssh/staging.key
+            StrictHostKeyChecking no
+          END
+        env:
+          SSH_USER: ${{ vars.SERVER_USER }}
+          SSH_KEY: ${{ secrets.SERVER_SSH_KEY }}
+          SSH_HOST: ${{ vars.SERVER_HOST }}
+
+      - name: Stop the server if running
+        run: |
+          ssh staging 'sudo systemctl is-active nginx.service && sudo systemctl stop nginx.service || echo "nginx not running";'
+          ssh staging 'sudo systemctl is-active ordserver.service && sudo systemctl stop ordserver.service || echo "ordserver not running";'     
+      
+      - name: Check out the new code from Github
+        run: ssh staging 'git -C Vermilion fetch && git -C Vermilion reset --hard origin/main || git clone git@github-vermilion:SmarakNayak/Vermilion.git' # This pulls if directory exists, otherwise clones
+        
+      - name: Get ord dependencies
+        run: |
+          ssh staging 'git -C ord fetch && git -C ord pull origin vermilion || git clone git@github.com:SmarakNayak/ord.git && git -C ord switch vermilion' #ord code
+          ssh staging 'curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y' #rust
+          
+      - name: Install ord
+        run: ssh staging 'source /home/ubuntu/.cargo/env; cd ord; cargo build --release' #install
+      
+      - name: Setup nginx config
+        run: ssh staging 'sudo cp Vermilion/nginx/server.conf /etc/nginx/conf.d/server.conf;'
+
+      - name: Install node 20.4.0
+        run: ssh staging 'curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.3/install.sh | bash; . ~/.nvm/nvm.sh; nvm install 20.4.0;'
+  
+      - name: Install client node dependencies
+        run: ssh staging 'cd Vermilion/app; . ~/.nvm/nvm.sh; npm install; npm run build;'
+        
+      - name: Set up static files
+        run: ssh staging 'sudo rm -r /var/www/html/*; sudo cp -r ~/Vermilion/app/build/. /var/www/html/;'
+      
+      - name: Setup backup cronjobs
+        run: ssh staging 'crontab /home/ubuntu/Vermilion/Cronjobs/Vermilion.cron'
+          
+      - name: Set up systemd services
+        run: ssh staging 'sudo cp Vermilion/systemd/ordserver.service /etc/systemd/system/ordserver.service;sudo systemctl daemon-reload;' 
+      
+      - name: Start the app
+        if: ${{ always() }}
+        run: ssh staging 'sudo systemctl start ordserver.service; sudo systemctl start nginx.service;'
