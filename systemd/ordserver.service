@@ -9,7 +9,8 @@ User=ubuntu
 ExecStart=/home/ubuntu/ord/target/release/./ord --index-sats --config /home/ubuntu/ord.yaml --db-cache-size 100000000 vermilion --http-port 1080 --api-http-port 1081 --n-threads 1
 WorkingDirectory=/home/ubuntu/ord/target/release
 Restart=always
-RestartSec=30s
+RestartSec=30
+TimeoutStopSec=infinity
 
 [Install]
 WantedBy=multi-user.target
