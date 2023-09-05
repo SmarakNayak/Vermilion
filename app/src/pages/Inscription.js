@@ -2,12 +2,15 @@ import React, { useState, useEffect } from 'react';
 import { useParams, Link } from "react-router-dom";
 import styled from 'styled-components';
 import { lightTheme } from '../styles/themes';
+import IframeResizer from 'iframe-resizer-react';
+const iframecontentwindow = require("../scripts/iframeResizer.contentWindow.min.txt");
 
 const Inscription = () => {
   let { number } = useParams();
   const [binaryContent, setBinaryContent] = useState(null);
   const [blobUrl, setBlobUrl] = useState(null);
   const [textContent, setTextContent] = useState(null);
+  const [htmlContent, setHtmlContent] = useState(null);
   const [metadata, setMetadata] = useState(null);
   const [editions, setEditions] = useState(null);
   const [editionNumber, setEditionNumber] = useState(null);
@@ -141,16 +144,31 @@ const Inscription = () => {
     updateText();    
   },[contentType])
   
-  
+  useEffect(() => {
+    const injectScript = async () => {
+      if(contentType=="html") {
+        const html = await binaryContent.text();
+        const script = await fetch(iframecontentwindow).then(response => response.text());
+        let result = html.replace("</html>","<script>" + script + "</script></html>");
+        console.log(result);
+        setHtmlContent(result);
+      }
+    }
+    injectScript(); 
+  },[contentType])
+
   //TODO: add tz using moment.js or timeZoneName: "long" 
+  //auto resized html (doesn't work well)
+  //<IframeResizer srcDoc={htmlContent} checkOrigin={false} heightCalculationMethod="lowestElement" minHeight={800} sizeWidth={true} widthCalculationMethod="rightMostElement" minWidth={800} log/>
+  //<StyledIframe src={blobUrl}></StyledIframe>
   return (
     <PageContainer>
       <Heading>Inscription {metadata?.number}</Heading>
       {
         {
           'image': <ImageContainer src={blobUrl} />,
-          'html': <HtmlContainer src={blobUrl}/>, //
-          'text': <TextContainer>{textContent}</TextContainer>,
+          'html': <HtmlContainer><StyledIframe src={blobUrl} scrolling='no'></StyledIframe></HtmlContainer>,
+          'text': <TextContainer><p>{textContent}</p></TextContainer>,
           'video': <video controls loop muted autoplay><source src={blobUrl} type={metadata?.content_type}/></video>,
           'audio': <audio controls><source src={blobUrl} type={metadata?.content_type}/></audio>,
           'pdf': <TextContainer>pdf unsupported'</TextContainer>,
@@ -205,10 +223,8 @@ const LinksContainer = styled.div`
 `;
 
 const ImageContainer = styled.img`
-  min-height:16rem;
-  min-height:16rem;
+  min-width:16rem;
   max-width:32rem;
-  max-height:32rem;
   width: auto;
   height: auto;
   image-rendering: pixelated;
@@ -229,18 +245,31 @@ const StyledP = styled.p`
   margin-inline-end: 5px;
 `
 
-const TextContainer = styled.p`
+const TextContainer = styled.div`
+  display: flex;
+  align-items: center;
+  min-height: 11rem;
   max-width: 800px;
+  margin: 1em;
   font-size: 1em;
-  display: block;
   font-family: monospace;
   white-space-collapse: preserve;
-  margin: 10em 10em;
 `;
 
-const HtmlContainer = styled.iframe`
-  width: 45rem;
-  height: 40rem;
+const HtmlContainer = styled.div`
+  display: flex;
+  justify-content: center;
+  min-width: 35rem;
+  min-height: 35rem;
+`
+
+const StyledIframe = styled.iframe`
+  border: none;
+  //flex: 0 100%;
+  //flex-grow: 1;
+  width: 100%;
+  resize: both;
+  //aspect-ratio: 1/1;
 `
 
 export default Inscription;
