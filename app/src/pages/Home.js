@@ -13,7 +13,7 @@ const Home = () => {
       <InfoText>A new mythology for Bitcoin</InfoText>
       <FooterContainer>
         <LinksContainer>
-          <PageLink href='' target='_blank'>
+          <PageLink href='/inscription/714502'>
             Learn more
           </PageLink>
         </LinksContainer>
