@@ -7,7 +7,7 @@ StartLimitBurst=10
 Type=simple
 User=ubuntu
 Environment="RUST_LOG=info"
-ExecStart=/home/ubuntu/ord/target/release/./ord --index-sats --config /home/ubuntu/ord.yaml vermilion --http-port 1080 --api-http-port 1081 --n-threads 1
+ExecStart=/home/ubuntu/ord/target/release/./ord --index-sats --config /home/ubuntu/ord.yaml --db-cache-size 1073741824 vermilion --http-port 1080 --api-http-port 1081 --n-threads 1
 WorkingDirectory=/home/ubuntu/ord/target/release
 Restart=always
 RestartSec=30
