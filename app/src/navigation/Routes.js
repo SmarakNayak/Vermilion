@@ -3,6 +3,7 @@ import { BrowserRouter, Route, Routes } from 'react-router-dom';
 import Home from '../pages/Home';
 import Inscription from '../pages/Inscription';
 import Edition from '../pages/Edition';
+import Block from '../pages/Block';
 
 const Navigation = () => {
   return (
@@ -11,6 +12,7 @@ const Navigation = () => {
         <Route path="/" element={<Home />} />
         <Route path="/inscription/:number" element={<Inscription />} />
         <Route path="/edition/:sha256" element={<Edition />} />
+        <Route path="/block/:number" element={<Block />} />
       </Routes>
     </BrowserRouter>
   )
