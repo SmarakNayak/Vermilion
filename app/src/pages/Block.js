@@ -66,6 +66,7 @@ const LinksContainer = styled.div`
   align-items: center;
   justify-content: space-between;
   position: relative;
+  width: 30%;
 `;
 
 const Heading = styled.h2`
