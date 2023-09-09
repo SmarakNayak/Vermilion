@@ -182,7 +182,9 @@ const Inscription = () => {
         <p>Style: {metadata?.content_type}</p>
         <p>Size: {metadata?.content_length}</p>
         <p>Fee: {metadata?.genesis_fee}</p>
-        <p>Blocktime: {metadata?.genesis_height} </p>
+        <MetadataContainer>
+          <StyledP>Blocktime: </StyledP><Link to={'/block/' + metadata?.genesis_height}>{metadata?.genesis_height} </Link>
+        </MetadataContainer>
         <p>Clocktime: {metadata?.timestamp ? new Date(metadata?.timestamp*1000).toLocaleString(undefined, {day:"numeric", month: "short", year:"numeric", hour: 'numeric', minute: 'numeric', hour12: true}) : ""} </p>
         <MetadataContainer>
           <StyledP>{editionNumber ? "Edition: " : ""} </StyledP><Link to={'/edition/' + metadata?.sha256}>{editionNumber ? editionNumber + "/" + editionCount : ""} </Link>
@@ -238,10 +240,13 @@ const Heading = styled.h2`
 const MetadataContainer = styled.div`
   align-items: baseline;
   display: flex;
+  margin-block-start: 1em;
+  margin-block-end: 1em;
 `
 
 const StyledP = styled.p`
   margin-block-start: 0em;
+  margin-block-end: 0em;
   margin-inline-end: 5px;
 `
 
