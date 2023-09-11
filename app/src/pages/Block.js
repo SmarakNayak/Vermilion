@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from "react-router-dom";
 import styled from 'styled-components';
-
+import InscriptionContainer from '../components/InscriptionContainer';
 
 const Block = () => {
   let { number } = useParams();
@@ -26,7 +26,7 @@ const Block = () => {
   return (
     <PageContainer>
       <Heading>Block {number}</Heading>
-      {refs?.map(entry => <a href={'/inscription/' +entry.number}><ImageContainer src={"/api/inscription/" + entry.id}></ImageContainer></a> )}
+      {refs?.map(entry => <UnstyledLink to={'/inscription/' +entry.number}><InscriptionContainer number={entry.number}></InscriptionContainer></UnstyledLink>)}
       <LinksContainer>
         <Link to={'/block/' + previousNumber}> previous </Link>
         <Link to={'/block/' + nextNumber}> next </Link>
@@ -51,13 +51,10 @@ const PageContainer = styled.div`
   }
 `;
 
-const ImageContainer = styled.img`
-  min-width:16rem;
-  max-width:32rem;
-  width: auto;
-  height: auto;
-  image-rendering: pixelated;
-`;
+const UnstyledLink = styled(Link)`
+  color: unset;
+  text-decoration: unset;
+`
 
 const LinksContainer = styled.div`
   display: flex;
