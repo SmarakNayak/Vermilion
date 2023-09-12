@@ -96,7 +96,7 @@ const InscriptionContainer = (props) => {
   useEffect(()=> {
     const updateText = async () => {
       //1. Update text state variable if text type
-      if(contentType=="text") {
+      if(contentType==="text") {
         const text = await binaryContent.text();
         setTextContent(text);
       }

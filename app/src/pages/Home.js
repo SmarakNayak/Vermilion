@@ -18,6 +18,9 @@ const Home = () => {
           </PageLink>
         </LinksContainer>
         <LinksContainer>
+          <PageLink href='https://github.com/SmarakNayak/Vermilion' target='_blank'>
+            GitHub
+          </PageLink>
           <PageLink href='https://twitter.com/burn2redeem' target='_blank'>
             Twitter
           </PageLink>
