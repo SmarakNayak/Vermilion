@@ -222,6 +222,8 @@ const LinksContainer = styled.div`
   align-items: center;
   justify-content: space-between;
   position: relative;
+  margin-top: 25px;
+  margin-bottom: 25px;
 `;
 
 const ImageContainer = styled.img`
