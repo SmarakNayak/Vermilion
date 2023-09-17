@@ -7,6 +7,10 @@ module.exports = function(app) {
     createProxyMiddleware({
       target: 'https://vermilion.place/',
       changeOrigin: true,
+      // target: 'http://localhost:2081',
+      // pathRewrite: {
+      //   '^/api/': '/', // remove base path on localhost
+      // },
     })
   );
 };

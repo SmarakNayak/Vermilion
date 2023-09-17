@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { useParams, Link } from "react-router-dom";
 import styled from 'styled-components';
 import { lightTheme } from '../styles/themes';
-import IframeResizer from 'iframe-resizer-react';
 const iframecontentwindow = require("../scripts/iframeResizer.contentWindow.min.txt");
 
 const Inscription = () => {
@@ -125,12 +124,20 @@ const Inscription = () => {
       setEditionCount(max);
     }
 
+    const fetchRandom = async () => {
+      setRandomNumber(Math.floor(Math.random() * 1000001));
+      //1. Get content
+      const response = await fetch("/api/random_inscription");
+      const json = await response.json();
+      setRandomNumber(json?.number);
+    }
+
     fetchContent();
     fetchMetadata();
     fetchEditions();
+    fetchRandom();
     setNextNumber(parseInt(number)+1);
     setPreviousNumber(parseInt(number)-1);
-    setRandomNumber(Math.floor(Math.random() * 1000001));
   },[number])
 
   useEffect(()=> {
