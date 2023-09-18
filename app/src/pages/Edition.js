@@ -121,7 +121,7 @@ const Edition = () => {
   useEffect(()=> {
     const updateText = async () => {
       //1. Update text state variable if text type
-      if(contentType=="text") {
+      if(contentType=="text" || contentType==="svg" || contentType==="html") {
         const text = await binaryContent.text();
         setTextContent(text);
       }
@@ -142,7 +142,8 @@ const Edition = () => {
       {
         {
           'image': <ImageContainer src={blobUrl} />,
-          'html': <HtmlContainer src={blobUrl}/>, //
+          'svg': <SvgContainer dangerouslySetInnerHTML={{__html: textContent}} />,
+          'html': <HtmlContainer><StyledIframe src={"/api/inscription_number/" + firstEdition} scrolling='no' sandbox='allow-scripts'></StyledIframe></HtmlContainer>,
           'text': <TextContainer>{textContent}</TextContainer>,
           'video': <video controls loop muted autoplay><source src={blobUrl} type={contentType}/></video>,
           'audio': <audio controls><source src={blobUrl} type={contentType}/></audio>,
@@ -220,6 +221,18 @@ const ImageContainer = styled.img`
   image-rendering: pixelated;
 `;
 
+const SvgContainer = styled.div`
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height:12rem;
+  min-width:24rem;
+  max-width:32rem;
+  width: auto;
+  height: auto;
+  image-rendering: pixelated;
+`;
+
 const Heading = styled.h2`
   font-family: monospace;
   font-weight: normal;
@@ -234,9 +247,20 @@ const TextContainer = styled.p`
   margin: 10em 10em;
 `;
 
-const HtmlContainer = styled.iframe`
-  width: 45rem;
-  height: 40rem;
+const HtmlContainer = styled.div`
+  display: flex;
+  justify-content: center;
+  min-width: 35rem;
+  min-height: 35rem;
+`
+
+const StyledIframe = styled.iframe`
+  border: none;
+  //flex: 0 100%;
+  //flex-grow: 1;
+  width: 100%;
+  resize: both;
+  //aspect-ratio: 1/1;
 `
 
 const StyledTable = styled.table`

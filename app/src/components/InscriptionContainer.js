@@ -36,7 +36,7 @@ const InscriptionContainer = (props) => {
           setContentType("image");
           break;
         case "image/svg+xml":
-          setContentType("image");
+          setContentType("svg");
           break;
         case "image/gif":
           setContentType("image");
@@ -96,7 +96,7 @@ const InscriptionContainer = (props) => {
   useEffect(()=> {
     const updateText = async () => {
       //1. Update text state variable if text type
-      if(contentType==="text") {
+      if(contentType==="text" || contentType==="svg" || contentType==="html") {
         const text = await binaryContent.text();
         setTextContent(text);
       }
@@ -109,7 +109,8 @@ const InscriptionContainer = (props) => {
       {
         {
           'image': <ImageContainer src={blobUrl} />,
-          'html': <HtmlContainer><StyledIframe src={blobUrl} scrolling='no'></StyledIframe></HtmlContainer>,
+          'svg': <SvgContainer dangerouslySetInnerHTML={{__html: textContent}} />,
+          'html': <HtmlContainer><StyledIframe src={"/api/inscription_number/" + props.number} scrolling='no'></StyledIframe></HtmlContainer>,
           'text': <TextContainer><p>{textContent}</p></TextContainer>,
           'video': <video controls loop muted autoplay><source src={blobUrl} type={rawContentType}/></video>,
           'audio': <audio controls><source src={blobUrl} type={rawContentType}/></audio>,
@@ -148,6 +149,18 @@ const HtmlContainer = styled.div`
   min-width: 35rem;
   min-height: 35rem;
 `
+
+const SvgContainer = styled.div`
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height:12rem;
+  min-width:24rem;
+  max-width:32rem;
+  width: auto;
+  height: auto;
+  image-rendering: pixelated;
+`;
 
 const StyledIframe = styled.iframe`
   border: none;

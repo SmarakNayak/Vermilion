@@ -9,7 +9,6 @@ const Inscription = () => {
   const [binaryContent, setBinaryContent] = useState(null);
   const [blobUrl, setBlobUrl] = useState(null);
   const [textContent, setTextContent] = useState(null);
-  const [htmlContent, setHtmlContent] = useState(null);
   const [metadata, setMetadata] = useState(null);
   const [editions, setEditions] = useState(null);
   const [editionNumber, setEditionNumber] = useState(null);
@@ -46,7 +45,7 @@ const Inscription = () => {
           setContentType("image");
           break;
         case "image/svg+xml":
-          setContentType("image");
+          setContentType("svg");
           break;
         case "image/gif":
           setContentType("image");
@@ -143,38 +142,24 @@ const Inscription = () => {
   useEffect(()=> {
     const updateText = async () => {
       //1. Update text state variable if text type
-      if(contentType=="text") {
+      if(contentType=="text" || contentType=="svg" || contentType=="html" ) {
         const text = await binaryContent.text();
         setTextContent(text);
       }
     }
     updateText();    
   },[contentType])
-  
-  useEffect(() => {
-    const injectScript = async () => {
-      if(contentType=="html") {
-        const html = await binaryContent.text();
-        const script = await fetch(iframecontentwindow).then(response => response.text());
-        let result = html.replace("</html>","<script>" + script + "</script></html>");
-        console.log(result);
-        setHtmlContent(result);
-      }
-    }
-    injectScript(); 
-  },[contentType])
 
-  //TODO: add tz using moment.js or timeZoneName: "long" 
-  //auto resized html (doesn't work well)
-  //<IframeResizer srcDoc={htmlContent} checkOrigin={false} heightCalculationMethod="lowestElement" minHeight={800} sizeWidth={true} widthCalculationMethod="rightMostElement" minWidth={800} log/>
-  //<StyledIframe src={blobUrl}></StyledIframe>
+  //TODO: add tz using moment.js or timeZoneName: "long"
+  // <HtmlContainer><StyledIframe srcDoc={textContent} scrolling='no' sandbox='allow-scripts'></StyledIframe></HtmlContainer> alternative that doesn't require another network call - size is buggy though..
   return (
     <PageContainer>
       <Heading>Inscription {metadata?.number}</Heading>
       {
         {
           'image': <ImageContainer src={blobUrl} />,
-          'html': <HtmlContainer><StyledIframe src={blobUrl} scrolling='no'></StyledIframe></HtmlContainer>,
+          'svg': <SvgContainer dangerouslySetInnerHTML={{__html: textContent}} />,
+          'html': <HtmlContainer><StyledIframe src={"/api/inscription_number/"+ number} scrolling='no' sandbox='allow-scripts'></StyledIframe></HtmlContainer>,
           'text': <TextContainer><p>{textContent}</p></TextContainer>,
           'video': <video controls loop muted autoplay><source src={blobUrl} type={metadata?.content_type}/></video>,
           'audio': <audio controls><source src={blobUrl} type={metadata?.content_type}/></audio>,
@@ -235,6 +220,18 @@ const LinksContainer = styled.div`
 
 const ImageContainer = styled.img`
   min-width:16rem;
+  max-width:32rem;
+  width: auto;
+  height: auto;
+  image-rendering: pixelated;
+`;
+
+const SvgContainer = styled.div`
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height:12rem;
+  min-width:24rem;
   max-width:32rem;
   width: auto;
   height: auto;
