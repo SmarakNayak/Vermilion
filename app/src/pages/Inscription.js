@@ -17,6 +17,8 @@ const Inscription = () => {
   const [nextNumber, setNextNumber] = useState(null);
   const [previousNumber, setPreviousNumber] = useState(null);
   const [randomNumber, setRandomNumber] = useState(null);
+  const [address, setAddress] = useState(null);
+  const [transfers, setTransfers] = useState(null); //Not displayed yet
 
   useEffect(() => {
 
@@ -131,8 +133,26 @@ const Inscription = () => {
       setRandomNumber(json?.number);
     }
 
+    const fetchAddress = async () => {
+      //1. Get address
+      const response = await fetch("/api/inscription_last_transfer_number/" + number);
+      const json = await response.json();
+      setAddress(json);
+      console.log(json);
+    }
+
+    const fetchTransfers = async () => {
+      //1. Get transfers
+      const response = await fetch("/api/inscription_transfers_number/" + number);
+      const json = await response.json();
+      setTransfers(json);
+      console.log(json);
+    }
+
     fetchContent();
     fetchMetadata();
+    fetchAddress();
+    fetchTransfers();
     fetchEditions();
     fetchRandom();
     setNextNumber(parseInt(number)+1);
@@ -178,6 +198,9 @@ const Inscription = () => {
           <StyledP>Blocktime: </StyledP><Link to={'/block/' + metadata?.genesis_height}>{metadata?.genesis_height} </Link>
         </MetadataContainer>
         <p>Clocktime: {metadata?.timestamp ? new Date(metadata?.timestamp*1000).toLocaleString(undefined, {day:"numeric", month: "short", year:"numeric", hour: 'numeric', minute: 'numeric', hour12: true}) : ""} </p>
+        <MetadataContainer>
+          <StyledP>{address ? "Address: " : ""} </StyledP><Link to={'/address/' + address?.address}>{address?.address} </Link>
+        </MetadataContainer>
         <MetadataContainer>
           <StyledP>{editionNumber ? "Edition: " : ""} </StyledP><Link to={'/edition/' + metadata?.sha256}>{editionNumber ? editionNumber + "/" + editionCount : ""} </Link>
         </MetadataContainer>
