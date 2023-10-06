@@ -26,7 +26,7 @@ const SatBlock = () => {
   //TODO: Add pagination
   return (
     <PageContainer>
-      <Heading>Block {number}</Heading>
+      <Heading>Sat Block {number}</Heading>
       <Masonry>
         {refs?.map(entry => <Brick><UnstyledLink to={'/inscription/' +entry.number}><InscriptionContainer number={entry.number}></InscriptionContainer></UnstyledLink></Brick>)}
       </Masonry>
