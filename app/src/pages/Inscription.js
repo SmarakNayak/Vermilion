@@ -199,7 +199,10 @@ const Inscription = () => {
         </MetadataContainer>
         <p>Clocktime: {metadata?.timestamp ? new Date(metadata?.timestamp*1000).toLocaleString(undefined, {day:"numeric", month: "short", year:"numeric", hour: 'numeric', minute: 'numeric', hour12: true}) : ""} </p>
         <MetadataContainer>
-          <StyledP>{address ? "Address: " : ""} </StyledP><Link to={'/address/' + address?.address}>{address?.address} </Link>
+          <StyledP>{address ? "Address: " : "Address: "} </StyledP><Link to={'/address/' + address?.address}>{address?.address} </Link>
+        </MetadataContainer>
+        <MetadataContainer>
+          <StyledP>{metadata?.sat ? "Sat: " : "Sat: "} </StyledP><Link to={'/sat/' + metadata?.sat}>{metadata?.sat} </Link>
         </MetadataContainer>
         <MetadataContainer>
           <StyledP>{editionNumber ? "Edition: " : ""} </StyledP><Link to={'/edition/' + metadata?.sha256}>{editionNumber ? editionNumber + "/" + editionCount : ""} </Link>

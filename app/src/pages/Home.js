@@ -10,7 +10,7 @@ const Home = () => {
       <a href='/inscription/0'>
         <Logo src={"/api/inscription_number/0"} alt='Genesis Inscription'/>
       </a>
-      <InfoText>A new mythology for Bitcoin</InfoText>
+      <InfoText>Discover Bitcoin | Discover Ordinals</InfoText>
       <FooterContainer>
         <LinksContainer>
           <PageLink href='/inscription/714502'>
