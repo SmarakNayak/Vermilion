@@ -38,7 +38,9 @@ const Sat = () => {
       </Masonry>
       <div>
         <p>Sat Name: {metadata?.name}</p>
-        <p>Sat Blocktime: {metadata?.block}</p>
+        <MetadataContainer>
+          <StyledP>Sat Blocktime: </StyledP><Link to={'/sat_block/' + metadata?.block}>{metadata?.block} </Link>
+        </MetadataContainer>
         <p>Sat Clocktime: {metadata?.timestamp ? new Date(metadata?.timestamp*1000).toLocaleString(undefined, {day:"numeric", month: "short", year:"numeric", hour: 'numeric', minute: 'numeric', hour12: true}) : ""}</p>
         <p>Sat Rarity: {metadata?.rarity ? metadata?.rarity.charAt(0).toUpperCase() + metadata?.rarity.slice(1) : ""}</p>
       </div>
@@ -102,5 +104,19 @@ const Brick = styled.div`
   display: flex;
   justify-content: center;
 `
+
+const MetadataContainer = styled.div`
+  align-items: baseline;
+  display: flex;
+  margin-block-start: 1em;
+  margin-block-end: 1em;
+`
+
+const StyledP = styled.p`
+  margin-block-start: 0em;
+  margin-block-end: 0em;
+  margin-inline-end: 5px;
+`
+
 
 export default Sat;

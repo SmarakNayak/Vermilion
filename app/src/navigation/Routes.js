@@ -6,6 +6,7 @@ import Edition from '../pages/Edition';
 import Block from '../pages/Block';
 import Address from '../pages/Address';
 import Sat from '../pages/Sat';
+import SatBlock from '../pages/SatBlock';
 
 const Navigation = () => {
   return (
@@ -17,6 +18,7 @@ const Navigation = () => {
         <Route path="/block/:number" element={<Block />} />
         <Route path="/address/:address" element={<Address />} />
         <Route path="/sat/:sat" element={<Sat />} />
+        <Route path="/sat_block/:number" element={<SatBlock />} />
       </Routes>
     </BrowserRouter>
   )
