@@ -20,8 +20,19 @@ module.exports = function(app) {
       changeOrigin: true,
       // target: 'http://localhost:2081',
       // pathRewrite: {
-      //   '^/content/': '/inscription/', // remove base path on localhost
+      //   '^/content/': '/inscription/', // switch content for inscription on localhost
       // },
+    })
+  );
+  app.use(
+    '/search_api',
+    createProxyMiddleware({
+      // target: 'https://vermilion.place/',
+      // changeOrigin: true,
+      target: 'http://localhost:4080',
+      pathRewrite: {
+        '^/search_api/': '/', // remove base path on localhost
+      },
     })
   );
 };

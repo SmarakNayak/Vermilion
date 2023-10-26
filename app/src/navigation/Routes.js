@@ -7,6 +7,7 @@ import Block from '../pages/Block';
 import Address from '../pages/Address';
 import Sat from '../pages/Sat';
 import SatBlock from '../pages/SatBlock';
+import Search from '../pages/Search';
 
 const Navigation = () => {
   return (
@@ -19,6 +20,7 @@ const Navigation = () => {
         <Route path="/address/:address" element={<Address />} />
         <Route path="/sat/:sat" element={<Sat />} />
         <Route path="/sat_block/:number" element={<SatBlock />} />
+        <Route path="/search" element={<Search />} />
       </Routes>
     </BrowserRouter>
   )
