@@ -7,33 +7,51 @@ const Search = () => {
   let { number } = useParams();
   const [refs, setRefs] = useState([]);
   const [searchInput, setSearchInput] = useState("");
+  const [image, setImage] = useState();
+  const [imageURL, setImageURL] = useState();
 
-  //1. Get links
   useEffect(() => {
-    const fetchContent = async () => {
-      //1. Get inscription numbers
-      //const response = await fetch("/search_api/search/" + searchInput);
-      //let json = await response.json();
-      //console.log(json)
-      //json = json.sort((a,b)=>b.genesis_fee/b.content_size-a.genesis_fee/a.content_size);
-      //setRefs(json);
-    }
-    fetchContent();
-  },[number])
+    if (image === undefined) return;
+    // const newImageURL = []
+    // image.forEach(img => newImageURL.push(URL.createObjectURL(img)))
+    setImageURL(URL.createObjectURL(image))
+  },[image])
 
   const handleChange = (e) => {
     e.preventDefault();
     setSearchInput(e.target.value);
   };
 
-  const handleSubmit = (e) => {
+  const handleTextSubmit = (e) => {
     e.preventDefault();
-    fetchContent();
+    fetchTextSearch();
   }
 
-  const fetchContent = async () => {
+  const handleImageSubmit = (e) => {
+    e.preventDefault();
+    fetchImageSearch();
+  }
+
+  const onImageChange = (e) => {
+    console.log(e.target.files)
+    setImage(...e.target.files)
+  }
+
+  const fetchTextSearch = async () => {
     //1. Get inscription numbers
     const response = await fetch("/search_api/search/" + searchInput);
+    let json = await response.json();
+    console.log(json)
+    //json = json.sort((a,b)=>b.genesis_fee/b.content_size-a.genesis_fee/a.content_size);
+    setRefs(json);
+  }
+
+  const fetchImageSearch = async () => {
+    const requestOptions = {
+      method: 'POST',
+      body: image
+    };
+    const response = await fetch('/search_api/search_by_image', requestOptions)
     let json = await response.json();
     console.log(json)
     //json = json.sort((a,b)=>b.genesis_fee/b.content_size-a.genesis_fee/a.content_size);
@@ -44,12 +62,16 @@ const Search = () => {
   return (
     <PageContainer>
       <Heading>Search</Heading>
-      <form onSubmit={handleSubmit}>
+      <form onSubmit={handleTextSubmit}>
         <input  type="text"
                 placeholder="Search Bitcoin"
                 onChange={handleChange}
                 value={searchInput} />
-        <input type="submit" value="Search" />
+        <input type="submit" value="Search by text" />
+      </form>
+      <form onSubmit={handleImageSubmit}>
+        <input type="file" multiple accept='image/*' onChange={onImageChange}/>
+        <input type="submit" value="Search by image" />
       </form>
       <Masonry>
         {refs?.map(entry => <Brick><UnstyledLink to={'/inscription/' +entry.number}><InscriptionContainer number={entry.number}></InscriptionContainer></UnstyledLink></Brick>)}
