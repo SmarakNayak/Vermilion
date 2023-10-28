@@ -24,10 +24,9 @@ const SatBlock = () => {
     setPreviousNumber(parseInt(number)-1);
   },[number])
 
-  //TODO: Add pagination
   return (
     <PageContainer>
-      <Heading>Block {number} Sat Inscriptions</Heading>
+      <Heading>Block {number} Sats</Heading>
       <Gallery inscriptionList={inscriptionList} displayJsonToggle={true}/>
       <LinksContainer>
         <Link to={'/sat_block/' + previousNumber}> previous block </Link>
