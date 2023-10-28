@@ -22,15 +22,15 @@ const Gallery = (props) => {
       setFilteredInscriptions([]);
     } else if(jsonFiltered) {
       const filtered = props.inscriptionList.filter( inscription =>
-        !inscription.isJson &
-        !inscription.isMaybeJson &
-        !inscription.isBitmapStyle
+        !inscription.is_json &
+        !inscription.is_maybe_json &
+        !inscription.is_bitmap_style
       )
       setFilteredInscriptions(filtered)
     } else {
       setFilteredInscriptions(props.inscriptionList)
     }
-  },[props.inscriptionList])
+  },[props.inscriptionList, jsonFiltered])
 
   useEffect(()=>{
     if (filteredInscriptions !== undefined) {
@@ -60,7 +60,7 @@ const Gallery = (props) => {
     setJsonFiltered(e.target.checked)
     //setJsonFiltered(!jsonFiltered)
   }
-  
+
   useEffect(() => {
     setShowToggle(props.displayJsonToggle);
   },[props.displayJsonToggle])
@@ -110,6 +110,7 @@ const Brick = styled.div`
   display: flex;
   justify-content: center;
 `
+
 const UnstyledLink = styled(Link)`
   color: unset;
   text-decoration: unset;

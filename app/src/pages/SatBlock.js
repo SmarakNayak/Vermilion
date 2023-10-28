@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from "react-router-dom";
 import styled from 'styled-components';
-import InscriptionContainer from '../components/InscriptionContainer';
+import Gallery from '../components/Gallery';
 
 const SatBlock = () => {
   let { number } = useParams();
-  const [refs, setRefs] = useState([]); 
+  const [inscriptionList, setInscriptionList] = useState([]); 
   const [nextNumber, setNextNumber] = useState(null);
   const [previousNumber, setPreviousNumber] = useState(null);
 
@@ -13,10 +13,11 @@ const SatBlock = () => {
   useEffect(() => {
     const fetchContent = async () => {
       //1. Get inscription numbers
+      setInscriptionList([]);
       const response = await fetch("/api/inscriptions_in_sat_block/" + number);
       let json = await response.json();
       json = json.sort((a,b)=>b.genesis_fee/b.content_size-a.genesis_fee/a.content_size);
-      setRefs(json);
+      setInscriptionList(json);
     }
     fetchContent();
     setNextNumber(parseInt(number)+1);
@@ -26,19 +27,16 @@ const SatBlock = () => {
   //TODO: Add pagination
   return (
     <PageContainer>
-      <Heading>Sat Block {number}</Heading>
-      <Masonry>
-        {refs?.map(entry => <Brick><UnstyledLink to={'/inscription/' +entry.number}><InscriptionContainer number={entry.number}></InscriptionContainer></UnstyledLink></Brick>)}
-      </Masonry>
+      <Heading>Block {number} Sat Inscriptions</Heading>
+      <Gallery inscriptionList={inscriptionList} displayJsonToggle={true}/>
       <LinksContainer>
-        <Link to={'/sat_block/' + previousNumber}> previous </Link>
-        <Link to={'/sat_block/' + nextNumber}> next </Link>
+        <Link to={'/sat_block/' + previousNumber}> previous block </Link>
+        <Link to={'/sat_block/' + nextNumber}> next block </Link>
       </LinksContainer>
     </PageContainer>
-    
   )
 }
-  
+
 const PageContainer = styled.div`
   width: 100%;
   min-height: 100vh;
@@ -53,11 +51,6 @@ const PageContainer = styled.div`
     padding: 0 2rem;
   }
 `;
-
-const UnstyledLink = styled(Link)`
-  color: unset;
-  text-decoration: unset;
-`
 
 const LinksContainer = styled.div`
   display: flex;
@@ -76,24 +69,6 @@ const Heading = styled.h2`
   font-weight: normal;
   margin-top: 50px;
   margin-bottom: 50px;
-`
-
-const Masonry = styled.div`
-  column-rule: 1px solid #eee;
-  column-gap: 50px;
-  column-count: 3;
-  column-fill: initial;
-  transition: all .5s ease-in-out;
-`
-
-const Brick = styled.div`
-  padding-bottom: 25px;
-  margin-bottom: 25px;
-  border-bottom: 1px solid #eee;
-  //display: inline-block;
-  vertical-align: top;
-  display: flex;
-  justify-content: center;
 `
 
 
