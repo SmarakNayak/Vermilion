@@ -27,7 +27,7 @@ const SatBlock = () => {
   return (
     <PageContainer>
       <Heading>Block {number} Sats</Heading>
-      <Gallery inscriptionList={inscriptionList} displayJsonToggle={true}/>
+      <Gallery inscriptionList={inscriptionList} displayJsonToggle={false}/>
       <LinksContainer>
         <Link to={'/sat_block/' + previousNumber}> previous block </Link>
         <Link to={'/sat_block/' + nextNumber}> next block </Link>

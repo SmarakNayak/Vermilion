@@ -24,7 +24,7 @@ const Address = () => {
   return (
     <PageContainer>
       <Heading>Address {address}</Heading>
-      <Gallery inscriptionList={inscriptionList} displayJsonToggle={true}/>
+      <Gallery inscriptionList={inscriptionList} displayJsonToggle={false}/>
     </PageContainer>
   )
 }

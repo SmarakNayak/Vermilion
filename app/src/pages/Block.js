@@ -28,7 +28,7 @@ const Block = () => {
   return (
     <PageContainer>
       <Heading>Block {number}</Heading>
-      <Gallery inscriptionList={inscriptionList} displayJsonToggle={true}/>
+      <Gallery inscriptionList={inscriptionList} displayJsonToggle={false}/>
       <LinksContainer>
         <Link to={'/block/' + previousNumber}> previous block </Link>
         <Link to={'/block/' + nextNumber}> next block </Link>
