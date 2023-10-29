@@ -245,7 +245,7 @@ const TextContainer = styled.p`
   font-family: monospace;
   white-space-collapse: preserve;
   margin: 10em 10em;
-`;
+`
 
 const HtmlContainer = styled.div`
   display: flex;
