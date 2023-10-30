@@ -1,6 +1,6 @@
 body {
   margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+  font-family: ABC Camera Plain Unlicensed Trial Regular, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
     'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
     sans-serif;
   -webkit-font-smoothing: antialiased;
@@ -10,4 +10,24 @@ body {
 code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
+}
+
+@font-face {
+  font-family: 'ABC Camera Unlicensed Trial Medium Italic';
+  src: url(./assets/fonts/ABCCamera-MediumItalic-Trial.otf);
+}
+
+@font-face {
+  font-family: 'ABC Camera Unlicensed Trial Bold';
+  src: url(./assets/fonts/ABCCamera-Bold-Trial.otf);
+}
+
+@font-face {
+  font-family: 'ABC Camera Plain Unlicensed Trial Regular';
+  src: url(./assets/fonts/ABCCameraPlain-Regular-Trial.otf);
+}
+
+@font-face {
+  font-family: 'ABC Camera Plain Unlicensed Trial Bold';
+  src: url(./assets/fonts/ABCCameraPlain-Bold-Trial.otf);
 }
