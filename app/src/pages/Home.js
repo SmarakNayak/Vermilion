@@ -7,22 +7,25 @@ const Home = () => {
 
   return (
     <PageContainer>
+      <TopContainer>
+        <LinksContainer>
+          <SiteText>vermillion</SiteText>
+        </LinksContainer>
+      </TopContainer>
       <a href='/inscription/0'>
         <Logo src={"/api/inscription_number/0"} alt='Genesis Inscription'/>
       </a>
-      <InfoText>Discover Bitcoin | Discover Ordinals</InfoText>
+      <InfoText>Discover <span style={{fontFamily: 'ABC Camera Unlicensed Trial Bold', color: '#E34234'}}> Bitcoin </span> • Discover <span style={{fontFamily: 'ABC Camera Unlicensed Trial Bold', color: '#E34234'}}> Ordinals</span></InfoText>
       <FooterContainer>
         <LinksContainer>
           <PageLink href='/inscription/714502'>
-            Learn more
+            714502
           </PageLink>
-        </LinksContainer>
-        <LinksContainer>
           <PageLink href='https://github.com/SmarakNayak/Vermilion' target='_blank'>
             GitHub
           </PageLink>
-          <PageLink href='https://twitter.com/burn2redeem' target='_blank'>
-            Twitter
+          <PageLink href='https://twitter.com/PHNXX____' target='_blank'>
+            X
           </PageLink>
           <PageLink href='https://discord.gg/9JMx3haGWf' target='_blank'>
             Discord
@@ -48,19 +51,39 @@ const PageContainer = styled.div`
   }
 `;
 
+const TopContainer = styled.div`
+  width: 96%;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  position: absolute;
+  top: 0;
+  height: 4rem;
+`;
+
+const SiteText = styled.a`
+  font-family: ABC Camera Unlicensed Trial Bold;
+  font-size: 1.25rem;
+  color: #E34234;
+  padding: 0;
+  margin: 0;
+  cursor: pointer;
+  text-decoration: none;
+`;
+
 const Logo = styled.img`
-  width: 16rem;
-  height: 16rem;
+  width: 12rem;
+  height: 12rem;
   image-rendering: pixelated;
 `;
 
 const InfoText = styled.p`
-  font-family: OptimaRoman;
-  font-size: 1.25rem;
+  font-family: ABC Camera Plain Unlicensed Trial Bold;
+  font-size: 2rem;
   margin: 2.5rem 0 0 0;
   max-width: 50rem;
   text-align: center;
-  text-transform: uppercase;
 `;
 
 const FooterContainer = styled.div`
@@ -68,66 +91,31 @@ const FooterContainer = styled.div`
   display: flex;
   flex-direction: row;
   align-items: center;
-  justify-content: space-between;
+  justify-content: center;
   position: absolute;
   bottom: 0;
-  height: 3rem;
+  height: 4rem;
 `;
 
 const LinksContainer = styled.div`
   display: flex;
   flex-direction: row;
   align-items: center;
-  column-gap: 1.5rem;
+  column-gap: 1rem;
 `;
 
 const PageLink = styled.a`
-  font-family: 'Inter';
-  font-weight: 400;
   font-size: .75rem;
-  color: ${lightTheme.textTwo};
+  color: #858585;
   padding: 0;
   margin: 0;
   cursor: pointer;
-  text-transform: uppercase;
-  // transition: all 250ms ease;
+  text-decoration: none;
+  transition: all 250ms ease;
 
-  :hover {
-    color: ${lightTheme.text};
+  &:hover {
+    color: #000;
   }
 `;
-
-const MessageText = styled.p`
-  font-family: 'Inter';
-  font-weight: 400;
-  font-size: .75rem;
-  color: #05ae66;
-  padding: 0;
-  margin: 0;
-  text-transform: uppercase;
-`;
-
-const EmailInput = styled.input`
-  margin: 0;
-  padding: 0;
-  border: none;
-  width: 151.52px;
-  height: 14.5px;
-
-  font-family: Inter;
-  font-weight: 400;
-  font-size: .75rem;
-  text-transform: uppercase;
-  // transition: all 250ms ease;
-
-  ::placeholder {
-    color: ${lightTheme.textTwo};
-  }
-
-  :hover::placeholder {
-    color: ${lightTheme.text};
-  }
-  
-`
 
 export default Home;
