@@ -126,9 +126,9 @@ const Discover = () => {
           </InscriptionContainer>
           <InfoContainer>
             <NumberText>{inscription.number}</NumberText>
-            {/* <MediaTextContainer>
+            <MediaTextContainer>
               <MediaTypeText>{inscription.content_type}</MediaTypeText>
-            </MediaTextContainer> */}
+            </MediaTextContainer>
             <ButtonContainer>
               <a href={'/inscription/' + inscription.number} target='_blank'>
                 <ActionButton>
@@ -170,48 +170,70 @@ const InscriptionContainer = styled.div`
   display: flex;
   align-items: center;
   justify-content: center;  
-  width: 512px;
-  max-width: 512px;
-  height: 512px;
-  max-height: 512px;
+  width: 32rem;
+  max-width: 32rem;
+  height: 32rem;
+  max-height: 32rem;
+
+  @media (max-width: 576px) {
+    width: 20rem;
+    max-width: 20rem;
+    height: 20rem;
+    max-height: 20rem;
+  }
 `;
 
 const ImageContainer = styled.img`
   min-width: 16rem;
-  max-width: 32rem;
   width: auto;
   height: auto;
-  max-width: 512px;
-  max-height: 512px;
+  max-width: 32rem;
+  max-height: 32rem;
   image-rendering: pixelated;
   border-radius: 4px;
   border: 8px solid #FFF;
   box-shadow: 0px 1px 6px 0px rgba(0, 0, 0, 0.09);
+
+  @media (max-width: 576px) {
+    max-width: 20rem;
+    max-height: 20rem;
+  }
 `;
 
 const HtmlContainer = styled.div`
   display: flex;
   justify-content: center;
-  min-width: 35rem;
-  min-height: 35rem;
+  width: auto;
+  height: auto;
+  max-width: 32rem;
+  max-height: 32rem;
   border-radius: 4px;
   border: 8px solid #FFF;
   box-shadow: 0px 1px 6px 0px rgba(0, 0, 0, 0.09);
+
+  @media (max-width: 576px) {
+    max-width: 20rem;
+    max-height: 20rem;
+  }
 `
 
 const SvgContainer = styled.div`
   display: flex;
   justify-content: center;
   align-items: center;
-  min-height:12rem;
-  min-width:24rem;
-  max-width:32rem;
   width: auto;
   height: auto;
+  max-width: 32rem;
+  max-height: 32rem;
   image-rendering: pixelated;
   border-radius: 4px;
   border: 8px solid #FFF;
   box-shadow: 0px 1px 6px 0px rgba(0, 0, 0, 0.09);
+
+  @media (max-width: 576px) {
+    max-width: 20rem;
+    max-height: 20rem;
+  }
 `;
 
 const StyledIframe = styled.iframe`
@@ -226,12 +248,17 @@ const StyledIframe = styled.iframe`
 const TextContainer = styled.div`
   width: auto;
   height: auto;
-  max-width: 512px;
-  max-height: 512px;
+  max-width: 32rem;
+  max-height: 32rem;
   padding: .75rem 1rem;
   border-radius: 4px;
   border: 8px solid #FFF;
   box-shadow: 0px 1px 6px 0px rgba(0, 0, 0, 0.09);
+
+  @media (max-width: 576px) {
+    max-width: 20rem;
+    max-height: 20rem;
+  }
 `;
 
 const InscriptionText = styled.p`
@@ -270,11 +297,16 @@ const ContentContainer = styled.div`
 const VideoContainer = styled.video`
   width: auto;
   height: auto;
-  max-width: 512px;
-  max-height: 512px;
+  max-width: 32rem;
+  max-height: 32rem;
   border-radius: 4px;
   border: 8px solid #FFF;
   box-shadow: 0px 1px 6px 0px rgba(0, 0, 0, 0.09);
+
+  @media (max-width: 576px) {
+    max-width: 20rem;
+    max-height: 20rem;
+  }
 `;
 
 const MediaTextContainer = styled.div`
