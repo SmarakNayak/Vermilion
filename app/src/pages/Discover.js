@@ -126,9 +126,9 @@ const Discover = () => {
           </InscriptionContainer>
           <InfoContainer>
             <NumberText>{inscription.number}</NumberText>
-            <MediaTextContainer>
+            {/* <MediaTextContainer>
               <MediaTypeText>{inscription.content_type}</MediaTypeText>
-            </MediaTextContainer>
+            </MediaTextContainer> */}
             <ButtonContainer>
               <a href={'/inscription/' + inscription.number} target='_blank'>
                 <ActionButton>
