@@ -45,7 +45,7 @@ const Discover = () => {
           fetchInscriptions();
         }
       },
-      { threshold: 0.9 }
+      { threshold: 1 }
     );
 
     
@@ -69,7 +69,7 @@ const Discover = () => {
           fetchInscriptions()
         }
       },
-      { threshold: 0.9 }
+      { threshold: 1 }
     );
 
     if (observerTarget.current) {
@@ -157,20 +157,20 @@ const Discover = () => {
               <ActionButton onClick={() => {copyToClipboard(`https://vermilion.place/inscription/` + inscription.number)}} >
                 <CopyIcon color='#000' height='16px' width='16px' />
               </ActionButton>
-              <ActionButton onClick={() => {takeScreenshot(i)}} >
+              {/* <ActionButton onClick={() => {takeScreenshot(i)}} >
                 <Share1Icon color='#000' height='16px' width='16px' />
-              </ActionButton>
+              </ActionButton> */}
             </ButtonContainer>
           </InfoContainer>
         </ContentContainer>
       ))}
       <div ref={observerTarget}></div>
-      {screenshot && (
+      {/* {screenshot && (
         <ScreenshotContainer className="imageContainer">
           <img width={800} src={screenshot} />
           <CloseIconContainer onClick={clearScreenshot}><Cross1Icon /></CloseIconContainer>          
         </ScreenshotContainer>
-      )}
+      )} */}
     </PageContainer>
     
   )
