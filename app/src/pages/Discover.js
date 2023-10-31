@@ -105,7 +105,7 @@ const Discover = () => {
                 'image/webp': <ImageContainer src={`/api/inscription_number/` + inscription.number} />,
                 'image/gif': <ImageContainer src={`/api/inscription_number/` + inscription.number} />,
                 'image/avif': <ImageContainer src={`/api/inscription_number/` + inscription.number} />,
-                'image/svg+xml': <ImageContainer src={`/api/inscription_number/` + inscription.number} />,
+                'image/svg+xml': <SvgContainer dangerouslySetInnerHTML={{__html: inscription.text}} />,
                 'text/plain;charset=utf-8': <TextContainer><InscriptionText>{inscription.text}</InscriptionText></TextContainer>,
                 'text/plain': <TextContainer><InscriptionText>{inscription.text}</InscriptionText></TextContainer>,
                 'text/rtf': <TextContainer><InscriptionText>{inscription.text}</InscriptionText></TextContainer>,
@@ -198,6 +198,21 @@ const HtmlContainer = styled.div`
   border: 8px solid #FFF;
   box-shadow: 0px 1px 6px 0px rgba(0, 0, 0, 0.09);
 `
+
+const SvgContainer = styled.div`
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height:12rem;
+  min-width:24rem;
+  max-width:32rem;
+  width: auto;
+  height: auto;
+  image-rendering: pixelated;
+  border-radius: 4px;
+  border: 8px solid #FFF;
+  box-shadow: 0px 1px 6px 0px rgba(0, 0, 0, 0.09);
+`;
 
 const StyledIframe = styled.iframe`
   border: none;
