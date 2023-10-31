@@ -151,8 +151,8 @@ const Inscription = () => {
 
     fetchContent();
     fetchMetadata();
-    fetchAddress();
-    fetchTransfers();
+    //fetchAddress();
+    //fetchTransfers();
     fetchEditions();
     fetchRandom();
     setNextNumber(parseInt(number)+1);
@@ -198,9 +198,9 @@ const Inscription = () => {
           <StyledP>Blocktime: </StyledP><Link to={'/block/' + metadata?.genesis_height}>{metadata?.genesis_height} </Link>
         </MetadataContainer>
         <p>Clocktime: {metadata?.timestamp ? new Date(metadata?.timestamp*1000).toLocaleString(undefined, {day:"numeric", month: "short", year:"numeric", hour: 'numeric', minute: 'numeric', hour12: true}) : ""} </p>
-        <MetadataContainer>
+        {/* <MetadataContainer>
           <StyledP>{address ? "Address: " : "Address: "} </StyledP><Link to={'/address/' + address?.address}>{address?.address} </Link>
-        </MetadataContainer>
+        </MetadataContainer> */}
         <MetadataContainer>
           <StyledP>{metadata?.sat ? "Sat: " : "Sat: "} </StyledP><Link to={'/sat/' + metadata?.sat}>{metadata?.sat} </Link>
         </MetadataContainer>
