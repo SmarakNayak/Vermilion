@@ -41,9 +41,14 @@ jobs:
       
       - name: Setup nginx config
         run: ssh staging 'sudo cp Vermilion/nginx/server.conf /etc/nginx/conf.d/server.conf;'
+
+      - name: Setup nginx config
+        run: ssh staging 'sudo cp Vermilion/systemd/memory_watcher.sh memory_watcher.sh; sudo chmod +x memory_watcher.sh;'
           
       - name: Set up systemd services
-        run: ssh staging 'sudo cp Vermilion/systemd/ordserver.service /etc/systemd/system/ordserver.service;sudo systemctl daemon-reload;'    
+        run: ssh staging 'sudo cp Vermilion/systemd/ordserver.service /etc/systemd/system/ordserver.service; sudo cp Vermilion/systemd/memwatch.service /etc/systemd/system/memwatch.service; sudo systemctl daemon-reload;'    
 
       - name: Restart ord service
-        run: ssh staging 'sudo systemctl is-active ordserver.service && sudo systemctl restart ordserver.service || sudo systemctl start ordserver.service;'
+        run: |
+          ssh staging 'sudo systemctl is-active ordserver.service && sudo systemctl restart ordserver.service || sudo systemctl start ordserver.service;'
+          ssh staging 'sudo systemctl is-active memwatch.service && sudo systemctl restart memwatch.service || sudo systemctl start memwatch.service;'

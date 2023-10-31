@@ -1,0 +1,14 @@
+[Unit]
+Description=Memory Watcher Service
+StartLimitIntervalSec=30
+StartLimitBurst=5
+
+[Service]
+Type=simple
+ExecStart=/home/ubuntu/./memory_watcher.sh
+WorkingDirectory=/home/ubuntu
+Restart=always
+RestartSec=1s
+
+[Install]
+WantedBy=multi-user.target
