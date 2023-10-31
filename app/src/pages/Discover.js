@@ -45,7 +45,7 @@ const Discover = () => {
           fetchInscriptions();
         }
       },
-      { threshold: 1 }
+      { threshold: 0.5 }
     );
 
     
@@ -69,7 +69,7 @@ const Discover = () => {
           fetchInscriptions()
         }
       },
-      { threshold: 1 }
+      { threshold: 0.5 }
     );
 
     if (observerTarget.current) {
@@ -164,13 +164,13 @@ const Discover = () => {
           </InfoContainer>
         </ContentContainer>
       ))}
+      <div ref={observerTarget}></div>
       {screenshot && (
         <ScreenshotContainer className="imageContainer">
           <img width={800} src={screenshot} />
           <CloseIconContainer onClick={clearScreenshot}><Cross1Icon /></CloseIconContainer>          
         </ScreenshotContainer>
       )}
-      <div ref={observerTarget}></div>
     </PageContainer>
     
   )
