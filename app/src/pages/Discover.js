@@ -11,7 +11,7 @@ const Discover = () => {
 
   const fetchInscriptions = async () => {
     console.log("Fetching")
-    const response = await fetch(`/api/random_inscriptions?n=5`);
+    const response = await fetch(`/api/random_inscriptions?n=10`);
     const newInscriptions = await response.json();
     setInscriptions(inscriptions => [...inscriptions, ...newInscriptions])
     return newInscriptions;
@@ -20,7 +20,7 @@ const Discover = () => {
   const fetchInitial = async() => {
     //Start both calls at same time
     const genesis_promise = fetch(`/api/inscription_metadata_number/0`);
-    const random_promise = fetch(`/api/random_inscriptions?n=5`);
+    const random_promise = fetch(`/api/random_inscriptions?n=10`);
     //Responses should arrive at similar times:
     const genesis_response = await genesis_promise;
     const random_response = await random_promise;
