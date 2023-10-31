@@ -205,6 +205,8 @@ const HtmlContainer = styled.div`
   justify-content: center;
   width: auto;
   height: auto;
+  min-width:16rem;
+  min-height:16rem;
   max-width: 32rem;
   max-height: 32rem;
   border-radius: 4px;
@@ -223,6 +225,8 @@ const SvgContainer = styled.div`
   align-items: center;
   width: auto;
   height: auto;
+  min-width:16rem;
+  min-height:16rem;
   max-width: 32rem;
   max-height: 32rem;
   image-rendering: pixelated;
