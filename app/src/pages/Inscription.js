@@ -112,17 +112,13 @@ const Inscription = () => {
       const response = await fetch("/api/inscription_editions_number/"+number);
       const json = await response.json();
       setEditions(json);
-      var max;
       for (let index = 0; index < json.length; index++) {        
         const element = json[index];
         if(element.number==number){
           setEditionNumber(element.edition);
         }
-        if (max == null || element.edition > max) {
-          max = element.edition;
-        }        
       }
-      setEditionCount(max);
+      setEditionCount(json[0].total);
     }
 
     const fetchRandom = async () => {
