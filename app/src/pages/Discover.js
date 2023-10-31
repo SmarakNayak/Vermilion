@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, createRef } from 'react';
 import { useParams, Link } from "react-router-dom";
 import styled from 'styled-components';
 import { ChevronDownIcon,  CopyIcon, EyeOpenIcon , InfoCircledIcon, Link2Icon, Share1Icon } from '@radix-ui/react-icons';
@@ -10,23 +10,63 @@ const Discover = () => {
   const [inscriptions, setInscriptions] = useState([]);
 
   const fetchInscriptions = async () => {
+    console.log("Fetching")
     const response = await fetch(`/api/random_inscriptions?n=5`);
-    const json = await response.json();
-    return json;
+    const newInscriptions = await response.json();
+    setInscriptions(inscriptions => [...inscriptions, ...newInscriptions])
+    return newInscriptions;
+  }
+
+  const fetchInitial = async() => {
+    //Start both calls at same time
+    const genesis_promise = fetch(`/api/inscription_metadata_number/0`);
+    const random_promise = fetch(`/api/random_inscriptions?n=5`);
+    //Responses should arrive at similar times:
+    const genesis_response = await genesis_promise;
+    const random_response = await random_promise;
+    const genesis_json = await genesis_response.json();
+    const random_json = await random_response.json();
+    setInscriptions([genesis_json], random_json)
   }
 
   useEffect(() => {
-    fetchInscriptions();
+    console.log("Initial fetch");
+    fetchInitial();
   }, []);
 
   const observerTarget = useRef(null);
+  const inscriptionReferences = useRef([]);
 
   useEffect(() => {
     const observer = new IntersectionObserver(
       entries => {
         if (entries[0].isIntersecting) {
-          fetchInscriptions().then(newInscriptions =>
-            setInscriptions(inscriptions => [...inscriptions, ...newInscriptions]))
+          console.log("3 to go, prefetch");
+          fetchInscriptions();
+        }
+      },
+      { threshold: 1 }
+    );
+
+    
+    if (inscriptionReferences.current[inscriptions.length-3]) {
+      observer.observe(inscriptionReferences.current[inscriptions.length-3]);
+    }
+
+    return () => {
+      if (inscriptionReferences.current[inscriptions.length-3]) {
+        observer.unobserve(inscriptionReferences.current[inscriptions.length-3]);
+      }
+    }
+
+  }, [inscriptions, inscriptionReferences])
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      entries => {
+        if (entries[0].isIntersecting) {          
+          console.log("last one, definitely prefetch");
+          fetchInscriptions()
         }
       },
       { threshold: 1 }
@@ -51,49 +91,50 @@ const Discover = () => {
     });
   }
 
+
   return (
     <PageContainer>
       {inscriptions.map((inscription, i, inscriptions) => (
-        <ContentContainer key={i+1} id={i+1}>
+        <ContentContainer key={i+1} id={i+1} ref={el => inscriptionReferences.current[i] = el}>
           <InscriptionContainer>
             {
               {
-                'image/png': <ImageContainer src={`/api/inscription_number/` + inscriptions[i].number} />,
-                'image/jpeg': <ImageContainer src={`/api/inscription_number/` + inscriptions[i].number} />,
-                'image/webp': <ImageContainer src={`/api/inscription_number/` + inscriptions[i].number} />,
-                'image/gif': <ImageContainer src={`/api/inscription_number/` + inscriptions[i].number} />,
-                'image/avif': <ImageContainer src={`/api/inscription_number/` + inscriptions[i].number} />,
-                'image/svg+xml': <SvgContainer dangerouslySetInnerHTML={{__html: inscriptions[i].text}} />,
-                'text/plain;charset=utf-8': <TextContainer><InscriptionText>{inscriptions[i].text}</InscriptionText></TextContainer>,
-                'text/plain': <TextContainer><InscriptionText>{inscriptions[i].text}</InscriptionText></TextContainer>,
-                'text/rtf': <TextContainer><InscriptionText>{inscriptions[i].text}</InscriptionText></TextContainer>,
-                'application/json': <TextContainer><InscriptionText>{inscriptions[i].text}</InscriptionText></TextContainer>,
-                'text/html;charset=utf-8': <HtmlContainer><StyledIframe src={"/api/inscription_number/"+ inscriptions[i].number} scrolling='no' sandbox='allow-scripts'></StyledIframe></HtmlContainer>,
-                'text/html': <HtmlContainer><StyledIframe src={"/api/inscription_number/"+ inscriptions[i].number} scrolling='no' sandbox='allow-scripts'></StyledIframe></HtmlContainer>,
-                'video/mp4': <VideoContainer controls loop muted autoPlay><source src={`/api/inscription_number/` + inscriptions[i].number} type={metadata?.content_type}/></VideoContainer>,
-                'video/webm': <VideoContainer controls loop muted autoPlay><source src={`/api/inscription_number/` + inscriptions[i].number} type={metadata?.content_type}/></VideoContainer>,
-                'audio/mpeg': <audio controls><source src={`/api/inscription_number/` + inscriptions[i].number} type={inscriptions[i].content_type}/></audio>,
-                'application/pdf': <TextContainer>pdf unsupported'</TextContainer>,
+                'image/png': <ImageContainer src={`/api/inscription_number/` + inscription.number} />,
+                'image/jpeg': <ImageContainer src={`/api/inscription_number/` + inscription.number} />,
+                'image/webp': <ImageContainer src={`/api/inscription_number/` + inscription.number} />,
+                'image/gif': <ImageContainer src={`/api/inscription_number/` + inscription.number} />,
+                'image/avif': <ImageContainer src={`/api/inscription_number/` + inscription.number} />,
+                'image/svg+xml': <ImageContainer src={`/api/inscription_number/` + inscription.number} />,
+                'text/plain;charset=utf-8': <TextContainer><InscriptionText>{inscription.text}</InscriptionText></TextContainer>,
+                'text/plain': <TextContainer><InscriptionText>{inscription.text}</InscriptionText></TextContainer>,
+                'text/rtf': <TextContainer><InscriptionText>{inscription.text}</InscriptionText></TextContainer>,
+                'application/json': <TextContainer><InscriptionText>{inscription.text}</InscriptionText></TextContainer>,
+                'text/html;charset=utf-8': <HtmlContainer><StyledIframe src={"/api/inscription_number/"+ inscription.number} scrolling='no' sandbox='allow-scripts'></StyledIframe></HtmlContainer>,
+                'text/html': <HtmlContainer><StyledIframe src={"/api/inscription_number/"+ inscription.number} scrolling='no' sandbox='allow-scripts'></StyledIframe></HtmlContainer>,
+                'video/mp4': <VideoContainer controls loop muted autoPlay><source src={`/api/inscription_number/` + inscription.number} type={inscription.content_type}/></VideoContainer>,
+                'video/webm': <VideoContainer controls loop muted autoPlay><source src={`/api/inscription_number/` + inscription.number} type={inscription.content_type}/></VideoContainer>,
+                'audio/mpeg': <audio controls><source src={`/api/inscription_number/` + inscription.number} type={inscription.content_type}/></audio>,
+                'application/pdf': <TextContainer>pdf unsupported</TextContainer>,
                 'model/gltf-binary': <TextContainer>gltf model type unsupported</TextContainer>,
 
                 // to update
                 'unsupported': <TextContainer>{metadata?.content_type} content type unsupported</TextContainer>,
                 'loading': <TextContainer>loading...</TextContainer>
-              }[inscriptions[i].content_type]
+              }[inscription.content_type]
             }
           </InscriptionContainer>
           <InfoContainer>
-            <NumberText>{inscriptions[i].number}</NumberText>
+            <NumberText>{inscription.number}</NumberText>
             {/* <MediaTextContainer>
-              <MediaTypeText>{inscriptions[i].content_type}</MediaTypeText>
+              <MediaTypeText>{inscription.content_type}</MediaTypeText>
             </MediaTextContainer> */}
             <ButtonContainer>
-              <a href={'/inscription/' + inscriptions[i].number} target='_blank'>
+              <a href={'/inscription/' + inscription.number} target='_blank'>
                 <ActionButton>
                   <EyeOpenIcon color='#000' height='16px' width='16px' />
                 </ActionButton>
               </a>
-              <ActionButton onClick={() => {copyToClipboard(`https://vermilion.place/inscription/` + inscriptions[i].number)}}>
+              <ActionButton onClick={() => {copyToClipboard(`https://vermilion.place/inscription/` + inscription.number)}}>
                 <CopyIcon color='#000' height='16px' width='16px' />
               </ActionButton>
               {/* <ActionButton>
@@ -141,21 +182,6 @@ const ImageContainer = styled.img`
   height: auto;
   max-width: 512px;
   max-height: 512px;
-  image-rendering: pixelated;
-  border-radius: 4px;
-  border: 8px solid #FFF;
-  box-shadow: 0px 1px 6px 0px rgba(0, 0, 0, 0.09);
-`;
-
-const SvgContainer = styled.div`
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  min-height:12rem;
-  min-width:24rem;
-  max-width:32rem;
-  width: auto;
-  height: auto;
   image-rendering: pixelated;
   border-radius: 4px;
   border: 8px solid #FFF;

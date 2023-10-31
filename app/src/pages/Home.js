@@ -9,10 +9,10 @@ const Home = () => {
     <PageContainer>
       <TopContainer>
         <LinksContainer>
-          <SiteText>vermillion</SiteText>
+          <SiteText>vermilion</SiteText>
         </LinksContainer>
       </TopContainer>
-      <a href='/inscription/0'>
+      <a href='/discover'>
         <Logo src={"/api/inscription_number/0"} alt='Genesis Inscription'/>
       </a>
       <InfoText>Discover <span style={{fontFamily: 'ABC Camera Unlicensed Trial Bold', color: '#E34234'}}> Bitcoin </span> • Discover <span style={{fontFamily: 'ABC Camera Unlicensed Trial Bold', color: '#E34234'}}> Ordinals</span></InfoText>
@@ -29,6 +29,9 @@ const Home = () => {
           </PageLink>
           <PageLink href='https://discord.gg/9JMx3haGWf' target='_blank'>
             Discord
+          </PageLink>
+          <PageLink href='/inscription/102182'>
+            102182
           </PageLink>
         </LinksContainer>
       </FooterContainer>
