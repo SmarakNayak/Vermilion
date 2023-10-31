@@ -12,6 +12,8 @@ WorkingDirectory=/home/ubuntu/ord/target/release
 Restart=always
 RestartSec=30
 TimeoutStopSec=infinity
+#MemoryHigh=7G
+#MemoryMax=8G
 
 [Install]
 WantedBy=multi-user.target
