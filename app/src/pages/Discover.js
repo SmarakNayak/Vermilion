@@ -45,7 +45,7 @@ const Discover = () => {
           fetchInscriptions();
         }
       },
-      { threshold: 0.9 }
+      { threshold: 1 }
     );
 
     
@@ -69,7 +69,7 @@ const Discover = () => {
           fetchInscriptions()
         }
       },
-      { threshold: 0.9 }
+      { threshold: 1 }
     );
 
     if (observerTarget.current) {
