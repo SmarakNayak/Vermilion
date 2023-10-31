@@ -26,7 +26,8 @@ const Discover = () => {
     const random_response = await random_promise;
     const genesis_json = await genesis_response.json();
     const random_json = await random_response.json();
-    setInscriptions([genesis_json], random_json)
+    //load both responses at same time to avoid lag after genesis/ out of order
+    setInscriptions([genesis_json, ...random_json])
   }
 
   useEffect(() => {
@@ -64,7 +65,7 @@ const Discover = () => {
   useEffect(() => {
     const observer = new IntersectionObserver(
       entries => {
-        if (entries[0].isIntersecting) {          
+        if (entries[0].isIntersecting && inscriptions.length !==0) {//Already prefetching on page load, no need to double prefetch
           console.log("last one, definitely prefetch");
           fetchInscriptions()
         }
