@@ -1,13 +1,12 @@
 import React, { useState, useEffect, useRef, createRef } from 'react';
-import { useParams, Link } from "react-router-dom";
 import styled from 'styled-components';
-import { ChevronDownIcon,  CopyIcon, EyeOpenIcon , InfoCircledIcon, Link2Icon, Share1Icon } from '@radix-ui/react-icons';
-const iframecontentwindow = require("../scripts/iframeResizer.contentWindow.min.txt");
+import { ChevronDownIcon,  CopyIcon, EyeOpenIcon , InfoCircledIcon, Link2Icon, Share1Icon, Cross1Icon } from '@radix-ui/react-icons';
+import { toPng, OptionsType, toJpeg, toBlob } from "html-to-image";
+
 
 const Discover = () => {
-  const [number, setNumber] = useState(0);
-  const [metadata, setMetadata] = useState(null);
   const [inscriptions, setInscriptions] = useState([]);
+  const [screenshot, setScreenshot] = useState(null);
 
   const fetchInscriptions = async () => {
     console.log("Fetching")
@@ -92,6 +91,26 @@ const Discover = () => {
     });
   }
 
+  const takeScreenshot = async (i) => {
+    console.log("taking screenshot");
+    const tempImage = await toBlob((inscriptionReferences.current[i]), {width: 700, height: 700, filter: screenshotfilter});    
+    const url = URL.createObjectURL(tempImage);
+    setScreenshot(url);
+  }
+
+  const clearScreenshot = async() => {
+    setScreenshot(null);
+  }
+
+  function screenshotfilter (node) {
+    console.log(node);
+    console.log(node.attributes?.tagname?.value);
+    const test = node.attributes?.tagname?.value !=="noScreenshot";
+    console.log(test);
+
+    return node.attributes?.tagname?.value !=="noScreenshot";
+  }
+
 
   return (
     <PageContainer>
@@ -115,11 +134,11 @@ const Discover = () => {
                 'video/mp4': <VideoContainer controls loop muted autoPlay><source src={`/api/inscription_number/` + inscription.number} type={inscription.content_type}/></VideoContainer>,
                 'video/webm': <VideoContainer controls loop muted autoPlay><source src={`/api/inscription_number/` + inscription.number} type={inscription.content_type}/></VideoContainer>,
                 'audio/mpeg': <audio controls><source src={`/api/inscription_number/` + inscription.number} type={inscription.content_type}/></audio>,
-                'application/pdf': <TextContainer>pdf unsupported</TextContainer>,
-                'model/gltf-binary': <TextContainer>gltf model type unsupported</TextContainer>,
 
                 // to update
-                'unsupported': <TextContainer>{metadata?.content_type} content type unsupported</TextContainer>,
+                'application/pdf': <TextContainer>pdf unsupported</TextContainer>,
+                'model/gltf-binary': <TextContainer>gltf model type unsupported</TextContainer>,
+                'unsupported': <TextContainer>{inscription.content_type} content type unsupported</TextContainer>,
                 'loading': <TextContainer>loading...</TextContainer>
               }[inscription.content_type]
             }
@@ -129,22 +148,28 @@ const Discover = () => {
             <MediaTextContainer>
               <MediaTypeText>{inscription.content_type}</MediaTypeText>
             </MediaTextContainer>
-            <ButtonContainer>
+            <ButtonContainer tagName="noScreenshot">
               <a href={'/inscription/' + inscription.number} target='_blank'>
                 <ActionButton>
-                  <EyeOpenIcon color='#000' height='16px' width='16px' />
+                  <EyeOpenIcon color='#000' height='16px' width='16px'  />
                 </ActionButton>
               </a>
-              <ActionButton onClick={() => {copyToClipboard(`https://vermilion.place/inscription/` + inscription.number)}}>
+              <ActionButton onClick={() => {copyToClipboard(`https://vermilion.place/inscription/` + inscription.number)}} >
                 <CopyIcon color='#000' height='16px' width='16px' />
               </ActionButton>
-              {/* <ActionButton>
+              <ActionButton onClick={() => {takeScreenshot(i)}} >
                 <Share1Icon color='#000' height='16px' width='16px' />
-              </ActionButton> */}
+              </ActionButton>
             </ButtonContainer>
           </InfoContainer>
         </ContentContainer>
       ))}
+      {screenshot && (
+        <ScreenshotContainer className="imageContainer">
+          <img width={800} src={screenshot} />
+          <CloseIconContainer onClick={clearScreenshot}><Cross1Icon /></CloseIconContainer>          
+        </ScreenshotContainer>
+      )}
       <div ref={observerTarget}></div>
     </PageContainer>
     
@@ -346,5 +371,27 @@ const ActionButton = styled.div`
     background-color: #DDD;
   }
 `;
+
+const ScreenshotContainer = styled.div`
+  border: 1px solid crimson;
+  border-radius: 4px;
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+`
+
+const CloseIconContainer = styled.div`
+  position: fixed;
+  top: -15px;
+  right: -15px;
+  background: white;
+  padding: 10px;
+  border-radius: 50%;
+  cursor: pointer;
+  &:hover {
+    background-color: #DDD;
+  }
+`
 
 export default Discover;
