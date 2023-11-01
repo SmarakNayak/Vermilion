@@ -98,30 +98,31 @@ const Discover = () => {
       {inscriptions.map((inscription, i, inscriptions) => (
         <ContentContainer key={i+1} id={i+1} ref={el => inscriptionReferences.current[i] = el}>
           <InscriptionContainer>
-            {
-              {
-                'image/png': <ImageContainer src={`/api/inscription_number/` + inscription.number} />,
-                'image/jpeg': <ImageContainer src={`/api/inscription_number/` + inscription.number} />,
-                'image/webp': <ImageContainer src={`/api/inscription_number/` + inscription.number} />,
-                'image/gif': <ImageContainer src={`/api/inscription_number/` + inscription.number} />,
-                'image/avif': <ImageContainer src={`/api/inscription_number/` + inscription.number} />,
-                'image/svg+xml': <SvgContainer dangerouslySetInnerHTML={{__html: inscription.text}} />,
-                'text/plain;charset=utf-8': <TextContainer><InscriptionText>{inscription.text}</InscriptionText></TextContainer>,
-                'text/plain': <TextContainer><InscriptionText>{inscription.text}</InscriptionText></TextContainer>,
-                'text/rtf': <TextContainer><InscriptionText>{inscription.text}</InscriptionText></TextContainer>,
-                'application/json': <TextContainer><InscriptionText>{inscription.text}</InscriptionText></TextContainer>,
-                'text/html;charset=utf-8': <HtmlContainer><StyledIframe src={"/api/inscription_number/"+ inscription.number} scrolling='no' sandbox='allow-scripts'></StyledIframe></HtmlContainer>,
-                'text/html': <HtmlContainer><StyledIframe src={"/api/inscription_number/"+ inscription.number} scrolling='no' sandbox='allow-scripts'></StyledIframe></HtmlContainer>,
-                'video/mp4': <VideoContainer controls loop muted autoPlay><source src={`/api/inscription_number/` + inscription.number} type={inscription.content_type}/></VideoContainer>,
-                'video/webm': <VideoContainer controls loop muted autoPlay><source src={`/api/inscription_number/` + inscription.number} type={inscription.content_type}/></VideoContainer>,
-                'audio/mpeg': <audio controls><source src={`/api/inscription_number/` + inscription.number} type={inscription.content_type}/></audio>,
-                'application/pdf': <TextContainer>pdf unsupported</TextContainer>,
-                'model/gltf-binary': <TextContainer>gltf model type unsupported</TextContainer>,
-
-                // to update
-                'unsupported': <TextContainer>{metadata?.content_type} content type unsupported</TextContainer>,
-                'loading': <TextContainer>loading...</TextContainer>
-              }[inscription.content_type]
+            {inscription.is_recursive==true && inscription.content_type=='image/svg+xml'
+              ? <SvgContainer src={`/api/inscription_number/` + inscription.number} scrolling='no' sandbox='allow-scripts allow-same-origin'/>
+              : {
+                  'image/png': <ImageContainer src={`/api/inscription_number/` + inscription.number} />,
+                  'image/jpeg': <ImageContainer src={`/api/inscription_number/` + inscription.number} />,
+                  'image/webp': <ImageContainer src={`/api/inscription_number/` + inscription.number} />,
+                  'image/gif': <ImageContainer src={`/api/inscription_number/` + inscription.number} />,
+                  'image/avif': <ImageContainer src={`/api/inscription_number/` + inscription.number} />,
+                  'image/svg+xml': <ImageContainer src={`/api/inscription_number/` + inscription.number} scrolling='no' sandbox='allow-scripts allow-same-origin'/>,
+                  'text/plain;charset=utf-8': <TextContainer><InscriptionText>{inscription.text}</InscriptionText></TextContainer>,
+                  'text/plain': <TextContainer><InscriptionText>{inscription.text}</InscriptionText></TextContainer>,
+                  'text/rtf': <TextContainer><InscriptionText>{inscription.text}</InscriptionText></TextContainer>,
+                  'application/json': <TextContainer><InscriptionText>{inscription.text}</InscriptionText></TextContainer>,
+                  'text/html;charset=utf-8': <HtmlContainer><StyledIframe src={"/api/inscription_number/"+ inscription.number} scrolling='no' sandbox='allow-scripts allow-same-origin'></StyledIframe></HtmlContainer>,
+                  'text/html': <HtmlContainer><StyledIframe src={"/api/inscription_number/"+ inscription.number} scrolling='no' sandbox='allow-scripts allow-same-origin'></StyledIframe></HtmlContainer>,
+                  'video/mp4': <VideoContainer controls loop muted autoPlay><source src={`/api/inscription_number/` + inscription.number} type={inscription.content_type}/></VideoContainer>,
+                  'video/webm': <VideoContainer controls loop muted autoPlay><source src={`/api/inscription_number/` + inscription.number} type={inscription.content_type}/></VideoContainer>,
+                  'audio/mpeg': <audio controls><source src={`/api/inscription_number/` + inscription.number} type={inscription.content_type}/></audio>,
+                  'application/pdf': <TextContainer>pdf unsupported</TextContainer>,
+                  'model/gltf-binary': <TextContainer>gltf model type unsupported</TextContainer>,
+  
+                  // to update
+                  'unsupported': <TextContainer>{metadata?.content_type} content type unsupported</TextContainer>,
+                  'loading': <TextContainer>loading...</TextContainer>
+                }[inscription.content_type]
             }
           </InscriptionContainer>
           <InfoContainer>
@@ -205,8 +206,8 @@ const HtmlContainer = styled.div`
   justify-content: center;
   width: auto;
   height: auto;
-  min-width:16rem;
-  min-height:16rem;
+  min-width: 16rem;
+  min-height: 16rem;
   max-width: 32rem;
   max-height: 32rem;
   border-radius: 4px;
@@ -219,14 +220,15 @@ const HtmlContainer = styled.div`
   }
 `
 
-const SvgContainer = styled.div`
+const SvgContainer = styled.iframe`
+  // This container is required for recursive SVGs, as img elements cannot reference external content
   display: flex;
   justify-content: center;
   align-items: center;
   width: auto;
   height: auto;
-  min-width:16rem;
-  min-height:16rem;
+  min-width: 16rem;
+  min-height: 16rem;
   max-width: 32rem;
   max-height: 32rem;
   image-rendering: pixelated;
@@ -258,6 +260,7 @@ const TextContainer = styled.div`
   border-radius: 4px;
   border: 8px solid #FFF;
   box-shadow: 0px 1px 6px 0px rgba(0, 0, 0, 0.09);
+  overflow: overlay; //Can also do hidden
 
   @media (max-width: 576px) {
     max-width: 20rem;

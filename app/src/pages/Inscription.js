@@ -162,24 +162,28 @@ const Inscription = () => {
         const text = await binaryContent.text();
         setTextContent(text);
       }
+      if(metadata?.is_recursive && contentType=="svg") {
+        setContentType("svg-recursive")
+      }
     }
-    updateText();    
+    updateText();
   },[contentType])
 
   //TODO: add tz using moment.js or timeZoneName: "long"
   // <HtmlContainer><StyledIframe srcDoc={textContent} scrolling='no' sandbox='allow-scripts'></StyledIframe></HtmlContainer> alternative that doesn't require another network call - size is buggy though..
   return (
     <PageContainer>
-      <Heading>Inscription {metadata?.number}</Heading>
+      <NumberText>Inscription {metadata?.number}</NumberText>
       {
         {
           'image': <ImageContainer src={blobUrl} />,
-          'svg': <SvgContainer dangerouslySetInnerHTML={{__html: textContent}} />,
-          'html': <HtmlContainer><StyledIframe src={"/api/inscription_number/"+ number} scrolling='no' sandbox='allow-scripts'></StyledIframe></HtmlContainer>,
+          'svg-recursive': <SvgContainer src={"/api/inscription_number/"+ number} scrolling='no' sandbox='allow-scripts allow-same-origin' loading="lazy"/>,
+          'svg': <ImageContainer src={"/api/inscription_number/"+ number}/>,
+          'html': <HtmlContainer><StyledIframe src={"/api/inscription_number/"+ number} scrolling='no' sandbox='allow-scripts allow-same-origin' loading="lazy"></StyledIframe></HtmlContainer>,
           'text': <TextContainer><p>{textContent}</p></TextContainer>,
           'video': <video controls loop muted autoplay><source src={blobUrl} type={metadata?.content_type}/></video>,
           'audio': <audio controls><source src={blobUrl} type={metadata?.content_type}/></audio>,
-          'pdf': <TextContainer>pdf unsupported'</TextContainer>,
+          'pdf': <TextContainer>pdf unsupported</TextContainer>,
           'model': <TextContainer>gltf model type unsupported</TextContainer>,
           'unsupported': <TextContainer>{metadata?.content_type} content type unsupported</TextContainer>,
           'loading': <TextContainer>loading...</TextContainer>
@@ -241,23 +245,41 @@ const LinksContainer = styled.div`
 `;
 
 const ImageContainer = styled.img`
-  min-width:16rem;
-  max-width:32rem;
+  min-width: 16rem;
   width: auto;
   height: auto;
+  max-width: 32rem;
+  max-height: 32rem;
   image-rendering: pixelated;
+  border-radius: 4px;
+  border: 8px solid #FFF;
+  box-shadow: 0px 1px 6px 0px rgba(0, 0, 0, 0.09);
+
+  @media (max-width: 576px) {
+    max-width: 20rem;
+    max-height: 20rem;
+  }
 `;
 
-const SvgContainer = styled.div`
+const SvgContainer = styled.iframe`
   display: flex;
   justify-content: center;
   align-items: center;
-  min-height:12rem;
-  min-width:24rem;
-  max-width:32rem;
   width: auto;
   height: auto;
+  min-width:16rem;
+  min-height:16rem;
+  max-width: 32rem;
+  max-height: 32rem;
   image-rendering: pixelated;
+  border-radius: 4px;
+  border: 8px solid #FFF;
+  box-shadow: 0px 1px 6px 0px rgba(0, 0, 0, 0.09);
+
+  @media (max-width: 576px) {
+    max-width: 20rem;
+    max-height: 20rem;
+  }
 `;
 
 const Heading = styled.h2`
@@ -292,8 +314,20 @@ const TextContainer = styled.div`
 const HtmlContainer = styled.div`
   display: flex;
   justify-content: center;
-  min-width: 35rem;
-  min-height: 35rem;
+  width: auto;
+  height: auto;
+  min-width:16rem;
+  min-height:16rem;
+  max-width: 32rem;
+  max-height: 32rem;
+  border-radius: 4px;
+  border: 8px solid #FFF;
+  box-shadow: 0px 1px 6px 0px rgba(0, 0, 0, 0.09);
+
+  @media (max-width: 576px) {
+    max-width: 20rem;
+    max-height: 20rem;
+  }
 `
 
 const StyledIframe = styled.iframe`
@@ -304,5 +338,11 @@ const StyledIframe = styled.iframe`
   resize: both;
   //aspect-ratio: 1/1;
 `
+
+const NumberText = styled.p`
+  font-family: ABC Camera Unlicensed Trial Medium Italic;
+  font-size: 2em;
+  margin: 0;
+`;
 
 export default Inscription;
