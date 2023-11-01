@@ -6,8 +6,8 @@ do
   if [ $m -ge 15000 ]; then
     echo "Way too much memory, Hard killing"
     systemctl kill -s SIGKILL ordserver.service&
-  fi
-  if [ $m -ge 13500 ]; then
+    sleep 50
+  elif [ $m -ge 13500 ]; then
     echo "Memory getting high, Soft killing"
     systemctl restart ordserver.service&
   fi
