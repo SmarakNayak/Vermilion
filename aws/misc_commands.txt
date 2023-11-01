@@ -1,0 +1,8 @@
+swapon -s
+lsblk
+sudo mkswap /dev/nvme1n1
+sudo swapon /dev/nvme1n1
+lsblk
+swapon -s
+
+ sudo amazon-cloudwatch-agent-ctl -a fetch-config -m ec2 -c file:/opt/aws/amazon-cloudwatch-agent/bin/config.json -s
