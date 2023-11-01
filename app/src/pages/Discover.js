@@ -235,6 +235,7 @@ const SvgContainer = styled.iframe`
   border-radius: 4px;
   border: 8px solid #FFF;
   box-shadow: 0px 1px 6px 0px rgba(0, 0, 0, 0.09);
+  resize: both;
 
   @media (max-width: 576px) {
     max-width: 20rem;
