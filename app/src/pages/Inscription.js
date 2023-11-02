@@ -19,6 +19,7 @@ const Inscription = () => {
   const [randomNumber, setRandomNumber] = useState(null);
   const [address, setAddress] = useState(null);
   const [transfers, setTransfers] = useState(null); //Not displayed yet
+  const [shortId, setShortId] = useState(null);
 
   useEffect(() => {
 
@@ -104,6 +105,9 @@ const Inscription = () => {
       const response = await fetch("/api/inscription_metadata_number/"+number);
       const json = await response.json();
       setMetadata(json);
+      const id = json.id;
+      const short_id = id.slice(0, 5) + "..." + id.slice(-5);
+      setShortId(short_id);
     }
 
     const fetchEditions = async () => {
@@ -173,60 +177,82 @@ const Inscription = () => {
   // <HtmlContainer><StyledIframe srcDoc={textContent} scrolling='no' sandbox='allow-scripts'></StyledIframe></HtmlContainer> alternative that doesn't require another network call - size is buggy though..
   return (
     <PageContainer>
-      <NumberText>Inscription {metadata?.number}</NumberText>
-      {
+      <TopContainer>
+        <TopLinksContainer>
+          <SiteText to ={'/'}>vermilion</SiteText>
+        </TopLinksContainer>
+      </TopContainer>
+      <CenterContainer>
+        <div><NumberText>Inscription {metadata?.number}</NumberText></div>
         {
-          'image': <ImageContainer src={blobUrl} />,
-          'svg-recursive': <SvgContainer src={"/api/inscription_number/"+ number} scrolling='no' sandbox='allow-scripts allow-same-origin' loading="lazy"/>,
-          'svg': <ImageContainer src={"/api/inscription_number/"+ number}/>,
-          'html': <HtmlContainer><StyledIframe src={"/api/inscription_number/"+ number} scrolling='no' sandbox='allow-scripts allow-same-origin' loading="lazy"></StyledIframe></HtmlContainer>,
-          'text': <TextContainer><p>{textContent}</p></TextContainer>,
-          'video': <video controls loop muted autoplay><source src={blobUrl} type={metadata?.content_type}/></video>,
-          'audio': <audio controls><source src={blobUrl} type={metadata?.content_type}/></audio>,
-          'pdf': <TextContainer>pdf unsupported</TextContainer>,
-          'model': <TextContainer>gltf model type unsupported</TextContainer>,
-          'unsupported': <TextContainer>{metadata?.content_type} content type unsupported</TextContainer>,
-          'loading': <TextContainer>loading...</TextContainer>
-        }[contentType]
-      }
-      <div>
-        <p>Id: {metadata?.id}</p>
-        <p>Style: {metadata?.content_type}</p>
-        <p>Size: {metadata?.content_length}</p>
-        <p>Fee: {metadata?.genesis_fee}</p>
+          {
+            'image': <ImageContainer src={blobUrl} />,
+            'svg-recursive': <SvgContainer src={"/api/inscription_number/"+ number} scrolling='no' sandbox='allow-scripts allow-same-origin' loading="lazy"/>,
+            'svg': <ImageContainer src={"/api/inscription_number/"+ number}/>,
+            'html': <HtmlContainer><StyledIframe src={"/api/inscription_number/"+ number} scrolling='no' sandbox='allow-scripts allow-same-origin' loading="lazy"></StyledIframe></HtmlContainer>,
+            'text': <TextContainer><p>{textContent}</p></TextContainer>,
+            'video': <VideoContainer controls loop muted autoplay><source src={blobUrl} type={metadata?.content_type}/></VideoContainer>,
+            'audio': <AudioContainer controls><source src={blobUrl} type={metadata?.content_type}/></AudioContainer>,
+            'pdf': <TextContainer>pdf unsupported</TextContainer>,
+            'model': <TextContainer>gltf model type unsupported</TextContainer>,
+            'unsupported': <TextContainer>{metadata?.content_type} content type unsupported</TextContainer>,
+            'loading': <TextContainer>loading...</TextContainer>
+          }[contentType]
+        }
         <MetadataContainer>
-          <StyledP>Blocktime: </StyledP><Link to={'/block/' + metadata?.genesis_height}>{metadata?.genesis_height} </Link>
+          <MetadataLineContainer>
+            <StyledP>Id: </StyledP><a href={'https://ordinals.com/inscription/' + metadata?.id}>{metadata?.id ? shortId : ""} </a>
+          </MetadataLineContainer>
+          <MetadataLineContainer>
+            <StyledP>Style: </StyledP><StyledP>{metadata?.content_type}</StyledP>
+          </MetadataLineContainer>
+          <MetadataLineContainer>
+            <StyledP>Size: </StyledP><StyledP>{metadata?.content_length} </StyledP>
+          </MetadataLineContainer>
+          <MetadataLineContainer>
+            <StyledP>Fee: </StyledP><StyledP> {metadata?.genesis_fee} </StyledP>
+          </MetadataLineContainer>
+          <MetadataLineContainer>
+            <StyledP>Blocktime: </StyledP><Link to={'/block/' + metadata?.genesis_height}>{metadata?.genesis_height} </Link>
+          </MetadataLineContainer>
+          <MetadataLineContainer>
+            <StyledP>Clocktime: </StyledP><StyledP> {metadata?.timestamp ? new Date(metadata?.timestamp*1000).toLocaleString(undefined, {day:"numeric", month: "short", year:"numeric", hour: 'numeric', minute: 'numeric', hour12: true}) : ""} </StyledP>
+          </MetadataLineContainer>
+          {/* <MetadataLineContainer>
+            <StyledP>{address ? "Address: " : "Address: "} </StyledP><Link to={'/address/' + address?.address}>{address?.address} </Link>
+          </MetadataLineContainer> */}
+          <MetadataLineContainer>
+            <StyledP>{"Sat: "} </StyledP><Link to={'/sat/' + metadata?.sat}>{metadata?.sat} </Link>
+          </MetadataLineContainer>
+          <MetadataLineContainer>
+            <StyledP>{editionNumber ? "Edition: " : ""} </StyledP><Link to={'/edition/' + metadata?.sha256}>{editionNumber ? editionNumber + "/" + editionCount : ""} </Link>
+          </MetadataLineContainer>
+          <LinksContainer>
+            <Link to={'/inscription/' + previousNumber}> previous </Link>
+            <Link to={'/discover'}> discover </Link>
+            <Link to={'/inscription/' + nextNumber}> next </Link>
+          </LinksContainer>
         </MetadataContainer>
-        <p>Clocktime: {metadata?.timestamp ? new Date(metadata?.timestamp*1000).toLocaleString(undefined, {day:"numeric", month: "short", year:"numeric", hour: 'numeric', minute: 'numeric', hour12: true}) : ""} </p>
-        {/* <MetadataContainer>
-          <StyledP>{address ? "Address: " : "Address: "} </StyledP><Link to={'/address/' + address?.address}>{address?.address} </Link>
-        </MetadataContainer> */}
-        <MetadataContainer>
-          <StyledP>{metadata?.sat ? "Sat: " : "Sat: "} </StyledP><Link to={'/sat/' + metadata?.sat}>{metadata?.sat} </Link>
-        </MetadataContainer>
-        <MetadataContainer>
-          <StyledP>{editionNumber ? "Edition: " : ""} </StyledP><Link to={'/edition/' + metadata?.sha256}>{editionNumber ? editionNumber + "/" + editionCount : ""} </Link>
-        </MetadataContainer>
-        <LinksContainer>
-          <Link to={'/inscription/' + previousNumber}> previous </Link>
-          <Link to={'/inscription/' + randomNumber}> discover </Link>
-          <Link to={'/inscription/' + nextNumber}> next </Link>
-        </LinksContainer>
-      </div>
+      </CenterContainer>
+      <BottomContainer></BottomContainer>
     </PageContainer>
     
   )
 }
 
 const PageContainer = styled.div`
-  width: 100%;
+  //width: 100%;
   min-height: 100vh;
   display: flex;
   flex-direction: column;
   flex: 1;
   align-items: center;
-  justify-content: center;
+  justify-content: space-between;
   position: relative;
+  Overflow-x: hidden;
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
 
   @media (max-width: 768px) {
     padding: 0 2rem;
@@ -254,6 +280,8 @@ const ImageContainer = styled.img`
   border-radius: 4px;
   border: 8px solid #FFF;
   box-shadow: 0px 1px 6px 0px rgba(0, 0, 0, 0.09);
+  margin-top: 6rem;
+  margin-bottom: 6rem;
 
   @media (max-width: 576px) {
     max-width: 20rem;
@@ -276,6 +304,8 @@ const SvgContainer = styled.iframe`
   border: 8px solid #FFF;
   box-shadow: 0px 1px 6px 0px rgba(0, 0, 0, 0.09);
   resize: both;
+  margin-top: 6rem;
+  margin-bottom: 6rem;
 
   @media (max-width: 576px) {
     max-width: 20rem;
@@ -289,10 +319,20 @@ const Heading = styled.h2`
 `
 
 const MetadataContainer = styled.div`
+  min-width: 30rem;
+
+  @media (max-width: 576px) {
+    min-width: 20rem;
+    max-width: 20rem;
+  }
+`
+
+const MetadataLineContainer = styled.div`
   align-items: baseline;
   display: flex;
   margin-block-start: 1em;
   margin-block-end: 1em;
+  justify-content: space-between;
 `
 
 const StyledP = styled.p`
@@ -310,6 +350,8 @@ const TextContainer = styled.div`
   font-size: 1em;
   font-family: monospace;
   white-space-collapse: preserve;
+  margin-top: 6rem;
+  margin-bottom: 6rem;
 `;
 
 const HtmlContainer = styled.div`
@@ -324,11 +366,23 @@ const HtmlContainer = styled.div`
   border-radius: 4px;
   border: 8px solid #FFF;
   box-shadow: 0px 1px 6px 0px rgba(0, 0, 0, 0.09);
+  margin-top: 6rem;
+  margin-bottom: 6rem;
 
   @media (max-width: 576px) {
     max-width: 20rem;
     max-height: 20rem;
   }
+`
+
+const AudioContainer = styled.audio`
+  margin-top: 6rem;
+  margin-bottom: 6rem;
+`
+
+const VideoContainer = styled.video`
+  margin-top: 6rem;
+  margin-bottom: 6rem;
 `
 
 const StyledIframe = styled.iframe`
@@ -344,6 +398,49 @@ const NumberText = styled.p`
   font-family: ABC Camera Unlicensed Trial Medium Italic;
   font-size: 2em;
   margin: 0;
+`;
+
+const TopContainer = styled.div`
+  width: 96%;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  // position: absolute;
+  // top: 0;
+  height: 4rem;
+`;
+
+const CenterContainer = styled.div`
+  width: 96%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+`;
+
+const BottomContainer = styled.div`
+  width: 96%;
+  display: flex;
+  visibility: hidden;
+  height: 4rem;
+`;
+
+const TopLinksContainer = styled.div`
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  column-gap: 1rem;
+`;
+
+const SiteText = styled(Link)`
+  font-family: ABC Camera Unlicensed Trial Bold;
+  font-size: 1.25rem;
+  color: #E34234;
+  padding: 0;
+  margin: 0;
+  cursor: pointer;
+  text-decoration: none;
 `;
 
 export default Inscription;
