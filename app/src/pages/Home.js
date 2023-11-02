@@ -49,9 +49,16 @@ const PageContainer = styled.div`
   justify-content: center;
   position: relative;
 
-  @media (max-width: 768px) {
-    padding: 0 2rem;
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
   }
+
+  // @media (max-width: 768px) {
+  //   padding: 0 2rem;
+  // }
+  // Commented out, cause made scroll bar appear on android
 `;
 
 const TopContainer = styled.div`

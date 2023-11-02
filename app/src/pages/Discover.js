@@ -95,6 +95,11 @@ const Discover = () => {
 
   return (
     <PageContainer>
+      <TopContainer>
+        <LinksContainer>
+        <SiteText to ={'/'}>vermilion</SiteText>
+        </LinksContainer>
+      </TopContainer>
       {inscriptions.map((inscription, i, inscriptions) => (
         <ContentContainer key={i+1} id={i+1} ref={el => inscriptionReferences.current[i] = el}>
           <InscriptionContainer>
@@ -131,7 +136,7 @@ const Discover = () => {
               <MediaTypeText>{inscription.content_type}</MediaTypeText>
             </MediaTextContainer> */}
             <ButtonContainer>
-              <a href={'/inscription/' + inscription.number} target='_blank'>
+              <a href={'/inscription/' + inscription.number}>
                 <ActionButton>
                   <EyeOpenIcon color='#000' height='16px' width='16px' />
                 </ActionButton>
@@ -353,6 +358,35 @@ const ActionButton = styled.div`
   &:hover {
     background-color: #DDD;
   }
+`;
+
+const LinksContainer = styled.div`
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  column-gap: 1rem;
+`;
+
+const TopContainer = styled.div`
+  width: 96%;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  position: sticky;
+  top: 0;
+  height: 4rem;
+  z-index: 2;
+`;
+
+const SiteText = styled(Link)`
+  font-family: ABC Camera Unlicensed Trial Bold;
+  font-size: 1.25rem;
+  color: #E34234;
+  padding: 0;
+  margin: 0;
+  cursor: pointer;
+  text-decoration: none;
 `;
 
 export default Discover;
