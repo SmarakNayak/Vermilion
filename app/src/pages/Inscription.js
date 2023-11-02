@@ -20,8 +20,17 @@ const Inscription = () => {
   const [address, setAddress] = useState(null);
   const [transfers, setTransfers] = useState(null); //Not displayed yet
   const [shortId, setShortId] = useState(null);
+  const [prettySize, setPrettySize] = useState(null);
 
   useEffect(() => {
+
+    const shortenBytes = (n) => {
+      const k = n > 0 ? Math.floor((Math.log2(n)/10)) : 0;
+      const rank = (k > 0 ? 'KMGT'[k - 1] : '') + 'B';
+      const rank_clean = (rank==='B' ? "Bytes" : rank);
+      const count = Math.floor(n / Math.pow(1024, k));
+      return count + " " + rank_clean;
+  }
 
     const fetchContent = async () => {
       setBlobUrl(null);
@@ -108,6 +117,8 @@ const Inscription = () => {
       const id = json.id;
       const short_id = id.slice(0, 5) + "..." + id.slice(-5);
       setShortId(short_id);
+      const pretty_size = shortenBytes(json.content_length);
+      setPrettySize(pretty_size);
     }
 
     const fetchEditions = async () => {
@@ -207,10 +218,10 @@ const Inscription = () => {
             <StyledP>Style: </StyledP><StyledP>{metadata?.content_type}</StyledP>
           </MetadataLineContainer>
           <MetadataLineContainer>
-            <StyledP>Size: </StyledP><StyledP>{metadata?.content_length} </StyledP>
+            <StyledP>Size: </StyledP><StyledP>{metadata?.content_length ? prettySize : ""} </StyledP>
           </MetadataLineContainer>
           <MetadataLineContainer>
-            <StyledP>Fee: </StyledP><StyledP> {metadata?.genesis_fee} </StyledP>
+            <StyledP>Fee: </StyledP><StyledP> {metadata?.genesis_fee ? metadata?.genesis_fee + " Sats" : ""} </StyledP>
           </MetadataLineContainer>
           <MetadataLineContainer>
             <StyledP>Blocktime: </StyledP><Link to={'/block/' + metadata?.genesis_height}>{metadata?.genesis_height} </Link>
@@ -286,6 +297,8 @@ const ImageContainer = styled.img`
   @media (max-width: 576px) {
     max-width: 20rem;
     max-height: 20rem;
+    margin-top: 3rem;
+    margin-bottom: 3rem;
   }
 `;
 
@@ -310,6 +323,8 @@ const SvgContainer = styled.iframe`
   @media (max-width: 576px) {
     max-width: 20rem;
     max-height: 20rem;
+    margin-top: 3rem;
+    margin-bottom: 3rem;
   }
 `;
 
@@ -352,6 +367,10 @@ const TextContainer = styled.div`
   white-space-collapse: preserve;
   margin-top: 6rem;
   margin-bottom: 6rem;
+  @media (max-width: 576px) {
+    margin-top: 3rem;
+    margin-bottom: 3rem;
+  }
 `;
 
 const HtmlContainer = styled.div`
@@ -372,17 +391,27 @@ const HtmlContainer = styled.div`
   @media (max-width: 576px) {
     max-width: 20rem;
     max-height: 20rem;
+    margin-top: 3rem;
+    margin-bottom: 3rem;
   }
 `
 
 const AudioContainer = styled.audio`
   margin-top: 6rem;
   margin-bottom: 6rem;
+  @media (max-width: 576px) {
+    margin-top: 3rem;
+    margin-bottom: 3rem;
+  }
 `
 
 const VideoContainer = styled.video`
   margin-top: 6rem;
   margin-bottom: 6rem;
+  @media (max-width: 576px) {
+    margin-top: 3rem;
+    margin-bottom: 3rem;
+  }
 `
 
 const StyledIframe = styled.iframe`
