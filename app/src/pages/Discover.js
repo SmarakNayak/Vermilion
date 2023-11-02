@@ -368,7 +368,7 @@ const LinksContainer = styled.div`
 `;
 
 const TopContainer = styled.div`
-  width: 96%;
+  //width: 96%;
   display: flex;
   flex-direction: row;
   align-items: center;
