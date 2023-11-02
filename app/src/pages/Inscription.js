@@ -240,7 +240,7 @@ const Inscription = () => {
           </MetadataLineContainer>
           <LinksContainer>
             <Link to={'/inscription/' + previousNumber}> previous </Link>
-            <Link to={'/discover'}> discover </Link>
+            <a href={'/discover'}> discover </a>
             <Link to={'/inscription/' + nextNumber}> next </Link>
           </LinksContainer>
         </MetadataContainer>
