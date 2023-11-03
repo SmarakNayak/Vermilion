@@ -21,16 +21,13 @@ const Discover = () => {
     //Start both calls at same time
     const genesis_promise = fetch(`/api/inscription_metadata_number/0`);
     const random_promise = fetch(`/api/random_inscriptions?n=10`);
-    const rabbit_promise = fetch(`/api/inscription_metadata_number/62451`)
     //Responses should arrive at similar times:
     const genesis_response = await genesis_promise;
     const random_response = await random_promise;
-    const rabbit_response = await rabbit_promise;
     const genesis_json = await genesis_response.json();
     const random_json = await random_response.json();
-    const rabbit_json = await rabbit_response.json();
     //load both responses at same time to avoid lag after genesis/ out of order
-    setInscriptions([genesis_json, ...random_json, rabbit_json])
+    setInscriptions([genesis_json, ...random_json])
   }
 
   useEffect(() => {
