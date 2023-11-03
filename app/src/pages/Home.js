@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
+import {Helmet} from 'react-helmet';
 import LogoImage from '../assets/logo-temp.png';
 import { lightTheme } from '../styles/themes';
 
@@ -7,6 +8,13 @@ const Home = () => {
 
   return (
     <PageContainer>
+      <Helmet>
+        <meta name="twitter:card" content="summary_large_image"/>
+        <meta name="twitter:site" content="@PHNXX____"/>
+        <meta name="twitter:title" content="Vermilion.Place"/>
+        <meta name="twitter:description" content="Discover Bitcoin. Discover Ordinals."/>
+        <meta name="twitter:image" content="https://vermilion.place/vermilion.place_twitter_800_418.png"/>
+      </Helmet>
       <TopContainer>
         <LinksContainer>
           <SiteText>vermilion</SiteText>
