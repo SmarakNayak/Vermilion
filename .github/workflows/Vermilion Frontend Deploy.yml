@@ -27,10 +27,6 @@ jobs:
           SSH_USER: ${{ vars.SERVER_USER }}
           SSH_KEY: ${{ secrets.SERVER_SSH_KEY }}
           SSH_HOST: ${{ vars.SERVER_HOST }}
-
-      - name: Stop nginx if running
-        run: |
-          ssh staging 'sudo systemctl is-active nginx.service && sudo systemctl stop nginx.service || echo "nginx not running";'
       
       # ssh-keygen -t ed25519 -C "miltu.s.nayak@gmail.com"
       - name: Add Github SSH key and adjust permissions
@@ -54,5 +50,4 @@ jobs:
         run: ssh staging 'sudo rm -r /var/www/html/*; sudo cp -r ~/Vermilion/app/build/. /var/www/html/;'
       
       - name: Restart nginx
-        if: ${{ always() }}
-        run: ssh staging 'sudo systemctl start nginx.service;'
+        run: ssh staging 'sudo systemctl is-active nginx.service && sudo systemctl restart nginx.service || sudo systemctl restart nginx.service;'
