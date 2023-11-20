@@ -33,7 +33,7 @@ jobs:
           ssh staging 'sudo systemctl is-active discover.service && sudo systemctl stop discover.service || echo "discover not running";'    
       
       - name: Check out the new code from Github
-        run: ssh staging 'git -C Vermilion-Discover fetch && git -C Vermilion-Discover reset --hard origin/main || git clone git@github-vermilion:SmarakNayak/Vermilion-Discover.git' # This pulls if directory exists, otherwise clones
+        run: ssh staging 'git -C Vermilion-Discover fetch && git -C Vermilion-Discover reset --hard origin/main || git clone git@github-discover:SmarakNayak/Vermilion-Discover.git' # This pulls if directory exists, otherwise clones
         
       - name: Get python dependencies
         run: |
