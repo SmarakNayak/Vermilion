@@ -28,7 +28,7 @@ const Search = () => {
 
   const fetchTextSearch = async () => {
     //1. Get inscription numbers
-    const response = await fetch("/search_api/search/" + searchInput + "?n=100");
+    const response = await fetch("/search_api/search/" + searchInput + "?n=10");
     let json = await response.json();
     //json = json.sort((a,b)=>b.genesis_fee/b.content_size-a.genesis_fee/a.content_size);
     setInscriptionList(json);
@@ -39,7 +39,7 @@ const Search = () => {
       method: 'POST',
       body: image
     };
-    const response = await fetch('/search_api/search_by_image?n=100', requestOptions)
+    const response = await fetch('/search_api/search_by_image?n=10', requestOptions)
     let json = await response.json();
     //json = json.sort((a,b)=>b.genesis_fee/b.content_size-a.genesis_fee/a.content_size);
     setInscriptionList(json);
