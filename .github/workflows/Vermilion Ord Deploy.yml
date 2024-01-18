@@ -42,7 +42,10 @@ jobs:
       - name: Setup nginx config
         run: ssh staging 'sudo cp Vermilion/nginx/server.conf /etc/nginx/conf.d/server.conf;'
 
-      - name: Setup nginx config
+      - name: Setup mysql config
+        run: ssh staging 'sudo cp Vermilion/Config/mysql_settings.cnf /etc/mysql/conf.d/mysql_settings.cnf;'
+
+      - name: Setup memwatcher
         run: ssh staging 'sudo cp Vermilion/systemd/memory_watcher.sh memory_watcher.sh; sudo chmod +x memory_watcher.sh;'
           
       - name: Set up systemd services

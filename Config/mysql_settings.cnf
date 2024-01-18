@@ -1,0 +1,6 @@
+[mysqld]
+log_bin_trust_function_creators = 1
+innodb_buffer_pool_size = 8589934592
+binlog_expire_logs_seconds = 86400
+max_binlog_size = 2000M
+slow_query_log = 1
