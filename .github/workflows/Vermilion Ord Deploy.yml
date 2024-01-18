@@ -53,5 +53,6 @@ jobs:
 
       - name: Restart ord service
         run: |
+          ssh staging 'sudo systemctl is-active mysql.service && sudo systemctl restart mysql.service || sudo systemctl start mysql.service;'
           ssh staging 'sudo systemctl is-active ordserver.service && sudo systemctl restart ordserver.service || sudo systemctl start ordserver.service;'
           ssh staging 'sudo systemctl is-active memwatch.service && sudo systemctl restart memwatch.service || sudo systemctl start memwatch.service;'
