@@ -13,6 +13,8 @@ ExecStart=/home/ubuntu/Vermilion-Discover/venv/bin/./python main.py 4080
 WorkingDirectory=/home/ubuntu/Vermilion-Discover
 Restart=always
 RestartSec=30
+KillSignal=SIGINT
+TimeoutStopSec=1200
 
 [Install]
 WantedBy=multi-user.target
