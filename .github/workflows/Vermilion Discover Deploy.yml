@@ -43,6 +43,9 @@ jobs:
           
       - name: Set up systemd services
         run: ssh staging 'sudo cp Vermilion/systemd/discover.service /etc/systemd/system/discover.service; sudo systemctl daemon-reload;' 
+
+      - name: Setup cluster cronjob
+        run: ssh staging 'crontab /home/ubuntu/Vermilion/Cronjobs/Vermilion.cron'
       
       - name: Start the app
         if: ${{ always() }}
