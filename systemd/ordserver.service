@@ -8,7 +8,7 @@ Type=simple
 User=ubuntu
 Environment=RUST_LOG="info,ord::index::updater::inscription_updater=warn"
 ExecStart=/home/ubuntu/ord/target/release/./ord --index-sats --config /home/ubuntu/ord.yaml --db-cache-size 4294967296 vermilion --http-port 1080 --api-http-port 1081 --n-threads 1
-WorkingDirectory=/home/ubuntu/ord/target/release
+WorkingDirectory=/home/ubuntu/ord
 Restart=always
 RestartSec=30
 TimeoutStopSec=infinity

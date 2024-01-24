@@ -22,3 +22,4 @@
 #
 # m h  dom mon dow   command
 # 0 */3 * * * cd /home/ubuntu/; aws s3 sync .ord s3://vermilion/.ord --delete --exact-timestamps >> /home/ubuntu/cron.log 2>&1;
+ 0 5 * * 1 cd Vermilion-Discover; source venv/bin/activate; export DISCOVER_CONFIG_PATH=/home/ubuntu/ord.yaml; python3 cluster.py >> /home/ubuntu/cron.log 2>&1;
