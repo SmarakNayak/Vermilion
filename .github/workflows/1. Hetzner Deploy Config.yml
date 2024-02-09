@@ -1,5 +1,5 @@
 # This is a workflow that update Vermilion Frontend
-name: Hetzner Config Deploy
+name: 1. Hetzner Config Deploy
 
 # Controls when the workflow will run
 on:
