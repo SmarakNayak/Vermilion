@@ -1,5 +1,5 @@
 # This is a workflow that deploys a fresh bitcoin node
-name: Vermilion Bitcoin Deploy
+name: 2. Hetzner Bitcoin Deploy.yml
 
 # Controls when the workflow will run
 on:
