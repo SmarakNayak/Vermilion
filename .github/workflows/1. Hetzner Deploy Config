@@ -1,0 +1,57 @@
+# This is a workflow that update Vermilion Frontend
+name: Vermilion Frontend Deploy
+
+# Controls when the workflow will run
+on:
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  Vermilion-Deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Configure SSH
+        run: |
+          mkdir -p ~/.ssh/
+          echo "$SSH_KEY" > ~/.ssh/staging.key
+          chmod 600 ~/.ssh/staging.key
+          cat >>~/.ssh/config <<END
+          Host staging
+            HostName $SSH_HOST
+            User $SSH_USER
+            IdentityFile ~/.ssh/staging.key
+            StrictHostKeyChecking no
+          END
+        env:
+          SSH_USER: ${{ vars.SERVER_USER }}
+          SSH_KEY: ${{ secrets.SERVER_SSH_KEY }}
+          SSH_HOST: ${{ vars.SERVER_HOST }}
+      
+      - name: Install AWS CLI
+        run: |
+          ssh staging 'sudo apt-get -y update'
+          ssh staging 'sudo apt-get -y install awscli'
+        
+      - name: Create AWS config file
+        run: ssh staging 'mkdir -p .aws; echo "[default]" > ~/.aws/config;'
+      
+      - name: Create AWS credential file
+        run:  ssh staging 'printf "%s\n" "[default]"
+                                         "aws_access_key_id=${{secrets.S3_ACCESS_KEY}}"
+                                         "aws_secret_access_key=${{secrets.S3_SECRET_ACCESS_KEY}}" > ~/.aws/credentials'
+      
+      # ssh-keygen -t ed25519 -C "miltu.s.nayak@gmail.com"
+      - name: Add Github SSH key and adjust permissions
+        run: |
+          ssh staging 'echo "${{secrets.SERVER_GITHUB_SSH_KEY}}" > ~/.ssh/id_ed25519_vermilion; chmod 700 ~/.ssh/; chmod 600 ~/.ssh/id_ed25519_vermilion;' # Doesn't work unless secret is referred to using braces, possibly due to single quotes
+          ssh staging 'set +o noclobber; ssh-keyscan -t ed25519 github.com > ~/.ssh/known_hosts || echo "Known_hosts already exists. Not adding."; set -o noclobber; '        
+      
+      - name: Check out the new code from Github
+        run: ssh staging 'git -C Vermilion fetch && git -C Vermilion reset --hard origin/main || git clone git@github-vermilion:SmarakNayak/Vermilion.git' # This pulls if directory exists, otherwise clones
+      
+      - name: Setup nginx config
+        run: ssh staging 'sudo cp Vermilion/nginx/server.conf /etc/nginx/conf.d/server.conf;'
+
+      - name: Setup mysql config
+        run: ssh staging 'sudo cp Vermilion/Config/mysql_settings.cnf /etc/mysql/conf.d/mysql_settings.cnf;'
