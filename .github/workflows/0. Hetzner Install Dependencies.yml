@@ -1,5 +1,5 @@
 # This is a workflow that installs dependencies
-name: 1. Hetzner Install Dependencies
+name: 0. Hetzner Install Dependencies
 
 # Controls when the workflow will run
 on:
@@ -13,7 +13,7 @@ on:
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
-  Config-Deploy:
+  Install-Dependencies:
     runs-on: ubuntu-latest
     environment: '${{ github.event.inputs.hetzner_server }}'
     steps:
