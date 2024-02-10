@@ -47,3 +47,9 @@ jobs:
 
       - name: Install essential build tools for rust
         run: ssh staging 'sudo apt-get -y install build-essential pkg-config libssl-dev'
+
+      - name: Initialize mysql server
+        run: |
+          ssh staging 'sudo mysql -e "CREATE DATABASE IF NOT EXISTS vermilion"'
+          ssh staging 'sudo mysql -e "CREATE USER IF NOT EXISTS ${{secrets.MYSQL_USER}}@localhost IDENTIFIED BY ${{secrets.MYSQL_PASS}}"'          
+          ssh staging 'sudo mysql -e "GRANT ALL PRIVILEGES ON vermilion.* TO ${{secrets.MYSQL_USER}}@localhost"'
