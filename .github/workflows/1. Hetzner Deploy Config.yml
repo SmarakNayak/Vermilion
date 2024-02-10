@@ -43,7 +43,7 @@ jobs:
                                          "aws_secret_access_key=${{secrets.S3_SECRET_ACCESS_KEY}}" > ~/.aws/credentials'
 
       - name: Create Ord config file
-        run: |
+        run: >
           ssh staging 'printf "%s\n" "db_connection_string: mysql://${{secrets.MYSQL_USER}}:${{secrets.MYSQL_PASS}}@localhost:3306/vermilion?pool_min=35&pool_max=60"
                                      "s3_bucket_name: vermilion-ordinals"
                                      "s3_head_check: true"
