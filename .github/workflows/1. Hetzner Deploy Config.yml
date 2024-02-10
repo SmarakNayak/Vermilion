@@ -70,3 +70,9 @@ jobs:
 
       - name: Setup mysql config
         run: ssh staging 'sudo cp Vermilion/Config/mysql_settings.cnf /etc/mysql/conf.d/mysql_settings.cnf;'
+
+      - name: Initialize mysql server
+        run: |
+          ssh staging 'sudo mysql -e "CREATE DATABASE IF NOT EXISTS vermilion"'
+          ssh staging 'sudo mysql -e "CREATE USER IF NOT EXISTS ${{secrets.MYSQL_USER}}@localhost IDENTIFIED BY ${{secrets.MYSQL_PASS}}"'          
+          ssh staging 'sudo mysql -e "GRANT ALL PRIVILEGES ON vermilion.* TO ${{secrets.MYSQL_USER}}@localhost"'
