@@ -5,11 +5,17 @@ name: 2. Hetzner Bitcoin Deploy.yml
 on:
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
+    inputs:
+      hetzner_server:
+        description: 'Which server to deploy to? Hetzner_blue or Hetzner_green'
+        required: true
+        default: 'Hetzner_blue'
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
   Bitcoin-Deploy:
     runs-on: ubuntu-latest
+    environment: '${{ github.event.inputs.hetzner_server }}'
     steps:
       - name: Configure SSH
         run: |
@@ -41,6 +47,12 @@ jobs:
                                                        && tar -xzf bitcoin-*.tar.gz -C ~/bitcoin_install --strip-components 1 
                                                        && rm bitcoin-*.tar.gz
                                                        && echo "26.0" > ~/bitcoin_install/version);'
+
+      - name: Check out the new code from Github
+        run: ssh staging 'git -C Vermilion fetch && git -C Vermilion reset --hard origin/main || git clone git@github-vermilion:SmarakNayak/Vermilion.git' # This pulls if directory exists, otherwise clones
+      
+      - name: Add bitcoin config
+        run: ssh staging 'mkdir -p .bitcoin; cp Vermilion/Config/bitcoin.conf .bitcoin/bitcoin.conf;'
 
       - name: Set up systemd services
         run: ssh staging 'sudo cp Vermilion/systemd/bitcoind.service /etc/systemd/system/bitcoind.service; sudo systemctl daemon-reload;' 
