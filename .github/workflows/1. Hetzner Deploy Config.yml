@@ -41,6 +41,13 @@ jobs:
         run:  ssh staging 'printf "%s\n" "[default]"
                                          "aws_access_key_id=${{secrets.S3_ACCESS_KEY}}"
                                          "aws_secret_access_key=${{secrets.S3_SECRET_ACCESS_KEY}}" > ~/.aws/credentials'
+
+      - name: Create Ord config file
+        run: |
+          ssh staging 'printf "%s\n" "db_connection_string: mysql://${{secrets.MYSQL_USER}}:${{secrets.MYSQL_PASS}}@localhost:3306/vermilion?pool_min=35&pool_max=60"
+                                     "s3_bucket_name: vermilion-ordinals"
+                                     "s3_head_check: true"
+                                     "s3_upload_start_number: 1000000000" > ~/ord.yaml'
       
       # ssh-keygen -t ed25519 -C "miltu.s.nayak@gmail.com"
       - name: Add Github SSH key and adjust permissions
