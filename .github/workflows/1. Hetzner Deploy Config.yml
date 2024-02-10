@@ -33,11 +33,6 @@ jobs:
           SSH_USER: ${{ vars.SERVER_USER }}
           SSH_KEY: ${{ secrets.SERVER_SSH_KEY }}
           SSH_HOST: ${{ vars.SERVER_HOST }}
-      
-      - name: Install AWS CLI
-        run: |
-          ssh staging 'sudo apt-get -y update'
-          ssh staging 'sudo apt-get -y install awscli'
         
       - name: Create AWS config file
         run: ssh staging 'mkdir -p .aws; echo "[default]" > ~/.aws/config;'
