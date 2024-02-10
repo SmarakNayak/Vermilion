@@ -71,6 +71,7 @@ jobs:
       - name: Setup mysql config
         run: ssh staging 'sudo cp Vermilion/Config/mysql_settings.cnf /etc/mysql/conf.d/mysql_settings.cnf;'
 
+      # Note: '"'"' = escaped single ' - bash implicitly concatenates differently quoted string expressions
       - name: Initialize mysql server
         run: |
           ssh staging 'sudo mysql -e "CREATE DATABASE IF NOT EXISTS vermilion"'
