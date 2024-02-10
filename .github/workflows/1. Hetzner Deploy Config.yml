@@ -46,7 +46,8 @@ jobs:
         run: ssh staging 'printf "%s\n" "${{format('db_connection_string{0} ', ':')}}mysql://${{secrets.MYSQL_USER}}:${{secrets.MYSQL_PASS}}@localhost:3306/vermilion?pool_min=35&pool_max=60"
                                         "${{format('s3_bucket_name{0} ', ':')}}vermilion-ordinals"
                                         "${{format('s3_head_check{0} ', ':')}}true"
-                                        "${{format('s3_upload_start_number{0} ', ':')}}1000000000" > ~/ord.yaml'
+                                        "${{format('s3_upload_start_number{0} ', ':')}}1000000000"
+                                        "hidden:" > ~/ord.yaml'
       
       # ssh-keygen -t ed25519 -C "miltu.s.nayak@gmail.com"
       - name: Add Github SSH key and adjust permissions
