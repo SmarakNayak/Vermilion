@@ -73,6 +73,8 @@ jobs:
 
       - name: Initialize mysql server
         run: |
+          run: |
+          echo "mysql_password='${{secrets.MYSQL_PASS}}'" >> "$GITHUB_ENV"
           ssh staging 'sudo mysql -e "CREATE DATABASE IF NOT EXISTS vermilion"'
-          ssh staging 'sudo mysql -e "CREATE USER IF NOT EXISTS ${{secrets.MYSQL_USER}}@localhost IDENTIFIED BY \'\'${{secrets.MYSQL_PASS}}\'\'"'
+          ssh staging 'sudo mysql -e "CREATE USER IF NOT EXISTS ${{secrets.MYSQL_USER}}@localhost IDENTIFIED BY $mysql_password"'
           ssh staging 'sudo mysql -e "GRANT ALL PRIVILEGES ON vermilion.* TO ${{secrets.MYSQL_USER}}@localhost"'
