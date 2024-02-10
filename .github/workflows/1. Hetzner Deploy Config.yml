@@ -63,7 +63,10 @@ jobs:
         run: ssh staging 'sudo cp Vermilion/Config/ssh.conf ~/.ssh/config;'
       
       - name: Setup nginx config
-        run: ssh staging 'sudo cp Vermilion/nginx/server.conf /etc/nginx/conf.d/server.conf; sudo cp Vermilion/nginx/nginx.conf /etc/nginx/nginx.conf;'
+        run: |
+          ssh staging 'sudo cp Vermilion/nginx/server.conf /etc/nginx/conf.d/server.conf;' 
+          ssh staging 'sudo cp Vermilion/nginx/nginx.conf /etc/nginx/nginx.conf;'
+          ssh staging 'sudo rm -f /etc/nginx/sites-enabled/default;'
 
       - name: Setup mysql config
         run: ssh staging 'sudo cp Vermilion/Config/mysql_settings.cnf /etc/mysql/conf.d/mysql_settings.cnf;'
