@@ -1,0 +1,21 @@
+1. Combine harddrives
+set SWRAID_LEVEL to 0 when using installimage
+
+2. Create ubuntu user
+adduser --disabled-password ubuntu
+usermod -aG sudo ubuntu
+sudo visudo
+## add next two lines to file
+# User rules for ubuntu
+ubuntu ALL=(ALL) NOPASSWD:ALL
+
+3. Allow SSH access for ubuntu
+mkdir .ssh
+nano .ssh/authorized_keys
+chown -R ubuntu:ubuntu ~/.ssh
+chmod -R 700 ~/.ssh
+chmod -f 600 ~/.ssh/authorized_keys
+sudo nano /etc/ssh/sshd_config
+## add next line to file
+PasswordAuthentication no
+sudo systemctl restart sshd
