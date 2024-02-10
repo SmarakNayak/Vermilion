@@ -46,4 +46,4 @@ jobs:
         run: ssh staging 'sudo apt-get -y install mysql-server'
 
       - name: Install essential build tools for rust
-        run: ssh staging 'sudo apt-get -y install build-essential pkg-config'
+        run: ssh staging 'sudo apt-get -y install build-essential pkg-config libssl-dev'
