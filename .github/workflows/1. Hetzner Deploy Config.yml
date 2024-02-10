@@ -59,7 +59,7 @@ jobs:
         run: ssh staging 'git -C Vermilion fetch && git -C Vermilion reset --hard origin/main || git clone git@github.com:SmarakNayak/Vermilion.git' # This pulls if directory exists, otherwise clones
       
       - name: Setup ssh config
-        run: ssh staging 'sudo cp Vermilion/config/ssh.conf ~/.ssh/config;'
+        run: ssh staging 'sudo cp Vermilion/Config/ssh.conf ~/.ssh/config;'
       
       - name: Setup nginx config
         run: ssh staging 'sudo cp Vermilion/nginx/server.conf /etc/nginx/conf.d/server.conf;'
