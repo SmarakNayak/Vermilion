@@ -1,7 +1,14 @@
 [mysqld]
-log_bin_trust_function_creators = 1
-innodb_buffer_pool_size = 17179869184
+innodb_buffer_pool_size = 34359738368
+innodb_log_file_size = 4294967296
+innodb_log_buffer_size = 1073741824
+innodb_flush_log_at_trx_commit = 1
+innodb_read_io_threads = 16
+innodb_write_io_threads = 16
+innodb_flush_log_at_trx_commit = 0
+
 binlog_expire_logs_seconds = 86400
 max_binlog_size = 2000M
 slow_query_log = 1
+log_bin_trust_function_creators = 1
 local_infile = 1
