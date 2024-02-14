@@ -1,8 +1,7 @@
 [mysqld]
 innodb_buffer_pool_size = 34359738368
-innodb_log_file_size = 4294967296
+innodb_log_file_size = 8589934592
 innodb_log_buffer_size = 1073741824
-innodb_flush_log_at_trx_commit = 1
 innodb_read_io_threads = 16
 innodb_write_io_threads = 16
 innodb_flush_log_at_trx_commit = 0
