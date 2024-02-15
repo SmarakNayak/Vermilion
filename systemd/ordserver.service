@@ -6,7 +6,7 @@ StartLimitBurst=10
 [Service]
 Type=simple
 User=ubuntu
-Environment=RUST_LOG="info,ord::index::updater::inscription_updater=warn"
+Environment=RUST_LOG="info,ord::index::updater::inscription_updater=warn,ord::options=warn"
 ExecStart=/home/ubuntu/ord/target/release/./ord --index-sats --index-transactions --config /home/ubuntu/ord.yaml vermilion --http-port 1080 --api-http-port 1081 --n-threads 1
 WorkingDirectory=/home/ubuntu/ord
 Restart=always
