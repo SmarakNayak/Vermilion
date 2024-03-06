@@ -89,4 +89,4 @@ jobs:
           ssh staging 'sudo --login -u postgres createuser ${{secrets.MYSQL_USER}} || echo "user already exists"'
           ssh staging 'sudo --login -u postgres createdb vermilion || echo "db already exists"'
           ssh staging 'sudo --login -u postgres psql -d vermilion -c "alter user ${{secrets.MYSQL_USER}} with encrypted password '"'"'${{secrets.MYSQL_PASS}}'"'"'"';
-          ssh staging "sudo --login -u postgres psql -d vermilion -c "grant all privileges on database vermilion to ${{secrets.MYSQL_USER}}"';
+          ssh staging 'sudo --login -u postgres psql -d vermilion -c "grant all privileges on database vermilion to ${{secrets.MYSQL_USER}}"';
