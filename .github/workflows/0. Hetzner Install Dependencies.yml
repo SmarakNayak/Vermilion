@@ -45,5 +45,8 @@ jobs:
       - name: Install mysql
         run: ssh staging 'sudo apt-get -y install mysql-server'
 
+      - name: Install postgres
+        run: ssh staging 'sudo apt-get -y install postgresql'
+
       - name: Install essential build tools for rust
         run: ssh staging 'sudo apt-get -y install build-essential pkg-config libssl-dev'
