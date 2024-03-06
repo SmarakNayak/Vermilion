@@ -83,3 +83,10 @@ jobs:
           ssh staging 'sudo mysql -e "CREATE DATABASE IF NOT EXISTS vermilion"'
           ssh staging 'sudo mysql -e "CREATE USER IF NOT EXISTS ${{secrets.MYSQL_USER}}@localhost IDENTIFIED BY '"'"'${{secrets.MYSQL_PASS}}'"'"'"'
           ssh staging 'sudo mysql -e "GRANT ALL PRIVILEGES ON vermilion.* TO ${{secrets.MYSQL_USER}}@localhost"'
+
+      - name: Init postgres server
+        run: |
+          ssh staging 'sudo -u postgres createuser ${{secrets.MYSQL_USER}}'
+          ssh staging 'sudo -u postgres createdb vermilion'
+          ssh staging 'sudo -u postgres psql < "alter user ${{secrets.MYSQL_USER}} with encrypted password '"'"'${{secrets.MYSQL_PASS}}'"'"'"';
+          ssh staging "sudo -u postgres psql < "grant all privileges on database vermilion to ${{secrets.MYSQL_USER}}"';
