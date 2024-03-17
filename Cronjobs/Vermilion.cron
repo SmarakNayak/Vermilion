@@ -22,3 +22,4 @@
 #
 # m h  dom mon dow   command
 0 5 * * 1 export DISCOVER_CONFIG_PATH=/home/ubuntu/ord.yaml; cd Vermilion-Discover && /home/ubuntu/Vermilion-Discover/venv/bin/python3 /home/ubuntu/Vermilion-Discover/cluster.py >> /home/ubuntu/cron.log 2>&1;
+0 5 * * 2 sudo --login -u postgres psql -d vermilion -c "call update_weights();"
