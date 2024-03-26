@@ -27,12 +27,12 @@ module.exports = function(app) {
   app.use(
     '/search_api',
     createProxyMiddleware({
-      // target: 'https://vermilion.place/',
-      // changeOrigin: true,
-      target: 'http://localhost:4080',
-      pathRewrite: {
-        '^/search_api/': '/', // remove base path on localhost
-      },
+      target: 'https://vermilion.place/',
+      changeOrigin: true,
+      // target: 'http://localhost:4080',
+      // pathRewrite: {
+      //   '^/search_api/': '/', // remove base path on localhost
+      // },
     })
   );
 };
