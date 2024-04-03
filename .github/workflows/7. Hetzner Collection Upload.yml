@@ -1,0 +1,38 @@
+# This is a workflow that add collection json to the server
+name: 6. Hetzner Collection json upload
+
+# Controls when the workflow will run
+on:
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+    inputs:
+      hetzner_server:
+        description: 'Which server to deploy to? Hetzner_blue or Hetzner_green'
+        required: true
+        default: 'Hetzner_blue'
+        
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  Vermilion-Collections-Upload:
+    runs-on: ubuntu-latest
+    environment: '${{ github.event.inputs.hetzner_server }}'
+    steps:
+      - name: Configure SSH
+        run: |
+          mkdir -p ~/.ssh/
+          echo "$SSH_KEY" > ~/.ssh/staging.key
+          chmod 600 ~/.ssh/staging.key
+          cat >>~/.ssh/config <<END
+          Host staging
+            HostName $SSH_HOST
+            User $SSH_USER
+            IdentityFile ~/.ssh/staging.key
+            StrictHostKeyChecking no
+          END
+        env:
+          SSH_USER: ${{ vars.SERVER_USER }}
+          SSH_KEY: ${{ secrets.SERVER_SSH_KEY }}
+          SSH_HOST: ${{ vars.SERVER_HOST }}
+
+      - name: Check out the new code from Github
+        run: ssh staging 'git -C ordinal-collections fetch && git -C ordinal-collections reset --hard origin/main || git clone git@github-vermilion:SmarakNayak/ordinal-collections.git' # This pulls if directory exists, otherwise clones
