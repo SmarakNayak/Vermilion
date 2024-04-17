@@ -10,6 +10,8 @@ import SatBlock from '../pages/SatBlock';
 import Search from '../pages/Search';
 import Discover from '../pages/Discover';
 import Dbscan from '../pages/Dbscan';
+import Collection from '../pages/Collection';
+import Explore from '../pages/Explore';
 
 const Navigation = () => {
   return (
@@ -24,6 +26,8 @@ const Navigation = () => {
         <Route path="/sat_block/:number" element={<SatBlock />} />
         <Route path="/search" element={<Search />} />
         <Route path="/discover" element={<Discover />} />
+        <Route path="/collection" element={<Collection />} />
+        <Route path="/explore" element={<Explore />} />
         <Route path="/dbscan/:dbclass" element={<Dbscan />} />
       </Routes>
     </BrowserRouter>

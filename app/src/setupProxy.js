@@ -5,7 +5,7 @@ module.exports = function(app) {
   app.use(
     '/api',
     createProxyMiddleware({
-      target: 'https://vermilion.place/',
+      target: 'https://blue.vermilion.place/',
       changeOrigin: true,
       // target: 'http://localhost:2081',
       // pathRewrite: {
@@ -16,7 +16,7 @@ module.exports = function(app) {
   app.use(
     '/content',
     createProxyMiddleware({
-      target: 'https://vermilion.place/',
+      target: 'https://blue.vermilion.place/',
       changeOrigin: true,
       // target: 'http://localhost:2081',
       // pathRewrite: {
@@ -27,7 +27,7 @@ module.exports = function(app) {
   app.use(
     '/search_api',
     createProxyMiddleware({
-      target: 'https://vermilion.place/',
+      target: 'https://blue.vermilion.place/',
       changeOrigin: true,
       // target: 'http://localhost:4080',
       // pathRewrite: {

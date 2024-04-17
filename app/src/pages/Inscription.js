@@ -1,7 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from "react-router-dom";
 import styled from 'styled-components';
-import { lightTheme } from '../styles/themes';
+import TopSection from '../components/TopSection';
+import Stack from '../components/Stack';
+import { addCommas, copyText } from '../helpers/utils';
+import HashIcon from '../assets/icons/HashIcon';
+import WebIcon from '../assets/icons/WebIcon';
+import CopyIcon from '../assets/icons/CopyIcon';
 const iframecontentwindow = require("../scripts/iframeResizer.contentWindow.min.txt");
 
 const Inscription = () => {
@@ -188,64 +193,121 @@ const Inscription = () => {
   // <HtmlContainer><StyledIframe srcDoc={textContent} scrolling='no' sandbox='allow-scripts'></StyledIframe></HtmlContainer> alternative that doesn't require another network call - size is buggy though..
   return (
     <PageContainer>
-      <TopContainer>
-        <TopLinksContainer>
-          <SiteText to ={'/'}>vermilion</SiteText>
-        </TopLinksContainer>
-      </TopContainer>
-      <CenterContainer>
-        <div><NumberText>Inscription {metadata?.number}</NumberText></div>
-        {
+      <TopSection />
+      <MainContainer>
+        <ContentContainer>
           {
-            'image': <ImageContainer src={blobUrl} />,
-            'svg-recursive': <SvgContainer src={"/api/inscription_number/"+ number} scrolling='no' sandbox='allow-scripts allow-same-origin' loading="lazy"/>,
-            'svg': <ImageContainer src={"/api/inscription_number/"+ number}/>,
-            'html': <HtmlContainer><StyledIframe src={"/api/inscription_number/"+ number} scrolling='no' sandbox='allow-scripts allow-same-origin' loading="lazy"></StyledIframe></HtmlContainer>,
-            'text': <TextContainer><p>{textContent}</p></TextContainer>,
-            'video': <VideoContainer controls loop muted autoplay><source src={blobUrl} type={metadata?.content_type}/></VideoContainer>,
-            'audio': <AudioContainer controls><source src={blobUrl} type={metadata?.content_type}/></AudioContainer>,
-            'pdf': <TextContainer>pdf unsupported</TextContainer>,
-            'model': <TextContainer>gltf model type unsupported</TextContainer>,
-            'unsupported': <TextContainer>{metadata?.content_type} content type unsupported</TextContainer>,
-            'loading': <TextContainer>loading...</TextContainer>
-          }[contentType]
-        }
-        <MetadataContainer>
-          <MetadataLineContainer>
-            <StyledP>Id: </StyledP><a href={'https://ordinals.com/inscription/' + metadata?.id}>{metadata?.id ? shortId : ""} </a>
-          </MetadataLineContainer>
-          <MetadataLineContainer>
-            <StyledP>Style: </StyledP><StyledP>{metadata?.content_type}</StyledP>
-          </MetadataLineContainer>
-          <MetadataLineContainer>
-            <StyledP>Size: </StyledP><StyledP>{metadata?.content_length ? prettySize : ""} </StyledP>
-          </MetadataLineContainer>
-          <MetadataLineContainer>
-            <StyledP>Fee: </StyledP><StyledP> {metadata?.genesis_fee ? metadata?.genesis_fee + " Sats" : ""} </StyledP>
-          </MetadataLineContainer>
-          <MetadataLineContainer>
-            <StyledP>Blocktime: </StyledP><Link to={'/block/' + metadata?.genesis_height}>{metadata?.genesis_height} </Link>
-          </MetadataLineContainer>
-          <MetadataLineContainer>
-            <StyledP>Clocktime: </StyledP><StyledP> {metadata?.timestamp ? new Date(metadata?.timestamp*1000).toLocaleString(undefined, {day:"numeric", month: "short", year:"numeric", hour: 'numeric', minute: 'numeric', hour12: true}) : ""} </StyledP>
-          </MetadataLineContainer>
-          {/* <MetadataLineContainer>
-            <StyledP>{address ? "Address: " : "Address: "} </StyledP><Link to={'/address/' + address?.address}>{address?.address} </Link>
-          </MetadataLineContainer> */}
-          <MetadataLineContainer>
-            <StyledP>{"Sat: "} </StyledP><Link to={'/sat/' + metadata?.sat}>{metadata?.sat} </Link>
-          </MetadataLineContainer>
-          <MetadataLineContainer>
-            <StyledP>{editionNumber ? "Edition: " : ""} </StyledP><Link to={'/edition/' + metadata?.sha256}>{editionNumber ? editionNumber + "/" + editionCount : ""} </Link>
-          </MetadataLineContainer>
-          <LinksContainer>
-            <Link to={'/inscription/' + previousNumber}> previous </Link>
-            <a href={'/discover'}> discover </a>
-            <Link to={'/inscription/' + nextNumber}> next </Link>
-          </LinksContainer>
-        </MetadataContainer>
-      </CenterContainer>
-      <BottomContainer></BottomContainer>
+            {
+              'image': <ImageContainer src={blobUrl} />,
+              'svg-recursive': <SvgContainer src={"/api/inscription_number/"+ number} scrolling='no' sandbox='allow-scripts allow-same-origin' loading="lazy"/>,
+              'svg': <ImageContainer src={"/api/inscription_number/"+ number}/>,
+              'html': <HtmlContainer><StyledIframe src={"/api/inscription_number/"+ number} scrolling='no' sandbox='allow-scripts allow-same-origin' loading="lazy"></StyledIframe></HtmlContainer>,
+              'text': <TextContainer><p>{textContent}</p></TextContainer>,
+              'video': <VideoContainer controls loop muted autoplay><source src={blobUrl} type={metadata?.content_type}/></VideoContainer>,
+              'audio': <AudioContainer controls><source src={blobUrl} type={metadata?.content_type}/></AudioContainer>,
+              'pdf': <TextContainer>pdf unsupported</TextContainer>,
+              'model': <TextContainer>gltf model type unsupported</TextContainer>,
+              'unsupported': <TextContainer>{metadata?.content_type} content type unsupported</TextContainer>,
+              'loading': <TextContainer>loading...</TextContainer>
+            }[contentType]
+          }
+        </ContentContainer>
+        <InfoContainer>
+          <DataContainer gapSize={'1rem'}>
+            <NumberText>{metadata?.number ? addCommas(metadata?.number) : ""}</NumberText>
+            <Stack horizontal={true} center={false} style={{gap: '1rem', flexWrap: 'wrap'}}>
+              <UnstyledLink to={'/edition/' + metadata?.sha256}>
+                <DataButton>
+                  <HashIcon svgSize={'1rem'} svgColor={'#959595'}></HashIcon>
+                  {editionNumber ? "Edition " + editionNumber + " of " + editionCount : ""}
+                </DataButton>
+              </UnstyledLink>
+              <UnstyledLink to={'https://ordinals.com/inscription/' + metadata?.id} target='_blank'>
+                <DataButton>
+                  <WebIcon svgSize={'1rem'} svgColor={'#959595'}></WebIcon>
+                  View on ordinals.com
+                </DataButton>
+              </UnstyledLink>
+            </Stack>
+          </DataContainer>
+          <DataContainer gapSize={'.75rem'}>
+            <InfoSectionText>Details</InfoSectionText>
+            <DataContainer gapSize={'0'}>
+              <InfoRowContainer>
+                <InfoLabelContainer>
+                  <InfoText isLabel={true}>Owner</InfoText>
+                </InfoLabelContainer>
+                <InfoDataContainer>
+                  <InfoText>???</InfoText>
+                </InfoDataContainer>
+              </InfoRowContainer>
+              <InfoRowContainer isMiddle={true}>
+                <InfoLabelContainer>
+                  <InfoText isLabel={true}>Inscription ID</InfoText>
+                </InfoLabelContainer>
+                <InfoDataContainer>
+                  <UnstyledButton onClick={() => copyText(metadata?.id)}>
+                    <InfoText>{metadata?.id ? shortId : ""}</InfoText>
+                    <CopyIcon svgSize={'1rem'} svgColor={'#D9D9D9'} />
+                  </UnstyledButton>
+                </InfoDataContainer>
+              </InfoRowContainer>
+              <InfoRowContainer isMiddle={true}>
+                <InfoLabelContainer>
+                  <InfoText isLabel={true}>File Type</InfoText>
+                </InfoLabelContainer>
+                <InfoDataContainer>
+                  <InfoText>{metadata?.content_type ? metadata?.content_type : ""}</InfoText>
+                </InfoDataContainer>
+              </InfoRowContainer>
+              <InfoRowContainer isMiddle={true}>
+                <InfoLabelContainer>
+                  <InfoText isLabel={true}>File Size</InfoText>
+                </InfoLabelContainer>
+                <InfoDataContainer>
+                  <InfoText>{metadata?.content_length ? prettySize : ""}</InfoText>
+                </InfoDataContainer>
+              </InfoRowContainer>
+              <InfoRowContainer isMiddle={true}>
+                <InfoLabelContainer>
+                  <InfoText isLabel={true}>Block Time</InfoText>
+                </InfoLabelContainer>
+                <InfoDataContainer>
+                  <UnstyledLink to={'/block/' + metadata?.genesis_height}>
+                    <InfoText isLink={true}>{metadata?.genesis_height ? addCommas(metadata?.genesis_height) : ""}</InfoText>
+                  </UnstyledLink>
+                </InfoDataContainer>
+              </InfoRowContainer>
+              <InfoRowContainer isMiddle={true}>
+                <InfoLabelContainer>
+                  <InfoText isLabel={true}>Clock Time</InfoText>
+                </InfoLabelContainer>
+                <InfoDataContainer>
+                  <InfoText>{metadata?.timestamp ? new Date(metadata?.timestamp*1000).toLocaleString(undefined, {day:"numeric", month: "short", year:"numeric", hour: 'numeric', minute: 'numeric', hour12: true}) : ""}</InfoText>
+                </InfoDataContainer>
+              </InfoRowContainer>
+              <InfoRowContainer isMiddle={true}>
+                <InfoLabelContainer>
+                  <InfoText isLabel={true}>Fee</InfoText>
+                </InfoLabelContainer>
+                <InfoDataContainer>
+                  <InfoText>{metadata?.genesis_fee ? addCommas(metadata?.genesis_fee) + " sats" : ""}</InfoText>
+                </InfoDataContainer>
+              </InfoRowContainer>
+              <InfoRowContainer isMiddle={true}>
+                <InfoLabelContainer>
+                  <InfoText isLabel={true}>Sat Number</InfoText>
+                </InfoLabelContainer>
+                <InfoDataContainer>
+                  <UnstyledLink to={'/sat/' + metadata?.sat}>
+                    <InfoText isLink={true}>{metadata?.sat ? addCommas(metadata?.sat) : ""}</InfoText>
+                  </UnstyledLink>
+                </InfoDataContainer>
+              </InfoRowContainer>
+            </DataContainer>
+          </DataContainer>
+        </InfoContainer>
+      </MainContainer>
     </PageContainer>
     
   )
@@ -260,14 +322,57 @@ const PageContainer = styled.div`
   align-items: center;
   justify-content: space-between;
   position: relative;
-  Overflow-x: hidden;
+  overflow-x: hidden;
   -ms-overflow-style: none;
   scrollbar-width: none;
-}
+  gap: 0;
 
   @media (max-width: 768px) {
     padding: 0 2rem;
   }
+`;
+
+const MainContainer = styled.div`
+  width: 100%;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  flex: 1;
+
+  @media (max-width: 768px) {
+    flex-direction: column;;
+    align-items: center;
+  }
+`;
+
+const ContentContainer = styled.div`
+  background-color: #F7F7F7;
+  position: sticky;
+  top: 5rem;
+  max-height: 100vh;
+  overflow-y: scroll;
+  display: flex;
+  flex-direction: column;
+  flex-wrap: nowrap;
+  justify-content: center;
+  align-items: center;
+  width: calc(100% - 25rem);
+  height: calc(100vh - 4.5rem);
+  flex: 1;
+  overflow: hidden;
+  margin: 0;
+
+  @media (max-width: 768px) {
+    width: 100%;
+    background-color: #FFFFFF;
+  }
+`;
+
+const UnstyledLink = styled(Link)`
+  color: unset;
+  text-decoration: unset;
 `;
 
 const LinksContainer = styled.div`
@@ -288,11 +393,6 @@ const ImageContainer = styled.img`
   max-width: 32rem;
   max-height: 32rem;
   image-rendering: pixelated;
-  border-radius: 4px;
-  border: 8px solid #FFF;
-  box-shadow: 0px 1px 6px 0px rgba(0, 0, 0, 0.09);
-  margin-top: 6rem;
-  margin-bottom: 6rem;
 
   @media (max-width: 576px) {
     max-width: 20rem;
@@ -421,12 +521,6 @@ const StyledIframe = styled.iframe`
   width: 100%;
   resize: both;
   //aspect-ratio: 1/1;
-`
-
-const NumberText = styled.p`
-  font-family: ABC Camera Unlicensed Trial Medium Italic;
-  font-size: 2em;
-  margin: 0;
 `;
 
 const TopContainer = styled.div`
@@ -470,6 +564,124 @@ const SiteText = styled(Link)`
   margin: 0;
   cursor: pointer;
   text-decoration: none;
+`;
+
+const InfoContainer = styled.div`
+  padding: 3rem 3rem;
+  width: 100%;
+  max-width: 25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 2.5rem;
+`;
+
+const DataContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: ${(props) => props.gapSize};
+`;
+
+const NumberText = styled.p`
+  font-family: ABC Camera Unlicensed Trial Medium Italic;
+  font-size: 2em;
+  margin: 0;
+`;
+
+const InfoRowContainer = styled.div`
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-start;
+  flex-wrap: nowrap;
+  width: 100%;
+  gap: .5rem;
+  padding: .75rem 0;
+  border-top: ${(props) => props.isMiddle ? '1px solid #E9E9E9' : 'none'};
+`;
+
+const InfoLabelContainer = styled.div`
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  justify-content: flex-start;
+  align-items: center;
+  width: 100%;
+`;
+
+const InfoDataContainer = styled.div`
+  display: flex;
+  flex: none;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  justify-content: flex-start;
+  align-items: center;
+  gap: .5rem;
+`;
+
+const InfoSectionText = styled.p`
+  font-family: 'ABC Camera Plain Unlicensed Trial Medium';
+  font-size: .875rem;
+  margin: 0;
+  padding: 0;
+`;
+
+const InfoText = styled.p`
+  font-family: 'ABC Camera Plain Unlicensed Trial Regular';
+  font-size: .875rem;
+  margin: 0;
+  padding: 0;
+  color: ${props => props.isLabel ? '#959595' : '#000000'};
+  text-decoration: ${props => props.isLink ? 'underline' : 'none'};
+  text-underline-offset: .25rem;
+`;
+
+const DataButton = styled.button`
+  border-radius: .5rem;
+  border: none;
+  padding: .25rem .5rem;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  gap: .5rem;
+  font-family: 'ABC Camera Plain Unlicensed Trial Medium';
+  font-size: .875rem;
+  color: #959595;
+  background-color: #F5F5F5;
+  transition: 
+    background-color 350ms ease,
+    transform 150ms ease;
+  transform-origin: center center;
+
+  &:hover {
+    background-color: #E9E9E9;
+  }
+
+  &:active {
+    transform: scale(0.96);
+  }
+`;
+
+const UnstyledButton = styled.button`
+  border: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: .5rem;
+  background-color: #FFFFFF;
+  cursor: pointer;
+
+  transition: 
+    background-color 350ms ease,
+    transform 150ms ease;
+  transform-origin: center center;
+
+  &:active {
+    transform: scale(0.96);
+  }
 `;
 
 export default Inscription;

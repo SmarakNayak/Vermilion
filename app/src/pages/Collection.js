@@ -6,15 +6,14 @@ import TopSection from '../components/TopSection';
 import Stack from '../components/Stack';
 import EyeIcon from '../assets/icons/EyeIcon';
 import BlockIcon from '../assets/icons/BlockIcon';
-import { addCommas, copyText } from '../helpers/utils';
+import { addCommas } from '../helpers/utils';
 import FilterIcon from '../assets/icons/FilterIcon';
 import ChevronDownIcon from '../assets/icons/ChevronDownIcon';
-import CopyIcon from '../assets/icons/CopyIcon';
 import CheckIcon from '../assets/icons/CheckIcon';
 import Stat from '../components/Stat';
 
-const Block = () => {
-  let { number } = useParams();
+const Collection = () => {
+  let number = 780346;
   const [inscriptionList, setInscriptionList] = useState([]); 
   const [numberVisibility, setNumberVisibility] = useState(true);
 
@@ -45,10 +44,8 @@ const Block = () => {
         <Stack horizontal={false} center={false} style={{gap: '1.5rem'}}>
           <RowContainer>
             <Container style={{gap: '1rem'}}>
-              <BlockImgContainer>
-                <BlockIcon svgSize={'2.25rem'} svgColor={'#E34234'}></BlockIcon>
-              </BlockImgContainer>
-              <BlockText>{addCommas(number)}</BlockText>
+              <BlockImgContainer></BlockImgContainer>
+              <BlockText>Collection Name</BlockText>
             </Container>
           </RowContainer>
           <RowContainer style={{gap: '1rem'}}>
@@ -56,41 +53,33 @@ const Block = () => {
               <CheckIcon svgSize={'1rem'} svgColor={'#009859'} />
               Mar 20, 2024 @ 15:59
             </InfoButton>
-            <InfoButton isButton={true} onClick={() => copyText('text')}>
-              {'Hash: ' + '0045...9f45'}
-              <CopyIcon svgSize={'1rem'} svgColor={'#959595'} />
-            </InfoButton>
           </RowContainer>
           <RowContainer>
             <Container style={{gap: '1.5rem', flexFlow: 'wrap', justifyContent: 'center'}}>
-              <Stat value={'34'} category={'Inscriptions'} />
+              <Stat value={addCommas(10001)} category={'Supply'} />
               <Divider />
-              <Stat value={'1.64' + ' MB'} category={'Size'} />
+              <Stat value={'5,988 (59.9%)'} category={'Owners'} />
               <Divider />
-              <Stat value={'30 to 646' + ' sat/vB'} category={'Fee Span'} />
-              <Divider />
-              <Stat value={'~37' + ' sat/vB'} category={'Median Fee'} />
-              <Divider />
-              <Stat value={'0.525' + ' BTC'} category={'Total Fees'} />
+              <Stat value={'53,105,612 to 55,543,825'} category={'Range'} />
             </Container>
           </RowContainer>
           <SectionContainer>
             <TabButton>Inscriptions</TabButton>
           </SectionContainer>
           <RowContainer>
-            <Stack horizontal={true} center={false} style={{gap: '1rem'}}>
-              {/* <FilterButton>
-                <FilterIcon svgSize={'1rem'} svgColor={'#000000'}></FilterIcon>  
-                Filters
-              </FilterButton> */}
-              <VisibilityButton onClick={toggleNumberVisibility}>
-                <EyeIcon svgSize={'1rem'} svgColor={numberVisibility ? '#000000' : '#959595'}></EyeIcon>
-              </VisibilityButton>
-            </Stack>
-            <FilterButton>
-              Newest
-              <ChevronDownIcon svgSize={'1rem'} svgColor={'#000000'}></ChevronDownIcon>
-            </FilterButton>
+              <Stack horizontal={true} center={false} style={{gap: '1rem'}}>
+                {/* <FilterButton>
+                  <FilterIcon svgSize={'1rem'} svgColor={'#000000'}></FilterIcon>  
+                  Filters
+                </FilterButton> */}
+                <VisibilityButton onClick={toggleNumberVisibility}>
+                  <EyeIcon svgSize={'1rem'} svgColor={numberVisibility ? '#000000' : '#959595'}></EyeIcon>
+                </VisibilityButton>
+              </Stack>
+              <FilterButton>
+                Newest
+                <ChevronDownIcon svgSize={'1rem'} svgColor={'#000000'}></ChevronDownIcon>
+                </FilterButton>
           </RowContainer>
           <RowContainer>
             <Gallery inscriptionList={inscriptionList} displayJsonToggle={false} numberVisibility={numberVisibility} />
@@ -184,9 +173,7 @@ const SectionContainer = styled.div`
   display: flex;
   flex-direction: row;
   flex: 1;
-  gap: 1rem;
   width: 100%;
-  padding-bottom: 1rem;
   border-bottom: 1px #E9E9E9 solid;
 `;
 
@@ -207,31 +194,17 @@ const ShareButton = styled.button`
 `;
 
 const TabButton = styled.button`
-  border-radius: .5rem;
   border: none;
+  border-bottom: 2px #E34234 solid;
   padding: .5rem 1rem;
-  margin: 0;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  gap: .5rem;
   font-family: 'ABC Camera Plain Unlicensed Trial Medium';
   font-size: .875rem;
-  color: #E34234;  
-  background-color:#F9E8E7;
-  transition: 
-    background-color 350ms ease,
-    transform 150ms ease;
-  transform-origin: center center;
-
-  &:hover {
-    background-color: #F9E8E7;
-  }
-
-  &:active {
-    transform: scale(0.96);
-  }
+  color: #E34234;
+  background-color: #FFFFFF;
 `;
 
 const VisibilityButton = styled.button`
@@ -325,4 +298,4 @@ const InfoButton = styled.button`
   }
 `;
 
-export default Block;
+export default Collection;

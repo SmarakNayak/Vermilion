@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import styled from 'styled-components';
 import InscriptionContainer from '../components/InscriptionContainer';
 import ToggleSwitch from '../components/toggle'
+import GridItemContainer from './GridItemContainer';
 
 const Gallery = (props) => {
   //Pagination
@@ -66,9 +67,9 @@ const Gallery = (props) => {
   },[props.displayJsonToggle])
 
   return(
-    <GalleryContainer>
-      {showToggle ? <ToggleSwitch checked={jsonFiltered} text={"Hide json"} onChange={onJsonToggle}/> : <div/>}
-      <Masonry>
+    <GridContainer>
+      {/* {showToggle ? <ToggleSwitch checked={jsonFiltered} text={"Hide json"} onChange={onJsonToggle}/> : <div/>} */}
+      {/* <Masonry>
         {visibleInscriptions.map(
           entry => 
           <Brick key={entry.number}>
@@ -76,16 +77,29 @@ const Gallery = (props) => {
               <InscriptionContainer number={entry.number}/>
             </UnstyledLink>
           </Brick>)}
-      </Masonry>
-      {visibleInscriptions.length>0 ? 
+      </Masonry> */}
+      {visibleInscriptions.map(
+          entry => 
+          // <ItemContainer key={entry.number} number={entry.number}>
+          //   <UnstyledLink to={'/inscription/' + entry.number}>
+          //     <ImageContainer>
+          //       <ImageWrapper>
+          //         <InscriptionContainer number={entry.number}/>
+          //       </ImageWrapper>
+          //     </ImageContainer>
+          //   </UnstyledLink>
+          // </ItemContainer>
+          <GridItemContainer key={entry.number} number={entry.number} numberVisibility={props.numberVisibility}></GridItemContainer>
+      )}
+      {/* {visibleInscriptions.length>0 ? 
         <StyledTablePaginator>
           <StyledArrowContainer onClick = {onLeftArrowClick}>←</StyledArrowContainer> 
           <p>Page {pageNo} of {noOfPages}</p> 
           <StyledArrowContainer onClick = {onRightArrowClick}>→</StyledArrowContainer>
         </StyledTablePaginator>
         : <div/>
-      }
-    </GalleryContainer>
+      } */}
+    </GridContainer>
   )
 }
 
@@ -135,6 +149,89 @@ const StyledTablePaginator = styled.div`
 	justify-content: center;
 	gap: 10px;
 	padding-top: 10px;
-`
+`;
+
+const GridContainer = styled.div`
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 16px;
+  width: 100%;
+
+  @media (max-width: 1984px) {
+    // grid-template-columns: repeat(5, 1fr);
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+  }
+
+  @media (max-width: 1346px) {
+    grid-template-columns: repeat(4, 1fr);
+  }
+
+  @media (max-width: 960px) {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  @media (max-width: 630px) {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  @media (max-width: 320px) {
+    grid-template-columns: repeat(1, 1fr);
+  }
+`;
+
+const ItemContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: .5rem;
+  cursor: pointer;
+`;
+
+const ImageContainer = styled.div`
+  background-color: #F5F5F5;
+  padding: 15%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  aspect-ratio: 360/400;
+  transition: all 350ms ease;
+
+  ${ItemContainer}:hover & {
+    background-color: #E9E9E9;
+  }
+`;
+
+const ImageWrapper = styled.div`
+  // width: 16rem;
+  // height: 16rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+`;
+
+const LoadedImage = styled.img`
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  aspect-ratio: 1/1;
+  filter: drop-shadow(0 8px 24px rgba(158,158,158,.2));
+  transition: all 350ms ease;
+
+  ${ItemContainer}:hover & {
+    transform: scale(1.03);
+  }
+`;
+
+const ItemText = styled.p`
+  font-size: .875rem;
+  color: #959595;
+  margin: 0;
+
+  transition: all 350ms ease;
+
+  ${ItemContainer}:hover & {
+    color: #000000;
+  }
+`;
 
 export default Gallery;

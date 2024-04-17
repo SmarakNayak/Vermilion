@@ -6,27 +6,27 @@ import TopSection from '../components/TopSection';
 import Stack from '../components/Stack';
 import EyeIcon from '../assets/icons/EyeIcon';
 import BlockIcon from '../assets/icons/BlockIcon';
-import { addCommas, copyText } from '../helpers/utils';
+import { addCommas } from '../helpers/utils';
 import FilterIcon from '../assets/icons/FilterIcon';
 import ChevronDownIcon from '../assets/icons/ChevronDownIcon';
-import CopyIcon from '../assets/icons/CopyIcon';
-import CheckIcon from '../assets/icons/CheckIcon';
 import Stat from '../components/Stat';
+import BlockRow from '../components/BlockRow';
 
-const Block = () => {
-  let { number } = useParams();
+const Explore = () => {
+  let number = 780346;
   const [inscriptionList, setInscriptionList] = useState([]); 
   const [numberVisibility, setNumberVisibility] = useState(true);
+  const [activeTab, setActiveTab] = useState('Inscriptions');
 
   //1. Get links
-
   useEffect(() => {
     const fetchContent = async () => {
       //1. Get inscription numbers
       setInscriptionList([]);
-      const response = await fetch("/api/inscriptions_in_block/" + number);
+      // const response = await fetch("/api/inscriptions_in_block/" + number);
+      const response = await fetch("/api/inscriptions?content_types=image&page_size=20&page_number=1&sort_by=highest_fee");
       let json = await response.json();
-      json = json.sort((a,b)=>b.genesis_fee/b.content_size-a.genesis_fee/a.content_size);
+      // json = json.sort((a,b)=>b.genesis_fee/b.content_size-a.genesis_fee/a.content_size);
       setInscriptionList(json);
     }
     fetchContent();
@@ -37,64 +37,72 @@ const Block = () => {
     setNumberVisibility(!numberVisibility);
   };
 
+  // function to update active tab
+  const handleTabClick = (tabName) => {
+    setActiveTab(tabName);
+  };
+
   return (
     <PageContainer>
       <TopSection />
       <MainContainer>
         {/* Stack placed within main container to allow for filter section */}
         <Stack horizontal={false} center={false} style={{gap: '1.5rem'}}>
-          <RowContainer>
-            <Container style={{gap: '1rem'}}>
-              <BlockImgContainer>
-                <BlockIcon svgSize={'2.25rem'} svgColor={'#E34234'}></BlockIcon>
-              </BlockImgContainer>
-              <BlockText>{addCommas(number)}</BlockText>
-            </Container>
-          </RowContainer>
-          <RowContainer style={{gap: '1rem'}}>
-            <InfoButton>
-              <CheckIcon svgSize={'1rem'} svgColor={'#009859'} />
-              Mar 20, 2024 @ 15:59
-            </InfoButton>
-            <InfoButton isButton={true} onClick={() => copyText('text')}>
-              {'Hash: ' + '0045...9f45'}
-              <CopyIcon svgSize={'1rem'} svgColor={'#959595'} />
-            </InfoButton>
-          </RowContainer>
-          <RowContainer>
-            <Container style={{gap: '1.5rem', flexFlow: 'wrap', justifyContent: 'center'}}>
-              <Stat value={'34'} category={'Inscriptions'} />
-              <Divider />
-              <Stat value={'1.64' + ' MB'} category={'Size'} />
-              <Divider />
-              <Stat value={'30 to 646' + ' sat/vB'} category={'Fee Span'} />
-              <Divider />
-              <Stat value={'~37' + ' sat/vB'} category={'Median Fee'} />
-              <Divider />
-              <Stat value={'0.525' + ' BTC'} category={'Total Fees'} />
-            </Container>
+          <RowContainer style={{justifyContent: 'flex-start'}}>
+            <PageText>Explore</PageText>
           </RowContainer>
           <SectionContainer>
-            <TabButton>Inscriptions</TabButton>
+            {/* Update onClick to change active tab */}
+            <TabButton 
+              onClick={() => handleTabClick('Inscriptions')}
+              isActive={activeTab === 'Inscriptions'}
+              >
+              Inscriptions
+            </TabButton>
+            <TabButton 
+              onClick={() => handleTabClick('Blocks')}
+              isActive={activeTab === 'Blocks'}
+              >
+              Blocks
+            </TabButton>
+            <TabButton 
+              onClick={() => handleTabClick('Collections')}
+              isActive={activeTab === 'Collections'}
+              >
+              Collections
+            </TabButton>
           </SectionContainer>
-          <RowContainer>
-            <Stack horizontal={true} center={false} style={{gap: '1rem'}}>
-              {/* <FilterButton>
-                <FilterIcon svgSize={'1rem'} svgColor={'#000000'}></FilterIcon>  
-                Filters
-              </FilterButton> */}
-              <VisibilityButton onClick={toggleNumberVisibility}>
-                <EyeIcon svgSize={'1rem'} svgColor={numberVisibility ? '#000000' : '#959595'}></EyeIcon>
-              </VisibilityButton>
-            </Stack>
-            <FilterButton>
-              Newest
-              <ChevronDownIcon svgSize={'1rem'} svgColor={'#000000'}></ChevronDownIcon>
-            </FilterButton>
-          </RowContainer>
-          <RowContainer>
-            <Gallery inscriptionList={inscriptionList} displayJsonToggle={false} numberVisibility={numberVisibility} />
-          </RowContainer>
+            {/* 3. Conditional Rendering */}
+            {activeTab === 'Inscriptions' && (
+              <Stack horizontal={false} center={false} style={{gap: '1.5rem'}}>
+                <RowContainer>
+                  <Stack horizontal={true} center={false} style={{gap: '1rem'}}>
+                    {/* <FilterButton>
+                      <FilterIcon svgSize={'1rem'} svgColor={'#000000'}></FilterIcon>  
+                      Filters
+                    </FilterButton> */}
+                    <VisibilityButton onClick={toggleNumberVisibility}>
+                      <EyeIcon svgSize={'1rem'} svgColor={numberVisibility ? '#000000' : '#959595'}></EyeIcon>
+                    </VisibilityButton>
+                  </Stack>
+                  <FilterButton>
+                    Newest
+                    <ChevronDownIcon svgSize={'1rem'} svgColor={'#000000'}></ChevronDownIcon>
+                  </FilterButton>
+                </RowContainer>
+                <Gallery inscriptionList={inscriptionList} displayJsonToggle={false} numberVisibility={numberVisibility} />
+              </Stack>
+            )}
+            {activeTab === 'Blocks' && (
+              <Stack horizontal={false} center={false} style={{gap: '1.5rem'}}>
+                <div>Blocks placeholder</div>
+              </Stack>
+            )}
+            {activeTab === 'Collections' && (
+              <Stack horizontal={false} center={false} style={{gap: '1.5rem'}}>
+                <div>Collections placeholder</div> 
+              </Stack>
+            )}
         </Stack>
       </MainContainer>
     </PageContainer>
@@ -137,6 +145,12 @@ const RowContainer = styled.div`
   align-items: center;
   justify-content: center;
   width: 100%;
+`;
+
+const PageText = styled.p`
+    font-family: ABC Camera Plain Unlicensed Trial Medium;
+    font-size: 1.25rem;
+    margin: 0;
 `;
 
 const BlockImgContainer = styled.div`
@@ -218,15 +232,15 @@ const TabButton = styled.button`
   gap: .5rem;
   font-family: 'ABC Camera Plain Unlicensed Trial Medium';
   font-size: .875rem;
-  color: #E34234;  
-  background-color:#F9E8E7;
+  color: ${props => props.isActive ? '#E34234' : '#959595'}; // Change text color based on isActive
+  background-color: ${props => props.isActive ? '#F9E8E7' : '#FFFFFF'}; // Change background based on isActive
   transition: 
     background-color 350ms ease,
     transform 150ms ease;
   transform-origin: center center;
 
   &:hover {
-    background-color: #F9E8E7;
+    background-color: ${props => props.isActive ? '#F9E8E7' : '#F5F5F5'};
   }
 
   &:active {
@@ -292,37 +306,4 @@ const FilterButton = styled.button`
   }
 `;
 
-const Divider = styled.div`
-  height: 1.5rem;
-  border: 1px solid #E9E9E9;
-`;
-
-const InfoButton = styled.button`
-  border-radius: 1.5rem;
-  border: none;
-  padding: .5rem 1rem;
-  margin: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: ${props => props.isButton ? 'pointer' : 'default'};
-  gap: .5rem;
-  font-family: 'ABC Camera Plain Unlicensed Trial Regular';
-  font-size: .875rem;
-  color: #000000;  
-  background-color:#F5F5F5;
-  transition: 
-    background-color 350ms ease,
-    transform 150ms ease;
-  transform-origin: center center;
-
-  &:hover {
-    background-color: #E9E9E9;
-  }
-
-  &:active {
-    transform: scale(0.96);
-  }
-`;
-
-export default Block;
+export default Explore;
