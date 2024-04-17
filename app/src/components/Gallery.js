@@ -7,7 +7,7 @@ import GridItemContainer from './GridItemContainer';
 
 const Gallery = (props) => {
   //Pagination
-  const pageSize = 10
+  const pageSize = 30
   const [pageNo, setPageNo] = useState(1);
   const [noOfPages, setNoOfPages] = useState(1);
   const [jsonFiltered, setJsonFiltered] = useState(true);
@@ -105,6 +105,10 @@ const Gallery = (props) => {
 
 const GalleryContainer = styled.div`
 
+`
+
+const StyledGallery = styled(Gallery)`
+  width: 100%;
 `
 
 const Masonry = styled.div`

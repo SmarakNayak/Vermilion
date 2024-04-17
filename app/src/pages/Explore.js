@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, Link } from "react-router-dom";
 import styled from 'styled-components';
 import Gallery from '../components/Gallery';
+import StyledGallery from '../components/Gallery';
 import TopSection from '../components/TopSection';
 import Stack from '../components/Stack';
 import EyeIcon from '../assets/icons/EyeIcon';
@@ -15,7 +16,6 @@ import SortbyDropdown from '../components/Dropdown';
 import FilterMenu from '../components/FilterMenu';
 
 const Explore = () => {
-  let number = 780346;
   const [inscriptionList, setInscriptionList] = useState([]); 
   const [numberVisibility, setNumberVisibility] = useState(true);
   const [filterVisibility, setFilterVisibility] = useState(false);
@@ -28,7 +28,7 @@ const Explore = () => {
     const fetchContent = async () => {
       //1. Get inscription numbers
       setInscriptionList([]);
-      let query_string = "/api/inscriptions?sort_by=" + selectedSortOption
+      let query_string = "/api/inscriptions?page_size=50&sort_by=" + selectedSortOption
       console.log("oi");
       console.log(selectedFilterOptions["Content Type"]);
       if (selectedFilterOptions["Content Type"] !== undefined && selectedFilterOptions["Content Type"].length > 0) {
@@ -105,7 +105,7 @@ const Explore = () => {
           </SectionContainer>
             {/* 3. Conditional Rendering */}
             {activeTab === 'Inscriptions' && (
-              <Stack horizontal={false} center={false} style={{gap: '1.5rem'}}>
+              <Stack horizontal={false} center={false} style={{gap: '1.5rem', width: '100%'}}>
                 <RowContainer>
                   <FilterButton onClick={toggleFilterVisibility}>
                     Filter

@@ -37,7 +37,7 @@ const Search = () => {
 
   const fetchTextSearch = async () => {
     //1. Get inscription numbers
-    const response = await fetch("/search_api/search/" + searchInput + "?n=10");
+    const response = await fetch("/search_api/search/" + searchInput + "?n=50");
     let json = await response.json();
     //json = json.sort((a,b)=>b.genesis_fee/b.content_size-a.genesis_fee/a.content_size);
     setInscriptionList(json);
