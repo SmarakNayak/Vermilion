@@ -25,6 +25,7 @@ const Inscription = () => {
   const [address, setAddress] = useState(null);
   const [transfers, setTransfers] = useState(null); //Not displayed yet
   const [shortId, setShortId] = useState(null);
+  const [shortAddress, setShortAddress] = useState(null);
   const [prettySize, setPrettySize] = useState(null);
 
   useEffect(() => {
@@ -153,6 +154,9 @@ const Inscription = () => {
       //1. Get address
       const response = await fetch("/api/inscription_last_transfer_number/" + number);
       const json = await response.json();
+      const address = json.address;
+      const short_address = address.slice(0, 5) + "..." + address.slice(-5);
+      setShortAddress(short_address);
       setAddress(json);
       console.log(json);
     }
@@ -167,7 +171,7 @@ const Inscription = () => {
 
     fetchContent();
     fetchMetadata();
-    //fetchAddress();
+    fetchAddress();
     //fetchTransfers();
     fetchEditions();
     fetchRandom();
@@ -238,7 +242,12 @@ const Inscription = () => {
                   <InfoText isLabel={true}>Owner</InfoText>
                 </InfoLabelContainer>
                 <InfoDataContainer>
-                  <InfoText>???</InfoText>
+                  <UnstyledLink to={'/address/' + address?.address}>
+                    <InfoText isLink={true}>{address?.address ? shortAddress : ""}</InfoText>
+                  </UnstyledLink>
+                  <UnstyledButton onClick={() => copyText(metadata?.id)}>                    
+                    <CopyIcon svgSize={'1rem'} svgColor={'#D9D9D9'} />
+                  </UnstyledButton>
                 </InfoDataContainer>
               </InfoRowContainer>
               <InfoRowContainer isMiddle={true}>
