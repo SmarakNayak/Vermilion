@@ -45,7 +45,7 @@ const FilterMenu = ({ isOpen, onSelectionChange }) => {
 
   const categories = [
     { name: 'Content Type', options: ["text", "image", "gif", "audio", "video", "html", "json"] },
-    { name: 'Charms', options: ['Charm 1', 'Charm 2', 'Charm 3'] },
+    { name: 'Charms', options: ["coin", "uncommon", "rare", "epic", "legendary", "cursed", "lost", "nineball", "reinscription", "unbound", "vindicated"] },
     { name: 'Satributes', options: [
       "vintage", "nakamoto", "firsttransaction", "palindrome", "pizza", "block9", "block9_450", "block78", 
       "alpha", "omega", "uniform_palinception", "perfect_palinception", "block286", "jpeg", 
