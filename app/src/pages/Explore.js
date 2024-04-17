@@ -11,36 +11,67 @@ import FilterIcon from '../assets/icons/FilterIcon';
 import ChevronDownIcon from '../assets/icons/ChevronDownIcon';
 import Stat from '../components/Stat';
 import BlockRow from '../components/BlockRow';
+import SortbyDropdown from '../components/Dropdown';
+import FilterMenu from '../components/FilterMenu';
 
 const Explore = () => {
   let number = 780346;
   const [inscriptionList, setInscriptionList] = useState([]); 
   const [numberVisibility, setNumberVisibility] = useState(true);
+  const [filterVisibility, setFilterVisibility] = useState(false);
   const [activeTab, setActiveTab] = useState('Inscriptions');
+  const [selectedSortOption, setSelectedSortOption] = useState('newest');
+  const [selectedFilterOptions, setSelectedFilterOptions] = useState({"Content Type": ["image"], "Satributes": [], "Charms":[]});
 
-  //1. Get links
+  //1. Get inscription list
   useEffect(() => {
     const fetchContent = async () => {
       //1. Get inscription numbers
       setInscriptionList([]);
-      // const response = await fetch("/api/inscriptions_in_block/" + number);
-      const response = await fetch("/api/inscriptions?content_types=image&page_size=20&page_number=1&sort_by=highest_fee");
+      let query_string = "/api/inscriptions?sort_by=" + selectedSortOption
+      console.log("oi");
+      console.log(selectedFilterOptions["Content Type"]);
+      if (selectedFilterOptions["Content Type"] !== undefined && selectedFilterOptions["Content Type"].length > 0) {
+        console.log("hit");
+        query_string += "&content_types=" + selectedFilterOptions["Content Type"].toString();
+      }
+      if (selectedFilterOptions["Satributes"] !== undefined && selectedFilterOptions["Satributes"].length > 0) {
+        query_string += "&satributes=" + selectedFilterOptions["Satributes"].toString();
+      }
+      if (selectedFilterOptions["Charms"] !== undefined && selectedFilterOptions["Charms"].length > 0) {
+        query_string += "&charms=" + selectedFilterOptions["Charms"].toString();
+      }
+      const response = await fetch(query_string);
       let json = await response.json();
-      // json = json.sort((a,b)=>b.genesis_fee/b.content_size-a.genesis_fee/a.content_size);
       setInscriptionList(json);
     }
     fetchContent();
-  },[number]);
+  },[selectedSortOption, selectedFilterOptions]);
 
   // function to toggle visibility of inscription numbers
   const toggleNumberVisibility = () => {
     setNumberVisibility(!numberVisibility);
   };
 
+  const toggleFilterVisibility = () => {
+    setFilterVisibility(!filterVisibility);
+  };
+
   // function to update active tab
   const handleTabClick = (tabName) => {
     setActiveTab(tabName);
   };
+  
+  const handleSortOptionChange = (option) => {
+    setSelectedSortOption(option);
+    // Perform any necessary actions with the selected option
+    console.log('Selected sort option:', option);
+  };
+
+  const handleFilterOptionsChange = (filterOptions) => {
+    setSelectedFilterOptions(filterOptions);
+    console.log('Selected filter option:', filterOptions);
+  }
 
   return (
     <PageContainer>
@@ -76,6 +107,10 @@ const Explore = () => {
             {activeTab === 'Inscriptions' && (
               <Stack horizontal={false} center={false} style={{gap: '1.5rem'}}>
                 <RowContainer>
+                  <FilterButton onClick={toggleFilterVisibility}>
+                    Filter
+                    <FilterIcon svgSize={'1rem'} svgColor={'#000000'}></FilterIcon>
+                  </FilterButton>
                   <Stack horizontal={true} center={false} style={{gap: '1rem'}}>
                     {/* <FilterButton>
                       <FilterIcon svgSize={'1rem'} svgColor={'#000000'}></FilterIcon>  
@@ -85,12 +120,16 @@ const Explore = () => {
                       <EyeIcon svgSize={'1rem'} svgColor={numberVisibility ? '#000000' : '#959595'}></EyeIcon>
                     </VisibilityButton>
                   </Stack>
-                  <FilterButton>
+                  {/* <FilterButton>
                     Newest
                     <ChevronDownIcon svgSize={'1rem'} svgColor={'#000000'}></ChevronDownIcon>
-                  </FilterButton>
+                  </FilterButton> */}
+                  <SortbyDropdown onOptionSelect={handleSortOptionChange} />
                 </RowContainer>
-                <Gallery inscriptionList={inscriptionList} displayJsonToggle={false} numberVisibility={numberVisibility} />
+                <RowContainer>
+                  <FilterMenu isOpen={filterVisibility} onSelectionChange ={handleFilterOptionsChange}></FilterMenu>
+                  <Gallery inscriptionList={inscriptionList} displayJsonToggle={false} numberVisibility={numberVisibility} />
+                </RowContainer>
               </Stack>
             )}
             {activeTab === 'Blocks' && (
@@ -142,7 +181,7 @@ const MainContainer = styled.div`
 const RowContainer = styled.div`
   display: flex;
   flex-direction: row;
-  align-items: center;
+  align-items: flex-start;
   justify-content: center;
   width: 100%;
 `;
