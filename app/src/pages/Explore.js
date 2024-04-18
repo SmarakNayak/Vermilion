@@ -14,6 +14,9 @@ import Stat from '../components/Stat';
 import BlockRow from '../components/BlockRow';
 import SortbyDropdown from '../components/Dropdown';
 import FilterMenu from '../components/FilterMenu';
+import { formatTimestampMs } from '../helpers/utils';
+import { shortenBytes } from '../helpers/utils';
+import { formatSats } from '../helpers/utils';
 
 const Explore = () => {
   const [baseApi, setBaseApi] = useState(null); 
@@ -22,10 +25,15 @@ const Explore = () => {
   const [activeTab, setActiveTab] = useState('Inscriptions');
   const [selectedSortOption, setSelectedSortOption] = useState('newest');
   const [selectedFilterOptions, setSelectedFilterOptions] = useState({"Content Type": ["image"], "Satributes": [], "Charms":[]});
+  
+  const [blockSortColumn, setBlockSortColumn] = useState('block_number');
+  const [blockSortDescending, setBlockSortDescending] = useState(true);
+  const [selectedBlockSortOption, setSelectedBlockSortOption] = useState('newest');
+  const [blockData, setBlockData] = useState([]);
 
-  //1. Get inscription list
+  //Get inscriptions endpoint
   useEffect(() => {
-    let query_string = "/api/inscriptions?sort_by=" + selectedSortOption
+    let query_string = "/api/inscriptions?sort_by=" + selectedSortOption;
     if (selectedFilterOptions["Content Type"] !== undefined && selectedFilterOptions["Content Type"].length > 0) {
       console.log("hit");
       query_string += "&content_types=" + selectedFilterOptions["Content Type"].toString();
@@ -38,6 +46,21 @@ const Explore = () => {
     }
     setBaseApi(query_string);
   },[selectedSortOption, selectedFilterOptions]);
+
+  //Get blocks endpoint
+  useEffect(() => {
+    let query_string = "/api/blocks?sort_by=" + selectedBlockSortOption;
+    const fetchContent = async () => {
+      const response = await fetch(query_string);
+      let json = await response.json();
+      console.log(json);
+      setBlockData(json);
+    }
+    fetchContent();
+  },[selectedBlockSortOption])
+
+  //Get collections endpoint
+
 
   // function to toggle visibility of inscription numbers
   const toggleNumberVisibility = () => {
@@ -53,10 +76,11 @@ const Explore = () => {
     setActiveTab(tabName);
   };
   
+  //inscription handlers
   const handleSortOptionChange = (option) => {
     setSelectedSortOption(option);
     // Perform any necessary actions with the selected option
-    console.log('Selected sort option:', option);
+    console.log('Selected inscription sort option:', option);
   };
 
   const handleFilterOptionsChange = (filterOptions) => {
@@ -64,22 +88,70 @@ const Explore = () => {
     console.log('Selected filter option:', filterOptions);
   };
 
-  // Example data for the table
-  const blockData = [
-    { block: '833,440', inscriptions: '2,095', creationDate: 'Jan 20, 2024', size: '1.64 MB', feeSpan: '30 to 646 sat/vB', medianFee: '~37 sat/vB', totalFees: '0.525 BTC' },
-    { block: '833,440', inscriptions: '2,095', creationDate: 'Jan 20, 2024', size: '1.64 MB', feeSpan: '30 to 646 sat/vB', medianFee: '~37 sat/vB', totalFees: '0.525 BTC' },
-    { block: '833,440', inscriptions: '2,095', creationDate: 'Jan 20, 2024', size: '1.64 MB', feeSpan: '30 to 646 sat/vB', medianFee: '~37 sat/vB', totalFees: '0.525 BTC' },
-    { block: '833,440', inscriptions: '2,095', creationDate: 'Jan 20, 2024', size: '1.64 MB', feeSpan: '30 to 646 sat/vB', medianFee: '~37 sat/vB', totalFees: '0.525 BTC' },
-    { block: '833,440', inscriptions: '2,095', creationDate: 'Jan 20, 2024', size: '1.64 MB', feeSpan: '30 to 646 sat/vB', medianFee: '~37 sat/vB', totalFees: '0.525 BTC' },
-    { block: '833,440', inscriptions: '2,095', creationDate: 'Jan 20, 2024', size: '1.64 MB', feeSpan: '30 to 646 sat/vB', medianFee: '~37 sat/vB', totalFees: '0.525 BTC' },
-    { block: '833,440', inscriptions: '2,095', creationDate: 'Jan 20, 2024', size: '1.64 MB', feeSpan: '30 to 646 sat/vB', medianFee: '~37 sat/vB', totalFees: '0.525 BTC' },
-    { block: '833,440', inscriptions: '2,095', creationDate: 'Jan 20, 2024', size: '1.64 MB', feeSpan: '30 to 646 sat/vB', medianFee: '~37 sat/vB', totalFees: '0.525 BTC' },
-    { block: '833,440', inscriptions: '2,095', creationDate: 'Jan 20, 2024', size: '1.64 MB', feeSpan: '30 to 646 sat/vB', medianFee: '~37 sat/vB', totalFees: '0.525 BTC' },
-    { block: '833,440', inscriptions: '2,095', creationDate: 'Jan 20, 2024', size: '1.64 MB', feeSpan: '30 to 646 sat/vB', medianFee: '~37 sat/vB', totalFees: '0.525 BTC' },
-    { block: '833,440', inscriptions: '2,095', creationDate: 'Jan 20, 2024', size: '1.64 MB', feeSpan: '30 to 646 sat/vB', medianFee: '~37 sat/vB', totalFees: '0.525 BTC' },
-    { block: '833,440', inscriptions: '2,095', creationDate: 'Jan 20, 2024', size: '1.64 MB', feeSpan: '30 to 646 sat/vB', medianFee: '~37 sat/vB', totalFees: '0.525 BTC' },
-    // Add more rows as needed
-  ];
+  //block handlers
+  const handleBlockSort = (column) => {
+    if (column === blockSortColumn) {
+      setBlockSortDescending(!blockSortDescending);
+    } else {
+      setBlockSortColumn(column);
+      setBlockSortDescending(true);
+    }
+  }
+  //Update block option
+  useEffect(() => {
+    // "newest", "oldest", 
+    // "most_txs", "least_txs", 
+    // "most_inscriptions", "least_inscriptions",
+    // "biggest_block", "smallest_block",
+    // "highest_total_fees", "lowest_total_fees",
+    // "most_volume", "least_volume"
+    if (blockSortColumn === "block_number" && blockSortDescending) {
+      setSelectedBlockSortOption("newest");
+    } else if (blockSortColumn === "block_number" && !blockSortDescending) {
+      setSelectedBlockSortOption("oldest");
+
+    } else if (blockSortColumn === "txs" && blockSortDescending) {
+      setSelectedBlockSortOption("most_txs");
+    } else if (blockSortColumn === "txs" && !blockSortDescending) {
+      setSelectedBlockSortOption("least_txs");
+
+    } else if (blockSortColumn === "inscriptions" && blockSortDescending) {
+      setSelectedBlockSortOption("most_inscriptions");
+    } else if (blockSortColumn === "inscriptions" && !blockSortDescending) {
+      setSelectedBlockSortOption("least_inscriptions");
+
+    } else if (blockSortColumn === "date" && !blockSortDescending) {
+      setSelectedBlockSortOption("least_txs");
+    } else if (blockSortColumn === "date" && !blockSortDescending) {
+      setSelectedBlockSortOption("oldest");
+
+    } else if (blockSortColumn === "size" && blockSortDescending) {
+      setSelectedBlockSortOption("biggest_block");
+    } else if (blockSortColumn === "size" && !blockSortDescending) {
+      setSelectedBlockSortOption("smallest_block");
+
+    } else if (blockSortColumn === "volume" && blockSortDescending) {
+      setSelectedBlockSortOption("most_volume");
+    } else if (blockSortColumn === "volume" && !blockSortDescending) {
+      setSelectedBlockSortOption("least_volume");
+
+    } else if (blockSortColumn === "fees" && blockSortDescending) {
+      setSelectedBlockSortOption("highest_total_fees");
+    } else if (blockSortColumn === "fees" && !blockSortDescending) {
+      setSelectedBlockSortOption("lowest_total_fees");
+
+    }
+  },[blockSortColumn, blockSortDescending])
+
+  //collection handlers
+
+  const renderSortIcon = (column) => {
+    if (blockSortColumn === column) {
+      return blockSortDescending ? <ChevronDownIcon svgSize={'1rem'} svgColor={'#000000'}></ChevronDownIcon> : <ChevronDownIcon svgSize={'1rem'} svgColor={'#000000'}></ChevronDownIcon>;
+    }
+    return null;
+  };
+
 
   // Example data for the table
   const collectionData = [
@@ -129,23 +201,15 @@ const Explore = () => {
             {activeTab === 'Inscriptions' && (
               <Stack horizontal={false} center={false} style={{gap: '1.5rem', width: '100%'}}>
                 <RowContainer>
-                  <FilterButton onClick={toggleFilterVisibility}>
-                    Filter
-                    <FilterIcon svgSize={'1rem'} svgColor={'#000000'}></FilterIcon>
-                  </FilterButton>
                   <Stack horizontal={true} center={false} style={{gap: '1rem'}}>
-                    {/* <FilterButton>
-                      <FilterIcon svgSize={'1rem'} svgColor={'#000000'}></FilterIcon>  
+                    <FilterButton onClick={toggleFilterVisibility}>
+                      <FilterIcon svgSize={'1rem'} svgColor={'#000000'}></FilterIcon>
                       Filters
-                    </FilterButton> */}
+                    </FilterButton>
                     <VisibilityButton onClick={toggleNumberVisibility}>
                       <EyeIcon svgSize={'1rem'} svgColor={numberVisibility ? '#000000' : '#959595'}></EyeIcon>
                     </VisibilityButton>
                   </Stack>
-                  {/* <FilterButton>
-                    Newest
-                    <ChevronDownIcon svgSize={'1rem'} svgColor={'#000000'}></ChevronDownIcon>
-                  </FilterButton> */}
                   <SortbyDropdown onOptionSelect={handleSortOptionChange} />
                 </RowContainer>
                 <RowContainer>
@@ -166,20 +230,16 @@ const Explore = () => {
                       <EyeIcon svgSize={'1rem'} svgColor={numberVisibility ? '#000000' : '#959595'}></EyeIcon>
                     </VisibilityButton>
                   </Stack>
-                  <FilterButton>
-                    Newest
-                    <ChevronDownIcon svgSize={'1rem'} svgColor={'#000000'}></ChevronDownIcon>
-                  </FilterButton>
                 </RowContainer>
                 <DivTable>
                   <DivRow header>
-                    <DivCell header>Block</DivCell>
-                    <DivCell header>Inscriptions</DivCell>
+                    <SortableDivCell header onClick={() => handleBlockSort("block_number")} isActive={blockSortColumn === 'block_number'}>Block {renderSortIcon("block_number")}</SortableDivCell>
+                    <SortableDivCell header onClick={() => handleBlockSort("txs")} isActive={blockSortColumn === 'txs'}>Transactions {renderSortIcon("txs")}</SortableDivCell>
+                    <SortableDivCell header onClick={() => handleBlockSort("inscriptions")} isActive={blockSortColumn === 'inscriptions'}>Inscriptions {renderSortIcon("inscriptions")}</SortableDivCell>
                     <DivCell header>Creation Date</DivCell>
-                    <DivCell header>Size</DivCell>
-                    <DivCell header>Fee Span</DivCell>
-                    <DivCell header>Median Fee</DivCell>
-                    <DivCell header>Total Fees</DivCell>
+                    <SortableDivCell header onClick={() => handleBlockSort("size")} isActive={blockSortColumn === 'size'}>Size {renderSortIcon("size")}</SortableDivCell>
+                    <SortableDivCell header onClick={() => handleBlockSort("volume")} isActive={blockSortColumn === 'volume'}>Traded Volume {renderSortIcon("volume")}</SortableDivCell>
+                    <SortableDivCell header onClick={() => handleBlockSort("fees")} isActive={blockSortColumn === 'fees'}>Total Fees {renderSortIcon("fees")}</SortableDivCell>
                   </DivRow>
                   {blockData.map((row, index) => (
                     <DivRow key={index}>
@@ -187,14 +247,14 @@ const Explore = () => {
                         <BlockImgContainer>
                           <BlockIcon svgSize={'2rem'} svgColor={'#E34234'}></BlockIcon>
                         </BlockImgContainer>
-                        {row.block}
+                        {row.block_number}
                       </DivCell>
-                      <DivCell>{row.inscriptions}</DivCell>
-                      <DivCell>{row.creationDate}</DivCell>
-                      <DivCell>{row.size}</DivCell>
-                      <DivCell>{row.feeSpan}</DivCell>
-                      <DivCell>{row.medianFee}</DivCell>
-                      <DivCell>{row.totalFees}</DivCell>
+                      <DivCell>{row?.block_tx_count}</DivCell>
+                      <DivCell>{row?.block_inscription_count ? row.block_inscription_count : 0}</DivCell>
+                      <DivCell>{row?.block_timestamp ? formatTimestampMs(row.block_timestamp) : ""}</DivCell>
+                      <DivCell>{row?.block_size ? shortenBytes(row.block_size) : 0}</DivCell>
+                      <DivCell>{row?.block_volume ? formatSats(row.block_volume) : "0 BTC"}</DivCell>
+                      <DivCell>{row?.block_fees ? formatSats(row.block_fees) : "0 BTC"}</DivCell>
                     </DivRow>
                   ))}
                 </DivTable>
@@ -494,6 +554,24 @@ const DivCell = styled.div`
   margin: 0;
   font-family: ABC Camera Plain Unlicensed Trial Regular;
   font-size: .875rem;
+  color: ${props => props.header ? '#959595' : '#000000'};
+  &:nth-child(1) {
+    justify-content: flex-start;
+  }
+`;
+
+const SortableDivCell = styled.div`
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 1rem;
+  flex: 1;
+  margin: 0;
+  font-family: ABC Camera Plain Unlicensed Trial Regular;
+  font-size: .875rem;
+  cursor: pointer;
+  font-weight: ${props => props.isActive ? 'bold' : 'normal'};
   color: ${props => props.header ? '#959595' : '#000000'};
   &:nth-child(1) {
     justify-content: flex-start;
