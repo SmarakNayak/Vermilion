@@ -11,23 +11,34 @@ import FilterIcon from '../assets/icons/FilterIcon';
 import ChevronDownIcon from '../assets/icons/ChevronDownIcon';
 import UploadIcon from '../assets/icons/UploadIcon';
 import SearchIcon from '../assets/icons/SearchIcon';
+import CrossIcon from '../assets/icons/CrossIcon'; // Ensure this import is correct based on your project structure
 import Stat from '../components/Stat';
 
 const Search = () => {
-  // let number = 780346;
   const [numberVisibility, setNumberVisibility] = useState(true);
   const [inscriptionList, setInscriptionList] = useState([]);
   const [searchInput, setSearchInput] = useState("");
+  const [lastSearch, setlastSearch] = useState("");
   const [image, setImage] = useState();
+  const [isError, setIsError] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleTextChange = (e) => {
     e.preventDefault();
     setSearchInput(e.target.value);
+    setIsError(false);
   };
 
   const handleTextSubmit = (e) => {
     e.preventDefault();
-    fetchTextSearch();
+    if (searchInput.trim() === "") {
+      setIsError(true); // Set error state if input is blank
+    } else {
+      setImage(undefined)
+      setlastSearch(searchInput);
+      fetchTextSearch();
+      setIsError(false); // Reset error state on valid submission
+    }
   }
 
   const handleKeyPress = (e) => {
@@ -36,11 +47,13 @@ const Search = () => {
   }
 
   const fetchTextSearch = async () => {
+    setIsLoading(true); // Start loading
     //1. Get inscription numbers
     const response = await fetch("/search_api/search/" + searchInput + "?n=50");
     let json = await response.json();
     //json = json.sort((a,b)=>b.genesis_fee/b.content_size-a.genesis_fee/a.content_size);
     setInscriptionList(json);
+    setIsLoading(false); // End loading
   }
 
   // function to toggle visibility of inscription numbers
@@ -65,18 +78,27 @@ const Search = () => {
     setImage(...e.target.files) 
     fetchImageSearch(...e.target.files);
     setSearchInput(""); // Clear search input when image search is run
-  }
+  };
 
   const fetchImageSearch = async (file) => {
+    setIsLoading(true); // Start loading
     const requestOptions = {
       method: 'POST',
       body: file
     };
-    const response = await fetch('/search_api/search_by_image?n=10', requestOptions)
+    const response = await fetch('/search_api/search_by_image?n=50', requestOptions)
     let json = await response.json();
     //json = json.sort((a,b)=>b.genesis_fee/b.content_size-a.genesis_fee/a.content_size);
     setInscriptionList(json);
-  }
+    setIsLoading(false); // End loading
+  };
+
+  const clearSearch = () => {
+    setInscriptionList([]);
+    setSearchInput("");
+    setlastSearch("");
+    setImage(undefined); // Clear image if used
+  };
 
   return (
     <PageContainer>
@@ -106,6 +128,7 @@ const Search = () => {
                   onChange={handleTextChange}
                   onKeyDown={handleKeyPress}
                   value={searchInput}
+                  isError={isError}
                 />
               </form>
             </SearchContainer>
@@ -140,7 +163,7 @@ const Search = () => {
               />
               <FilterButton onClick={handleFileButtonClick}>
                 <UploadIcon svgSize={'1rem'} svgColor={'#000000'}></UploadIcon>
-                Upload image
+                <UploadText>Upload image</UploadText>
               </FilterButton>
               <FilterButton>
                 Newest
@@ -148,6 +171,21 @@ const Search = () => {
               </FilterButton>
             </Stack>
           </RowContainer>
+          {isLoading && <p style={{color: '#959595', fontSize: '.875rem', padding: '.5rem 0', margin: 0}}>Loading...</p>}
+          {/* Add search summary message */}
+          {!isLoading && inscriptionList.length > 0 && (
+            <RowContainer style={{justifyContent: 'flex-start', alignItems: 'center'}}>
+              <Stack horizontal={true} center={true} style={{gap: '.5rem'}}>
+                <SummaryText>Showing {inscriptionList.length} results for</SummaryText>
+                <div style={{display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '.5rem .75rem', backgroundColor: '#F9E8E7', borderRadius: '.5rem'}}>
+                  <SearchText>{image ? image.name : lastSearch}</SearchText>
+                  <button onClick={clearSearch} style={{border: 'none', background: 'transparent', cursor: 'pointer', margin: 0, padding: 0, width: '1rem', height: '1rem'}}>
+                    <CrossIcon svgSize={'1rem'} svgColor={'#000000'} />
+                  </button>
+                </div>
+              </Stack>
+            </RowContainer>
+          )}
           <RowContainer>
             {/* {inscriptionList.length ? (
               <Gallery inscriptionList={inscriptionList} numberVisibility={numberVisibility} />
@@ -222,7 +260,7 @@ const SearchContainer = styled.div`
 const SearchInput = styled.input`
   width: auto;
   height: auto;
-  border: none;
+  border: 2px solid transparent;
   border-radius: .5rem;
   transition: all 150ms ease;
   background-color: transparent;
@@ -241,6 +279,15 @@ const SearchInput = styled.input`
   right: 0;
   bottom: 0;
   padding: 0 1rem 0 2.5rem;
+  box-sizing: border-box;
+
+  &:hover {
+    border: 2px solid #E9E9E9;
+  }
+
+  &:focus {
+    border: 2px solid ${props => props.isError ? '#FF0000' : '#E9E9E9'};
+  }
 
   ::placeholder { /* Chrome, Firefox, Opera, Safari 10.1+ */
     color: #959595;
@@ -291,8 +338,16 @@ const StatusText = styled.p`
   margin: 0;
 `;
 
-const StatsText = styled.p`
+const SummaryText = styled.p`
   font-size: .875rem;
+  color: #000000;
+  margin: 0;
+`;
+
+const SearchText = styled.p`
+  font-family: ABC Camera Plain Unlicensed Trial Medium;
+  font-size: .875rem;
+  color: #000000;
   margin: 0;
 `;
 
@@ -406,6 +461,16 @@ const FilterButton = styled.button`
 
   &:active {
     transform: scale(0.96);
+  };
+`;
+
+const UploadText = styled.p`
+  font-family: 'ABC Camera Plain Unlicensed Trial Medium';
+  font-size: .875rem;
+  color: #000000;
+
+  @media (max-width: 630px) {
+    display: none;
   }
 `;
 
