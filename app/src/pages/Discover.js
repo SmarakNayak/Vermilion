@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useRef, createRef } from 'react';
 import { useParams, Link } from "react-router-dom";
 import styled from 'styled-components';
-import { ChevronDownIcon, ChevronRightIcon, CopyIcon, EyeOpenIcon , InfoCircledIcon, Link2Icon, Share1Icon } from '@radix-ui/react-icons';
 import TopSection from '../components/TopSection';
+import CopyIcon from '../assets/icons/CopyIcon';
+import ArrowSquareIcon from '../assets/icons/ArrowSquareIcon';
 const iframecontentwindow = require("../scripts/iframeResizer.contentWindow.min.txt");
 
 const Discover = () => {
@@ -212,11 +213,11 @@ const Discover = () => {
             </MediaTextContainer> */}
             <ButtonContainer>
               <ActionButton onClick={() => {copyToClipboard(`https://vermilion.place/inscription/` + inscription.number)}}>
-                <CopyIcon color='#000' height='20px' width='20px' />
+                <CopyIcon svgColor='#000000' svgSize='1.5rem' />
               </ActionButton>
-              <a href={'/inscription/' + inscription.number}>
+              <a href={'/inscription/' + inscription.number} target='_blank'>
                 <ActionButton>
-                  <EyeOpenIcon color='#000' height='20px' width='20px' />
+                  <ArrowSquareIcon svgColor='#000000' svgSize='1.5rem' />
                 </ActionButton>
               </a>
               {/* <ActionButton>
@@ -270,6 +271,10 @@ const InscriptionList = styled.div`
   overflow-y: auto;
   margin-top: 6rem; 
   padding-right: 1.5rem;
+
+  @media (max-width: 768px) {
+    display: none;
+  }
 `;
 
 const InscriptionThumbnail = styled.div`
@@ -464,8 +469,12 @@ const ActionButton = styled.div`
   transform-origin: center center;
 
   &:hover {
-    background-color: #e9e9e9;
+    background-color: #E9E9E9;
   }
+
+  &:active {
+    transform: scale(0.96);
+  };
 `;
 
 export default Discover;
