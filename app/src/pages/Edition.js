@@ -160,13 +160,13 @@ const Edition = () => {
                   'loading': <TextContainer>loading...</TextContainer>
                 }[contentType]
               } 
-              <BlockText>Inscription {firstEdition}</BlockText>
+              <BlockText>Inscription {addCommas(firstEdition)}</BlockText>
             </Container>
           </RowContainer>
           <RowContainer style={{gap: '1rem'}}>
             <InfoButton>
               <HashIcon svgSize={'1rem'} svgColor={'#959595'} />
-              {editionCount + `${editionCount > 1 ? ' editions' : 'edition'}`}
+              {editionCount + `${editionCount > 1 ? ' editions' : ' edition'}`}
             </InfoButton>
             <InfoButton isButton={true} onClick={() => copyText(sha256)}>
               Sha256: {formatAddress(sha256)}
@@ -189,9 +189,6 @@ const Edition = () => {
               ))}
             </DivTable>
           </TableContainer>
-          <RowContainer>
-            <FilterButton>Show more</FilterButton>
-          </RowContainer>
         </Stack>
       </MainContainer>
       {/* <Heading>Inscription {firstEdition}</Heading>
