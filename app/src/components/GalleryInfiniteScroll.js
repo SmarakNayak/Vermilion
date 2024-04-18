@@ -29,7 +29,7 @@ const GalleryInfiniteScroll = (props) => {
 
     setInscriptions(newInscriptions);
     setHasMore(newInscriptions?.length > 0);
-    setNextPageNo(nextPageNo+1);
+    setNextPageNo(1);
   }
 
   const fetchData = async () => {

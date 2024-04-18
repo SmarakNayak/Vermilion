@@ -41,7 +41,7 @@ const Checkbox = styled.input`
 
 const FilterMenu = ({ isOpen, onSelectionChange }) => {
   const [expandedCategories, setExpandedCategories] = useState({});
-  const [selectedOptions, setSelectedOptions] = useState({});
+  const [selectedOptions, setSelectedOptions] = useState({'Content Type': ["image"]});
 
   const categories = [
     { name: 'Content Type', options: ["text", "image", "gif", "audio", "video", "html", "json"] },
