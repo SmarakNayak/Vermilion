@@ -124,9 +124,6 @@ const Discover = () => {
     };
   }, [inscriptions]); // Dependency on inscriptions to re-attach observers when list changes
 
-  console.log(activeInscription)
-  console.log(inscriptions)
-
   // useEffect(() => {
   //   if (activeInscription) {
   //     // Find the index of the active inscription based on its ID.
@@ -246,11 +243,18 @@ const Discover = () => {
   )
 }
 
-const MainContent = styled.div`
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
+const PageContainer = styled.div`
+  position: relative;
+  overflow-y: auto;
+  overscroll-behavior-y: contain;
+  scroll-snap-type: y mandatory;
+  height: 100vh;
+  width: 100%;
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
 `;
 
 const InscriptionList = styled.div`
@@ -282,21 +286,6 @@ const InscriptionThumbnail = styled.div`
     image-rendering: pixelated;
   }
   cursor: pointer;
-`;
-
-const PageContainer = styled.div`
-  background-color: #FBFBFB;
-  position: relative;
-  overflow-y: auto;
-  overscroll-behavior-y: contain;
-  scroll-snap-type: y mandatory;
-  height: 100vh;
-  width: 100%;
-  -ms-overflow-style: none;
-  scrollbar-width: none;
-  &::-webkit-scrollbar {
-    display: none;
-  }
 `;
 
 const InscriptionContainer = styled.div`
@@ -449,22 +438,6 @@ const VideoContainer = styled.video`
   }
 `;
 
-const MediaTextContainer = styled.div`
-  display: flex;
-  padding: 2px 6px;
-  justify-content: center;
-  align-items: center;
-  background: #EEE;
-  border-radius: .125em;
-  text-transform: uppercase;
-`;
-
-const MediaTypeText = styled.p`
-  font-size: .875em;
-  color: #858585;
-  margin: 0;
-`;
-
 const ButtonContainer = styled.div`
   position: relative;
   bottom: 0;
@@ -493,35 +466,6 @@ const ActionButton = styled.div`
   &:hover {
     background-color: #e9e9e9;
   }
-`;
-
-const LinksContainer = styled.div`
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  column-gap: 1rem;
-`;
-
-const TopContainer = styled.div`
-  //width: 96%;
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  justify-content: center;
-  position: sticky;
-  top: 0;
-  height: 4rem;
-  z-index: 2;
-`;
-
-const SiteText = styled(Link)`
-  font-family: ABC Camera Unlicensed Trial Bold;
-  font-size: 1.25rem;
-  color: #E34234;
-  padding: 0;
-  margin: 0;
-  cursor: pointer;
-  text-decoration: none;
 `;
 
 export default Discover;
