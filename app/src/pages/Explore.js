@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, Link } from "react-router-dom";
 import styled from 'styled-components';
 import Gallery from '../components/Gallery';
-import StyledGallery from '../components/Gallery';
+import GalleryInfiniteScroll from '../components/GalleryInfiniteScroll';
 import TopSection from '../components/TopSection';
 import Stack from '../components/Stack';
 import EyeIcon from '../assets/icons/EyeIcon';
@@ -16,7 +16,7 @@ import SortbyDropdown from '../components/Dropdown';
 import FilterMenu from '../components/FilterMenu';
 
 const Explore = () => {
-  const [inscriptionList, setInscriptionList] = useState([]); 
+  const [baseApi, setBaseApi] = useState(null); 
   const [numberVisibility, setNumberVisibility] = useState(true);
   const [filterVisibility, setFilterVisibility] = useState(false);
   const [activeTab, setActiveTab] = useState('Inscriptions');
@@ -25,27 +25,18 @@ const Explore = () => {
 
   //1. Get inscription list
   useEffect(() => {
-    const fetchContent = async () => {
-      //1. Get inscription numbers
-      setInscriptionList([]);
-      let query_string = "/api/inscriptions?page_size=50&sort_by=" + selectedSortOption
-      console.log("oi");
-      console.log(selectedFilterOptions["Content Type"]);
-      if (selectedFilterOptions["Content Type"] !== undefined && selectedFilterOptions["Content Type"].length > 0) {
-        console.log("hit");
-        query_string += "&content_types=" + selectedFilterOptions["Content Type"].toString();
-      }
-      if (selectedFilterOptions["Satributes"] !== undefined && selectedFilterOptions["Satributes"].length > 0) {
-        query_string += "&satributes=" + selectedFilterOptions["Satributes"].toString();
-      }
-      if (selectedFilterOptions["Charms"] !== undefined && selectedFilterOptions["Charms"].length > 0) {
-        query_string += "&charms=" + selectedFilterOptions["Charms"].toString();
-      }
-      const response = await fetch(query_string);
-      let json = await response.json();
-      setInscriptionList(json);
+    let query_string = "/api/inscriptions?sort_by=" + selectedSortOption
+    if (selectedFilterOptions["Content Type"] !== undefined && selectedFilterOptions["Content Type"].length > 0) {
+      console.log("hit");
+      query_string += "&content_types=" + selectedFilterOptions["Content Type"].toString();
     }
-    fetchContent();
+    if (selectedFilterOptions["Satributes"] !== undefined && selectedFilterOptions["Satributes"].length > 0) {
+      query_string += "&satributes=" + selectedFilterOptions["Satributes"].toString();
+    }
+    if (selectedFilterOptions["Charms"] !== undefined && selectedFilterOptions["Charms"].length > 0) {
+      query_string += "&charms=" + selectedFilterOptions["Charms"].toString();
+    }
+    setBaseApi(query_string);
   },[selectedSortOption, selectedFilterOptions]);
 
   // function to toggle visibility of inscription numbers
@@ -128,7 +119,7 @@ const Explore = () => {
                 </RowContainer>
                 <RowContainer>
                   <FilterMenu isOpen={filterVisibility} onSelectionChange ={handleFilterOptionsChange}></FilterMenu>
-                  <Gallery inscriptionList={inscriptionList} displayJsonToggle={false} numberVisibility={numberVisibility} />
+                  <GalleryInfiniteScroll baseApi={baseApi} numberVisibility={numberVisibility} />
                 </RowContainer>
               </Stack>
             )}

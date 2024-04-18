@@ -6,99 +6,24 @@ import ToggleSwitch from '../components/toggle'
 import GridItemContainer from './GridItemContainer';
 
 const Gallery = (props) => {
-  //Pagination
-  const pageSize = 30
-  const [pageNo, setPageNo] = useState(1);
-  const [noOfPages, setNoOfPages] = useState(1);
-  const [jsonFiltered, setJsonFiltered] = useState(true);
-  const [filteredInscriptions, setFilteredInscriptions] = useState([]);
-  const [visibleInscriptions, setVisibleInscriptions] = useState([]);
-
-  const [showToggle, setShowToggle] = useState(false);
+  const [inscriptions, setInscriptions] = useState([]);
 
   //Update inscriptionList
   useEffect(() => {
     console.log(props)
     if(props?.inscriptionList===undefined || props.inscriptionList.length<1) {
-      setFilteredInscriptions([]);
-    } else if(jsonFiltered) {
-      const filtered = props.inscriptionList.filter( inscription =>
-        !inscription.is_json &
-        !inscription.is_maybe_json &
-        !inscription.is_bitmap_style
-      )
-      setFilteredInscriptions(filtered)
+      setInscriptions([]);
     } else {
-      setFilteredInscriptions(props.inscriptionList)
+      setInscriptions(props.inscriptionList)
     }
-  },[props.inscriptionList, jsonFiltered])
-
-  useEffect(()=>{
-    if (filteredInscriptions !== undefined) {
-      setNoOfPages(Math.max(1,Math.ceil(filteredInscriptions.length/pageSize)))
-      setPageNo(1)
-    } else {
-      setNoOfPages(1)
-      setPageNo(1)
-    }
-  },[filteredInscriptions])
-
-  useEffect(()=>{
-    const visible = filteredInscriptions.slice((pageNo-1)*pageSize, pageNo*pageSize)
-    setVisibleInscriptions(visible)
-  },[filteredInscriptions, pageNo, noOfPages])
-
-  const onLeftArrowClick = () => {
-		setPageNo(Math.max(pageNo-1, 1)) //pageNo can't be lower than 1
-	}
-	const onRightArrowClick = () => {
-		setPageNo(Math.min(pageNo+1, noOfPages)) //pageNo can't exceed noOfPage
-	}
-
-  //Json Toggle
-  const onJsonToggle = (e) => {
-    //if(e===undefined) return;
-    setJsonFiltered(e.target.checked)
-    //setJsonFiltered(!jsonFiltered)
-  }
-
-  useEffect(() => {
-    setShowToggle(props.displayJsonToggle);
-  },[props.displayJsonToggle])
+  },[props.inscriptionList])
 
   return(
     <GridContainer>
-      {/* {showToggle ? <ToggleSwitch checked={jsonFiltered} text={"Hide json"} onChange={onJsonToggle}/> : <div/>} */}
-      {/* <Masonry>
-        {visibleInscriptions.map(
+      {inscriptions.map(
           entry => 
-          <Brick key={entry.number}>
-            <UnstyledLink to={'/inscription/' + entry.number}>
-              <InscriptionContainer number={entry.number}/>
-            </UnstyledLink>
-          </Brick>)}
-      </Masonry> */}
-      {visibleInscriptions.map(
-          entry => 
-          // <ItemContainer key={entry.number} number={entry.number}>
-          //   <UnstyledLink to={'/inscription/' + entry.number}>
-          //     <ImageContainer>
-          //       <ImageWrapper>
-          //         <InscriptionContainer number={entry.number}/>
-          //       </ImageWrapper>
-          //     </ImageContainer>
-          //   </UnstyledLink>
-          // </ItemContainer>
           <GridItemContainer key={entry.number} number={entry.number} numberVisibility={props.numberVisibility}></GridItemContainer>
       )}
-      {/* {visibleInscriptions.length>0 ? 
-        <StyledTablePaginator>
-          <StyledArrowContainer onClick = {onLeftArrowClick}>←</StyledArrowContainer> 
-          <p>Page {pageNo} of {noOfPages}</p> 
-          <StyledArrowContainer onClick = {onRightArrowClick}>→</StyledArrowContainer>
-        </StyledTablePaginator>
-        : <div/>
-      } */}
     </GridContainer>
   )
 }
