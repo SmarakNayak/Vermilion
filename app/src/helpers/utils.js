@@ -41,6 +41,7 @@ export const shortenBytes = (n) => {
 };
 
 export const formatSats = (sats) => {
-  let string = (sats / Math.pow(10, 8)).toFixed(2) + " BTC";
+  let btc = sats / Math.pow(10, 8);
+  let string = btc.toFixed(btc % 1 !== 0 ? 2 : 0) + " BTC";
   return string;
-}
+};

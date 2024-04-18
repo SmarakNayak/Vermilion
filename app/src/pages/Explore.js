@@ -10,6 +10,8 @@ import BlockIcon from '../assets/icons/BlockIcon';
 import { addCommas } from '../helpers/utils';
 import FilterIcon from '../assets/icons/FilterIcon';
 import ChevronDownIcon from '../assets/icons/ChevronDownIcon';
+import ChevronDownSmallIcon from '../assets/icons/ChevronDownSmallIcon';
+import ChevronUpSmallIcon from '../assets/icons/ChevronUpSmallIcon';
 import Stat from '../components/Stat';
 import BlockRow from '../components/BlockRow';
 import SortbyDropdown from '../components/Dropdown';
@@ -17,6 +19,8 @@ import FilterMenu from '../components/FilterMenu';
 import { formatTimestampMs } from '../helpers/utils';
 import { shortenBytes } from '../helpers/utils';
 import { formatSats } from '../helpers/utils';
+import BlockTable from '../components/BlockTable';
+import CollectionsTable from '../components/CollectionsTable';
 
 const Explore = () => {
   const [baseApi, setBaseApi] = useState(null); 
@@ -25,11 +29,6 @@ const Explore = () => {
   const [activeTab, setActiveTab] = useState('Inscriptions');
   const [selectedSortOption, setSelectedSortOption] = useState('newest');
   const [selectedFilterOptions, setSelectedFilterOptions] = useState({"Content Type": ["image"], "Satributes": [], "Charms":[]});
-  
-  const [blockSortColumn, setBlockSortColumn] = useState('block_number');
-  const [blockSortDescending, setBlockSortDescending] = useState(true);
-  const [selectedBlockSortOption, setSelectedBlockSortOption] = useState('newest');
-  const [blockData, setBlockData] = useState([]);
 
   //Get inscriptions endpoint
   useEffect(() => {
@@ -46,18 +45,6 @@ const Explore = () => {
     }
     setBaseApi(query_string);
   },[selectedSortOption, selectedFilterOptions]);
-
-  //Get blocks endpoint
-  useEffect(() => {
-    let query_string = "/api/blocks?sort_by=" + selectedBlockSortOption;
-    const fetchContent = async () => {
-      const response = await fetch(query_string);
-      let json = await response.json();
-      console.log(json);
-      setBlockData(json);
-    }
-    fetchContent();
-  },[selectedBlockSortOption])
 
   //Get collections endpoint
 
@@ -89,69 +76,8 @@ const Explore = () => {
   };
 
   //block handlers
-  const handleBlockSort = (column) => {
-    if (column === blockSortColumn) {
-      setBlockSortDescending(!blockSortDescending);
-    } else {
-      setBlockSortColumn(column);
-      setBlockSortDescending(true);
-    }
-  }
-  //Update block option
-  useEffect(() => {
-    // "newest", "oldest", 
-    // "most_txs", "least_txs", 
-    // "most_inscriptions", "least_inscriptions",
-    // "biggest_block", "smallest_block",
-    // "highest_total_fees", "lowest_total_fees",
-    // "most_volume", "least_volume"
-    if (blockSortColumn === "block_number" && blockSortDescending) {
-      setSelectedBlockSortOption("newest");
-    } else if (blockSortColumn === "block_number" && !blockSortDescending) {
-      setSelectedBlockSortOption("oldest");
-
-    } else if (blockSortColumn === "txs" && blockSortDescending) {
-      setSelectedBlockSortOption("most_txs");
-    } else if (blockSortColumn === "txs" && !blockSortDescending) {
-      setSelectedBlockSortOption("least_txs");
-
-    } else if (blockSortColumn === "inscriptions" && blockSortDescending) {
-      setSelectedBlockSortOption("most_inscriptions");
-    } else if (blockSortColumn === "inscriptions" && !blockSortDescending) {
-      setSelectedBlockSortOption("least_inscriptions");
-
-    } else if (blockSortColumn === "date" && !blockSortDescending) {
-      setSelectedBlockSortOption("least_txs");
-    } else if (blockSortColumn === "date" && !blockSortDescending) {
-      setSelectedBlockSortOption("oldest");
-
-    } else if (blockSortColumn === "size" && blockSortDescending) {
-      setSelectedBlockSortOption("biggest_block");
-    } else if (blockSortColumn === "size" && !blockSortDescending) {
-      setSelectedBlockSortOption("smallest_block");
-
-    } else if (blockSortColumn === "volume" && blockSortDescending) {
-      setSelectedBlockSortOption("most_volume");
-    } else if (blockSortColumn === "volume" && !blockSortDescending) {
-      setSelectedBlockSortOption("least_volume");
-
-    } else if (blockSortColumn === "fees" && blockSortDescending) {
-      setSelectedBlockSortOption("highest_total_fees");
-    } else if (blockSortColumn === "fees" && !blockSortDescending) {
-      setSelectedBlockSortOption("lowest_total_fees");
-
-    }
-  },[blockSortColumn, blockSortDescending])
 
   //collection handlers
-
-  const renderSortIcon = (column) => {
-    if (blockSortColumn === column) {
-      return blockSortDescending ? <ChevronDownIcon svgSize={'1rem'} svgColor={'#000000'}></ChevronDownIcon> : <ChevronDownIcon svgSize={'1rem'} svgColor={'#000000'}></ChevronDownIcon>;
-    }
-    return null;
-  };
-
 
   // Example data for the table
   const collectionData = [
@@ -231,33 +157,7 @@ const Explore = () => {
                     </VisibilityButton>
                   </Stack>
                 </RowContainer>
-                <DivTable>
-                  <DivRow header>
-                    <SortableDivCell header onClick={() => handleBlockSort("block_number")} isActive={blockSortColumn === 'block_number'}>Block {renderSortIcon("block_number")}</SortableDivCell>
-                    <SortableDivCell header onClick={() => handleBlockSort("txs")} isActive={blockSortColumn === 'txs'}>Transactions {renderSortIcon("txs")}</SortableDivCell>
-                    <SortableDivCell header onClick={() => handleBlockSort("inscriptions")} isActive={blockSortColumn === 'inscriptions'}>Inscriptions {renderSortIcon("inscriptions")}</SortableDivCell>
-                    <DivCell header>Creation Date</DivCell>
-                    <SortableDivCell header onClick={() => handleBlockSort("size")} isActive={blockSortColumn === 'size'}>Size {renderSortIcon("size")}</SortableDivCell>
-                    <SortableDivCell header onClick={() => handleBlockSort("volume")} isActive={blockSortColumn === 'volume'}>Traded Volume {renderSortIcon("volume")}</SortableDivCell>
-                    <SortableDivCell header onClick={() => handleBlockSort("fees")} isActive={blockSortColumn === 'fees'}>Total Fees {renderSortIcon("fees")}</SortableDivCell>
-                  </DivRow>
-                  {blockData.map((row, index) => (
-                    <DivRow key={index}>
-                      <DivCell>
-                        <BlockImgContainer>
-                          <BlockIcon svgSize={'2rem'} svgColor={'#E34234'}></BlockIcon>
-                        </BlockImgContainer>
-                        {row.block_number}
-                      </DivCell>
-                      <DivCell>{row?.block_tx_count}</DivCell>
-                      <DivCell>{row?.block_inscription_count ? row.block_inscription_count : 0}</DivCell>
-                      <DivCell>{row?.block_timestamp ? formatTimestampMs(row.block_timestamp) : ""}</DivCell>
-                      <DivCell>{row?.block_size ? shortenBytes(row.block_size) : 0}</DivCell>
-                      <DivCell>{row?.block_volume ? formatSats(row.block_volume) : "0 BTC"}</DivCell>
-                      <DivCell>{row?.block_fees ? formatSats(row.block_fees) : "0 BTC"}</DivCell>
-                    </DivRow>
-                  ))}
-                </DivTable>
+                <BlockTable/>
               </ExploreContainer>
             )}
             {activeTab === 'Collections' && (
@@ -277,33 +177,7 @@ const Explore = () => {
                     <ChevronDownIcon svgSize={'1rem'} svgColor={'#000000'}></ChevronDownIcon>
                   </FilterButton>
                 </RowContainer>
-                <DivTable>
-                  <DivRow header>
-                    <DivCell header>Collection</DivCell>
-                    <DivCell header>Range</DivCell>
-                    <DivCell header>Creation Date</DivCell>
-                    <DivCell header>Supply</DivCell>
-                    <DivCell header>Owners</DivCell>
-                    <DivCell header>Creation Fee</DivCell>
-                    <DivCell header>On Chain Footprint</DivCell>
-                  </DivRow>
-                  {collectionData.map((row, index) => (
-                    <DivRow key={index}>
-                      <DivCell>
-                        <BlockImgContainer>
-                          <BlockIcon svgSize={'2rem'} svgColor={'#E34234'}></BlockIcon>
-                        </BlockImgContainer>
-                        {row.collection}
-                      </DivCell>
-                      <DivCell>{row.range}</DivCell>
-                      <DivCell>{row.date}</DivCell>
-                      <DivCell>{row.supply}</DivCell>
-                      <DivCell>{row.owners}</DivCell>
-                      <DivCell>{row.totalFees}</DivCell>
-                      <DivCell>{row.footprint}</DivCell>
-                    </DivRow>
-                  ))}
-                </DivTable>
+                <CollectionsTable/>
               </ExploreContainer>
             )}
         </Stack>
