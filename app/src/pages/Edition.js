@@ -1,16 +1,20 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from "react-router-dom";
 import styled from 'styled-components';
-import { lightTheme } from '../styles/themes';
+import TopSection from '../components/TopSection';
+import Stack from '../components/Stack';
+import { addCommas, copyText, formatAddress } from '../helpers/utils';
+import CopyIcon from '../assets/icons/CopyIcon';
+import HashIcon from '../assets/icons/HashIcon';
 
 const Edition = () => {
   let { sha256 } = useParams();
   const [binaryContent, setBinaryContent] = useState(null);
   const [blobUrl, setBlobUrl] = useState(null);
   const [textContent, setTextContent] = useState(null);
-  const [editions, setEditions] = useState(null);
+  const [editions, setEditions] = useState([]);
   const [firstEdition, setFirstEdition] = useState(null);
-  const [editionCount, setEditionCount] = useState(null);
+  const [editionCount, setEditionCount] = useState('');
   const [contentType, setContentType] = useState(null);
   //Table
   const [pageNo, setPageNo] = useState(1);
@@ -131,10 +135,66 @@ const Edition = () => {
 	const onRightArrowClick = () => {
 		setPageNo(Math.min(noOfPages,pageNo+1))
 	}
+
+  console.log(editionCount, editions);
   
   return (
     <PageContainer>
-      <Heading>Inscription {firstEdition}</Heading>
+      <TopSection />
+      <MainContainer>
+        {/* Stack placed within main container to allow for filter section */}
+        <Stack horizontal={false} center={false} style={{gap: '1.5rem'}}>
+          <RowContainer>
+            <Container style={{gap: '1rem'}}>
+              {
+                {
+                  'image': <ImageContainer src={blobUrl} />,
+                  'svg': <SvgContainer dangerouslySetInnerHTML={{__html: textContent}} />,
+                  'html': <HtmlContainer><StyledIframe src={"/api/inscription_number/" + firstEdition} scrolling='no' sandbox='allow-scripts'></StyledIframe></HtmlContainer>,
+                  'text': <TextContainer>{textContent}</TextContainer>,
+                  'video': <video controls loop muted autoplay><source src={blobUrl} type={contentType}/></video>,
+                  'audio': <audio controls><source src={blobUrl} type={contentType}/></audio>,
+                  'pdf': <TextContainer>pdf unsupported'</TextContainer>,
+                  'model': <TextContainer>gltf model type unsupported</TextContainer>,
+                  'unsupported': <TextContainer>{contentType} content type unsupported</TextContainer>,
+                  'loading': <TextContainer>loading...</TextContainer>
+                }[contentType]
+              } 
+              <BlockText>Inscription {firstEdition}</BlockText>
+            </Container>
+          </RowContainer>
+          <RowContainer style={{gap: '1rem'}}>
+            <InfoButton>
+              <HashIcon svgSize={'1rem'} svgColor={'#959595'} />
+              {editionCount + `${editionCount > 1 ? ' editions' : 'edition'}`}
+            </InfoButton>
+            <InfoButton isButton={true} onClick={() => copyText(sha256)}>
+              Sha256: {formatAddress(sha256)}
+              <CopyIcon svgSize={'1rem'} svgColor={'#959595'} />
+            </InfoButton>
+          </RowContainer>
+          <TableContainer>
+            <DivTable>
+              <DivRow header>
+                <DivCell header>Edition #</DivCell>
+                <DivCell header>Inscription #</DivCell>
+                <DivCell header>Inscription ID</DivCell>
+              </DivRow>
+              {editions.map((edition, index) => (
+                <DivRow key={index}>
+                  <DivCell>{edition.edition}</DivCell>
+                  <DivCell>{addCommas(edition.number)}</DivCell>
+                  <DivCell>{formatAddress(edition.id)}</DivCell>
+                </DivRow>
+              ))}
+            </DivTable>
+          </TableContainer>
+          <RowContainer>
+            <FilterButton>Show more</FilterButton>
+          </RowContainer>
+        </Stack>
+      </MainContainer>
+      {/* <Heading>Inscription {firstEdition}</Heading>
       {
         {
           'image': <ImageContainer src={blobUrl} />,
@@ -186,9 +246,8 @@ const Edition = () => {
           <p>Page {pageNo} of {noOfPages}</p> 
           <StyledArrowContainer onClick = {onRightArrowClick}>→</StyledArrowContainer>
         </StyledTablePaginator>
-      </div>
+      </div> */}
     </PageContainer>
-    
   )
 }
 
@@ -197,21 +256,33 @@ const PageContainer = styled.div`
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  flex: 1;
-  align-items: center;
-  justify-content: center;
-  position: relative;
+  // flex: 1;
+  align-items: start;
+  // justify-content: center;
+  margin: 0;
 
   @media (max-width: 768px) {
-    padding: 0 2rem;
+    
+  }
+`;
+
+const MainContainer = styled.div`
+  width: calc(100% - 3rem);
+  padding: .5rem 1.5rem 2.5rem 1.5rem;
+  margin: 0;
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+
+  @media (max-width: 630px) {
+    width: calc(100% - 3rem);
+    padding: 1rem 1.5rem 2.5rem 1.5rem;
   }
 `;
 
 const ImageContainer = styled.img`
-  min-height:16rem;
-  min-height:16rem;
-  max-width:32rem;
-  max-height:32rem;
+  max-width: 4rem;
+  max-height: 4rem;
   width: auto;
   height: auto;
   image-rendering: pixelated;
@@ -221,9 +292,7 @@ const SvgContainer = styled.div`
   display: flex;
   justify-content: center;
   align-items: center;
-  min-height:12rem;
-  min-width:24rem;
-  max-width:32rem;
+  max-width: 4rem;
   width: auto;
   height: auto;
   image-rendering: pixelated;
@@ -235,7 +304,7 @@ const Heading = styled.h2`
 `
 
 const TextContainer = styled.p`
-  max-width: 800px;
+  max-width: 4rem;
   font-size: 1em;
   display: block;
   font-family: monospace;
@@ -246,8 +315,8 @@ const TextContainer = styled.p`
 const HtmlContainer = styled.div`
   display: flex;
   justify-content: center;
-  min-width: 35rem;
-  min-height: 35rem;
+  min-width: 4rem;
+  min-height: 4rem;
 `
 
 const StyledIframe = styled.iframe`
@@ -286,5 +355,137 @@ const StyledTablePaginator = styled.div`
 	gap: 10px;
 	padding-top: 10px;
 `
+
+const RowContainer = styled.div`
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+`;
+
+const Container = styled.div`
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+`;
+
+const BlockText = styled.p`
+  font-family: ABC Camera Plain Unlicensed Trial Medium;
+  font-size: 1.5rem;
+  margin: 0;
+`;
+
+const InfoButton = styled.button`
+  border-radius: 1.5rem;
+  border: none;
+  padding: .5rem 1rem;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: ${props => props.isButton ? 'pointer' : 'default'};
+  gap: .5rem;
+  font-family: 'ABC Camera Plain Unlicensed Trial Regular';
+  font-size: .875rem;
+  color: #000000;  
+  background-color:#F5F5F5;
+  transition: 
+    background-color 350ms ease,
+    transform 150ms ease;
+  transform-origin: center center;
+
+  &:hover {
+    background-color: #E9E9E9;
+  }
+
+  &:active {
+    transform: scale(0.96);
+  }
+`;
+
+const TableContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  flex; 1;
+  gap: 1.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid #E9E9E9;
+`;
+
+const DivTable = styled.div`
+  display: flex;
+  flex-direction: column;
+  width: calc(100% - 2rem);
+  max-width: 40rem;
+`;
+
+const DivRow = styled.div`
+  display: flex;
+  flex-direction: row;
+  width: 100%;
+  border-radius: .5rem;
+  padding: ${props => props.header ? '0 3rem' : '1rem 3rem'};
+  background-color: ${props => props.header ? 'transparent' : 'transparent'};
+  cursor: ${props => props.header ? 'default' : 'pointer'};
+  transition: 
+    background-color 350ms ease,
+    transform 150ms ease;
+  transform-origin: center center;
+
+  &:hover {
+    background-color: ${props => props.header ? '#transparent' : '#F5F5F5'};
+  }
+  &:not(:last-child) {
+    margin-bottom: 0.5rem;
+  }
+`;
+
+const DivCell = styled.div`
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 1rem;
+  flex: 1;
+  margin: 0;
+  font-family: ABC Camera Plain Unlicensed Trial Regular;
+  font-size: .875rem;
+  color: ${props => props.header ? '#959595' : '#000000'};
+  &:nth-child(1) {
+    justify-content: flex-start;
+  }
+`;
+
+const FilterButton = styled.button`
+  height: 40px;
+  border-radius: .5rem;
+  border: none;
+  padding: .5rem 1rem;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  gap: .5rem;
+  font-family: 'ABC Camera Plain Unlicensed Trial Medium';
+  font-size: .875rem;
+  color: #000000;
+  background-color: #F5F5F5;
+  transition: 
+    background-color 350ms ease,
+    transform 150ms ease;
+  transform-origin: center center;
+
+  &:hover {
+    background-color: #E9E9E9;
+  }
+
+  &:active {
+    transform: scale(0.96);
+  }
+`;
 
 export default Edition;

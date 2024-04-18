@@ -62,7 +62,38 @@ const Explore = () => {
   const handleFilterOptionsChange = (filterOptions) => {
     setSelectedFilterOptions(filterOptions);
     console.log('Selected filter option:', filterOptions);
-  }
+  };
+
+  // Example data for the table
+  const blockData = [
+    { block: '833,440', inscriptions: '2,095', creationDate: 'Jan 20, 2024', size: '1.64 MB', feeSpan: '30 to 646 sat/vB', medianFee: '~37 sat/vB', totalFees: '0.525 BTC' },
+    { block: '833,440', inscriptions: '2,095', creationDate: 'Jan 20, 2024', size: '1.64 MB', feeSpan: '30 to 646 sat/vB', medianFee: '~37 sat/vB', totalFees: '0.525 BTC' },
+    { block: '833,440', inscriptions: '2,095', creationDate: 'Jan 20, 2024', size: '1.64 MB', feeSpan: '30 to 646 sat/vB', medianFee: '~37 sat/vB', totalFees: '0.525 BTC' },
+    { block: '833,440', inscriptions: '2,095', creationDate: 'Jan 20, 2024', size: '1.64 MB', feeSpan: '30 to 646 sat/vB', medianFee: '~37 sat/vB', totalFees: '0.525 BTC' },
+    { block: '833,440', inscriptions: '2,095', creationDate: 'Jan 20, 2024', size: '1.64 MB', feeSpan: '30 to 646 sat/vB', medianFee: '~37 sat/vB', totalFees: '0.525 BTC' },
+    { block: '833,440', inscriptions: '2,095', creationDate: 'Jan 20, 2024', size: '1.64 MB', feeSpan: '30 to 646 sat/vB', medianFee: '~37 sat/vB', totalFees: '0.525 BTC' },
+    { block: '833,440', inscriptions: '2,095', creationDate: 'Jan 20, 2024', size: '1.64 MB', feeSpan: '30 to 646 sat/vB', medianFee: '~37 sat/vB', totalFees: '0.525 BTC' },
+    { block: '833,440', inscriptions: '2,095', creationDate: 'Jan 20, 2024', size: '1.64 MB', feeSpan: '30 to 646 sat/vB', medianFee: '~37 sat/vB', totalFees: '0.525 BTC' },
+    { block: '833,440', inscriptions: '2,095', creationDate: 'Jan 20, 2024', size: '1.64 MB', feeSpan: '30 to 646 sat/vB', medianFee: '~37 sat/vB', totalFees: '0.525 BTC' },
+    { block: '833,440', inscriptions: '2,095', creationDate: 'Jan 20, 2024', size: '1.64 MB', feeSpan: '30 to 646 sat/vB', medianFee: '~37 sat/vB', totalFees: '0.525 BTC' },
+    { block: '833,440', inscriptions: '2,095', creationDate: 'Jan 20, 2024', size: '1.64 MB', feeSpan: '30 to 646 sat/vB', medianFee: '~37 sat/vB', totalFees: '0.525 BTC' },
+    { block: '833,440', inscriptions: '2,095', creationDate: 'Jan 20, 2024', size: '1.64 MB', feeSpan: '30 to 646 sat/vB', medianFee: '~37 sat/vB', totalFees: '0.525 BTC' },
+    // Add more rows as needed
+  ];
+
+  // Example data for the table
+  const collectionData = [
+    { collection: 'Bitcoin Puppets', range: '89,945 to 11,523,702', date: 'Jan 20, 2024', supply: '10,001', owners: '5,988 (59.9%)', totalFees: '0.525 BTC', footprint: '5.675 BTC' },
+    { collection: 'Bitcoin Puppets', range: '89,945 to 11,523,702', date: 'Jan 20, 2024', supply: '10,001', owners: '5,988 (59.9%)', totalFees: '0.525 BTC', footprint: '5.675 BTC' },
+    { collection: 'Bitcoin Puppets', range: '89,945 to 11,523,702', date: 'Jan 20, 2024', supply: '10,001', owners: '5,988 (59.9%)', totalFees: '0.525 BTC', footprint: '5.675 BTC' },
+    { collection: 'Bitcoin Puppets', range: '89,945 to 11,523,702', date: 'Jan 20, 2024', supply: '10,001', owners: '5,988 (59.9%)', totalFees: '0.525 BTC', footprint: '5.675 BTC' },
+    { collection: 'Bitcoin Puppets', range: '89,945 to 11,523,702', date: 'Jan 20, 2024', supply: '10,001', owners: '5,988 (59.9%)', totalFees: '0.525 BTC', footprint: '5.675 BTC' },
+    { collection: 'Bitcoin Puppets', range: '89,945 to 11,523,702', date: 'Jan 20, 2024', supply: '10,001', owners: '5,988 (59.9%)', totalFees: '0.525 BTC', footprint: '5.675 BTC' },
+    { collection: 'Bitcoin Puppets', range: '89,945 to 11,523,702', date: 'Jan 20, 2024', supply: '10,001', owners: '5,988 (59.9%)', totalFees: '0.525 BTC', footprint: '5.675 BTC' },
+    { collection: 'Bitcoin Puppets', range: '89,945 to 11,523,702', date: 'Jan 20, 2024', supply: '10,001', owners: '5,988 (59.9%)', totalFees: '0.525 BTC', footprint: '5.675 BTC' },
+    { collection: 'Bitcoin Puppets', range: '89,945 to 11,523,702', date: 'Jan 20, 2024', supply: '10,001', owners: '5,988 (59.9%)', totalFees: '0.525 BTC', footprint: '5.675 BTC' },
+    // Add more rows as needed
+  ];
 
   return (
     <PageContainer>
@@ -124,14 +155,96 @@ const Explore = () => {
               </Stack>
             )}
             {activeTab === 'Blocks' && (
-              <Stack horizontal={false} center={false} style={{gap: '1.5rem'}}>
-                <div>Blocks placeholder</div>
-              </Stack>
+              <ExploreContainer>
+                <RowContainer>
+                  <Stack horizontal={true} center={false} style={{gap: '1rem'}}>
+                    <FilterButton>
+                      <FilterIcon svgSize={'1rem'} svgColor={'#000000'}></FilterIcon>  
+                      Filters
+                    </FilterButton>
+                    <VisibilityButton onClick={toggleNumberVisibility}>
+                      <EyeIcon svgSize={'1rem'} svgColor={numberVisibility ? '#000000' : '#959595'}></EyeIcon>
+                    </VisibilityButton>
+                  </Stack>
+                  <FilterButton>
+                    Newest
+                    <ChevronDownIcon svgSize={'1rem'} svgColor={'#000000'}></ChevronDownIcon>
+                  </FilterButton>
+                </RowContainer>
+                <DivTable>
+                  <DivRow header>
+                    <DivCell header>Block</DivCell>
+                    <DivCell header>Inscriptions</DivCell>
+                    <DivCell header>Creation Date</DivCell>
+                    <DivCell header>Size</DivCell>
+                    <DivCell header>Fee Span</DivCell>
+                    <DivCell header>Median Fee</DivCell>
+                    <DivCell header>Total Fees</DivCell>
+                  </DivRow>
+                  {blockData.map((row, index) => (
+                    <DivRow key={index}>
+                      <DivCell>
+                        <BlockImgContainer>
+                          <BlockIcon svgSize={'2rem'} svgColor={'#E34234'}></BlockIcon>
+                        </BlockImgContainer>
+                        {row.block}
+                      </DivCell>
+                      <DivCell>{row.inscriptions}</DivCell>
+                      <DivCell>{row.creationDate}</DivCell>
+                      <DivCell>{row.size}</DivCell>
+                      <DivCell>{row.feeSpan}</DivCell>
+                      <DivCell>{row.medianFee}</DivCell>
+                      <DivCell>{row.totalFees}</DivCell>
+                    </DivRow>
+                  ))}
+                </DivTable>
+              </ExploreContainer>
             )}
             {activeTab === 'Collections' && (
-              <Stack horizontal={false} center={false} style={{gap: '1.5rem'}}>
-                <div>Collections placeholder</div> 
-              </Stack>
+              <ExploreContainer>
+                <RowContainer>
+                  <Stack horizontal={true} center={false} style={{gap: '1rem'}}>
+                    <FilterButton>
+                      <FilterIcon svgSize={'1rem'} svgColor={'#000000'}></FilterIcon>  
+                      Filters
+                    </FilterButton>
+                    <VisibilityButton onClick={toggleNumberVisibility}>
+                      <EyeIcon svgSize={'1rem'} svgColor={numberVisibility ? '#000000' : '#959595'}></EyeIcon>
+                    </VisibilityButton>
+                  </Stack>
+                  <FilterButton>
+                    Newest
+                    <ChevronDownIcon svgSize={'1rem'} svgColor={'#000000'}></ChevronDownIcon>
+                  </FilterButton>
+                </RowContainer>
+                <DivTable>
+                  <DivRow header>
+                    <DivCell header>Collection</DivCell>
+                    <DivCell header>Range</DivCell>
+                    <DivCell header>Creation Date</DivCell>
+                    <DivCell header>Supply</DivCell>
+                    <DivCell header>Owners</DivCell>
+                    <DivCell header>Creation Fee</DivCell>
+                    <DivCell header>On Chain Footprint</DivCell>
+                  </DivRow>
+                  {collectionData.map((row, index) => (
+                    <DivRow key={index}>
+                      <DivCell>
+                        <BlockImgContainer>
+                          <BlockIcon svgSize={'2rem'} svgColor={'#E34234'}></BlockIcon>
+                        </BlockImgContainer>
+                        {row.collection}
+                      </DivCell>
+                      <DivCell>{row.range}</DivCell>
+                      <DivCell>{row.date}</DivCell>
+                      <DivCell>{row.supply}</DivCell>
+                      <DivCell>{row.owners}</DivCell>
+                      <DivCell>{row.totalFees}</DivCell>
+                      <DivCell>{row.footprint}</DivCell>
+                    </DivRow>
+                  ))}
+                </DivTable>
+              </ExploreContainer>
             )}
         </Stack>
       </MainContainer>
@@ -333,6 +446,57 @@ const FilterButton = styled.button`
 
   &:active {
     transform: scale(0.96);
+  }
+`;
+
+const ExploreContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  flex; 1;
+  gap: 1.5rem;
+`;
+
+const DivTable = styled.div`
+  display: flex;
+  flex-direction: column;
+  width: calc(100% - 2rem);
+`;
+
+const DivRow = styled.div`
+  display: flex;
+  flex-direction: row;
+  width: 100%;
+  border-radius: .5rem;
+  padding: ${props => props.header ? '0 1rem' : '1rem'};
+  background-color: ${props => props.header ? 'transparent' : 'transparent'};
+  cursor: ${props => props.header ? 'default' : 'pointer'};
+  transition: 
+    background-color 350ms ease,
+    transform 150ms ease;
+  transform-origin: center center;
+
+  &:hover {
+    background-color: ${props => props.header ? '#transparent' : '#F5F5F5'};
+  }
+  &:not(:last-child) {
+    margin-bottom: 0.5rem;
+  }
+`;
+
+const DivCell = styled.div`
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 1rem;
+  flex: 1;
+  margin: 0;
+  font-family: ABC Camera Plain Unlicensed Trial Regular;
+  font-size: .875rem;
+  color: ${props => props.header ? '#959595' : '#000000'};
+  &:nth-child(1) {
+    justify-content: flex-start;
   }
 `;
 
