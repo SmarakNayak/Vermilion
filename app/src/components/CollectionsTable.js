@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import InfiniteScroll from 'react-infinite-scroll-component';
+import { renderToStaticMarkup } from 'react-dom/server';
 
 import BlockIcon from '../assets/icons/BlockIcon';
 import ChevronDownSmallIcon from '../assets/icons/ChevronDownSmallIcon';
@@ -98,6 +99,19 @@ const CollectionsTable = () => {
     return null;
   };
 
+  const BlockIconDefault = encodeURIComponent(
+    renderToStaticMarkup(<BlockIcon svgSize={'2rem'} svgColor={'#E34234'} />)
+  );
+
+  const handleImageError = (event) => {
+    console.log("error image triggered")
+    event.target.onError = null;
+    event.target.src = `data:image/svg+xml,${BlockIconDefault}`;
+    //have to override default size of CollectionIcon
+    event.target.style.width = "2rem"
+    event.target.style.height = "2rem"
+  };
+
   return (
     <DivTable>
       <DivRow header>
@@ -127,7 +141,10 @@ const CollectionsTable = () => {
           <DivRow key={index}>
             <DivCell>
               <BlockImgContainer>
-                <BlockIcon svgSize={'2rem'} svgColor={'#E34234'}></BlockIcon>
+                {row?.range_start ? 
+                  <CollectionIcon src ={"/api/inscription_number/"+row.range_start} onError={handleImageError}></CollectionIcon> :
+                  <BlockIcon svgSize={'2rem'} svgColor={'#E34234'}></BlockIcon>
+                }
               </BlockImgContainer>
               {row?.name}
             </DivCell>
@@ -143,6 +160,12 @@ const CollectionsTable = () => {
     </DivTable>
   )
 }
+
+const CollectionIcon = styled.img`
+  width: 3.75rem;
+  height: 3.75rem;
+  border-radius: 2rem;
+`
 
 const BlockImgContainer = styled.div`
   width: 3.75rem;
