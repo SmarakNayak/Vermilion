@@ -1,12 +1,8 @@
 import React, { useState, useEffect, ChangeEvent } from 'react';
 import { Link } from "react-router-dom";
 import styled from 'styled-components';
-import Logo from './Logo';
-import Stack from './Stack';
-import BurgerMenuIcon from '../assets/icons/BurgerMenuIcon';
 
 const TopSection = (props) => {
-
 
   return (
     <HeaderContainer>
@@ -24,9 +20,6 @@ const TopSection = (props) => {
           </UnstyledLink>
         </LinkContainer>
         <ConnectButton>Connect</ConnectButton>
-        <MenuButton>
-          <BurgerMenuIcon svgSize='1rem' svgColor='black'></BurgerMenuIcon>
-        </MenuButton>
       </ButtonContainer>
     </HeaderContainer>
   )
@@ -42,29 +35,34 @@ const HeaderContainer = styled.div`
   top: 0;
   width: calc(100% - 3rem);
   z-index: 1;
-  padding: 1rem 1.5rem;
+  padding: 0 1.5rem;
   margin: 0;
+  height: 4.5rem;
   background-color: #FFFFFF;
-  
-  @media (max-width: 630px) {
-    width: calc(100% - 3rem);
-    padding: 1rem 1.5rem 1rem 1.5rem;
-  }
-`
+`;
 
-const ConnectButton = styled.div`
+const ConnectButton = styled.button`
   height: 2.5rem;
   border-radius: 2rem;
   border: none;
   padding: 0 1rem;
+  margin: 0;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  font-family: 'ABC Camera Plain Unlicensed Trial Medium';
+  gap: .5rem;
+  font-family: ABC Camera Plain Unlicensed Trial Medium;
   font-size: .875rem;
-  color: #FFFFFF;
-  background-color: #000000;
+  color: #FFFFFF;  
+  background-color:#000000;
+  transition: 
+    transform 150ms ease;
+  transform-origin: center center;
+
+  &:active {
+    transform: scale(0.96);
+  }
 
   @media (max-width: 630px) {
     display: none;
@@ -83,8 +81,8 @@ const LinkContainer = styled.div`
   flex-direction: row;
   align-items: center;
 
-  @media (max-width: 630px) {
-    display: none;
+  @media (max-width: 425px) {
+    gap: 1rem;
   }
 `;
 
@@ -105,25 +103,15 @@ const LinkButton = styled.div`
   &:hover {
     background-color: #F5F5F5;
   }
-`;
 
-const MenuButton = styled.button`
-  height: 40px;
-  width: 40px;
-  border-radius: .5rem;
-  border: none;
-  margin: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  font-family: 'ABC Camera Plain Unlicensed Trial Medium';
-  font-size: .875rem;
-  color: #000000;
-  background-color: #FFFFFF;
+  @media (max-width: 425px) {
+    padding: 0;
+    flex-direction: column;
+    align-items: flex-start;
 
-  @media (min-width: 630px) {
-    display: none;
+    &:hover {
+      background-color: transparent;
+    }
   }
 `;
 
