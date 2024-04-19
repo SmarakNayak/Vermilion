@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import InfiniteScroll from 'react-infinite-scroll-component';
 import { renderToStaticMarkup } from 'react-dom/server';
+import { Link } from 'react-router-dom';
 
 import BlockIcon from '../assets/icons/BlockIcon';
 import ChevronDownSmallIcon from '../assets/icons/ChevronDownSmallIcon';
@@ -140,23 +141,25 @@ const BlockTable = () => {
         loader={<h4>Loading...</h4>}
       >
         {blockData.map((row, index) => (
-          <DivRow key={index}>
-            <DivCell>
-              <BlockImgContainer>
-                {row?.block_inscription_count > 0 ?
-                  <BlockImg src ={"/api/block_icon/"+row.block_number} onError={handleImageError}></BlockImg> :
-                  <BlockIcon svgSize={'2rem'} svgColor={'#E34234'}></BlockIcon> 
-                }
-              </BlockImgContainer>
-              {row.block_number}
-            </DivCell>
-            <DivCell>{row?.block_tx_count}</DivCell>
-            <DivCell>{row?.block_inscription_count ? row.block_inscription_count : 0}</DivCell>
-            <DivCell>{row?.block_timestamp ? formatTimestampMs(row.block_timestamp) : ""}</DivCell>
-            <DivCell>{row?.block_size ? shortenBytes(row.block_size) : 0}</DivCell>
-            <DivCell>{row?.block_volume ? formatSats(row.block_volume) : "0 BTC"}</DivCell>
-            <DivCell>{row?.block_fees ? formatSats(row.block_fees) : "0 BTC"}</DivCell>
-          </DivRow>
+          <Link to={"/block/" + row?.block_number}>
+            <DivRow key={index}>
+              <DivCell>
+                <BlockImgContainer>
+                  {row?.block_inscription_count > 0 ?
+                    <BlockImg src ={"/api/block_icon/"+row.block_number} onError={handleImageError}></BlockImg> :
+                    <BlockIcon svgSize={'2rem'} svgColor={'#E34234'}></BlockIcon> 
+                  }
+                </BlockImgContainer>
+                {row.block_number}
+              </DivCell>
+              <DivCell>{row?.block_tx_count}</DivCell>
+              <DivCell>{row?.block_inscription_count ? row.block_inscription_count : 0}</DivCell>
+              <DivCell>{row?.block_timestamp ? formatTimestampMs(row.block_timestamp) : ""}</DivCell>
+              <DivCell>{row?.block_size ? shortenBytes(row.block_size) : 0}</DivCell>
+              <DivCell>{row?.block_volume ? formatSats(row.block_volume) : "0 BTC"}</DivCell>
+              <DivCell>{row?.block_fees ? formatSats(row.block_fees) : "0 BTC"}</DivCell>
+            </DivRow>
+          </Link>
         ))}
       </InfiniteScroll>
     </DivTable>

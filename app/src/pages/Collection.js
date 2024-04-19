@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from "react-router-dom";
+import { renderToStaticMarkup } from 'react-dom/server';
+
 import styled from 'styled-components';
 import Gallery from '../components/Gallery';
 import TopSection from '../components/TopSection';
@@ -12,28 +14,94 @@ import ChevronDownIcon from '../assets/icons/ChevronDownIcon';
 import CheckIcon from '../assets/icons/CheckIcon';
 import Stat from '../components/Stat';
 
+import { formatSats } from '../helpers/utils';
+import { shortenBytes } from '../helpers/utils';
+import { formatTimestampSecs } from '../helpers/utils';
+
+import SortbyDropdown from '../components/Dropdown';
+import FilterMenu from '../components/FilterMenu';
+import GalleryInfiniteScroll from '../components/GalleryInfiniteScroll';
+
 const Collection = () => {
-  let number = 780346;
+  const [baseApi, setBaseApi] = useState(null); 
+  let { symbol } = useParams();
+  const [collectionSummary, setCollectionSummary] = useState(null);
   const [inscriptionList, setInscriptionList] = useState([]); 
   const [numberVisibility, setNumberVisibility] = useState(true);
+  const [filterVisibility, setFilterVisibility] = useState(false);
+
+  const [selectedSortOption, setSelectedSortOption] = useState('newest');
+  const [selectedFilterOptions, setSelectedFilterOptions] = useState({"Content Type": ["image"], "Satributes": [], "Charms":[]});
 
   //1. Get links
-
   useEffect(() => {
     const fetchContent = async () => {
       //1. Get inscription numbers
       setInscriptionList([]);
-      const response = await fetch("/api/inscriptions_in_block/" + number);
+      const response = await fetch("/api/inscriptions_in_collection/" + symbol);
       let json = await response.json();
-      json = json.sort((a,b)=>b.genesis_fee/b.content_size-a.genesis_fee/a.content_size);
       setInscriptionList(json);
     }
     fetchContent();
-  },[number]);
+  },[symbol]);
+
+  useEffect(() => {
+    const fetchContent = async () => {
+      const response = await fetch("/api/collection_summary/" + symbol);
+      let json = await response.json();
+      console.log(json);
+      setCollectionSummary(json);
+    }
+    fetchContent();
+  },[symbol]);
+
+  //2. get endpoint
+  useEffect(() => {
+    let query_string = "/api/inscriptions_in_collection/" + symbol + "?sort_by=" + selectedSortOption;
+    if (selectedFilterOptions["Content Type"] !== undefined && selectedFilterOptions["Content Type"].length > 0) {
+      console.log("hit");
+      query_string += "&content_types=" + selectedFilterOptions["Content Type"].toString();
+    }
+    if (selectedFilterOptions["Satributes"] !== undefined && selectedFilterOptions["Satributes"].length > 0) {
+      query_string += "&satributes=" + selectedFilterOptions["Satributes"].toString();
+    }
+    if (selectedFilterOptions["Charms"] !== undefined && selectedFilterOptions["Charms"].length > 0) {
+      query_string += "&charms=" + selectedFilterOptions["Charms"].toString();
+    }
+    setBaseApi(query_string);
+  },[selectedSortOption, selectedFilterOptions]);
 
   // function to toggle visibility of inscription numbers
   const toggleNumberVisibility = () => {
     setNumberVisibility(!numberVisibility);
+  };
+
+  const toggleFilterVisibility = () => {
+    setFilterVisibility(!filterVisibility);
+  };
+
+  const handleSortOptionChange = (option) => {
+    setSelectedSortOption(option);
+    // Perform any necessary actions with the selected option
+    console.log('Selected inscription sort option:', option);
+  };
+
+  const handleFilterOptionsChange = (filterOptions) => {
+    setSelectedFilterOptions(filterOptions);
+    console.log('Selected filter option:', filterOptions);
+  };
+
+  const BlockIconDefault = encodeURIComponent(
+    renderToStaticMarkup(<BlockIcon svgSize={'2rem'} svgColor={'#E34234'} />)
+  );
+
+  const handleImageError = (event) => {
+    console.log("error image triggered")
+    event.target.onError = null;
+    event.target.src = `data:image/svg+xml,${BlockIconDefault}`;
+    //have to override default size of CollectionIcon
+    event.target.style.width = "2.25rem"
+    event.target.style.height = "2.25rem"
   };
 
   return (
@@ -44,23 +112,32 @@ const Collection = () => {
         <Stack horizontal={false} center={false} style={{gap: '1.5rem'}}>
           <RowContainer>
             <Container style={{gap: '1rem'}}>
-              <BlockImgContainer></BlockImgContainer>
-              <BlockText>Collection Name</BlockText>
+              <BlockImgContainer>
+                {collectionSummary?.range_start ? 
+                  <CollectionIcon src ={"/api/inscription_number/"+collectionSummary?.range_start} onError={handleImageError}></CollectionIcon> :
+                  <BlockIcon svgSize={'2.25rem'} svgColor={'#E34234'}></BlockIcon>
+                }
+              </BlockImgContainer>
+              <BlockText>{collectionSummary?.name}</BlockText>
             </Container>
           </RowContainer>
           <RowContainer style={{gap: '1rem'}}>
             <InfoButton>
               <CheckIcon svgSize={'1rem'} svgColor={'#009859'} />
-              Mar 20, 2024 @ 15:59
+              {collectionSummary?.first_inscribed_date ? formatTimestampSecs(collectionSummary.first_inscribed_date) : ""}
             </InfoButton>
           </RowContainer>
           <RowContainer>
             <Container style={{gap: '1.5rem', flexFlow: 'wrap', justifyContent: 'center'}}>
-              <Stat value={addCommas(10001)} category={'Supply'} />
+              <Stat value={collectionSummary?.supply ? addCommas(collectionSummary?.supply) : 0} category={'Supply'} />
               <Divider />
-              <Stat value={'5,988 (59.9%)'} category={'Owners'} />
+              <Stat value={collectionSummary?.total_volume ? formatSats(collectionSummary.total_volume) : "0 BTC"} category={'Traded Volume'} />
               <Divider />
-              <Stat value={'53,105,612 to 55,543,825'} category={'Range'} />
+              <Stat value={collectionSummary?.range_start ? collectionSummary?.range_start + " to " + collectionSummary?.range_end : ""} category={'Range'} />
+              <Divider />
+              <Stat value={collectionSummary?.total_inscription_size ? shortenBytes(collectionSummary.total_inscription_size) : 0} category={'Total Size'} />
+              <Divider />
+              <Stat value={collectionSummary?.total_inscription_fees ? formatSats(collectionSummary.total_inscription_fees) : "0 BTC"} category={'Total Fees'} />
             </Container>
           </RowContainer>
           <SectionContainer>
@@ -68,21 +145,19 @@ const Collection = () => {
           </SectionContainer>
           <RowContainer>
               <Stack horizontal={true} center={false} style={{gap: '1rem'}}>
-                {/* <FilterButton>
-                  <FilterIcon svgSize={'1rem'} svgColor={'#000000'}></FilterIcon>  
+                <FilterButton onClick={toggleFilterVisibility}>
+                  <FilterIcon svgSize={'1rem'} svgColor={'#000000'}></FilterIcon>
                   Filters
-                </FilterButton> */}
+                </FilterButton>
                 <VisibilityButton onClick={toggleNumberVisibility}>
                   <EyeIcon svgSize={'1rem'} svgColor={numberVisibility ? '#000000' : '#959595'}></EyeIcon>
                 </VisibilityButton>
               </Stack>
-              <FilterButton>
-                Newest
-                <ChevronDownIcon svgSize={'1rem'} svgColor={'#000000'}></ChevronDownIcon>
-                </FilterButton>
+              <SortbyDropdown onOptionSelect={handleSortOptionChange} />
           </RowContainer>
           <RowContainer>
-            <Gallery inscriptionList={inscriptionList} displayJsonToggle={false} numberVisibility={numberVisibility} />
+            <FilterMenu isOpen={filterVisibility} onSelectionChange ={handleFilterOptionsChange}></FilterMenu>
+            <GalleryInfiniteScroll baseApi={baseApi} numberVisibility={numberVisibility} />
           </RowContainer>
         </Stack>
       </MainContainer>
@@ -90,6 +165,12 @@ const Collection = () => {
     
   )
 }
+
+const CollectionIcon = styled.img`
+  width: 3.75rem;
+  height: 3.75rem;
+  border-radius: 2rem;
+`
   
 const PageContainer = styled.div`
   width: 100%;

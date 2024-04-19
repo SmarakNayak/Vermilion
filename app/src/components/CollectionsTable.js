@@ -9,6 +9,7 @@ import ChevronUpSmallIcon from '../assets/icons/ChevronUpSmallIcon';
 import { formatTimestampSecs } from '../helpers/utils';
 import { shortenBytes } from '../helpers/utils';
 import { formatSats } from '../helpers/utils';
+import { Link } from 'react-router-dom';
 
 const CollectionsTable = () => {
   const [collectionSortColumn, setCollectionSortColumn] = useState('volume');
@@ -138,23 +139,25 @@ const CollectionsTable = () => {
         loader={<h4>Loading...</h4>}
       >
         {collectionData.map((row, index) => (
-          <DivRow key={index}>
-            <DivCell>
-              <BlockImgContainer>
-                {row?.range_start ? 
-                  <CollectionIcon src ={"/api/inscription_number/"+row.range_start} onError={handleImageError}></CollectionIcon> :
-                  <BlockIcon svgSize={'2rem'} svgColor={'#E34234'}></BlockIcon>
-                }
-              </BlockImgContainer>
-              {row?.name}
-            </DivCell>
-            <DivCell>{row?.range_start ? row?.range_start + " - " + row?.range_end : ""}</DivCell>
-            <DivCell>{row?.first_inscribed_date ? formatTimestampSecs(row.first_inscribed_date) : ""}</DivCell>
-            <DivCell>{row?.supply}</DivCell>
-            <DivCell>{row?.total_inscription_size ? shortenBytes(row.total_inscription_size) : 0}</DivCell>
-            <DivCell>{row?.total_volume ? formatSats(row.total_volume) : "0 BTC"}</DivCell>
-            <DivCell>{row?.total_inscription_fees ? formatSats(row.total_inscription_fees) : "0 BTC"}</DivCell>
-          </DivRow>
+          <Link to={"/collection/" + row?.collection_symbol}>
+            <DivRow key={index}>
+              <DivCell>
+                <BlockImgContainer>
+                  {row?.range_start ? 
+                    <CollectionIcon src ={"/api/inscription_number/"+row.range_start} onError={handleImageError}></CollectionIcon> :
+                    <BlockIcon svgSize={'2rem'} svgColor={'#E34234'}></BlockIcon>
+                  }
+                </BlockImgContainer>
+                {row?.name}
+              </DivCell>
+              <DivCell>{row?.range_start ? row?.range_start + " - " + row?.range_end : ""}</DivCell>
+              <DivCell>{row?.first_inscribed_date ? formatTimestampSecs(row.first_inscribed_date) : ""}</DivCell>
+              <DivCell>{row?.supply}</DivCell>
+              <DivCell>{row?.total_inscription_size ? shortenBytes(row.total_inscription_size) : 0}</DivCell>
+              <DivCell>{row?.total_volume ? formatSats(row.total_volume) : "0 BTC"}</DivCell>
+              <DivCell>{row?.total_inscription_fees ? formatSats(row.total_inscription_fees) : "0 BTC"}</DivCell>
+            </DivRow>
+          </Link>
         ))}
       </InfiniteScroll>
     </DivTable>

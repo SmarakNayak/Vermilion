@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from "react-router-dom";
 import styled from 'styled-components';
+import { renderToStaticMarkup } from 'react-dom/server';
+
 import Gallery from '../components/Gallery';
 import TopSection from '../components/TopSection';
 import Stack from '../components/Stack';
@@ -12,29 +14,81 @@ import ChevronDownIcon from '../assets/icons/ChevronDownIcon';
 import CopyIcon from '../assets/icons/CopyIcon';
 import CheckIcon from '../assets/icons/CheckIcon';
 import Stat from '../components/Stat';
+import { formatSats } from '../helpers/utils';
+import { shortenBytes } from '../helpers/utils';
+
+import SortbyDropdown from '../components/Dropdown';
+import FilterMenu from '../components/FilterMenu';
+import GalleryInfiniteScroll from '../components/GalleryInfiniteScroll';
 
 const Block = () => {
+  const [baseApi, setBaseApi] = useState(null); 
   let { number } = useParams();
-  const [inscriptionList, setInscriptionList] = useState([]); 
   const [numberVisibility, setNumberVisibility] = useState(true);
+  const [filterVisibility, setFilterVisibility] = useState(false);
+  const [blockStats, setBlockStats]  = useState(null); 
+  
+  const [selectedSortOption, setSelectedSortOption] = useState('newest');
+  const [selectedFilterOptions, setSelectedFilterOptions] = useState({"Content Type": ["image"], "Satributes": [], "Charms":[]});
 
-  //1. Get links
-
+  //1. Get block statistics
   useEffect(() => {
     const fetchContent = async () => {
-      //1. Get inscription numbers
-      setInscriptionList([]);
-      const response = await fetch("/api/inscriptions_in_block/" + number);
+      const response = await fetch("/api/block_statistics/" + number);
       let json = await response.json();
-      json = json.sort((a,b)=>b.genesis_fee/b.content_size-a.genesis_fee/a.content_size);
-      setInscriptionList(json);
+      console.log(json);
+      setBlockStats(json);
     }
     fetchContent();
   },[number]);
 
+  //2. get endpoint
+  useEffect(() => {
+    let query_string = "/api/inscriptions_in_block/" + number + "?sort_by=" + selectedSortOption;
+    if (selectedFilterOptions["Content Type"] !== undefined && selectedFilterOptions["Content Type"].length > 0) {
+      console.log("hit");
+      query_string += "&content_types=" + selectedFilterOptions["Content Type"].toString();
+    }
+    if (selectedFilterOptions["Satributes"] !== undefined && selectedFilterOptions["Satributes"].length > 0) {
+      query_string += "&satributes=" + selectedFilterOptions["Satributes"].toString();
+    }
+    if (selectedFilterOptions["Charms"] !== undefined && selectedFilterOptions["Charms"].length > 0) {
+      query_string += "&charms=" + selectedFilterOptions["Charms"].toString();
+    }
+    setBaseApi(query_string);
+  },[selectedSortOption, selectedFilterOptions]);
+
   // function to toggle visibility of inscription numbers
   const toggleNumberVisibility = () => {
     setNumberVisibility(!numberVisibility);
+  };
+
+  const toggleFilterVisibility = () => {
+    setFilterVisibility(!filterVisibility);
+  };
+
+  const handleSortOptionChange = (option) => {
+    setSelectedSortOption(option);
+    // Perform any necessary actions with the selected option
+    console.log('Selected inscription sort option:', option);
+  };
+
+  const handleFilterOptionsChange = (filterOptions) => {
+    setSelectedFilterOptions(filterOptions);
+    console.log('Selected filter option:', filterOptions);
+  };
+
+  const BlockIconDefault = encodeURIComponent(
+    renderToStaticMarkup(<BlockIcon svgSize={'2rem'} svgColor={'#E34234'} />)
+  );
+
+  const handleImageError = (event) => {
+    console.log("error image triggered")
+    event.target.onError = null;
+    event.target.src = `data:image/svg+xml,${BlockIconDefault}`;
+    //have to override default size of CollectionIcon
+    event.target.style.width = "2.25rem"
+    event.target.style.height = "2.25rem"
   };
 
   return (
@@ -46,7 +100,8 @@ const Block = () => {
           <RowContainer>
             <Container style={{gap: '1rem'}}>
               <BlockImgContainer>
-                <BlockIcon svgSize={'2.25rem'} svgColor={'#E34234'}></BlockIcon>
+                <BlockImg src ={"/api/block_icon/"+number} onError={handleImageError}></BlockImg>
+                {/* <BlockIcon svgSize={'2.25rem'} svgColor={'#E34234'}></BlockIcon> */}
               </BlockImgContainer>
               <BlockText>{addCommas(number)}</BlockText>
             </Container>
@@ -63,15 +118,15 @@ const Block = () => {
           </RowContainer>
           <RowContainer>
             <Container style={{gap: '1.5rem', flexFlow: 'wrap', justifyContent: 'center'}}>
-              <Stat value={'34'} category={'Inscriptions'} />
+              <Stat value={blockStats?.block_tx_count} category={'Transactions'} />
               <Divider />
-              <Stat value={'1.64' + ' MB'} category={'Size'} />
+              <Stat value={blockStats?.block_inscription_count} category={'Inscriptions'} />
               <Divider />
-              <Stat value={'30 to 646' + ' sat/vB'} category={'Fee Span'} />
+              <Stat value={blockStats?.block_size ? shortenBytes(blockStats.block_size) : 0} category={'Size'} />
               <Divider />
-              <Stat value={'~37' + ' sat/vB'} category={'Median Fee'} />
+              <Stat value={blockStats?.block_volume ? formatSats(blockStats.block_volume) : "0 BTC"} category={'Traded Volume'} />
               <Divider />
-              <Stat value={'0.525' + ' BTC'} category={'Total Fees'} />
+              <Stat value={blockStats?.block_fees ? formatSats(blockStats.block_fees) : "0 BTC"} category={'Total Fees'} />
             </Container>
           </RowContainer>
           <SectionContainer>
@@ -79,21 +134,19 @@ const Block = () => {
           </SectionContainer>
           <RowContainer>
             <Stack horizontal={true} center={false} style={{gap: '1rem'}}>
-              {/* <FilterButton>
-                <FilterIcon svgSize={'1rem'} svgColor={'#000000'}></FilterIcon>  
+              <FilterButton onClick={toggleFilterVisibility}>
+                <FilterIcon svgSize={'1rem'} svgColor={'#000000'}></FilterIcon>
                 Filters
-              </FilterButton> */}
+              </FilterButton>
               <VisibilityButton onClick={toggleNumberVisibility}>
                 <EyeIcon svgSize={'1rem'} svgColor={numberVisibility ? '#000000' : '#959595'}></EyeIcon>
               </VisibilityButton>
             </Stack>
-            <FilterButton>
-              Newest
-              <ChevronDownIcon svgSize={'1rem'} svgColor={'#000000'}></ChevronDownIcon>
-            </FilterButton>
+            <SortbyDropdown onOptionSelect={handleSortOptionChange} />
           </RowContainer>
           <RowContainer>
-            <Gallery inscriptionList={inscriptionList} displayJsonToggle={false} numberVisibility={numberVisibility} />
+            <FilterMenu isOpen={filterVisibility} onSelectionChange ={handleFilterOptionsChange}></FilterMenu>
+            <GalleryInfiniteScroll baseApi={baseApi} numberVisibility={numberVisibility} />
           </RowContainer>
         </Stack>
       </MainContainer>
@@ -101,6 +154,12 @@ const Block = () => {
     
   )
 }
+
+const BlockImg = styled.img`
+width: 3.75rem;
+height: 3.75rem;
+border-radius: 2rem;
+`
   
 const PageContainer = styled.div`
   width: 100%;
