@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, createRef } from 'react';
 import { useParams, Link } from "react-router-dom";
 import styled from 'styled-components';
+import { addCommas } from '../helpers/utils';
 import TopSection from '../components/TopSection';
 import CopyIcon from '../assets/icons/CopyIcon';
 import ArrowSquareIcon from '../assets/icons/ArrowSquareIcon';
@@ -207,7 +208,7 @@ const Discover = () => {
             }
           </InscriptionContainer>
           <InfoContainer>
-            <NumberText>{inscription.number}</NumberText>
+            <NumberText>{addCommas(inscription.number)}</NumberText>
             {/* <MediaTextContainer>
               <MediaTypeText>{inscription.content_type}</MediaTypeText>
             </MediaTextContainer> */}
