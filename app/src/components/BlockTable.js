@@ -217,7 +217,7 @@ const DivCell = styled.div`
   gap: 1rem;
   flex: 1;
   margin: 0;
-  font-family: ABC Camera Plain Unlicensed Trial Regular;
+  font-family: Relative Trial Medium;
   font-size: .875rem;
   color: ${props => props.header ? '#959595' : '#000000'};
   &:nth-child(1) {
@@ -233,7 +233,7 @@ const SortableDivCell = styled.div`
   gap: 1rem;
   flex: 1;
   margin: 0;
-  font-family: ABC Camera Plain Unlicensed Trial Regular;
+  font-family: Relative Trial Medium;
   font-size: .875rem;
   cursor: pointer;
   font-weight: ${props => props.isActive ? 'bold' : 'normal'};

@@ -225,7 +225,7 @@ const BlockImgContainer = styled.div`
 `;
 
 const BlockText = styled.p`
-  font-family: ABC Camera Plain Unlicensed Trial Medium;
+  font-family: Relative Trial Bold;
   font-size: 1.5rem;
   margin: 0;
 `;
@@ -291,7 +291,7 @@ const TabButton = styled.button`
   justify-content: center;
   cursor: pointer;
   gap: .5rem;
-  font-family: 'ABC Camera Plain Unlicensed Trial Medium';
+  font-family: Relative Trial Bold;
   font-size: .875rem;
   color: #E34234;  
   background-color:#F9E8E7;
@@ -320,7 +320,7 @@ const VisibilityButton = styled.button`
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  font-family: 'ABC Camera Plain Unlicensed Trial Medium';
+  font-family: Relative Trial Medium;
   font-size: .875rem;
   color: #959595;
   background-color: #F5F5F5;
@@ -349,7 +349,7 @@ const FilterButton = styled.button`
   justify-content: center;
   cursor: pointer;
   gap: .5rem;
-  font-family: 'ABC Camera Plain Unlicensed Trial Medium';
+  font-family: Relative Trial Medium;
   font-size: .875rem;
   color: #000000;
   background-color: #F5F5F5;
@@ -382,7 +382,7 @@ const InfoButton = styled.button`
   justify-content: center;
   cursor: ${props => props.isButton ? 'pointer' : 'default'};
   gap: .5rem;
-  font-family: 'ABC Camera Plain Unlicensed Trial Regular';
+  font-family: Relative Trial Medium;
   font-size: .875rem;
   color: #000000;  
   background-color:#F5F5F5;

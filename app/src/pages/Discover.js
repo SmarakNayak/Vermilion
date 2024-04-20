@@ -410,7 +410,7 @@ const InfoContainer = styled.div`
 `;
 
 const NumberText = styled.p`
-  font-family: ABC Camera Unlicensed Trial Medium Italic;
+  font-family: Relative Trial Bold;
   font-size: 2em;
   margin: 0;
 `;

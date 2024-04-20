@@ -591,7 +591,7 @@ const DataContainer = styled.div`
 `;
 
 const NumberText = styled.p`
-  font-family: ABC Camera Unlicensed Trial Medium Italic;
+  font-family: Relative Trial Bold;
   font-size: 2em;
   margin: 0;
 `;
@@ -628,14 +628,14 @@ const InfoDataContainer = styled.div`
 `;
 
 const InfoSectionText = styled.p`
-  font-family: 'ABC Camera Plain Unlicensed Trial Medium';
+  font-family: Relative Trial Medium;
   font-size: .875rem;
   margin: 0;
   padding: 0;
 `;
 
 const InfoText = styled.p`
-  font-family: 'ABC Camera Plain Unlicensed Trial Regular';
+  font-family: Relative Trial Medium;
   font-size: .875rem;
   margin: 0;
   padding: 0;
@@ -654,7 +654,7 @@ const DataButton = styled.button`
   justify-content: center;
   cursor: pointer;
   gap: .5rem;
-  font-family: 'ABC Camera Plain Unlicensed Trial Medium';
+  font-family: Relative Trial Medium;
   font-size: .875rem;
   color: #959595;
   background-color: #F5F5F5;

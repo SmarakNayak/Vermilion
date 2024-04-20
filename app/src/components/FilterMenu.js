@@ -26,18 +26,14 @@ const CategoryHeader = styled.div`
   justify-content: space-between;
   align-items: center;
   cursor: pointer;
-  font-family: ABC Camera Plain Unlicensed Trial Medium;
-  font-size: 1rem;
+  font-family: Relative Trial Bold;
+  font-size: .875rem;
 `;
 
 const CategoryOptions = styled.div`
   display: ${props => (props.isOpen ? 'flex' : 'none')};
   flex-wrap: wrap;
   gap: .5rem;
-
-  font-family: ABC Camera Plain Unlicensed Trial Regular;
-  font-size: .875rem;
-  color: #959595;
 `;
 
 const Option = styled.button`
@@ -52,7 +48,7 @@ const Option = styled.button`
   border: none;
   cursor: pointer;
   border-radius: .5rem;
-  font-family: 'ABC Camera Plain Unlicensed Trial Medium';
+  font-family: Relative Trial Medium;
   font-size: .875rem;
   transition: 
     transform 150ms ease;

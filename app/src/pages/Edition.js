@@ -275,7 +275,7 @@ const Container = styled.div`
 `;
 
 const BlockText = styled.p`
-  font-family: ABC Camera Plain Unlicensed Trial Medium;
+  font-family: Relative Trial Bold;
   font-size: 1.5rem;
   margin: 0;
 `;
@@ -290,7 +290,7 @@ const InfoButton = styled.button`
   justify-content: center;
   cursor: ${props => props.isButton ? 'pointer' : 'default'};
   gap: .5rem;
-  font-family: 'ABC Camera Plain Unlicensed Trial Regular';
+  font-family: Relative Trial Medium;
   font-size: .875rem;
   color: #000000;  
   text-wrap: nowrap;
@@ -357,7 +357,7 @@ const DivCell = styled.div`
   gap: 1rem;
   flex: 1;
   margin: 0;
-  font-family: ABC Camera Plain Unlicensed Trial Regular;
+  font-family: 'Relative Trial Medium';
   font-size: .875rem;
   color: ${props => props.header ? '#959595' : '#000000'};
   &:nth-child(1) {

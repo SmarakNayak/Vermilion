@@ -20,7 +20,7 @@ const FilterButton = styled.button`
   justify-content: center;
   cursor: pointer;
   gap: .5rem;
-  font-family: ABC Camera Plain Unlicensed Trial Medium;
+  font-family: Relative Trial Medium;
   font-size: .875rem;
   color: #000000;
   background-color: ${props => props.isActive ? '#E9E9E9' : '#F5F5F5'}; 
@@ -50,13 +50,13 @@ const DropdownMenu = styled.ul`
   margin-top: .5rem;
   // min-width: 200px;
   border-radius: .5rem;
-  z-index: 9999;
+  z-index: 1;
 `;
 
 const DropdownItem = styled.li`
   padding: .5rem 1rem;
   cursor: pointer;
-  font-family: ABC Camera Plain Unlicensed Trial Regular;
+  font-family: Relative Trial Medium;
   font-size: .875rem;
   color: #000000;
   border-radius: .375rem;

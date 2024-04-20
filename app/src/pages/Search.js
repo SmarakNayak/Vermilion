@@ -238,7 +238,7 @@ const RowContainer = styled.div`
 `;
 
 const PageText = styled.p`
-    font-family: ABC Camera Plain Unlicensed Trial Medium;
+    font-family: Relative Trial Bold;
     font-size: 1.25rem;
     margin: 0;
 `;
@@ -269,7 +269,7 @@ const SearchInput = styled.input`
   overflow: hidden;
   margin: 0;
   outline: none;
-  font-family: ABC Camera Plain Unlicensed Trial Regular;
+  font-family: Relative Trial Medium;
   font-weight: 500;
   color: #000000;
   font-size: .875rem;
@@ -313,7 +313,7 @@ const BlockImgContainer = styled.div`
 `;
 
 const BlockText = styled.p`
-  font-family: ABC Camera Plain Unlicensed Trial Medium;
+  font-family: Relative Trial Medium;
   font-size: 1.5rem;
   margin: 0;
 `;
@@ -345,7 +345,7 @@ const SummaryText = styled.p`
 `;
 
 const SearchText = styled.p`
-  font-family: ABC Camera Plain Unlicensed Trial Medium;
+  font-family: Relative Trial Medium;
   font-size: .875rem;
   color: #000000;
   margin: 0;
@@ -416,7 +416,7 @@ const VisibilityButton = styled.button`
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  font-family: 'ABC Camera Plain Unlicensed Trial Medium';
+  font-family: Relative Trial Medium;
   font-size: .875rem;
   color: #959595;
   background-color: #F5F5F5;
@@ -446,7 +446,7 @@ const FilterButton = styled.button`
   cursor: pointer;
   gap: .5rem;
   white-space: nowrap; 
-  font-family: 'ABC Camera Plain Unlicensed Trial Medium';
+  font-family: Relative Trial Medium;
   font-size: .875rem;
   color: #000000;
   background-color: #F5F5F5;
@@ -465,7 +465,7 @@ const FilterButton = styled.button`
 `;
 
 const UploadText = styled.p`
-  font-family: 'ABC Camera Plain Unlicensed Trial Medium';
+  font-family: Relative Trial Medium;
   font-size: .875rem;
   color: #000000;
 

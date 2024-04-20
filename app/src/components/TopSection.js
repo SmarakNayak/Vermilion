@@ -52,7 +52,7 @@ const ConnectButton = styled.button`
   justify-content: center;
   cursor: pointer;
   gap: .5rem;
-  font-family: ABC Camera Plain Unlicensed Trial Medium;
+  font-family: Relative Trial Bold;
   font-size: .875rem;
   color: #FFFFFF;  
   background-color:#000000;
@@ -94,7 +94,7 @@ const LinkButton = styled.div`
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  font-family: 'ABC Camera Plain Unlicensed Trial Medium';
+  font-family: Relative Trial Bold;
   font-size: .875rem;
   color: #000000;
   background-color: #FFFFFF;
