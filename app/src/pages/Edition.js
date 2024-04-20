@@ -160,10 +160,10 @@ const Edition = () => {
                   'loading': <TextContainer>loading...</TextContainer>
                 }[contentType]
               } 
-              <BlockText>Inscription {addCommas(firstEdition)}</BlockText>
+              <BlockText>{firstEdition !== null && firstEdition !== undefined ? 'Inscription ' + addCommas(firstEdition) : ''}</BlockText>
             </Container>
           </RowContainer>
-          <RowContainer style={{gap: '1rem'}}>
+          <RowContainer style={{gap: '1rem', flexWrap: 'wrap'}}>
             <InfoButton>
               <HashIcon svgSize={'1rem'} svgColor={'#959595'} />
               {editionCount + `${editionCount > 1 ? ' editions' : ' edition'}`}
@@ -181,69 +181,18 @@ const Edition = () => {
                 <DivCell header>Inscription ID</DivCell>
               </DivRow>
               {editions.map((edition, index) => (
-                <DivRow key={index}>
-                  <DivCell>{edition.edition}</DivCell>
-                  <DivCell>{addCommas(edition.number)}</DivCell>
-                  <DivCell>{formatAddress(edition.id)}</DivCell>
-                </DivRow>
+                <UnstyledLink to={'/inscription/' + edition.number}>
+                  <DivRow key={index}>
+                    <DivCell>{edition.edition}</DivCell>
+                    <DivCell>{addCommas(edition.number)}</DivCell>
+                    <DivCell>{formatAddress(edition.id)}</DivCell>
+                  </DivRow>
+                </UnstyledLink>
               ))}
             </DivTable>
           </TableContainer>
         </Stack>
       </MainContainer>
-      {/* <Heading>Inscription {firstEdition}</Heading>
-      {
-        {
-          'image': <ImageContainer src={blobUrl} />,
-          'svg': <SvgContainer dangerouslySetInnerHTML={{__html: textContent}} />,
-          'html': <HtmlContainer><StyledIframe src={"/api/inscription_number/" + firstEdition} scrolling='no' sandbox='allow-scripts'></StyledIframe></HtmlContainer>,
-          'text': <TextContainer>{textContent}</TextContainer>,
-          'video': <video controls loop muted autoplay><source src={blobUrl} type={contentType}/></video>,
-          'audio': <audio controls><source src={blobUrl} type={contentType}/></audio>,
-          'pdf': <TextContainer>pdf unsupported'</TextContainer>,
-          'model': <TextContainer>gltf model type unsupported</TextContainer>,
-          'unsupported': <TextContainer>{contentType} content type unsupported</TextContainer>,
-          'loading': <TextContainer>loading...</TextContainer>
-        }[contentType]
-      }      
-      <div>
-        <p>{editionCount} Edition(s)</p>
-        <p>Sha256: {sha256}</p>
-        <StyledTable>
-          <thead>
-            <tr>
-              <th style={{fontWeight:"normal"}}>Edition</th>
-              <th style={{fontWeight:"normal"}}>Number</th>
-            </tr>
-          </thead>
-          <tbody>
-            {editions ?
-              editions
-              .slice(
-                (pageNo-1)*10,
-								pageNo*10
-              )
-              .map((row) => {
-                const table = (
-                  <>
-                    <tr>
-                      <td>{row.edition}</td>
-                      <td><Link to={'/inscription/' + row.number}>{row.number}</Link></td>
-                    </tr>
-                  </>
-                )
-                return table;
-              }) :
-              <div/>
-            }
-          </tbody>
-        </StyledTable>
-        <StyledTablePaginator>
-          <StyledArrowContainer onClick = {onLeftArrowClick}>←</StyledArrowContainer> 
-          <p>Page {pageNo} of {noOfPages}</p> 
-          <StyledArrowContainer onClick = {onRightArrowClick}>→</StyledArrowContainer>
-        </StyledTablePaginator>
-      </div> */}
     </PageContainer>
   )
 }
@@ -257,10 +206,6 @@ const PageContainer = styled.div`
   align-items: start;
   // justify-content: center;
   margin: 0;
-
-  @media (max-width: 768px) {
-    
-  }
 `;
 
 const MainContainer = styled.div`
@@ -270,11 +215,6 @@ const MainContainer = styled.div`
   display: flex;
   flex-direction: row;
   align-items: flex-start;
-
-  @media (max-width: 630px) {
-    width: calc(100% - 3rem);
-    padding: 1rem 1.5rem 2.5rem 1.5rem;
-  }
 `;
 
 const ImageContainer = styled.img`
@@ -294,11 +234,6 @@ const SvgContainer = styled.div`
   height: auto;
   image-rendering: pixelated;
 `;
-
-const Heading = styled.h2`
-  font-family: monospace;
-  font-weight: normal;
-`
 
 const TextContainer = styled.p`
   max-width: 4rem;
@@ -323,34 +258,6 @@ const StyledIframe = styled.iframe`
   width: 100%;
   resize: both;
   //aspect-ratio: 1/1;
-`
-
-const StyledTable = styled.table`
-  margin-left: auto;
-  margin-right: auto;
-	border-spacing: 20px 4px;
-	white-space: nowrap;
-`
-
-const StyledArrowContainer = styled.p`
-	color: rgb(150,150,150);
-	cursor: pointer;
-	:hover,
-  :focus {
-    color: rgb(0,0,0);
-  }
-
-  &.active {
-    color: rgb(0,0,0);
-    font-weight:550;
-  }
-`
-
-const StyledTablePaginator = styled.div`
-	display: flex;
-	justify-content: center;
-	gap: 10px;
-	padding-top: 10px;
 `
 
 const RowContainer = styled.div`
@@ -386,6 +293,7 @@ const InfoButton = styled.button`
   font-family: 'ABC Camera Plain Unlicensed Trial Regular';
   font-size: .875rem;
   color: #000000;  
+  text-wrap: nowrap;
   background-color:#F5F5F5;
   transition: 
     background-color 350ms ease,
@@ -415,7 +323,8 @@ const TableContainer = styled.div`
 const DivTable = styled.div`
   display: flex;
   flex-direction: column;
-  width: calc(100% - 2rem);
+  align-items: center;
+  width: calc(100% - 5rem);
   max-width: 40rem;
 `;
 
@@ -454,6 +363,12 @@ const DivCell = styled.div`
   &:nth-child(1) {
     justify-content: flex-start;
   }
+
+  @media (max-width: 425px) {
+    &:last-child {
+      display: none;
+    }
+  }
 `;
 
 const FilterButton = styled.button`
@@ -483,6 +398,15 @@ const FilterButton = styled.button`
   &:active {
     transform: scale(0.96);
   }
+`;
+
+const UnstyledLink = styled(Link)`
+  color: unset;
+  text-decoration: unset;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 `;
 
 export default Edition;
