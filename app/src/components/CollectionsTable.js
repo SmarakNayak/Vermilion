@@ -3,12 +3,12 @@ import styled from 'styled-components';
 import InfiniteScroll from 'react-infinite-scroll-component';
 import { renderToStaticMarkup } from 'react-dom/server';
 
-import BlockIcon from '../assets/icons/BlockIcon';
+import ImageIcon from '../assets/icons/ImageIcon';
+import ArrowDownIcon from '../assets/icons/ArrowDownIcon';
+import ArrowUpIcon from '../assets/icons/ArrowUpIcon';
 import ChevronDownSmallIcon from '../assets/icons/ChevronDownSmallIcon';
 import ChevronUpSmallIcon from '../assets/icons/ChevronUpSmallIcon';
-import { formatTimestampSecs } from '../helpers/utils';
-import { shortenBytes } from '../helpers/utils';
-import { formatSats } from '../helpers/utils';
+import { addCommas, formatSats, formatTimestampSecs, shortenBytes } from '../helpers/utils';
 import { Link } from 'react-router-dom';
 
 const CollectionsTable = () => {
@@ -95,13 +95,13 @@ const CollectionsTable = () => {
 
   const renderSortIcon = (column) => {
     if (collectionSortColumn === column) {
-      return collectionSortDescending ? <ChevronDownSmallIcon svgSize={'1rem'} svgColor={'#000000'}></ChevronDownSmallIcon> : <ChevronUpSmallIcon svgSize={'1rem'} svgColor={'#000000'}></ChevronUpSmallIcon>;
+      return collectionSortDescending ? <ArrowDownIcon svgSize={'.875rem'} svgColor={'#000000'}></ArrowDownIcon> : <ArrowUpIcon svgSize={'.875rem'} svgColor={'#000000'}></ArrowUpIcon>;
     }
     return null;
   };
 
   const BlockIconDefault = encodeURIComponent(
-    renderToStaticMarkup(<BlockIcon svgSize={'2rem'} svgColor={'#E34234'} />)
+    renderToStaticMarkup(<ImageIcon svgSize={'2rem'} svgColor={'#E34234'} />)
   );
 
   const handleImageError = (event) => {
@@ -119,45 +119,53 @@ const CollectionsTable = () => {
         <DivCell header>Collection</DivCell>
         <DivCell header>Range</DivCell>
         <SortableDivCell header onClick={() => handleCollectionSort("date")} isActive={collectionSortColumn === 'date'}>
-          Creation Date {renderSortIcon("date")}
+          <HeaderWrapper isActive={collectionSortColumn === 'date'}>
+            Creation Date {renderSortIcon("date")}
+          </HeaderWrapper>
         </SortableDivCell>
         <DivCell header>Supply</DivCell>
         <SortableDivCell header onClick={() => handleCollectionSort("size")} isActive={collectionSortColumn === 'size'}>
-          Size {renderSortIcon("size")}
+          <HeaderWrapper isActive={collectionSortColumn === 'size'}>
+            Size {renderSortIcon("size")}
+          </HeaderWrapper>
         </SortableDivCell>
         <SortableDivCell header onClick={() => handleCollectionSort("volume")} isActive={collectionSortColumn === 'volume'}>
-          Traded Volume {renderSortIcon("volume")}
+          <HeaderWrapper isActive={collectionSortColumn === 'volume'}>
+            Traded Volume {renderSortIcon("volume")}
+          </HeaderWrapper>
         </SortableDivCell>
         <SortableDivCell header onClick={() => handleCollectionSort("fees")} isActive={collectionSortColumn === 'fees'}>
-          Total Fees {renderSortIcon("fees")}
+          <HeaderWrapper isActive={collectionSortColumn === 'fees'}>
+            Total Fees {renderSortIcon("fees")}
+          </HeaderWrapper>
         </SortableDivCell>
       </DivRow>
       <InfiniteScroll
         dataLength={collectionData?.length}
         next={fetchData}
         hasMore={hasMore}
-        loader={<h4>Loading...</h4>}
+        loader={<p style={{color: '#959595'}}>Loading...</p>}
       >
         {collectionData.map((row, index) => (
-          <Link to={"/collection/" + row?.collection_symbol}>
+          <UnstyledLink to={"/collection/" + row?.collection_symbol}>
             <DivRow key={index}>
               <DivCell>
                 <BlockImgContainer>
                   {row?.range_start ? 
                     <CollectionIcon src ={"/api/inscription_number/"+row.range_start} onError={handleImageError}></CollectionIcon> :
-                    <BlockIcon svgSize={'2rem'} svgColor={'#E34234'}></BlockIcon>
+                    <ImageIcon svgSize={'2rem'} svgColor={'#E34234'}></ImageIcon>
                   }
                 </BlockImgContainer>
                 {row?.name}
               </DivCell>
-              <DivCell>{row?.range_start ? row?.range_start + " - " + row?.range_end : ""}</DivCell>
+              <DivCell>{row?.range_start ? addCommas(row?.range_start) + " - " + addCommas(row?.range_end) : ""}</DivCell>
               <DivCell>{row?.first_inscribed_date ? formatTimestampSecs(row.first_inscribed_date) : ""}</DivCell>
-              <DivCell>{row?.supply}</DivCell>
+              <DivCell>{addCommas(row?.supply)}</DivCell>
               <DivCell>{row?.total_inscription_size ? shortenBytes(row.total_inscription_size) : 0}</DivCell>
-              <DivCell>{row?.total_volume ? formatSats(row.total_volume) : "0 BTC"}</DivCell>
+              <DivCell>{row?.total_volume ? addCommas(formatSats(row.total_volume)) : "0 BTC"}</DivCell>
               <DivCell>{row?.total_inscription_fees ? formatSats(row.total_inscription_fees) : "0 BTC"}</DivCell>
             </DivRow>
-          </Link>
+          </UnstyledLink>
         ))}
       </InfiniteScroll>
     </DivTable>
@@ -167,14 +175,14 @@ const CollectionsTable = () => {
 const CollectionIcon = styled.img`
   width: 3.75rem;
   height: 3.75rem;
-  border-radius: 2rem;
+  border-radius: .5rem;
 `
 
 const BlockImgContainer = styled.div`
   width: 3.75rem;
   height: 3.75rem;
-  background-color: #F5F5F5;
-  border-radius: 2rem;
+  background-color: transparent;
+  border-radius: .5rem;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -183,13 +191,13 @@ const BlockImgContainer = styled.div`
 const DivTable = styled.div`
   display: flex;
   flex-direction: column;
-  width: calc(100% - 2rem);
+  width: 100%;
 `;
 
 const DivRow = styled.div`
   display: flex;
   flex-direction: row;
-  width: 100%;
+  width: calc(100% - 2rem);
   border-radius: .5rem;
   padding: ${props => props.header ? '0 1rem' : '1rem'};
   background-color: ${props => props.header ? 'transparent' : 'transparent'};
@@ -217,9 +225,44 @@ const DivCell = styled.div`
   margin: 0;
   font-family: Relative Trial Medium;
   font-size: .875rem;
-  color: ${props => props.header ? '#959595' : '#000000'};
+  color: ${props => props.header ? '#959595' : '#000000'};;
   &:nth-child(1) {
     justify-content: flex-start;
+  }
+
+  // Hide "Creation Date" column on screens smaller than 1200px
+  @media (max-width: 1200px) {
+    &:nth-child(3) {
+      display: none;
+    }
+  }
+
+  // Hide "Size" column on screens smaller than 1000px
+  @media (max-width: 1000px) {
+    &:nth-child(5) {
+      display: none;
+    }
+  }
+
+  // Hide "Total Fees" column on screens smaller than 800px
+  @media (max-width: 800px) {
+    &:nth-child(7) {
+      display: none;
+    }
+  }
+
+  // Hide "Traded Volume" column on screens smaller than 600px
+  @media (max-width: 600px) {
+    &:nth-child(6) {
+      display: none;
+    }
+  }
+
+  // Hide "Range" column on screens smaller than 400px
+  @media (max-width: 400px) {
+    &:nth-child(2) {
+      display: none;
+    }
   }
 `;
 
@@ -234,11 +277,60 @@ const SortableDivCell = styled.div`
   font-family: Relative Trial Medium;
   font-size: .875rem;
   cursor: pointer;
-  font-weight: ${props => props.isActive ? 'bold' : 'normal'};
-  color: ${props => props.header ? '#959595' : '#000000'};
+  color: ${props => props.isActive ? '#000000' : '#959595'};
   &:nth-child(1) {
     justify-content: flex-start;
   }
+
+  // Hide "Creation Date" column on screens smaller than 1200px
+  @media (max-width: 1200px) {
+    &:nth-child(3) {
+      display: none;
+    }
+  }
+
+  // Hide "Size" column on screens smaller than 1000px
+  @media (max-width: 1000px) {
+    &:nth-child(5) {
+      display: none;
+    }
+  }
+
+  // Hide "Total Fees" column on screens smaller than 800px
+  @media (max-width: 800px) {
+    &:nth-child(7) {
+      display: none;
+    }
+  }
+
+  // Hide "Traded Volume" column on screens smaller than 600px
+  @media (max-width: 600px) {
+    &:nth-child(6) {
+      display: none;
+    }
+  }
+
+  // Hide "Range" column on screens smaller than 400px
+  @media (max-width: 400px) {
+    &:nth-child(2) {
+      display: none;
+    }
+  }
+`;
+
+const HeaderWrapper = styled.span`
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: .25rem;
+  padding: ${props => props.isActive ? '0.25rem .5rem' : '0.25rem 0'};
+  background-color: ${props => props.isActive ? '#F5F5F5' : 'transparent'};
+  border-radius: .5rem;
+`;
+
+const UnstyledLink = styled(Link)`
+  color: unset;
+  text-decoration: unset;
 `;
 
 export default CollectionsTable;
