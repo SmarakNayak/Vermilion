@@ -1,18 +1,24 @@
 import React, { useState } from 'react';
-import styled from 'styled-components';
+import styled, { keyframes } from 'styled-components';
+import CheckIcon from '../assets/icons/CheckIcon';
+import ChevronUpIcon from '../assets/icons/ChevronUpIcon'; 
+import ChevronDownIcon from '../assets/icons/ChevronDownIcon';
 
 const MenuContainer = styled.div`
-  display: flex;
-  flex-flow: column;
+  display: ${props => (props.isOpen ? 'flex' : 'none')};;
+  flex-direction: column;
   visibility: ${props => (props.isOpen ? 'visible' : 'hidden')};
-  width: ${props => (props.isOpen ? '250px' : '0px')};
-  background-color: white;
+  width: 100%;
+  max-width: 240px;
   transition: left 0.3s ease-in-out;
-  padding: 20px;
+  margin-right: 3rem;
+  gap: 2rem;
 `;
 
 const CategoryContainer = styled.div`
-  margin-bottom: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
 `;
 
 const CategoryHeader = styled.div`
@@ -20,23 +26,45 @@ const CategoryHeader = styled.div`
   justify-content: space-between;
   align-items: center;
   cursor: pointer;
-  padding: 10px 0;
+  font-family: ABC Camera Plain Unlicensed Trial Medium;
+  font-size: 1rem;
 `;
 
 const CategoryOptions = styled.div`
-  display: ${props => (props.isOpen ? 'block' : 'none')};
-  margin-left: 20px;
+  display: ${props => (props.isOpen ? 'flex' : 'none')};
+  flex-wrap: wrap;
+  gap: .5rem;
+
+  font-family: ABC Camera Plain Unlicensed Trial Regular;
+  font-size: .875rem;
+  color: #959595;
 `;
 
-const Option = styled.div`
+const Option = styled.button`
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-start;
   align-items: center;
-  padding: 5px 0;
-`;
+  padding: .375rem .75rem;
+  font-size: .875rem;
+  color: ${props => (props.isSelected ? 'white' : 'black')};
+  background-color: ${props => (props.isSelected ? '#000' : '#f5f5f5')};
+  text-align: left;
+  border: none;
+  cursor: pointer;
+  border-radius: .5rem;
+  font-family: 'ABC Camera Plain Unlicensed Trial Medium';
+  font-size: .875rem;
+  transition: 
+    transform 150ms ease;
+  transform-origin: center center;
 
-const Checkbox = styled.input`
-  margin-left: 5px;
+  &:active {
+    transform: scale(0.96);
+  }
+
+  &:hover {
+    background-color: ${props => (props.isSelected ? '#000' : '#e0e0e0')};
+  }
 `;
 
 const FilterMenu = ({ isOpen, onSelectionChange }) => {
@@ -79,17 +107,16 @@ const FilterMenu = ({ isOpen, onSelectionChange }) => {
         <CategoryContainer key={category.name}>
           <CategoryHeader onClick={() => toggleCategory(category.name)}>
             {category.name}
-            <span>{expandedCategories[category.name] ? '-' : '+'}</span>
+            {expandedCategories[category.name] ? <ChevronUpIcon svgColor={'#000000'} svgSize={'1rem'} /> : <ChevronDownIcon svgColor={'#000000'} svgSize={'1rem'} />}
           </CategoryHeader>
           <CategoryOptions isOpen={expandedCategories[category.name]}>
             {category.options.map(option => (
-              <Option key={option}>
+              <Option
+                key={option}
+                isSelected={selectedOptions[category.name]?.includes(option)}
+                onClick={() => toggleOption(category.name, option)}
+              >
                 {option}
-                <Checkbox
-                  type="checkbox"
-                  checked={selectedOptions[category.name]?.includes(option) || false}
-                  onChange={() => toggleOption(category.name, option)}
-                />
               </Option>
             ))}
           </CategoryOptions>
