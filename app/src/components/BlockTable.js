@@ -164,7 +164,11 @@ const BlockTable = () => {
         dataLength={blockData?.length}
         next={fetchData}
         hasMore={hasMore}
-        loader={<p style={{color: '#959595'}}>Loading...</p>}
+        loader={
+          <LoaderContainer>
+            <p style={{color: '#959595'}}>Loading...</p>
+          </LoaderContainer>
+        }
       >
         {blockData.map((row, index) => (
           <UnstyledLink to={"/block/" + row?.block_number}>
@@ -191,6 +195,14 @@ const BlockTable = () => {
     </DivTable>
   )
 }
+
+const LoaderContainer = styled.div`
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  padding-top: 1.5rem;
+`;
 
 const BlockImg = styled.img`
   width: 3.75rem;

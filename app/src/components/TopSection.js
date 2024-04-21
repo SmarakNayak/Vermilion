@@ -39,6 +39,8 @@ const HeaderContainer = styled.div`
   margin: 0;
   height: 4.5rem;
   background-color: #FFFFFF;
+
+  z-index: 2;
 `;
 
 const ConnectButton = styled.button`

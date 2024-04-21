@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { addCommas } from '../helpers/utils';
 
 const GridItemContainer = (props) => {
@@ -104,31 +104,31 @@ const GridItemContainer = (props) => {
       }
     }
     updateText();    
-  },[contentType])
+  },[contentType]);
 
   return(
     <UnstyledLink to={'/inscription/' + props.number}>
       <ItemContainer>
-        <ImgContainer>
-          <LoadedImage src={blobUrl} />
-        </ImgContainer>
+        <MediaContainer>
+          {
+            {
+              'image': <ImageContainer src={blobUrl} />,
+              'svg': <SvgContainer dangerouslySetInnerHTML={{__html: textContent}} />,
+              'html': <HtmlContainer><ContentOverlay /><StyledIframe src={"/api/inscription_number/" + props.number} sandbox='allow-scripts' loading='lazy' controls muted></StyledIframe></HtmlContainer>,
+              'text': <TextContainer><MediaText>{textContent}</MediaText></TextContainer>,
+              'video': <video controls loop muted autoplay style={{width: '100%'}}><ContentOverlay /><source src={blobUrl} type={rawContentType}/></video>,
+              'audio': <audio controls><ContentOverlay /><source src={blobUrl} type={rawContentType}/></audio>,
+              'pdf': <TextContainer>pdf unsupported'</TextContainer>,
+              'model': <TextContainer>gltf model type unsupported</TextContainer>,
+              'unsupported': <TextContainer>{rawContentType} content type unsupported</TextContainer>,
+              'loading': <TextContainer loading>Loading...</TextContainer>
+            }[contentType]
+          }
+        </MediaContainer>
         {props.numberVisibility && <ItemText>{addCommas(props.number)}</ItemText>}
         {/* <ItemText>{props.number}</ItemText> */}
       </ItemContainer>
-      {/* {
-        {
-          'image': <ImageContainer src={blobUrl} />,
-          'svg': <SvgContainer dangerouslySetInnerHTML={{__html: textContent}} />,
-          'html': <HtmlContainer><StyledIframe src={"/api/inscription_number/" + props.number} scrolling='no'></StyledIframe></HtmlContainer>,
-          'text': <TextContainer><p>{textContent}</p></TextContainer>,
-          'video': <video controls loop muted autoplay><source src={blobUrl} type={rawContentType}/></video>,
-          'audio': <audio controls><source src={blobUrl} type={rawContentType}/></audio>,
-          'pdf': <TextContainer>pdf unsupported'</TextContainer>,
-          'model': <TextContainer>gltf model type unsupported</TextContainer>,
-          'unsupported': <TextContainer>{rawContentType} content type unsupported</TextContainer>,
-          'loading': <TextContainer>loading...</TextContainer>
-        }[contentType]
-      } */}
+
     </UnstyledLink>
   )
 }
@@ -138,52 +138,13 @@ const UnstyledLink = styled(Link)`
   text-decoration: unset;
 `
 
-const ImageContainer = styled.img`
-  min-width:16rem;
-  max-width:32rem;
-  width: auto;
-  height: auto;
-  image-rendering: pixelated;
-`;
-
-const TextContainer = styled.div`
-  display: flex;
-  align-items: center;
-  min-height: 11rem;
-  max-width: 800px;
-  margin: 1em;
-  font-size: 1em;
-  font-family: monospace;
-  white-space-collapse: preserve;
-`;
-
-const HtmlContainer = styled.div`
-  display: flex;
-  justify-content: center;
-  min-width: 35rem;
-  min-height: 35rem;
-`
-
-const SvgContainer = styled.div`
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  min-height:12rem;
-  min-width:24rem;
-  max-width:32rem;
-  width: auto;
-  height: auto;
-  image-rendering: pixelated;
-`;
-
-const StyledIframe = styled.iframe`
-  border: none;
-  //flex: 0 100%;
-  //flex-grow: 1;
-  width: 100%;
-  resize: both;
-  //aspect-ratio: 1/1;
-`;
+// const ImageContainer = styled.img`
+//   min-width:16rem;
+//   max-width:32rem;
+//   width: auto;
+//   height: auto;
+//   image-rendering: pixelated;
+// `;
 
 const ItemContainer = styled.div`
   display: flex;
@@ -193,12 +154,12 @@ const ItemContainer = styled.div`
   cursor: pointer;
 `;
 
-const ImgContainer = styled.div`
+const MediaContainer = styled.div`
   background-color: #F5F5F5;
   padding: 15%;
   display: flex;
-//   align-items: center;
-//   justify-content: center;
+  align-items: center;
+  justify-content: center;
   width: 70%;
   height: auto;
   aspect-ratio: 1/1;
@@ -209,7 +170,7 @@ const ImgContainer = styled.div`
   }
 `;
 
-const LoadedImage = styled.img`
+const ImageContainer = styled.img`
   max-width: 100%;
   max-height: 100%;
   min-width: 100%; /* Ensures scaling up */
@@ -227,6 +188,119 @@ const LoadedImage = styled.img`
   }
 `;
 
+const TextContainer = styled.div`
+  max-width: 100%;
+  max-height: 100%;
+  min-width: 100%; /* Ensures scaling up */
+  min-height: 100%; /* Ensures scaling up */
+  width: auto;
+  height: auto;
+  display: flex;
+  margin: 0;
+  font-size: .875rem;
+  font-family: Relative Trial Medium;
+  color: ${props => props.loading ? '#959595' : '#000000'};
+  object-fit: contain;
+  aspect-ratio: 1/1;
+  filter: drop-shadow(0 8px 24px rgba(158,158,158,.2));
+  transition: all 350ms ease;
+
+  ${ItemContainer}:hover & {
+    transform: scale(1.03);
+  }
+
+  white-space-collapse: preserve;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-wrap: wrap;
+`;
+
+const MediaText = styled.p`
+  font-family: Relative Trial Medium;
+  font-size: .875rem;
+  color: #000000;
+  margin: 0;
+  padding: 0;
+  overflow-wrap: break-word;
+  word-break: break-word;
+  white-space: pre-wrap;
+`;
+
+const HtmlContainer = styled.div`
+  max-width: 100%;
+  max-height: 100%;
+  min-width: 100%; /* Ensures scaling up */
+  min-height: 100%; /* Ensures scaling up */
+  width: auto;
+  height: auto;
+  display: flex;
+  margin: 0;
+  font-size: .875rem;
+  font-family: monospace;
+  white-space-collapse: preserve;
+  object-fit: contain;
+  aspect-ratio: 1/1;
+  filter: drop-shadow(0 8px 24px rgba(158,158,158,.2));
+  transition: all 350ms ease;
+
+  ${ItemContainer}:hover & {
+    transform: scale(1.03);
+  }
+
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-wrap: wrap;
+`;
+
+// const SvgContainer = styled.div`
+//   display: flex;
+//   justify-content: center;
+//   align-items: center;
+//   min-height:12rem;
+//   min-width:24rem;
+//   max-width:32rem;
+//   width: auto;
+//   height: auto;
+//   image-rendering: pixelated;
+// `;
+
+const SvgContainer = styled.div`
+  max-width: 100%;
+  max-height: 100%;
+  min-width: 100%; /* Ensures scaling up */
+  min-height: 100%; /* Ensures scaling up */
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  aspect-ratio: 1/1;
+  image-rendering: pixelated;
+  filter: drop-shadow(0 8px 24px rgba(158,158,158,.2));
+  transition: all 350ms ease;
+
+  ${ItemContainer}:hover & {
+    transform: scale(1.03);
+  }
+`;
+
+const StyledIframe = styled.iframe`
+  border: none;
+  //flex: 0 100%;
+  //flex-grow: 1;
+  width: 100%;
+  resize: both;
+  //aspect-ratio: 1/1;
+`;
+
+const ContentOverlay = styled.div`
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 100%;
+  width: 100%;
+  cursor: pointer;
+`;
 
 const ItemText = styled.p`
   font-size: .875rem;

@@ -97,64 +97,63 @@ const Explore = () => {
     <PageContainer>
       <TopSection />
       <MainContainer>
-        {/* Stack placed within main container to allow for filter section */}
-        <Stack horizontal={false} center={false} style={{gap: '1.5rem'}}>
-          <RowContainer style={{justifyContent: 'flex-start'}}>
-            <PageText>Explore</PageText>
-          </RowContainer>
-          <SectionContainer>
-            {/* Update onClick to change active tab */}
-            <TabButton 
-              onClick={() => handleTabClick('Inscriptions')}
-              isActive={activeTab === 'Inscriptions'}
-              >
-              Inscriptions
-            </TabButton>
-            <TabButton 
-              onClick={() => handleTabClick('Blocks')}
-              isActive={activeTab === 'Blocks'}
-              >
-              Blocks
-            </TabButton>
-            <TabButton 
-              onClick={() => handleTabClick('Collections')}
-              isActive={activeTab === 'Collections'}
-              >
-              Collections
-            </TabButton>
-          </SectionContainer>
-            {/* 3. Conditional Rendering */}
-            {activeTab === 'Inscriptions' && (
-              <Stack horizontal={false} center={false} style={{gap: '1.5rem', width: '100%'}}>
-                <RowContainer>
-                  <Stack horizontal={true} center={false} style={{gap: '1rem'}}>
-                    <FilterButton onClick={toggleFilterVisibility}>
-                      <FilterIcon svgSize={'1rem'} svgColor={'#000000'}></FilterIcon>
-                      Filters
-                    </FilterButton>
-                    <VisibilityButton onClick={toggleNumberVisibility}>
-                      <EyeIcon svgSize={'1rem'} svgColor={numberVisibility ? '#000000' : '#959595'}></EyeIcon>
-                    </VisibilityButton>
-                  </Stack>
-                  <SortbyDropdown onOptionSelect={handleSortOptionChange} />
-                </RowContainer>
-                <RowContainer>
-                  <FilterMenu isOpen={filterVisibility} onSelectionChange ={handleFilterOptionsChange} onClose={toggleFilterVisibility}></FilterMenu>
+        <RowContainer style={{justifyContent: 'flex-start'}}>
+          <PageText>Explore</PageText>
+        </RowContainer>
+        <SectionContainer>
+          {/* Update onClick to change active tab */}
+          <TabButton 
+            onClick={() => handleTabClick('Inscriptions')}
+            isActive={activeTab === 'Inscriptions'}
+            >
+            Inscriptions
+          </TabButton>
+          <TabButton 
+            onClick={() => handleTabClick('Blocks')}
+            isActive={activeTab === 'Blocks'}
+            >
+            Blocks
+          </TabButton>
+          <TabButton 
+            onClick={() => handleTabClick('Collections')}
+            isActive={activeTab === 'Collections'}
+            >
+            Collections
+          </TabButton>
+        </SectionContainer>
+          {/* 3. Conditional Rendering */}
+          {activeTab === 'Inscriptions' && (
+            <Stack horizontal={false} center={false} style={{gap: '1.5rem', width: '100%'}}>
+              <RowContainer>
+                <Stack horizontal={true} center={false} style={{gap: '1rem'}}>
+                  <FilterButton onClick={toggleFilterVisibility}>
+                    <FilterIcon svgSize={'1rem'} svgColor={'#000000'}></FilterIcon>
+                    Filters
+                  </FilterButton>
+                  <VisibilityButton onClick={toggleNumberVisibility}>
+                    <EyeIcon svgSize={'1rem'} svgColor={numberVisibility ? '#000000' : '#959595'}></EyeIcon>
+                  </VisibilityButton>
+                </Stack>
+                <SortbyDropdown onOptionSelect={handleSortOptionChange} />
+              </RowContainer>
+              <RowContainer>
+                <FilterMenu isOpen={filterVisibility} onSelectionChange ={handleFilterOptionsChange} onClose={toggleFilterVisibility}></FilterMenu>
+                <GalleryContainer>
                   <GalleryInfiniteScroll baseApi={baseApi} numberVisibility={numberVisibility} />
-                </RowContainer>
-              </Stack>
-            )}
-            {activeTab === 'Blocks' && (
-              <ExploreContainer>
-                <BlockTable/>
-              </ExploreContainer>
-            )}
-            {activeTab === 'Collections' && (
-              <ExploreContainer>
-                <CollectionsTable/>
-              </ExploreContainer>
-            )}
-        </Stack>
+                </GalleryContainer>
+              </RowContainer>
+            </Stack>
+          )}
+          {activeTab === 'Blocks' && (
+            <ExploreContainer>
+              <BlockTable/>
+            </ExploreContainer>
+          )}
+          {activeTab === 'Collections' && (
+            <ExploreContainer>
+              <CollectionsTable/>
+            </ExploreContainer>
+          )}
       </MainContainer>
     </PageContainer>
     
@@ -181,8 +180,9 @@ const MainContainer = styled.div`
   padding: .5rem 1.5rem 2.5rem 1.5rem;
   margin: 0;
   display: flex;
-  flex-direction: row;
-  align-items: flex-start;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5rem;
 
   @media (max-width: 630px) {
     width: calc(100% - 3rem);
@@ -198,10 +198,16 @@ const RowContainer = styled.div`
   width: 100%;
 `;
 
+const GalleryContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+`;
+
 const PageText = styled.p`
-    font-family: Relative Trial Bold;
-    font-size: 1.25rem;
-    margin: 0;
+  font-family: Relative Trial Bold;
+  font-size: 1.25rem;
+  margin: 0;
 `;
 
 const SectionContainer = styled.div`
@@ -212,6 +218,7 @@ const SectionContainer = styled.div`
   width: 100%;
   padding-bottom: 1.5rem;
   border-bottom: 1px #E9E9E9 solid;
+  overflow: scroll;
 `;
 
 const TabButton = styled.button`

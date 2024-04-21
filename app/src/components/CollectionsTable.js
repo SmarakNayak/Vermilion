@@ -144,7 +144,11 @@ const CollectionsTable = () => {
         dataLength={collectionData?.length}
         next={fetchData}
         hasMore={hasMore}
-        loader={<p style={{color: '#959595'}}>Loading...</p>}
+        loader={
+          <LoaderContainer>
+            <p style={{color: '#959595'}}>Loading...</p>
+          </LoaderContainer>
+        }
       >
         {collectionData.map((row, index) => (
           <UnstyledLink to={"/collection/" + row?.collection_symbol}>
@@ -171,6 +175,14 @@ const CollectionsTable = () => {
     </DivTable>
   )
 }
+
+const LoaderContainer = styled.div`
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  padding-top: 1.5rem;
+`;
 
 const CollectionIcon = styled.img`
   width: 3.75rem;
@@ -225,7 +237,7 @@ const DivCell = styled.div`
   margin: 0;
   font-family: Relative Trial Medium;
   font-size: .875rem;
-  color: ${props => props.header ? '#959595' : '#000000'};;
+  color: ${props => props.header ? '#959595' : '#000000'};
   &:nth-child(1) {
     justify-content: flex-start;
   }

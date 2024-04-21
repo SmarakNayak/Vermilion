@@ -49,7 +49,11 @@ const GalleryInfiniteScroll = (props) => {
       dataLength={inscriptions?.length}
       next={fetchData}
       hasMore={hasMore}
-      loader={<h4>Loading...</h4>}
+      loader={
+        <LoaderContainer>
+          <p style={{color: '#959595'}}>Loading...</p>
+        </LoaderContainer>
+      }
     >
       <GridContainer>
         {inscriptions.map(
@@ -61,11 +65,20 @@ const GalleryInfiniteScroll = (props) => {
   )
 }
 
+const LoaderContainer = styled.div`
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  padding-top: 1.5rem;
+`;
+
 const GridContainer = styled.div`
   display: grid;
   grid-template-columns: repeat(6, 1fr);
   gap: 16px;
   width: 100%;
+  min-width: 100%;
 
   @media (max-width: 1984px) {
     // grid-template-columns: repeat(5, 1fr);
@@ -73,19 +86,19 @@ const GridContainer = styled.div`
   }
 
   @media (max-width: 1346px) {
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(4, minmax(0, 1fr));
   }
 
   @media (max-width: 960px) {
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
   @media (max-width: 630px) {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   @media (max-width: 320px) {
-    grid-template-columns: repeat(1, 1fr);
+    grid-template-columns: repeat(1, minmax(0, 1fr));
   }
 `;
 
