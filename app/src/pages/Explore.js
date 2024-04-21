@@ -75,24 +75,6 @@ const Explore = () => {
     console.log('Selected filter option:', filterOptions);
   };
 
-  //block handlers
-
-  //collection handlers
-
-  // Example data for the table
-  const collectionData = [
-    { collection: 'Bitcoin Puppets', range: '89,945 to 11,523,702', date: 'Jan 20, 2024', supply: '10,001', owners: '5,988 (59.9%)', totalFees: '0.525 BTC', footprint: '5.675 BTC' },
-    { collection: 'Bitcoin Puppets', range: '89,945 to 11,523,702', date: 'Jan 20, 2024', supply: '10,001', owners: '5,988 (59.9%)', totalFees: '0.525 BTC', footprint: '5.675 BTC' },
-    { collection: 'Bitcoin Puppets', range: '89,945 to 11,523,702', date: 'Jan 20, 2024', supply: '10,001', owners: '5,988 (59.9%)', totalFees: '0.525 BTC', footprint: '5.675 BTC' },
-    { collection: 'Bitcoin Puppets', range: '89,945 to 11,523,702', date: 'Jan 20, 2024', supply: '10,001', owners: '5,988 (59.9%)', totalFees: '0.525 BTC', footprint: '5.675 BTC' },
-    { collection: 'Bitcoin Puppets', range: '89,945 to 11,523,702', date: 'Jan 20, 2024', supply: '10,001', owners: '5,988 (59.9%)', totalFees: '0.525 BTC', footprint: '5.675 BTC' },
-    { collection: 'Bitcoin Puppets', range: '89,945 to 11,523,702', date: 'Jan 20, 2024', supply: '10,001', owners: '5,988 (59.9%)', totalFees: '0.525 BTC', footprint: '5.675 BTC' },
-    { collection: 'Bitcoin Puppets', range: '89,945 to 11,523,702', date: 'Jan 20, 2024', supply: '10,001', owners: '5,988 (59.9%)', totalFees: '0.525 BTC', footprint: '5.675 BTC' },
-    { collection: 'Bitcoin Puppets', range: '89,945 to 11,523,702', date: 'Jan 20, 2024', supply: '10,001', owners: '5,988 (59.9%)', totalFees: '0.525 BTC', footprint: '5.675 BTC' },
-    { collection: 'Bitcoin Puppets', range: '89,945 to 11,523,702', date: 'Jan 20, 2024', supply: '10,001', owners: '5,988 (59.9%)', totalFees: '0.525 BTC', footprint: '5.675 BTC' },
-    // Add more rows as needed
-  ];
-
   return (
     <PageContainer>
       <TopSection />

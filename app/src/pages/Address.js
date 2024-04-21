@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from "react-router-dom";
 import styled from 'styled-components';
+import { renderToStaticMarkup } from 'react-dom/server';
+
 import InscriptionContainer from '../components/InscriptionContainer';
 import TopSection from '../components/TopSection';
-import Gallery from '../components/Gallery';
+import GalleryInfiniteScroll from '../components/GalleryInfiniteScroll';
 import Stack from '../components/Stack';
 import EyeIcon from '../assets/icons/EyeIcon';
 import { addCommas, copyText, formatAddress } from '../helpers/utils';
@@ -14,11 +16,19 @@ import CopyIcon from '../assets/icons/CopyIcon';
 import Stat from '../components/Stat';
 import BlockRow from '../components/BlockRow';
 
+import SortbyDropdown from '../components/Dropdown';
+import FilterMenu from '../components/FilterMenu';
+
 const Address = () => {
   let { address } = useParams();
+  const [baseApi, setBaseApi] = useState(null); 
   const [inscriptionList, setInscriptionList] = useState([]); 
   const [numberVisibility, setNumberVisibility] = useState(true);
+  const [filterVisibility, setFilterVisibility] = useState(false);
+
   const [activeTab, setActiveTab] = useState('Inscriptions');
+  const [selectedSortOption, setSelectedSortOption] = useState('newest');
+  const [selectedFilterOptions, setSelectedFilterOptions] = useState({"Content Type": ["image"], "Satributes": [], "Charms":[]});
 
   //1. Get links
   useEffect(() => {
@@ -33,14 +43,45 @@ const Address = () => {
     fetchContent();
   },[address])
 
+    //Get inscriptions endpoint
+    useEffect(() => {
+      let query_string = "/api/inscriptions_in_address/" + address + "?sort_by=" + selectedSortOption;
+      if (selectedFilterOptions["Content Type"] !== undefined && selectedFilterOptions["Content Type"].length > 0) {
+        console.log("hit");
+        query_string += "&content_types=" + selectedFilterOptions["Content Type"].toString();
+      }
+      if (selectedFilterOptions["Satributes"] !== undefined && selectedFilterOptions["Satributes"].length > 0) {
+        query_string += "&satributes=" + selectedFilterOptions["Satributes"].toString();
+      }
+      if (selectedFilterOptions["Charms"] !== undefined && selectedFilterOptions["Charms"].length > 0) {
+        query_string += "&charms=" + selectedFilterOptions["Charms"].toString();
+      }
+      setBaseApi(query_string);
+    },[selectedSortOption, selectedFilterOptions]);
+
   // function to toggle visibility of inscription numbers
   const toggleNumberVisibility = () => {
     setNumberVisibility(!numberVisibility);
   };
 
+  const toggleFilterVisibility = () => {
+    setFilterVisibility(!filterVisibility);
+  };
+
   // function to update active tab
   const handleTabClick = (tabName) => {
     setActiveTab(tabName);
+  };
+
+  const handleSortOptionChange = (option) => {
+    setSelectedSortOption(option);
+    // Perform any necessary actions with the selected option
+    console.log('Selected inscription sort option:', option);
+  };
+
+  const handleFilterOptionsChange = (filterOptions) => {
+    setSelectedFilterOptions(filterOptions);
+    console.log('Selected filter option:', filterOptions);
   };
 
   //TODO: Add pagination
@@ -69,21 +110,19 @@ const Address = () => {
           </SectionContainer>
           <RowContainer>
               <Stack horizontal={true} center={false} style={{gap: '1rem'}}>
-                {/* <FilterButton>
-                  <FilterIcon svgSize={'1rem'} svgColor={'#000000'}></FilterIcon>  
+                <FilterButton onClick={toggleFilterVisibility}>
+                  <FilterIcon svgSize={'1rem'} svgColor={'#000000'}></FilterIcon>
                   Filters
-                </FilterButton> */}
+                </FilterButton>
                 <VisibilityButton onClick={toggleNumberVisibility}>
                   <EyeIcon svgSize={'1rem'} svgColor={numberVisibility ? '#000000' : '#959595'}></EyeIcon>
                 </VisibilityButton>
               </Stack>
-              <FilterButton>
-                Newest
-                <ChevronDownIcon svgSize={'1rem'} svgColor={'#000000'}></ChevronDownIcon>
-                </FilterButton>
+              <SortbyDropdown onOptionSelect={handleSortOptionChange} />
           </RowContainer>
           <RowContainer>
-            <Gallery inscriptionList={inscriptionList} displayJsonToggle={false} numberVisibility={numberVisibility} />
+            <FilterMenu isOpen={filterVisibility} onSelectionChange ={handleFilterOptionsChange} onClose={toggleFilterVisibility}></FilterMenu>
+            <GalleryInfiniteScroll baseApi={baseApi} numberVisibility={numberVisibility} />
           </RowContainer>
         </Stack>
       </MainContainer>
