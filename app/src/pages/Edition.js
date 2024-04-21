@@ -187,7 +187,7 @@ const Edition = () => {
                   <DivCell header>Inscription ID</DivCell>
                 </DivRow>
                 <GalleryContainer>
-                  <InfiniteScroll
+                  <StyledInfiniteScroll
                     dataLength={editions?.length}
                     next={fetchData}
                     hasMore={hasMore}
@@ -206,7 +206,7 @@ const Edition = () => {
                         </DivRow>
                       </UnstyledLink>
                     ))}
-                </InfiniteScroll>
+                </StyledInfiniteScroll>
               </GalleryContainer>
               </DivTable>
             </TableContainer>
@@ -216,6 +216,10 @@ const Edition = () => {
     </PageContainer>
   )
 }
+
+const StyledInfiniteScroll = styled(InfiniteScroll)`
+  overflow: hidden !important;
+`
 
 const GalleryContainer = styled.div`
   display: flex;
