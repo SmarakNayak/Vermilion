@@ -233,7 +233,7 @@ const Inscription = () => {
                   <InfoText isLabel={true}>Owner</InfoText>
                 </InfoLabelContainer>
                 <InfoDataContainer>
-                  <UnstyledLink to={'/address/' + address?.address}>
+                  <UnstyledLink to={address?.address !== "unbound" ? '/address/' + address?.address : ""}>
                     <InfoText isLink={true}>{address?.address ? shortAddress : ""}</InfoText>
                   </UnstyledLink>
                   <UnstyledButton onClick={() => copyText(metadata?.id)}>                    
