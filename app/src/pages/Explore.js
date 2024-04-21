@@ -139,7 +139,7 @@ const Explore = () => {
                   <SortbyDropdown onOptionSelect={handleSortOptionChange} />
                 </RowContainer>
                 <RowContainer>
-                  <FilterMenu isOpen={filterVisibility} onSelectionChange ={handleFilterOptionsChange}></FilterMenu>
+                  <FilterMenu isOpen={filterVisibility} onSelectionChange ={handleFilterOptionsChange} onClose={toggleFilterVisibility}></FilterMenu>
                   <GalleryInfiniteScroll baseApi={baseApi} numberVisibility={numberVisibility} />
                 </RowContainer>
               </Stack>

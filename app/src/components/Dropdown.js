@@ -6,7 +6,7 @@ import ChevronDownIcon from '../assets/icons/ChevronDownIcon';
 const DropdownWrapper = styled.div`
   position: relative;
   display: inline-block;
-  z-index: 9999;
+  z-index: 1;
 `;
 
 const FilterButton = styled.button`
