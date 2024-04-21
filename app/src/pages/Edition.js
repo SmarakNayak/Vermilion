@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from "react-router-dom";
 import styled from 'styled-components';
+import InfiniteScroll from 'react-infinite-scroll-component';
+
 import TopSection from '../components/TopSection';
 import Stack from '../components/Stack';
 import { addCommas, copyText, formatAddress } from '../helpers/utils';
@@ -16,9 +18,10 @@ const Edition = () => {
   const [firstEdition, setFirstEdition] = useState(null);
   const [editionCount, setEditionCount] = useState('');
   const [contentType, setContentType] = useState(null);
-  //Table
-  const [pageNo, setPageNo] = useState(1);
-	const [noOfPages, setNoOfPages] = useState(1);
+  //InfiniteScroll
+  const [pageSize, setPageSize] = useState(50);
+  const [nextPageNo, setNextPageNo] = useState(0);
+  const [hasMore, setHasMore] = useState(true);
 
   useEffect(() => {
 
@@ -100,23 +103,35 @@ const Edition = () => {
       }
     }
 
-    const fetchEditions = async () => {
-      const response = await fetch("/api/inscription_editions_sha256/"+sha256);
-      const json = await response.json();
-      setEditions(json);
-      for (let index = 0; index < json.length; index++) {        
-        const element = json[index];
-        if(element.edition==1){
-          setFirstEdition(element.number);
-        }
-      }
-      setEditionCount(json[0].total);
-      setNoOfPages(Math.max(1,Math.ceil(json.length/10)))
-    }
-
     fetchContent();
-    fetchEditions();
+    fetchInital();
   },[sha256])
+
+  const fetchInital = async () => {
+    console.log("fetch initial data")
+    const query_string = "/api/inscription_editions_sha256/" + sha256 + "?page_size=" + pageSize + "&page_number=0";
+    console.log(query_string);
+    const response = await fetch(query_string);
+    const newEditions = await response.json();
+
+    setFirstEdition(newEditions[0]?.number);
+    setEditionCount(newEditions[0]?.total)
+    setEditions(newEditions);
+    setHasMore(newEditions?.length === pageSize);
+    setNextPageNo(1);
+  }
+
+  const fetchData = async () => {
+    console.log("fetch data")
+    const query_string = "/api/inscription_editions_sha256/"+ sha256 + "?page_size=" + pageSize + "&page_number=" + nextPageNo;
+    console.log(query_string);
+    const response = await fetch(query_string);
+    const newEditions = await response.json();
+
+    setEditions([...editions, ...newEditions]);
+    setHasMore(newEditions?.length === pageSize);
+    setNextPageNo(nextPageNo+1);
+  };
 
   useEffect(()=> {
     const updateText = async () => {
@@ -128,15 +143,6 @@ const Edition = () => {
     }
     updateText();    
   },[contentType])
-  
-  const onLeftArrowClick = () => {
-		setPageNo(Math.max(1,pageNo-1))
-	}
-	const onRightArrowClick = () => {
-		setPageNo(Math.min(noOfPages,pageNo+1))
-	}
-
-  console.log(editionCount, editions);
   
   return (
     <PageContainer>
@@ -173,29 +179,49 @@ const Edition = () => {
               <CopyIcon svgSize={'1rem'} svgColor={'#959595'} />
             </InfoButton>
           </RowContainer>
-          <TableContainer>
-            <DivTable>
-              <DivRow header>
-                <DivCell header>Edition #</DivCell>
-                <DivCell header>Inscription #</DivCell>
-                <DivCell header>Inscription ID</DivCell>
-              </DivRow>
-              {editions.map((edition, index) => (
-                <UnstyledLink to={'/inscription/' + edition.number}>
-                  <DivRow key={index}>
-                    <DivCell>{edition.edition}</DivCell>
-                    <DivCell>{addCommas(edition.number)}</DivCell>
-                    <DivCell>{formatAddress(edition.id)}</DivCell>
-                  </DivRow>
-                </UnstyledLink>
-              ))}
-            </DivTable>
-          </TableContainer>
+            <TableContainer>
+              <DivTable>
+                <DivRow header>
+                  <DivCell header>Edition #</DivCell>
+                  <DivCell header>Inscription #</DivCell>
+                  <DivCell header>Inscription ID</DivCell>
+                </DivRow>
+                <GalleryContainer>
+                  <InfiniteScroll
+                    dataLength={editions?.length}
+                    next={fetchData}
+                    hasMore={hasMore}
+                    loader={
+                      <LoaderContainer>
+                        <p style={{color: '#959595'}}>Loading...</p>
+                      </LoaderContainer>
+                    }
+                  >
+                    {editions.map((edition, index) => (
+                      <UnstyledLink to={'/inscription/' + edition.number}>
+                        <DivRow key={index}>
+                          <DivCell>{edition.edition}</DivCell>
+                          <DivCell>{addCommas(edition.number)}</DivCell>
+                          <DivCell>{formatAddress(edition.id)}</DivCell>
+                        </DivRow>
+                      </UnstyledLink>
+                    ))}
+                </InfiniteScroll>
+              </GalleryContainer>
+              </DivTable>
+            </TableContainer>
+          
         </Stack>
       </MainContainer>
     </PageContainer>
   )
 }
+
+const GalleryContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+`;
 
 const PageContainer = styled.div`
   width: 100%;
@@ -408,5 +434,14 @@ const UnstyledLink = styled(Link)`
   flex-direction: column;
   align-items: center;
 `;
+
+const LoaderContainer = styled.div`
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  padding-top: 1.5rem;
+`;
+
 
 export default Edition;

@@ -7,6 +7,7 @@ import { addCommas, copyText } from '../helpers/utils';
 import HashIcon from '../assets/icons/HashIcon';
 import WebIcon from '../assets/icons/WebIcon';
 import CopyIcon from '../assets/icons/CopyIcon';
+import { shortenBytes } from '../helpers/utils';
 const iframecontentwindow = require("../scripts/iframeResizer.contentWindow.min.txt");
 
 const Inscription = () => {
@@ -29,15 +30,6 @@ const Inscription = () => {
   const [prettySize, setPrettySize] = useState(null);
 
   useEffect(() => {
-
-    const shortenBytes = (n) => {
-      const k = n > 0 ? Math.floor((Math.log2(n)/10)) : 0;
-      const rank = (k > 0 ? 'KMGT'[k - 1] : '') + 'B';
-      const rank_clean = (rank==='B' ? "Bytes" : rank);
-      const count = Math.floor(n / Math.pow(1024, k));
-      return count + " " + rank_clean;
-  }
-
     const fetchContent = async () => {
       setBlobUrl(null);
       setTextContent(null);
@@ -130,16 +122,10 @@ const Inscription = () => {
     const fetchEditions = async () => {
       setEditionNumber(null);
       setEditionCount(null);
-      const response = await fetch("/api/inscription_editions_number/"+number);
-      const json = await response.json();
-      setEditions(json);
-      for (let index = 0; index < json.length; index++) {        
-        const element = json[index];
-        if(element.number==number){
-          setEditionNumber(element.edition);
-        }
-      }
-      setEditionCount(json[0].total);
+      const response = await fetch("/api/inscription_edition_number/"+number);
+      const json = await response.json();      
+      setEditionNumber(json.edition);
+      setEditionCount(json.total);
     }
 
     const fetchRandom = async () => {
@@ -155,7 +141,12 @@ const Inscription = () => {
       const response = await fetch("/api/inscription_last_transfer_number/" + number);
       const json = await response.json();
       const address = json.address;
-      const short_address = address.slice(0, 5) + "..." + address.slice(-5);
+      let short_address = "";
+      if (address ==="unbound") {
+        short_address = "unbound";
+      } else {
+        short_address = address.slice(0, 5) + "..." + address.slice(-5);
+      }
       setShortAddress(short_address);
       setAddress(json);
       console.log(json);
