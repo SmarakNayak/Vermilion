@@ -71,9 +71,9 @@ const DropdownItem = styled.li`
   }
 `;
 
-const SortbyDropdown = ({ onOptionSelect }) => {
+const SearchDropdown = ({ onOptionSelect }) => {
   const [isOpen, setIsOpen] = useState(false);
-  const [selectedOption, setSelectedOption] = useState('newest');
+  const [selectedOption, setSelectedOption] = useState('most_relevant');
   const wrapperRef = useRef(null); // Create a ref for the dropdown wrapper
 
 
@@ -107,6 +107,7 @@ const SortbyDropdown = ({ onOptionSelect }) => {
   });
 
   const options = [
+    'most_relevant',
     'newest',
     'oldest',
     'newest_sat',
@@ -120,6 +121,7 @@ const SortbyDropdown = ({ onOptionSelect }) => {
   ];
 
   const labels = {
+    most_relevant: 'Relevance',
     newest: 'Newest',
     oldest: 'Oldest',
     newest_sat: 'Newest Sat',
@@ -154,4 +156,4 @@ const SortbyDropdown = ({ onOptionSelect }) => {
   );
 };
 
-export default SortbyDropdown;
+export default SearchDropdown;

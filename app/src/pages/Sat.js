@@ -14,6 +14,7 @@ import ClockIcon from '../assets/icons/ClockIcon';
 import CopyIcon from '../assets/icons/CopyIcon';
 import Stat from '../components/Stat';
 import BlockRow from '../components/BlockRow';
+import SortbyDropdown from '../components/Dropdown';
 
 const Sat = () => {
   let { sat } = useParams();
@@ -51,6 +52,29 @@ const Sat = () => {
   // function to update active tab
   const handleTabClick = (tabName) => {
     setActiveTab(tabName);
+  };
+
+  const handleSortOptionChange = (option) => {
+    let sortedInscriptions = [...inscriptions];    
+    if (option==="newest") {
+      sortedInscriptions = sortedInscriptions.sort((a,b)=>b.sequence_number-a.sequence_number);
+    } else if (option==="oldest") {
+      sortedInscriptions = sortedInscriptions.sort((a,b)=>a.sequence_number-b.sequence_number);
+    } else if (option==="newest_sat") {
+      sortedInscriptions = sortedInscriptions.sort((a,b)=>b.sat-a.sat);
+    } else if (option==="oldest_sat") {
+      sortedInscriptions = sortedInscriptions.sort((a,b)=>a.sat-b.sat);
+    } else if (option==="biggest") {
+      sortedInscriptions = sortedInscriptions.sort((a,b)=>b.content_length-a.content_length);
+    } else if (option==="smallest") {
+      sortedInscriptions = sortedInscriptions.sort((a,b)=>a.content_length-b.content_length);
+    } else if (option==="highest_fee") {
+      sortedInscriptions = sortedInscriptions.sort((a,b)=>b.genesis_fee-a.genesis_fee);
+    } else if (option==="lowest_fee") {
+      sortedInscriptions = sortedInscriptions.sort((a,b)=>a.genesis_fee-b.genesis_fee);
+    }
+    setInscriptions(sortedInscriptions);
+    console.log('Selected inscription sort option:', option);
   };
 
   //TODO: Add pagination
@@ -112,10 +136,7 @@ const Sat = () => {
                   <EyeIcon svgSize={'1rem'} svgColor={numberVisibility ? '#000000' : '#959595'}></EyeIcon>
                 </VisibilityButton>
               </Stack>
-              <FilterButton>
-                Newest
-                <ChevronDownIcon svgSize={'1rem'} svgColor={'#000000'}></ChevronDownIcon>
-              </FilterButton>
+              <SortbyDropdown onOptionSelect={handleSortOptionChange} />
           </RowContainer>
           <RowContainer>
             <Gallery inscriptionList={inscriptions} displayJsonToggle={false} numberVisibility={numberVisibility} />

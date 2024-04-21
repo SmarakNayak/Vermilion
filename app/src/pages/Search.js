@@ -13,6 +13,7 @@ import UploadIcon from '../assets/icons/UploadIcon';
 import SearchIcon from '../assets/icons/SearchIcon';
 import CrossIcon from '../assets/icons/CrossIcon'; // Ensure this import is correct based on your project structure
 import Stat from '../components/Stat';
+import SearchDropdown from '../components/SearchDropdown';
 
 const Search = () => {
   const [numberVisibility, setNumberVisibility] = useState(true);
@@ -100,6 +101,31 @@ const Search = () => {
     setImage(undefined); // Clear image if used
   };
 
+  const handleSortOptionChange = (option) => {
+    let inscriptions = [...inscriptionList];    
+    if (option==="most_relevant") {
+      inscriptions = inscriptions.sort((a,b)=>b.distance-a.distance);
+    } else if (option==="newest") {
+      inscriptions = inscriptions.sort((a,b)=>b.sequence_number-a.sequence_number);
+    } else if (option==="oldest") {
+      inscriptions = inscriptions.sort((a,b)=>a.sequence_number-b.sequence_number);
+    } else if (option==="newest_sat") {
+      inscriptions = inscriptions.sort((a,b)=>b.sat-a.sat);
+    } else if (option==="oldest_sat") {
+      inscriptions = inscriptions.sort((a,b)=>a.sat-b.sat);
+    } else if (option==="biggest") {
+      inscriptions = inscriptions.sort((a,b)=>b.content_length-a.content_length);
+    } else if (option==="smallest") {
+      inscriptions = inscriptions.sort((a,b)=>a.content_length-b.content_length);
+    } else if (option==="highest_fee") {
+      inscriptions = inscriptions.sort((a,b)=>b.genesis_fee-a.genesis_fee);
+    } else if (option==="lowest_fee") {
+      inscriptions = inscriptions.sort((a,b)=>a.genesis_fee-b.genesis_fee);
+    }
+    setInscriptionList(inscriptions);
+    console.log('Selected inscription sort option:', option);
+  };
+
   return (
     <PageContainer>
       <TopSection />
@@ -165,10 +191,7 @@ const Search = () => {
                 <UploadIcon svgSize={'1rem'} svgColor={'#000000'}></UploadIcon>
                 <UploadText>Upload image</UploadText>
               </FilterButton>
-              <FilterButton>
-                Newest
-                <ChevronDownIcon svgSize={'1rem'} svgColor={'#000000'}></ChevronDownIcon>
-              </FilterButton>
+              <SearchDropdown onOptionSelect={handleSortOptionChange} />
             </Stack>
           </RowContainer>
           {isLoading && <p style={{color: '#959595', fontSize: '.875rem', padding: '.5rem 0', margin: 0}}>Loading...</p>}
