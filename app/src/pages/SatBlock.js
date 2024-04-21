@@ -26,7 +26,7 @@ const SatBlock = () => {
   let { number } = useParams();
   const [numberVisibility, setNumberVisibility] = useState(true);
   const [filterVisibility, setFilterVisibility] = useState(false);
-  const [blockStats, setBlockStats]  = useState(null); 
+  const [satBlockStats, setSatBlockStats]  = useState(null); 
   
   const [selectedSortOption, setSelectedSortOption] = useState('newest');
   const [selectedFilterOptions, setSelectedFilterOptions] = useState({"Content Type": ["image"], "Satributes": [], "Charms":[]});
@@ -34,10 +34,10 @@ const SatBlock = () => {
   //1. Get block statistics
   useEffect(() => {
     const fetchContent = async () => {
-      const response = await fetch("/api/block_statistics/" + number);
+      const response = await fetch("/api/sat_block_statistics/" + number);
       let json = await response.json();
       console.log(json);
-      setBlockStats(json);
+      setSatBlockStats(json);
     }
     fetchContent();
   },[number]);
@@ -98,16 +98,16 @@ const SatBlock = () => {
         <RowContainer>
           <Container style={{gap: '1rem'}}>
             <BlockImgContainer>
-              <BlockImg src ={"/api/block_icon/"+number} onError={handleImageError}></BlockImg>
+              <BlockImg src ={"/api/sat_block_icon/"+number} onError={handleImageError}></BlockImg>
               {/* <BlockIcon svgSize={'2.25rem'} svgColor={'#E34234'}></BlockIcon> */}
             </BlockImgContainer>
-            <BlockText>{addCommas(number)}</BlockText>
+            <BlockText>{"Sat Creation Block " + addCommas(number)}</BlockText>
           </Container>
         </RowContainer>
         <RowContainer style={{gap: '1rem'}}>
           <InfoButton>
             <CheckIcon svgSize={'1rem'} svgColor={'#009859'} />
-            {formatTimestampMs(blockStats?.block_timestamp)}
+            {formatTimestampMs(satBlockStats?.sat_block_timestamp)}
           </InfoButton>
           {/* <InfoButton isButton={true} onClick={() => copyText('text')}>
             {'Hash: ' + '0045...9f45'}
@@ -116,15 +116,11 @@ const SatBlock = () => {
         </RowContainer>
         <RowContainer>
           <Container style={{gap: '2rem', flexFlow: 'wrap', justifyContent: 'center'}}>
-            <Stat value={blockStats?.block_tx_count} category={'Transactions'} />
+            <Stat value={satBlockStats?.sat_block_inscription_count ? satBlockStats?.sat_block_inscription_count : 0} category={'Inscriptions'} />
             {/* <Divider /> */}
-            <Stat value={blockStats?.block_inscription_count} category={'Inscriptions'} />
+            <Stat value={satBlockStats?.sat_block_inscription_size ? shortenBytes(satBlockStats.sat_block_inscription_size) : 0} category={'Total Inscription Size'} />
             {/* <Divider /> */}
-            <Stat value={blockStats?.block_size ? shortenBytes(blockStats.block_size) : 0} category={'Size'} />
-            {/* <Divider /> */}
-            <Stat value={blockStats?.block_volume ? formatSats(blockStats.block_volume) : "0 BTC"} category={'Traded Volume'} />
-            {/* <Divider /> */}
-            <Stat value={blockStats?.block_fees ? formatSats(blockStats.block_fees) : "0 BTC"} category={'Total Fees'} />
+            <Stat value={satBlockStats?.sat_block_inscription_fees ? formatSats(satBlockStats.sat_block_inscription_fees) : "0 BTC"} category={'Total Inscription Fees'} />
           </Container>
         </RowContainer>
         <SectionContainer>

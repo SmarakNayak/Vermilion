@@ -28,7 +28,7 @@ const GalleryInfiniteScroll = (props) => {
     const newInscriptions = await response.json();
 
     setInscriptions(newInscriptions);
-    setHasMore(newInscriptions?.length > 0);
+    setHasMore(newInscriptions?.length === pageSize);
     setNextPageNo(1);
   }
 
@@ -40,7 +40,7 @@ const GalleryInfiniteScroll = (props) => {
     const newInscriptions = await response.json();
 
     setInscriptions([...inscriptions, ...newInscriptions]);
-    setHasMore(newInscriptions?.length > 0);
+    setHasMore(newInscriptions?.length === pageSize);
     setNextPageNo(nextPageNo+1);
   };
 

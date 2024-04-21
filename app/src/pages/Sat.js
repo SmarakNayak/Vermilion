@@ -78,15 +78,25 @@ const Sat = () => {
               <CopyIcon svgSize={'1rem'} svgColor={'#959595'} />
             </InfoButton>
           </RowContainer>
+          <RowContainer style={{gap: '1rem'}}>
+            {metadata?.satributes.map(
+                entry => 
+                <InfoButton> 
+                  {entry}
+                </InfoButton>
+              )}
+          </RowContainer>
           <RowContainer>
             <Container style={{gap: '1.5rem', flexFlow: 'wrap', justifyContent: 'center'}}>
               <Stat value={metadata?.rarity ? metadata?.rarity.charAt(0).toUpperCase() + metadata?.rarity.slice(1) : ""} category={'Rarity'} />
               <Divider />
               <Stat value={metadata?.name ? metadata?.name : ""} category={'Name'} />
               <Divider />
-              <Stat value={metadata?.block ? addCommas(metadata?.block) : ""} category={'Sat Creation Block'} />
+              <UnstyledLink to={"/sat_block/" + metadata?.block}>
+                <Stat value={metadata?.block ? addCommas(metadata?.block) : ""} category={'Sat Creation Block'} />
+              </UnstyledLink>
               <Divider />
-              <Stat value={'???'} category={'Epoch'} />
+              <Stat value={metadata?.epoch} category={'Epoch'} />
             </Container>
           </RowContainer>
           <SectionContainer>
@@ -105,7 +115,7 @@ const Sat = () => {
               <FilterButton>
                 Newest
                 <ChevronDownIcon svgSize={'1rem'} svgColor={'#000000'}></ChevronDownIcon>
-                </FilterButton>
+              </FilterButton>
           </RowContainer>
           <RowContainer>
             <Gallery inscriptionList={inscriptions} displayJsonToggle={false} numberVisibility={numberVisibility} />
