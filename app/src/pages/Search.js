@@ -5,6 +5,7 @@ import Gallery from '../components/Gallery';
 import TopSection from '../components/TopSection';
 import Stack from '../components/Stack';
 import EyeIcon from '../assets/icons/EyeIcon';
+import BoltIcon from '../assets/icons/BoltIcon';
 import BlockIcon from '../assets/icons/BlockIcon';
 import { addCommas } from '../helpers/utils';
 import FilterIcon from '../assets/icons/FilterIcon';
@@ -23,6 +24,7 @@ const Search = () => {
   const [image, setImage] = useState();
   const [isError, setIsError] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [firstLoad, setFirstLoad] = useState(true);
 
   const handleTextChange = (e) => {
     e.preventDefault();
@@ -30,32 +32,42 @@ const Search = () => {
     setIsError(false);
   };
 
-  const handleTextSubmit = (e) => {
-    e.preventDefault();
-    if (searchInput.trim() === "") {
+  const handleSearchButtonClick = (searchTerm) => {
+    setSearchInput(searchTerm); // Update the input with the search term
+    submitSearch(searchTerm); // Programmatically submit the search
+  };
+  
+  const submitSearch = async (searchTerm) => {
+    if (searchTerm.trim() === "") {
       setIsError(true); // Set error state if input is blank
     } else {
-      setImage(undefined)
-      setlastSearch(searchInput);
-      fetchTextSearch();
+      setFirstLoad(false);
+      setImage(undefined);
+      setlastSearch(searchTerm);
+      await fetchTextSearch(searchTerm); // Assuming fetchTextSearch can optionally take a searchTerm
       setIsError(false); // Reset error state on valid submission
     }
-  }
+  };
+
+  // Modify handleTextSubmit to use submitSearch
+  const handleTextSubmit = (e) => {
+    e.preventDefault();
+    submitSearch(searchInput);
+  };
 
   const handleKeyPress = (e) => {
     if (e.key === 13) {
     }
   }
 
-  const fetchTextSearch = async () => {
+  // Adjusted fetchTextSearch to optionally take a searchTerm and use it
+  const fetchTextSearch = async (searchTerm = searchInput) => {
     setIsLoading(true); // Start loading
-    //1. Get inscription numbers
-    const response = await fetch("/search_api/search/" + searchInput + "?n=50");
+    const response = await fetch("/search_api/search/" + searchTerm + "?n=50");
     let json = await response.json();
-    //json = json.sort((a,b)=>b.genesis_fee/b.content_size-a.genesis_fee/a.content_size);
     setInscriptionList(json);
     setIsLoading(false); // End loading
-  }
+  };
 
   // function to toggle visibility of inscription numbers
   const toggleNumberVisibility = () => {
@@ -68,14 +80,10 @@ const Search = () => {
     fileInputRef.current.click(); // Programmatically click the hidden file input
   };
 
-  // const handleImageSubmit = (e) => {
-  //   e.preventDefault();
-  //   fetchImageSearch();
-  // }
-
   // Modified to set image and run search (no submit button)
 
   const onImageChange = (e) => {
+    setFirstLoad(false);
     setImage(...e.target.files) 
     fetchImageSearch(...e.target.files);
     setSearchInput(""); // Clear search input when image search is run
@@ -136,15 +144,9 @@ const Search = () => {
             <PageText>Search</PageText>
           </RowContainer>
           <RowContainer style={{gap: '1rem'}}>
-            <Stack horizontal={true} center={false} style={{gap: '1rem'}}>
-              {/* <FilterButton>
-                <FilterIcon svgSize={'1rem'} svgColor={'#000000'}></FilterIcon>  
-                Filters
-              </FilterButton> */}
-              <VisibilityButton onClick={toggleNumberVisibility}>
-                <EyeIcon svgSize={'1rem'} svgColor={numberVisibility ? '#000000' : '#959595'}></EyeIcon>
-              </VisibilityButton>
-            </Stack>
+            <VisibilityButton onClick={toggleNumberVisibility}>
+              <EyeIcon svgSize={'1rem'} svgColor={numberVisibility ? '#000000' : '#959595'}></EyeIcon>
+            </VisibilityButton>
             <SearchContainer>
               <SearchIcon svgSize={'1rem'} svgColor={'#959595'}></SearchIcon>
               <form onSubmit={handleTextSubmit}>
@@ -194,18 +196,34 @@ const Search = () => {
               <SearchDropdown onOptionSelect={handleSortOptionChange} />
             </Stack>
           </RowContainer>
+          {firstLoad && (
+            <Stack horizontal={false} center={true} style={{gap: '1.5rem', width: '100%', marginTop: '1rem'}}>
+              <Stack horizontal={false} center={true} style={{gap: '.5rem', width: '100%'}}>
+                <BoltIcon svgSize={'1.5rem'} svgColor={'#E34234'} />
+                <MessageText header>Visual Search</MessageText>
+              </Stack>
+              <MessageText>
+                Type something or upload an image to discover similar inscriptions. Try with one of these keywords:
+              </MessageText>
+              <RowContainer style={{gap: '1rem', flexWrap: 'wrap'}}>
+                <SearchButton onClick={() => handleSearchButtonClick('running bitcoin')}>running bitcoin</SearchButton>
+                <SearchButton onClick={() => handleSearchButtonClick('messi')}>messi</SearchButton>
+                <SearchButton onClick={() => handleSearchButtonClick('world peace')}>world peace</SearchButton>
+              </RowContainer>
+            </Stack>
+          )}
           {isLoading && <p style={{color: '#959595', fontSize: '.875rem', padding: '.5rem 0', margin: 0}}>Loading...</p>}
           {/* Add search summary message */}
           {!isLoading && inscriptionList.length > 0 && (
             <RowContainer style={{justifyContent: 'flex-start', alignItems: 'center'}}>
               <Stack horizontal={true} center={true} style={{gap: '.5rem'}}>
                 <SummaryText>Showing {inscriptionList.length} results for</SummaryText>
-                <div style={{display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '.5rem .75rem', backgroundColor: '#F9E8E7', borderRadius: '.5rem'}}>
-                  <SearchText>{image ? image.name : lastSearch}</SearchText>
-                  <button onClick={clearSearch} style={{border: 'none', background: 'transparent', cursor: 'pointer', margin: 0, padding: 0, width: '1rem', height: '1rem'}}>
-                    <CrossIcon svgSize={'1rem'} svgColor={'#000000'} />
-                  </button>
-                </div>
+                <SearchButton onClick={clearSearch}>
+                  <SearchButtonText>
+                    {image ? image.name : lastSearch}
+                  </SearchButtonText>
+                  <CrossIcon svgSize={'1rem'} svgColor={'#000000'} />
+                </SearchButton>
               </Stack>
             </RowContainer>
           )}
@@ -232,10 +250,6 @@ const PageContainer = styled.div`
   align-items: start;
   // justify-content: center;
   margin: 0;
-
-  @media (max-width: 768px) {
-    
-  }
 `;
 
 const MainContainer = styled.div`
@@ -246,10 +260,10 @@ const MainContainer = styled.div`
   flex-direction: row;
   align-items: flex-start;
 
-  @media (max-width: 630px) {
-    width: calc(100% - 3rem);
-    padding: 1rem 1.5rem 2.5rem 1.5rem;
-  }
+  // @media (max-width: 630px) {
+  //   width: calc(100% - 3rem);
+  //   padding: 1rem 1.5rem 2.5rem 1.5rem;
+  // }
 `;
 
 const RowContainer = styled.div`
@@ -325,107 +339,11 @@ const SearchInput = styled.input`
   }
 `;
 
-const BlockImgContainer = styled.div`
-  width: 3.75rem;
-  height: 3.75rem;
-  background-color: #F5F5F5;
-  border-radius: 2rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-`;
-
-const BlockText = styled.p`
-  font-family: Relative Trial Medium;
-  font-size: 1.5rem;
-  margin: 0;
-`;
-
-const Container = styled.div`
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-`;
-
-const StatusWrapper = styled.div`
-  display: flex;
-  padding: .5rem 1rem;
-  border-radius: .5rem;
-  background-color: #EBFCF4;
-`;
-
-const StatusText = styled.p`
-  font-family: ABC Camera Plain Unlicensed Trial Medium;
-  font-size: .875rem;
-  color: #009859;
-  margin: 0;
-`;
-
 const SummaryText = styled.p`
   font-size: .875rem;
   color: #000000;
   margin: 0;
-`;
-
-const SearchText = styled.p`
-  font-family: Relative Trial Medium;
-  font-size: .875rem;
-  color: #000000;
-  margin: 0;
-`;
-
-const SectionContainer = styled.div`
-  display: flex;
-  flex-direction: row;
-  flex: 1;
-  gap: 1rem;
-  width: 100%;
-  padding-bottom: 1rem;
-  border-bottom: 1px #E9E9E9 solid;
-`;
-
-const ShareButton = styled.button`
-  height: 36px;
-  border-radius: .5rem;
-  border: none;
-  padding: .5rem 1rem;
-  margin: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  font-family: 'ABC Camera Plain Unlicensed Trial Medium';
-  font-size: .875rem;
-  color: #FFFFFF;
-  background-color: #000000;
-`;
-
-const TabButton = styled.button`
-  border-radius: .5rem;
-  border: none;
-  padding: .5rem 1rem;
-  margin: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  gap: .5rem;
-  font-family: 'ABC Camera Plain Unlicensed Trial Medium';
-  font-size: .875rem;
-  color: ${props => props.isActive ? '#E34234' : '#959595'}; // Change text color based on isActive
-  background-color: ${props => props.isActive ? '#F9E8E7' : '#FFFFFF'}; // Change background based on isActive
-  transition: 
-    background-color 350ms ease,
-    transform 150ms ease;
-  transform-origin: center center;
-
-  &:hover {
-    background-color: ${props => props.isActive ? '#F9E8E7' : '#F5F5F5'};
-  }
-
-  &:active {
-    transform: scale(0.96);
-  }
+  flex-shrink: 0;
 `;
 
 const VisibilityButton = styled.button`
@@ -433,11 +351,11 @@ const VisibilityButton = styled.button`
   width: 40px;
   border-radius: .5rem;
   border: none;
-  padding: .5rem;
   margin: 0;
   display: flex;
   align-items: center;
   justify-content: center;
+  flex-shrink: 0;
   cursor: pointer;
   font-family: Relative Trial Medium;
   font-size: .875rem;
@@ -454,6 +372,10 @@ const VisibilityButton = styled.button`
 
   &:active {
     transform: scale(0.96);
+  }
+
+  @media (max-width: 425px) {
+    display: none;
   }
 `;
 
@@ -487,6 +409,44 @@ const FilterButton = styled.button`
   };
 `;
 
+const SearchButton = styled.button`
+  border-radius: .5rem;
+  border: none;
+  padding: .5rem .75rem;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  gap: .5rem;
+  white-space: nowrap; 
+  font-family: Relative Trial Medium;
+  font-size: .875rem;
+  color: #000000;
+  background-color: #F9E8E7;
+  transition: 
+    background-color 350ms ease,
+    transform 150ms ease;
+  transform-origin: center center;
+  flex-shrink: 1;
+  overflow: hidden;
+
+  &:hover {
+    background-color: #F9D9D6;
+  }
+
+  &:active {
+    transform: scale(0.96);
+  };
+`;
+
+const SearchButtonText = styled.span`
+  width: 100%; 
+  overflow: hidden;
+  text-overflow: ellipsis;
+`;
+
+
 const UploadText = styled.p`
   font-family: Relative Trial Medium;
   font-size: .875rem;
@@ -495,6 +455,16 @@ const UploadText = styled.p`
   @media (max-width: 630px) {
     display: none;
   }
+`;
+
+const MessageText = styled.p`
+  font-family: ${props => props.header ? 'Relative Trial Bold' : 'Relative Trial Medium'}; 
+  font-size: ${props => props.header ? '1rem' : '.875rem'};
+  color: ${props => props.header ? '#000000' : '#959595'};
+  margin: 0;
+  padding: 0;
+  text-wrap: wrap;
+  text-align: center;
 `;
 
 export default Search;
