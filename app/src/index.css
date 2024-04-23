@@ -6,6 +6,14 @@ body {
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+
+  ::-moz-selection { /* Code for Firefox */
+    background: #F9E8E7;
+  }
+  
+  ::selection {
+    background: #F9E8E7;
+  }
 }
 
 code {

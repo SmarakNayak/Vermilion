@@ -116,12 +116,12 @@ const GridItemContainer = (props) => {
               'svg': <SvgContainer dangerouslySetInnerHTML={{__html: textContent}} />,
               'html': <HtmlContainer><ContentOverlay /><StyledIframe src={"/api/inscription_number/" + props.number} sandbox='allow-scripts' loading='lazy' controls muted></StyledIframe></HtmlContainer>,
               'text': <TextContainer><MediaText>{textContent}</MediaText></TextContainer>,
-              'video': <video controls loop muted autoplay style={{width: '100%'}}><ContentOverlay /><source src={blobUrl} type={rawContentType}/></video>,
+              'video': <video controls loop muted autoplay style={{width: '100%', height: 'auto', aspectRatio: '1/1'}}><ContentOverlay /><source src={blobUrl} type={rawContentType}/></video>,
               'audio': <audio controls><ContentOverlay /><source src={blobUrl} type={rawContentType}/></audio>,
-              'pdf': <TextContainer>pdf unsupported'</TextContainer>,
-              'model': <TextContainer>gltf model type unsupported</TextContainer>,
-              'unsupported': <TextContainer>{rawContentType} content type unsupported</TextContainer>,
-              'loading': <TextContainer loading>Loading...</TextContainer>
+              'pdf': <TextContainer>PDF not yet supported</TextContainer>,
+              'model': <TextContainer>glTF model type not yet supported</TextContainer>,
+              'unsupported': <TextContainer isCentered>{rawContentType} content type not yet supported</TextContainer>,
+              'loading': <TextContainer loading isCentered>Loading...</TextContainer>
             }[contentType]
           }
         </MediaContainer>
@@ -196,6 +196,8 @@ const TextContainer = styled.div`
   width: auto;
   height: auto;
   display: flex;
+  align-items: ${props => props.isCentered ? 'center' : ''};
+  justify-content: ${props => props.isCentered ? 'center' : ''};
   margin: 0;
   font-size: .875rem;
   font-family: Relative Trial Medium;

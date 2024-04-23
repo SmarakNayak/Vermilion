@@ -184,6 +184,8 @@ const Inscription = () => {
     updateText();
   },[contentType])
 
+  console.log(metadata)
+
   //TODO: add tz using moment.js or timeZoneName: "long"
   // <HtmlContainer><StyledIframe srcDoc={textContent} scrolling='no' sandbox='allow-scripts'></StyledIframe></HtmlContainer> alternative that doesn't require another network call - size is buggy though..
   return (
@@ -191,39 +193,43 @@ const Inscription = () => {
       <TopSection />
       <MainContainer>
         <ContentContainer>
-          {
+          <MediaContainer>
             {
-              'image': <ImageContainer src={blobUrl} />,
-              'svg-recursive': <SvgContainer src={"/api/inscription_number/"+ number} scrolling='no' sandbox='allow-scripts allow-same-origin' loading="lazy"/>,
-              'svg': <ImageContainer src={"/api/inscription_number/"+ number}/>,
-              'html': <HtmlContainer><StyledIframe src={"/api/inscription_number/"+ number} scrolling='no' sandbox='allow-scripts allow-same-origin' loading="lazy"></StyledIframe></HtmlContainer>,
-              'text': <TextContainer><p>{textContent}</p></TextContainer>,
-              'video': <VideoContainer controls loop muted autoplay><source src={blobUrl} type={metadata?.content_type}/></VideoContainer>,
-              'audio': <AudioContainer controls><source src={blobUrl} type={metadata?.content_type}/></AudioContainer>,
-              'pdf': <TextContainer>pdf unsupported</TextContainer>,
-              'model': <TextContainer>gltf model type unsupported</TextContainer>,
-              'unsupported': <TextContainer>{metadata?.content_type} content type unsupported</TextContainer>,
-              'loading': <TextContainer>loading...</TextContainer>
-            }[contentType]
-          }
+              {
+                'image': <ImageContainer src={blobUrl} />,
+                'svg-recursive': <SvgContainer src={"/api/inscription_number/"+ number} scrolling='no' sandbox='allow-scripts allow-same-origin' loading="lazy"/>,
+                'svg': <ImageContainer src={"/api/inscription_number/"+ number}/>,
+                'html': <HtmlContainer><StyledIframe src={"/api/inscription_number/"+ number} scrolling='no' sandbox='allow-scripts allow-same-origin' loading="lazy"></StyledIframe></HtmlContainer>,
+                'text': <TextContainer><MediaText>{textContent}</MediaText></TextContainer>,
+                'video': <VideoContainer controls loop muted autoplay><source src={blobUrl} type={metadata?.content_type}/></VideoContainer>,
+                'audio': <AudioContainer controls><source src={blobUrl} type={metadata?.content_type}/></AudioContainer>,
+                'pdf': <TextContainer>PDF not yet supported</TextContainer>,
+                'model': <TextContainer>glTF model type not yet supported</TextContainer>,
+                'unsupported': <TextContainer unsupported isCentered>{metadata?.content_type} content type not yet supported</TextContainer>,
+                'loading': <TextContainer loading isCentered>Loading...</TextContainer>
+              }[contentType]
+            }
+          </MediaContainer>
         </ContentContainer>
         <InfoContainer>
-          <DataContainer gapSize={'1rem'}>
-            <NumberText>{metadata?.number ? addCommas(metadata?.number) : ""}</NumberText>
-            <Stack horizontal={true} center={false} style={{gap: '1rem', flexWrap: 'wrap'}}>
-              <UnstyledLink to={'/edition/' + metadata?.sha256}>
-                <DataButton>
-                  <HashIcon svgSize={'1rem'} svgColor={'#959595'}></HashIcon>
-                  {editionNumber ? "Edition " + editionNumber + " of " + editionCount : ""}
-                </DataButton>
-              </UnstyledLink>
+          <DataContainer info gapSize={'1rem'}>
+            <NumberText>{metadata?.number != null && metadata?.number != undefined ? addCommas(metadata?.number) : ""}</NumberText>
+            <PillContainer>
+              {editionNumber != null && editionNumber != undefined && (
+                <UnstyledLink to={'/edition/' + metadata?.sha256}>
+                  <DataButton>
+                    <HashIcon svgSize={'1rem'} svgColor={'#959595'}></HashIcon>
+                    {editionNumber ? "Edition " + editionNumber + " of " + editionCount : ""}
+                  </DataButton>
+                </UnstyledLink>
+              )}
               <UnstyledLink to={'https://ordinals.com/inscription/' + metadata?.id} target='_blank'>
                 <DataButton>
                   <WebIcon svgSize={'1rem'} svgColor={'#959595'}></WebIcon>
                   View on ordinals.com
                 </DataButton>
               </UnstyledLink>
-            </Stack>
+            </PillContainer>
           </DataContainer>
           <DataContainer gapSize={'.75rem'}>
             <InfoSectionText>Details</InfoSectionText>
@@ -236,9 +242,6 @@ const Inscription = () => {
                   <UnstyledLink to={address?.address !== "unbound" ? '/address/' + address?.address : ""}>
                     <InfoText isLink={true}>{address?.address ? shortAddress : ""}</InfoText>
                   </UnstyledLink>
-                  <UnstyledButton onClick={() => copyText(metadata?.id)}>                    
-                    <CopyIcon svgSize={'1rem'} svgColor={'#D9D9D9'} />
-                  </UnstyledButton>
                 </InfoDataContainer>
               </InfoRowContainer>
               <InfoRowContainer isMiddle={true}>
@@ -306,6 +309,19 @@ const Inscription = () => {
               </InfoRowContainer>
             </DataContainer>
           </DataContainer>
+          {metadata?.satributes.length > 0 && (
+            <DataContainer gapSize={'.75rem'}>
+              <InfoSectionText>Satributes</InfoSectionText>
+              <DataContainer gapSize={'0'}>
+                <InfoRowContainer style={{flexWrap: 'wrap'}}>
+                  {metadata?.satributes.map( 
+                    satribute => 
+                      <DataButton>{satribute}</DataButton>
+                    )}
+                </InfoRowContainer>
+              </DataContainer>
+            </DataContainer>
+          )}
         </InfoContainer>
       </MainContainer>
     </PageContainer>
@@ -327,9 +343,9 @@ const PageContainer = styled.div`
   scrollbar-width: none;
   gap: 0;
 
-  @media (max-width: 768px) {
-    padding: 0 2rem;
-  }
+  // @media (max-width: 768px) {
+  //   padding: 0 2rem;
+  // }
 `;
 
 const MainContainer = styled.div`
@@ -339,11 +355,11 @@ const MainContainer = styled.div`
   display: flex;
   flex-direction: row;
   align-items: flex-start;
-  flex: 1;
 
   @media (max-width: 768px) {
     flex-direction: column;;
     align-items: center;
+    width: calc(100% - 3rem);
   }
 `;
 
@@ -363,11 +379,25 @@ const ContentContainer = styled.div`
   flex: 1;
   overflow: hidden;
   margin: 0;
+  padding: 0 1.5rem;
+  min-width: 20rem;
 
   @media (max-width: 768px) {
-    width: 100%;
     background-color: #FFFFFF;
+    width: 100%;
+    min-width: unset;
   }
+`;
+
+const MediaContainer = styled.div`
+  background-color: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  max-width: 32rem;
+  height: auto;
+  aspect-ratio: 1/1;
 `;
 
 const UnstyledLink = styled(Link)`
@@ -375,126 +405,75 @@ const UnstyledLink = styled(Link)`
   text-decoration: unset;
 `;
 
-const LinksContainer = styled.div`
-  display: flex;
-  flex-direction: row;
-  flex: 1;
-  align-items: center;
-  justify-content: space-between;
-  position: relative;
-  margin-top: 25px;
-  margin-bottom: 25px;
-`;
-
 const ImageContainer = styled.img`
-  min-width: 16rem;
+  max-width: 100%;
+  max-height: 100%;
+  min-width: 100%; /* Ensures scaling up */
+  min-height: 100%; /* Ensures scaling up */
   width: auto;
   height: auto;
-  max-width: 32rem;
-  max-height: 32rem;
+  object-fit: contain;
+  aspect-ratio: 1/1;
   image-rendering: pixelated;
-
-  @media (max-width: 576px) {
-    max-width: 20rem;
-    max-height: 20rem;
-    margin-top: 3rem;
-    margin-bottom: 3rem;
-  }
 `;
 
 const SvgContainer = styled.iframe`
-  display: flex;
-  justify-content: center;
-  align-items: center;
+  max-width: 100%;
+  max-height: 100%;
+  min-width: 100%; /* Ensures scaling up */
+  min-height: 100%; /* Ensures scaling up */
   width: auto;
   height: auto;
-  min-width:16rem;
-  min-height:16rem;
-  max-width: 32rem;
-  max-height: 32rem;
+  object-fit: contain;
+  aspect-ratio: 1/1;
   image-rendering: pixelated;
-  border-radius: 4px;
-  border: 8px solid #FFF;
-  box-shadow: 0px 1px 6px 0px rgba(0, 0, 0, 0.09);
-  resize: both;
-  margin-top: 6rem;
-  margin-bottom: 6rem;
-
-  @media (max-width: 576px) {
-    max-width: 20rem;
-    max-height: 20rem;
-    margin-top: 3rem;
-    margin-bottom: 3rem;
-  }
 `;
 
-const Heading = styled.h2`
-  font-family: monospace;
-  font-weight: normal;
-`
-
-const MetadataContainer = styled.div`
-  min-width: 30rem;
-
-  @media (max-width: 576px) {
-    min-width: 20rem;
-    max-width: 20rem;
-  }
-`
-
-const MetadataLineContainer = styled.div`
-  align-items: baseline;
-  display: flex;
-  margin-block-start: 1em;
-  margin-block-end: 1em;
-  justify-content: space-between;
-`
-
-const StyledP = styled.p`
-  margin-block-start: 0em;
-  margin-block-end: 0em;
-  margin-inline-end: 5px;
-`
-
 const TextContainer = styled.div`
+  background-color: #FFFFFF;
+  border: 2px solid #F5F5F5;
+  box-sizing: border-box;
+  padding: .5rem;
+  max-width: 100%;
+  max-height: 100%;
+  min-width: 100%; /* Ensures scaling up */
+  min-height: 100%; /* Ensures scaling up */
+  width: auto;
+  height: auto;
   display: flex;
-  align-items: center;
-  min-height: 11rem;
-  max-width: 800px;
-  margin: 1em;
-  font-size: 1em;
-  font-family: monospace;
+  align-items: ${props => props.isCentered ? 'center' : ''};
+  justify-content: ${props => props.isCentered ? 'center' : ''};
+  margin: 0;
+  font-size: .875rem;
+  font-family: Relative Trial Medium;
+  color: ${props => props.loading ? '#959595' : '#000000'};
+  object-fit: contain;
+  aspect-ratio: 1/1;
   white-space-collapse: preserve;
-  margin-top: 6rem;
-  margin-bottom: 6rem;
-  @media (max-width: 576px) {
-    margin-top: 3rem;
-    margin-bottom: 3rem;
-  }
+  overflow: hidden;
+  overflow-y: scroll;
+  // text-overflow: ellipsis;
+  text-wrap: wrap;
 `;
 
 const HtmlContainer = styled.div`
-  display: flex;
-  justify-content: center;
+  max-width: 100%;
+  max-height: 100%;
+  min-width: 100%; /* Ensures scaling up */
+  min-height: 100%; /* Ensures scaling up */
   width: auto;
   height: auto;
-  min-width:16rem;
-  min-height:16rem;
-  max-width: 32rem;
-  max-height: 32rem;
-  border-radius: 4px;
-  border: 8px solid #FFF;
-  box-shadow: 0px 1px 6px 0px rgba(0, 0, 0, 0.09);
-  margin-top: 6rem;
-  margin-bottom: 6rem;
-
-  @media (max-width: 576px) {
-    max-width: 20rem;
-    max-height: 20rem;
-    margin-top: 3rem;
-    margin-bottom: 3rem;
-  }
-`
+  display: flex;
+  margin: 0;
+  font-size: .875rem;
+  font-family: monospace;
+  white-space-collapse: preserve;
+  object-fit: contain;
+  aspect-ratio: 1/1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-wrap: wrap;
+`;
 
 const AudioContainer = styled.audio`
   margin-top: 6rem;
@@ -506,12 +485,9 @@ const AudioContainer = styled.audio`
 `
 
 const VideoContainer = styled.video`
-  margin-top: 6rem;
-  margin-bottom: 6rem;
-  @media (max-width: 576px) {
-    margin-top: 3rem;
-    margin-bottom: 3rem;
-  }
+  width: 100%;
+  height: auto;
+  aspect-ratio: 1/1;
 `
 
 const StyledIframe = styled.iframe`
@@ -520,50 +496,29 @@ const StyledIframe = styled.iframe`
   //flex-grow: 1;
   width: 100%;
   resize: both;
-  //aspect-ratio: 1/1;
+  aspect-ratio: 1/1;
 `;
 
-const TopContainer = styled.div`
-  width: 96%;
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  justify-content: center;
-  // position: absolute;
-  // top: 0;
-  height: 4rem;
-`;
-
-const CenterContainer = styled.div`
-  width: 96%;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-`;
-
-const BottomContainer = styled.div`
-  width: 96%;
-  display: flex;
-  visibility: hidden;
-  height: 4rem;
-`;
-
-const TopLinksContainer = styled.div`
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  column-gap: 1rem;
-`;
-
-const SiteText = styled(Link)`
-  font-family: ABC Camera Unlicensed Trial Bold;
-  font-size: 1.25rem;
-  color: #E34234;
-  padding: 0;
+const MediaText = styled.p`
+  font-family: Relative Trial Medium;
+  font-size: .875rem;
+  color: #000000;
   margin: 0;
+  padding: 0;
+  overflow-wrap: break-word;
+  word-break: break-word;
+  white-space: pre-wrap;
+`;
+
+const ContentOverlay = styled.div`
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 100%;
+  width: 100%;
   cursor: pointer;
-  text-decoration: none;
 `;
 
 const InfoContainer = styled.div`
@@ -573,12 +528,30 @@ const InfoContainer = styled.div`
   display: flex;
   flex-direction: column;
   gap: 2.5rem;
+  overflow-y: auto; // Enable scrolling for overflow content
+  position: relative; // Adjust if necessary for layout
 `;
 
 const DataContainer = styled.div`
   display: flex;
   flex-direction: column;
   gap: ${(props) => props.gapSize};
+
+  @media (max-width: 768px) {
+    align-items: ${(props) => props.info ? 'center' : ''};
+  }
+`;
+
+const PillContainer = styled.div`
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-start;
+  gap: 1rem;
+  flex-wrap: wrap;
+
+  @media (max-width: 768px) {
+    justify-content: center;
+  }
 `;
 
 const NumberText = styled.p`
