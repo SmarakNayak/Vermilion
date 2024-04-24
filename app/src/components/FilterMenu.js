@@ -135,9 +135,9 @@ const CloseButton = styled.button`
   }
 `;
 
-const FilterMenu = ({ isOpen, onClose, onSelectionChange }) => {
+const FilterMenu = ({ isOpen, onClose, onSelectionChange, initialSelection }) => {
   const [expandedCategories, setExpandedCategories] = useState({});
-  const [selectedOptions, setSelectedOptions] = useState({'Content Type': ["image"]});
+  const [selectedOptions, setSelectedOptions] = useState(initialSelection);
 
   const categories = [
     { name: 'Content Type', options: ["text", "image", "gif", "audio", "video", "html", "json"] },
@@ -150,6 +150,7 @@ const FilterMenu = ({ isOpen, onClose, onSelectionChange }) => {
     ] },
   ];
 
+  //open close categories
   const toggleCategory = category => {
     setExpandedCategories({
       ...expandedCategories,
@@ -157,6 +158,7 @@ const FilterMenu = ({ isOpen, onClose, onSelectionChange }) => {
     });
   };
 
+  //select deselect options
   const toggleOption = (category, option) => {
     setSelectedOptions(prevSelectedOptions => {
       const newSelectedOptions = {

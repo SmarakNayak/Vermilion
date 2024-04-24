@@ -11,6 +11,7 @@ import ChevronVerticalIcon from '../assets/icons/ChevronVerticalIcon';
 import { addCommas, formatTimestampMs } from '../helpers/utils';
 import { shortenBytes } from '../helpers/utils';
 import { formatSats } from '../helpers/utils';
+import InscriptionIcon from './InscriptionIcon';
 
 const BlockTable = () => {
   const [blockSortColumn, setBlockSortColumn] = useState('block_number');
@@ -178,7 +179,7 @@ const BlockTable = () => {
               <DivCell>
                 <BlockImgContainer>
                   {row?.block_inscription_count > 0 ?
-                    <BlockImg src ={"/api/block_icon/"+row.block_number} onError={handleImageError}></BlockImg> :
+                    <InscriptionIcon endpoint = {"/api/block_icon/"+row.block_number} useBlockIconDefault = {true}></InscriptionIcon> :
                     <BlockIcon svgSize={'2rem'} svgColor={'#E34234'}></BlockIcon> 
                   }
                 </BlockImgContainer>

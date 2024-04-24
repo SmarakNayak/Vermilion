@@ -21,6 +21,7 @@ import { formatTimestampSecs } from '../helpers/utils';
 import SortbyDropdown from '../components/Dropdown';
 import FilterMenu from '../components/FilterMenu';
 import GalleryInfiniteScroll from '../components/GalleryInfiniteScroll';
+import InscriptionIcon from '../components/InscriptionIcon';
 
 const Collection = () => {
   const [baseApi, setBaseApi] = useState(null); 
@@ -31,7 +32,7 @@ const Collection = () => {
   const [filterVisibility, setFilterVisibility] = useState(false);
 
   const [selectedSortOption, setSelectedSortOption] = useState('newest');
-  const [selectedFilterOptions, setSelectedFilterOptions] = useState({"Content Type": ["image"], "Satributes": [], "Charms":[]});
+  const [selectedFilterOptions, setSelectedFilterOptions] = useState({"Content Type": [], "Satributes": [], "Charms":[]});
 
   //1. Get links
   useEffect(() => {
@@ -69,7 +70,7 @@ const Collection = () => {
       query_string += "&charms=" + selectedFilterOptions["Charms"].toString();
     }
     setBaseApi(query_string);
-  },[selectedSortOption, selectedFilterOptions]);
+  },[symbol, selectedSortOption, selectedFilterOptions]);
 
   // function to toggle visibility of inscription numbers
   const toggleNumberVisibility = () => {
@@ -112,7 +113,7 @@ const Collection = () => {
           <Container style={{gap: '1rem'}}>
             <BlockImgContainer>
               {collectionSummary?.range_start ? 
-                <CollectionIcon src ={"/api/inscription_number/"+collectionSummary?.range_start} onError={handleImageError}></CollectionIcon> :
+                <InscriptionIcon endpoint = {"/api/inscription_number/" + collectionSummary?.range_start} useBlockIconDefault = {false}></InscriptionIcon> :
                 <BlockIcon svgSize={'2.25rem'} svgColor={'#E34234'}></BlockIcon>
               }
             </BlockImgContainer>
@@ -154,7 +155,7 @@ const Collection = () => {
           <SortbyDropdown onOptionSelect={handleSortOptionChange} />
         </RowContainer>
         <RowContainer>
-          <FilterMenu isOpen={filterVisibility} onSelectionChange ={handleFilterOptionsChange} onClose={toggleFilterVisibility}></FilterMenu>
+          <FilterMenu isOpen={filterVisibility} onSelectionChange ={handleFilterOptionsChange} onClose={toggleFilterVisibility} initialSelection={selectedFilterOptions}></FilterMenu>
           <GalleryContainer>
             <GalleryInfiniteScroll baseApi={baseApi} numberVisibility={numberVisibility} />
           </GalleryContainer>

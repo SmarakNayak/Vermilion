@@ -20,6 +20,7 @@ import { shortenBytes } from '../helpers/utils';
 import SortbyDropdown from '../components/Dropdown';
 import FilterMenu from '../components/FilterMenu';
 import GalleryInfiniteScroll from '../components/GalleryInfiniteScroll';
+import InscriptionIcon from '../components/InscriptionIcon';
 
 const Block = () => {
   const [baseApi, setBaseApi] = useState(null); 
@@ -56,7 +57,7 @@ const Block = () => {
       query_string += "&charms=" + selectedFilterOptions["Charms"].toString();
     }
     setBaseApi(query_string);
-  },[selectedSortOption, selectedFilterOptions]);
+  },[number, selectedSortOption, selectedFilterOptions]);
 
   // function to toggle visibility of inscription numbers
   const toggleNumberVisibility = () => {
@@ -98,7 +99,7 @@ const Block = () => {
         <RowContainer>
           <Container style={{gap: '1rem'}}>
             <BlockImgContainer>
-              <BlockImg src ={"/api/block_icon/"+number} onError={handleImageError}></BlockImg>
+              <InscriptionIcon endpoint = {"/api/block_icon/"+number} useBlockIconDefault = {true}></InscriptionIcon>
               {/* <BlockIcon svgSize={'2.25rem'} svgColor={'#E34234'}></BlockIcon> */}
             </BlockImgContainer>
             <BlockText>{addCommas(number)}</BlockText>
@@ -143,7 +144,7 @@ const Block = () => {
           <SortbyDropdown onOptionSelect={handleSortOptionChange} />
         </RowContainer>
         <RowContainer>
-          <FilterMenu isOpen={filterVisibility} onSelectionChange ={handleFilterOptionsChange} onClose={toggleFilterVisibility}></FilterMenu>
+          <FilterMenu isOpen={filterVisibility} onSelectionChange ={handleFilterOptionsChange} onClose={toggleFilterVisibility} initialSelection={selectedFilterOptions}></FilterMenu>
           <GalleryContainer>
             <GalleryInfiniteScroll baseApi={baseApi} numberVisibility={numberVisibility} />
           </GalleryContainer>

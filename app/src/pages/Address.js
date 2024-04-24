@@ -121,7 +121,7 @@ const Address = () => {
               <SortbyDropdown onOptionSelect={handleSortOptionChange} />
           </RowContainer>
           <RowContainer>
-            <FilterMenu isOpen={filterVisibility} onSelectionChange ={handleFilterOptionsChange} onClose={toggleFilterVisibility}></FilterMenu>
+            <FilterMenu isOpen={filterVisibility} onSelectionChange ={handleFilterOptionsChange} onClose={toggleFilterVisibility} initialSelection={selectedFilterOptions}></FilterMenu>
             <GalleryInfiniteScroll baseApi={baseApi} numberVisibility={numberVisibility} />
           </RowContainer>
         </Stack>

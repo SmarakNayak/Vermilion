@@ -168,7 +168,7 @@ const CollectionsTable = () => {
               <DivCell>
                 <BlockImgContainer>
                   {row?.range_start ? 
-                    <InscriptionIcon number ={row.range_start}></InscriptionIcon> :
+                    <InscriptionIcon endpoint = {"/api/inscription_number/" + row.range_start} useBlockIconDefault = {false}></InscriptionIcon> :
                     <ImageIcon svgSize={'2rem'} svgColor={'#E34234'}></ImageIcon>
                   }
                 </BlockImgContainer>

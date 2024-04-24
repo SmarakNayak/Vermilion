@@ -20,6 +20,7 @@ import { shortenBytes } from '../helpers/utils';
 import SortbyDropdown from '../components/Dropdown';
 import FilterMenu from '../components/FilterMenu';
 import GalleryInfiniteScroll from '../components/GalleryInfiniteScroll';
+import InscriptionIcon from '../components/InscriptionIcon';
 
 const SatBlock = () => {
   const [baseApi, setBaseApi] = useState(null); 
@@ -98,7 +99,7 @@ const SatBlock = () => {
         <RowContainer>
           <Container style={{gap: '1rem'}}>
             <BlockImgContainer>
-              <BlockImg src ={"/api/sat_block_icon/"+number} onError={handleImageError}></BlockImg>
+            <InscriptionIcon endpoint = {"/api/sat_block_icon/"+number} useBlockIconDefault = {true}></InscriptionIcon>
               {/* <BlockIcon svgSize={'2.25rem'} svgColor={'#E34234'}></BlockIcon> */}
             </BlockImgContainer>
             <BlockText>{"Sat Creation Block " + addCommas(number)}</BlockText>
@@ -139,7 +140,7 @@ const SatBlock = () => {
           <SortbyDropdown onOptionSelect={handleSortOptionChange} />
         </RowContainer>
         <RowContainer>
-          <FilterMenu isOpen={filterVisibility} onSelectionChange ={handleFilterOptionsChange} onClose={toggleFilterVisibility}></FilterMenu>
+          <FilterMenu isOpen={filterVisibility} onSelectionChange ={handleFilterOptionsChange} onClose={toggleFilterVisibility} initialSelection={selectedFilterOptions}></FilterMenu>
           <GalleryContainer>
             <GalleryInfiniteScroll baseApi={baseApi} numberVisibility={numberVisibility} />
           </GalleryContainer>

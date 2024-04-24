@@ -1,21 +1,22 @@
 import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import ImageIcon from '../assets/icons/ImageIcon';
+import BlockIcon from '../assets/icons/BlockIcon';
 
+
+//no dependancy on metadata endpoint!
 const InscriptionIcon = (props) => {
   const [binaryContent, setBinaryContent] = useState(null);
   const [blobUrl, setBlobUrl] = useState(null);
-  const [textContent, setTextContent] = useState(null);
-  const [metadata, setMetadata] = useState(null);
+  const [rawContentType, setRawContentType] = useState(null);
   const [contentType, setContentType] = useState(null);
 
   useEffect(() => {
     const fetchContent = async () => {
       setBlobUrl(null);
-      setTextContent(null);
       setContentType("loading");
       //1. Get content
-      const response = await fetch("/api/inscription_number/"+props.number);
+      const response = await fetch(props.endpoint);
       //2. Assign local url
       const blob = await response.blob();
       const url = URL.createObjectURL(blob);
@@ -23,6 +24,7 @@ const InscriptionIcon = (props) => {
       setBlobUrl(url);
       //3. Work out type
       let content_type = response.headers.get("content-type");
+      setRawContentType(content_type);
       switch (content_type) {
         //Image types
         case "image/png":
@@ -87,48 +89,24 @@ const InscriptionIcon = (props) => {
           break;
       }
     }
-    
-    const fetchMetadata = async () => {
-      const response = await fetch("/api/inscription_metadata_number/"+props.number);
-      const json = await response.json();
-      setMetadata(json);
-    }
 
     fetchContent();
-    fetchMetadata();
-  },[props.number])
-
-  useEffect(()=> {
-    const updateText = async () => {
-      //1. Update text state variable if text type
-      if(contentType==="text" || contentType==="svg" || contentType==="html" ) {
-        const text = await binaryContent.text();
-        setTextContent(text);
-      }
-      if(metadata?.is_recursive && contentType==="svg") {
-        setContentType("svg-recursive")
-      }
-    }
-    updateText();
-  },[contentType])
-
-  console.log(metadata)
+  },[props.endpoint])
 
   return (
     <IconContainer>
       {
         {
           'image': <ImageContainer src={blobUrl} />,
-          'svg-recursive': <SvgContainer src={"/api/inscription_number/"+ props.number} scrolling='no' sandbox='allow-scripts allow-same-origin' loading="lazy"/>,
-          'svg': <ImageContainer src={blobUrl}/>,
-          'html': <HtmlContainer><StyledIframe src={"/api/inscription_number/"+ props.number} scrolling='no' sandbox='allow-scripts allow-same-origin' loading="lazy"></StyledIframe></HtmlContainer>,
-          'text': <ImageIcon svgSize={'2rem'} svgColor={'#E34234'}></ImageIcon>,
-          'video': <VideoContainer controls loop muted autoplay><source src={blobUrl} type={metadata?.content_type}/></VideoContainer>,
-          'audio': <ImageIcon svgSize={'2rem'} svgColor={'#E34234'}></ImageIcon>,
-          'pdf': <ImageIcon svgSize={'2rem'} svgColor={'#E34234'}></ImageIcon>,
-          'model': <ImageIcon svgSize={'2rem'} svgColor={'#E34234'}></ImageIcon>,
-          'unsupported': <ImageIcon svgSize={'2rem'} svgColor={'#E34234'}></ImageIcon>,
-          'loading': <ImageIcon svgSize={'2rem'} svgColor={'#E34234'}></ImageIcon>
+          'svg': <ImageContainer src={props.endpoint} scrolling='no' sandbox='allow-scripts allow-same-origin' loading="lazy"/>,
+          'html': <HtmlContainer><StyledIframe src={props.endpoint} scrolling='no' sandbox='allow-scripts allow-same-origin' loading="lazy"></StyledIframe></HtmlContainer>,
+          'text': props.useBlockIconDefault ? <BlockIcon svgSize={'2rem'} svgColor={'#E34234'} /> : <ImageIcon svgSize={'2rem'} svgColor={'#E34234'}></ImageIcon>,
+          'video': <VideoContainer controls loop muted autoplay><source src={blobUrl} type={rawContentType}/></VideoContainer>,
+          'audio': props.useBlockIconDefault ? <BlockIcon svgSize={'2rem'} svgColor={'#E34234'} /> : <ImageIcon svgSize={'2rem'} svgColor={'#E34234'}></ImageIcon>,
+          'pdf': props.useBlockIconDefault ? <BlockIcon svgSize={'2rem'} svgColor={'#E34234'} /> : <ImageIcon svgSize={'2rem'} svgColor={'#E34234'}></ImageIcon>,
+          'model': props.useBlockIconDefault ? <BlockIcon svgSize={'2rem'} svgColor={'#E34234'} /> : <ImageIcon svgSize={'2rem'} svgColor={'#E34234'}></ImageIcon>,
+          'unsupported': props.useBlockIconDefault ? <BlockIcon svgSize={'2rem'} svgColor={'#E34234'} /> : <ImageIcon svgSize={'2rem'} svgColor={'#E34234'}></ImageIcon>,
+          'loading': props.useBlockIconDefault ? <BlockIcon svgSize={'2rem'} svgColor={'#E34234'} /> : <ImageIcon svgSize={'2rem'} svgColor={'#E34234'}></ImageIcon>
         }[contentType]
       }
     </IconContainer>
@@ -154,7 +132,7 @@ const ImageContainer = styled.img`
   height: auto;
   object-fit: contain;
   aspect-ratio: 1/1;
-  image-rendering: pixelated;
+  //image-rendering: pixelated;
   border-radius: 0.5rem;
 `;
 
