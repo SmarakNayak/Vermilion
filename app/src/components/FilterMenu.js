@@ -9,9 +9,9 @@ const MenuContainer = styled.div`
   flex-direction: column;
   visibility: ${props => (props.isOpen ? 'visible' : 'hidden')};
   width: 100%;
-  max-width: 240px;
+  max-width: 18rem;
   transition: left 0.3s ease-in-out;
-  margin-right: 3rem;
+  margin-right: 2rem;
   gap: 2rem;
 
   @media (max-width: 630px) {
@@ -62,12 +62,22 @@ const CategoryHeader = styled.div`
   cursor: pointer;
   font-family: Relative Trial Bold;
   font-size: .875rem;
+  padding: .75rem 1rem;
+  border-radius: .5rem;
+  transition: 
+    background-color 350ms ease;
+  transform-origin: center center;
+
+  &:hover {
+    background-color: #F5F5F5;
+  }
 `;
 
 const CategoryOptions = styled.div`
   display: ${props => (props.isOpen ? 'flex' : 'none')};
   flex-wrap: wrap;
   gap: .5rem;
+  padding: 0 1rem;
 `;
 
 const Option = styled.button`
