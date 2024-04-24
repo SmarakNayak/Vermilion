@@ -113,7 +113,8 @@ const GridItemContainer = (props) => {
           {
             {
               'image': <ImageContainer src={blobUrl} />,
-              'svg': <SvgContainer dangerouslySetInnerHTML={{__html: textContent}} />,
+              'svg': <ImageContainer src={"/api/inscription_number/"+ props.number} />,
+              'svg-recursive': <SvgContainer src={"/api/inscription_number/"+ props.number} scrolling='no' sandbox='allow-scripts allow-same-origin' loading="lazy"/>,
               'html': <HtmlContainer><ContentOverlay /><StyledIframe src={"/api/inscription_number/" + props.number} sandbox='allow-scripts' loading='lazy' controls muted></StyledIframe></HtmlContainer>,
               'text': <TextContainer><MediaText>{textContent}</MediaText></TextContainer>,
               'video': <video controls loop muted autoplay style={{width: '100%', height: 'auto', aspectRatio: '1/1'}}><ContentOverlay /><source src={blobUrl} type={rawContentType}/></video>,
@@ -156,6 +157,7 @@ const ItemContainer = styled.div`
 
 const MediaContainer = styled.div`
   background-color: #F5F5F5;
+  border-radius: .25rem;
   padding: 15%;
   display: flex;
   align-items: center;
