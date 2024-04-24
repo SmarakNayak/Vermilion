@@ -5,7 +5,7 @@ import styled from 'styled-components';
 import ChevronDownIcon from '../assets/icons/ChevronDownIcon';
 import { addCommas, formatAddress } from '../helpers/utils';
 
-const SearchMenu = ({ addressData, collectionData, menuOpen, searchInput, searchResults, setMenuOpen }) => {
+const SearchMenu = ({ addressData, collectionData, inscriptionData, menuOpen, searchInput, searchResults, setMenuOpen }) => {
   const [isOpen, setIsOpen] = useState(false);
   const menuRef = useRef(null);
   const isNumberInput = !isNaN(searchInput);
@@ -69,6 +69,14 @@ const SearchMenu = ({ addressData, collectionData, menuOpen, searchInput, search
               </UnstyledLink>
             </CategoryOptions>
           </CategoryContainer>
+          <CategoryContainer>
+            <CategoryHeader>Sat Creation Block</CategoryHeader>
+            <CategoryOptions>
+              <UnstyledLink to={'/sat_block/' + searchInput}>
+                <Option>{addCommas(searchInput)}</Option>
+              </UnstyledLink>
+            </CategoryOptions>
+          </CategoryContainer>
         </>
       )}
       {collectionData.length > 0 && (
@@ -89,6 +97,16 @@ const SearchMenu = ({ addressData, collectionData, menuOpen, searchInput, search
           <CategoryOptions>
             <UnstyledLink to={'/address/' + addressData}>
               <Option>{formatAddress(addressData)}</Option>
+            </UnstyledLink>
+          </CategoryOptions>
+        </CategoryContainer>
+      )}
+      {inscriptionData != null && !isNumberInput && (
+        <CategoryContainer>
+          <CategoryHeader>Inscription</CategoryHeader>
+          <CategoryOptions>
+            <UnstyledLink to={'/inscription/' + inscriptionData?.number}>
+              <Option>{addCommas(inscriptionData?.number)}</Option>
             </UnstyledLink>
           </CategoryOptions>
         </CategoryContainer>

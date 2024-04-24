@@ -16,6 +16,7 @@ const TopSection = (props) => {
   const [searchResults, setSearchResults] = useState([]);
   const [collectionData, setCollectionData] = useState([]);
   const [addressData, setAddressData] = useState(null);
+  const [inscriptionData, setInscriptionData] = useState(null);
   const [menuOpen, setMenuOpen] = useState('');
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [showMobileSearch, setShowMobileSearch] = useState(false);
@@ -28,6 +29,7 @@ const TopSection = (props) => {
       fetchTextSearch(e.target.value); // Assuming fetchTextSearch can optionally take a searchTerm
       setCollectionData([]); // clear collection results 
       setAddressData(null); // clear address results
+      setInscriptionData(null);
     }
   };
 
@@ -62,6 +64,7 @@ const TopSection = (props) => {
       setSearchResults(json);
       setCollectionData(json['collections']);
       setAddressData(json['address']);
+      setInscriptionData(json['inscription']);
       setIsLoading(false); // End loading
     }
   };
@@ -84,6 +87,7 @@ const TopSection = (props) => {
     setMenuOpen(false);
     setCollectionData([]); // clear collection results 
     setAddressData(null); // clear address results
+    setInscriptionData(null);
   }
 
   console.log(searchInput, searchResults);
@@ -109,7 +113,7 @@ const TopSection = (props) => {
           </ClearButton>
         )}
         {menuOpen && (
-          <SearchMenu addressData={addressData} collectionData={collectionData} menuOpen={menuOpen} setMenuOpen={setMenuOpen} searchInput={searchInput} searchResults={searchResults} />
+          <SearchMenu addressData={addressData} collectionData={collectionData} inscriptionData={inscriptionData} menuOpen={menuOpen} setMenuOpen={setMenuOpen} searchInput={searchInput} searchResults={searchResults} />
         )}
       </SearchContainer>
       <ButtonContainer>
@@ -159,7 +163,7 @@ const TopSection = (props) => {
               </ClearButton>
             )}
             {menuOpen && (
-              <SearchMenu addressData={addressData} collectionData={collectionData} menuOpen={menuOpen} setMenuOpen={setMenuOpen} searchInput={searchInput} searchResults={searchResults} />
+              <SearchMenu addressData={addressData} collectionData={collectionData} inscriptionData={inscriptionData} menuOpen={menuOpen} setMenuOpen={setMenuOpen} searchInput={searchInput} searchResults={searchResults} />
             )}
           </SearchContainer>
         </MobileContainer>
