@@ -12,7 +12,7 @@ const MenuContainer = styled.div`
   max-width: 18rem;
   transition: left 0.3s ease-in-out;
   margin-right: 2rem;
-  gap: 2rem;
+  gap: 1rem;
 
   @media (max-width: 630px) {
     background-color: #FFFFFF;

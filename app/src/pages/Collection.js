@@ -108,58 +108,57 @@ const Collection = () => {
     <PageContainer>
       <TopSection />
       <MainContainer>
-        {/* Stack placed within main container to allow for filter section */}
-        <Stack horizontal={false} center={false} style={{gap: '1.5rem'}}>
-          <RowContainer>
-            <Container style={{gap: '1rem'}}>
-              <BlockImgContainer>
-                {collectionSummary?.range_start ? 
-                  <CollectionIcon src ={"/api/inscription_number/"+collectionSummary?.range_start} onError={handleImageError}></CollectionIcon> :
-                  <BlockIcon svgSize={'2.25rem'} svgColor={'#E34234'}></BlockIcon>
-                }
-              </BlockImgContainer>
-              <BlockText>{collectionSummary?.name}</BlockText>
-            </Container>
-          </RowContainer>
-          <RowContainer style={{gap: '1rem'}}>
-            <InfoButton>
-              <CheckIcon svgSize={'1rem'} svgColor={'#009859'} />
-              {collectionSummary?.first_inscribed_date ? formatTimestampSecs(collectionSummary.first_inscribed_date) : ""}
-            </InfoButton>
-          </RowContainer>
-          <RowContainer>
-            <Container style={{gap: '1.5rem', flexFlow: 'wrap', justifyContent: 'center'}}>
-              <Stat value={collectionSummary?.supply ? addCommas(collectionSummary?.supply) : 0} category={'Supply'} />
-              <Divider />
-              <Stat value={collectionSummary?.total_volume ? formatSats(collectionSummary.total_volume) : "0 BTC"} category={'Traded Volume'} />
-              <Divider />
-              <Stat value={collectionSummary?.range_start ? collectionSummary?.range_start + " to " + collectionSummary?.range_end : ""} category={'Range'} />
-              <Divider />
-              <Stat value={collectionSummary?.total_inscription_size ? shortenBytes(collectionSummary.total_inscription_size) : 0} category={'Total Size'} />
-              <Divider />
-              <Stat value={collectionSummary?.total_inscription_fees ? formatSats(collectionSummary.total_inscription_fees) : "0 BTC"} category={'Total Fees'} />
-            </Container>
-          </RowContainer>
-          <SectionContainer>
-            <TabButton>Inscriptions</TabButton>
-          </SectionContainer>
-          <RowContainer>
-              <Stack horizontal={true} center={false} style={{gap: '1rem'}}>
-                <FilterButton onClick={toggleFilterVisibility}>
-                  <FilterIcon svgSize={'1rem'} svgColor={'#000000'}></FilterIcon>
-                  Filters
-                </FilterButton>
-                <VisibilityButton onClick={toggleNumberVisibility}>
-                  <EyeIcon svgSize={'1rem'} svgColor={numberVisibility ? '#000000' : '#959595'}></EyeIcon>
-                </VisibilityButton>
-              </Stack>
-              <SortbyDropdown onOptionSelect={handleSortOptionChange} />
-          </RowContainer>
-          <RowContainer>
-            <FilterMenu isOpen={filterVisibility} onSelectionChange ={handleFilterOptionsChange}></FilterMenu>
+        <RowContainer>
+          <Container style={{gap: '1rem'}}>
+            <BlockImgContainer>
+              {collectionSummary?.range_start ? 
+                <CollectionIcon src ={"/api/inscription_number/"+collectionSummary?.range_start} onError={handleImageError}></CollectionIcon> :
+                <BlockIcon svgSize={'2.25rem'} svgColor={'#E34234'}></BlockIcon>
+              }
+            </BlockImgContainer>
+            <BlockText>{collectionSummary?.name}</BlockText>
+          </Container>
+        </RowContainer>
+        <RowContainer style={{gap: '1rem'}}>
+          <InfoButton>
+            <CheckIcon svgSize={'1rem'} svgColor={'#009859'} />
+            {collectionSummary?.first_inscribed_date ? formatTimestampSecs(collectionSummary.first_inscribed_date) : ""}
+          </InfoButton>
+        </RowContainer>
+        <RowContainer>
+          <Container style={{gap: '1.5rem', flexFlow: 'wrap', justifyContent: 'center'}}>
+            <Stat value={collectionSummary?.supply ? addCommas(collectionSummary?.supply) : 0} category={'Supply'} />
+            <Divider />
+            <Stat value={collectionSummary?.total_volume ? formatSats(collectionSummary.total_volume) : "0 BTC"} category={'Traded Volume'} />
+            <Divider />
+            <Stat value={collectionSummary?.range_start ? collectionSummary?.range_start + " to " + collectionSummary?.range_end : ""} category={'Range'} />
+            <Divider />
+            <Stat value={collectionSummary?.total_inscription_size ? shortenBytes(collectionSummary.total_inscription_size) : 0} category={'Total Size'} />
+            <Divider />
+            <Stat value={collectionSummary?.total_inscription_fees ? formatSats(collectionSummary.total_inscription_fees) : "0 BTC"} category={'Total Fees'} />
+          </Container>
+        </RowContainer>
+        <SectionContainer>
+          <TabButton isActive>Inscriptions</TabButton>
+        </SectionContainer>
+        <RowContainer>
+          <Stack horizontal={true} center={false} style={{gap: '1rem'}}>
+            <FilterButton onClick={toggleFilterVisibility}>
+              <FilterIcon svgSize={'1rem'} svgColor={'#000000'}></FilterIcon>
+              Filters
+            </FilterButton>
+            <VisibilityButton onClick={toggleNumberVisibility}>
+              <EyeIcon svgSize={'1rem'} svgColor={numberVisibility ? '#000000' : '#959595'}></EyeIcon>
+            </VisibilityButton>
+          </Stack>
+          <SortbyDropdown onOptionSelect={handleSortOptionChange} />
+        </RowContainer>
+        <RowContainer>
+          <FilterMenu isOpen={filterVisibility} onSelectionChange ={handleFilterOptionsChange} onClose={toggleFilterVisibility}></FilterMenu>
+          <GalleryContainer>
             <GalleryInfiniteScroll baseApi={baseApi} numberVisibility={numberVisibility} />
-          </RowContainer>
-        </Stack>
+          </GalleryContainer>
+        </RowContainer>
       </MainContainer>
     </PageContainer>
     
@@ -192,8 +191,9 @@ const MainContainer = styled.div`
   padding: .5rem 1.5rem 2.5rem 1.5rem;
   margin: 0;
   display: flex;
-  flex-direction: row;
-  align-items: flex-start;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5rem;
 
   @media (max-width: 630px) {
     width: calc(100% - 3rem);
@@ -204,8 +204,14 @@ const MainContainer = styled.div`
 const RowContainer = styled.div`
   display: flex;
   flex-direction: row;
-  align-items: center;
+  align-items: flex-start;
   justify-content: center;
+  width: 100%;
+`;
+
+const GalleryContainer = styled.div`
+  display: flex;
+  flex-direction: column;
   width: 100%;
 `;
 
@@ -254,8 +260,11 @@ const SectionContainer = styled.div`
   display: flex;
   flex-direction: row;
   flex: 1;
+  gap: 1rem;
   width: 100%;
+  padding-bottom: 1.5rem;
   border-bottom: 1px #E9E9E9 solid;
+  // overflow: scroll;
 `;
 
 const ShareButton = styled.button`
@@ -275,17 +284,31 @@ const ShareButton = styled.button`
 `;
 
 const TabButton = styled.button`
+  border-radius: .5rem;
   border: none;
-  border-bottom: 2px #E34234 solid;
   padding: .5rem 1rem;
+  margin: 0;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
+  gap: .5rem;
   font-family: Relative Trial Bold;
   font-size: .875rem;
-  color: #E34234;
-  background-color: #FFFFFF;
+  color: ${props => props.isActive ? '#E34234' : '#959595'}; // Change text color based on isActive
+  background-color: ${props => props.isActive ? '#F9E8E7' : '#FFFFFF'}; // Change background based on isActive
+  transition: 
+    background-color 350ms ease,
+    transform 150ms ease;
+  transform-origin: center center;
+
+  &:hover {
+    background-color: ${props => props.isActive ? '#F9E8E7' : '#F5F5F5'};
+  }
+
+  &:active {
+    transform: scale(0.96);
+  }
 `;
 
 const VisibilityButton = styled.button`
