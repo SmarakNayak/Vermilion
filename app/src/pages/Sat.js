@@ -117,7 +117,7 @@ const Sat = () => {
               <Stat value={metadata?.name ? metadata?.name : ""} category={'Name'} />
               <Divider />
               <UnstyledLink to={"/sat_block/" + metadata?.block}>
-                <Stat value={metadata?.block ? addCommas(metadata?.block) : ""} category={'Sat Creation Block'} />
+                <Stat value={metadata?.block ? addCommas(metadata?.block) : 0} category={'Sat Creation Block'} />
               </UnstyledLink>
               <Divider />
               <Stat value={metadata?.epoch} category={'Epoch'} />

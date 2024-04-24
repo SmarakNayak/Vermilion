@@ -119,7 +119,7 @@ const Block = () => {
           <Container style={{gap: '2rem', flexFlow: 'wrap', justifyContent: 'center'}}>
             <Stat value={blockStats?.block_tx_count} category={'Transactions'} />
             {/* <Divider /> */}
-            <Stat value={blockStats?.block_inscription_count} category={'Inscriptions'} />
+            <Stat value={blockStats?.block_inscription_count ? blockStats?.block_inscription_count : 0} category={'Inscriptions'} />
             {/* <Divider /> */}
             <Stat value={blockStats?.block_size ? shortenBytes(blockStats.block_size) : 0} category={'Size'} />
             {/* <Divider /> */}

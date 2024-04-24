@@ -57,7 +57,7 @@ const Address = () => {
         query_string += "&charms=" + selectedFilterOptions["Charms"].toString();
       }
       setBaseApi(query_string);
-    },[selectedSortOption, selectedFilterOptions]);
+    },[address, selectedSortOption, selectedFilterOptions]);
 
   // function to toggle visibility of inscription numbers
   const toggleNumberVisibility = () => {

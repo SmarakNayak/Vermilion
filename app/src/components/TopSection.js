@@ -53,7 +53,7 @@ const TopSection = (props) => {
   };
 
   const fetchTextSearch = async (searchTerm) => {
-    if (searchInput.trim() === "") {
+    if (searchTerm.trim() === "") {
       return
     } else {
       setIsLoading(true); // Start loading
