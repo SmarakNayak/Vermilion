@@ -82,26 +82,25 @@ const Sat = () => {
     <PageContainer>
       <TopSection />
       <MainContainer>
-        {/* Stack placed within main container to allow for filter section */}
-        <Stack horizontal={false} center={false} style={{gap: '1.5rem'}}>
-          <RowContainer>
-            <Container style={{gap: '1rem'}}>
-              <BlockImgContainer>
-                <BlockIcon svgSize={'2.25rem'} svgColor={'#E34234'}></BlockIcon>
-              </BlockImgContainer>
-              <BlockText>Sat {addCommas(sat)}</BlockText>
-            </Container>
-          </RowContainer>
-          <RowContainer style={{gap: '1rem'}}>
-            <InfoButton>
-              <ClockIcon svgSize={'1rem'} svgColor={'#000000'} />
-              {metadata?.timestamp ? new Date(metadata?.timestamp*1000).toLocaleString(undefined, {day:"numeric", month: "short", year:"numeric", hour: 'numeric', minute: 'numeric', hour12: true}) : ""}
-            </InfoButton>
-            <InfoButton isButton={true} onClick={() => copyText(sat)}>
-              {'Sat Number: ' + sat}
-              <CopyIcon svgSize={'1rem'} svgColor={'#959595'} />
-            </InfoButton>
-          </RowContainer>
+        <RowContainer>
+          <Container style={{gap: '1rem'}}>
+            <BlockImgContainer>
+              <BlockIcon svgSize={'2.25rem'} svgColor={'#E34234'}></BlockIcon>
+            </BlockImgContainer>
+            <BlockText>Sat {addCommas(sat)}</BlockText>
+          </Container>
+        </RowContainer>
+        <RowContainer style={{gap: '1rem'}}>
+          <InfoButton>
+            <ClockIcon svgSize={'1rem'} svgColor={'#000000'} />
+            {metadata?.timestamp ? new Date(metadata?.timestamp*1000).toLocaleString(undefined, {day:"numeric", month: "short", year:"numeric", hour: 'numeric', minute: 'numeric', hour12: true}) : ""}
+          </InfoButton>
+          <InfoButton isButton={true} onClick={() => copyText(sat)}>
+            {'Sat Number: ' + sat}
+            <CopyIcon svgSize={'1rem'} svgColor={'#959595'} />
+          </InfoButton>
+        </RowContainer>
+        {metadata?.satributes.length > 0 && (
           <RowContainer style={{gap: '1rem'}}>
             {metadata?.satributes.map(
                 entry => 
@@ -110,38 +109,40 @@ const Sat = () => {
                 </InfoButton>
               )}
           </RowContainer>
-          <RowContainer>
-            <Container style={{gap: '1.5rem', flexFlow: 'wrap', justifyContent: 'center'}}>
-              <Stat value={metadata?.rarity ? metadata?.rarity.charAt(0).toUpperCase() + metadata?.rarity.slice(1) : ""} category={'Rarity'} />
-              <Divider />
-              <Stat value={metadata?.name ? metadata?.name : ""} category={'Name'} />
-              <Divider />
-              <UnstyledLink to={"/sat_block/" + metadata?.block}>
-                <Stat value={metadata?.block ? addCommas(metadata?.block) : 0} category={'Sat Creation Block'} />
-              </UnstyledLink>
-              <Divider />
-              <Stat value={metadata?.epoch} category={'Epoch'} />
-            </Container>
-          </RowContainer>
-          <SectionContainer>
-            <TabButton>Inscriptions</TabButton>
-          </SectionContainer>
-          <RowContainer>
-              <Stack horizontal={true} center={false} style={{gap: '1rem'}}>
-                {/* <FilterButton>
-                  <FilterIcon svgSize={'1rem'} svgColor={'#000000'}></FilterIcon>  
-                  Filters
-                </FilterButton> */}
-                <VisibilityButton onClick={toggleNumberVisibility}>
-                  <EyeIcon svgSize={'1rem'} svgColor={numberVisibility ? '#000000' : '#959595'}></EyeIcon>
-                </VisibilityButton>
-              </Stack>
-              <SortbyDropdown onOptionSelect={handleSortOptionChange} />
-          </RowContainer>
-          <RowContainer>
+        )}
+        <RowContainer>
+          <Container style={{gap: '2rem', flexFlow: 'wrap', justifyContent: 'center'}}>
+            <Stat value={metadata?.rarity ? metadata?.rarity.charAt(0).toUpperCase() + metadata?.rarity.slice(1) : ""} category={'Rarity'} />
+            {/* <Divider /> */}
+            <Stat value={metadata?.name ? metadata?.name : ""} category={'Name'} />
+            {/* <Divider /> */}
+            <UnstyledLink to={"/sat_block/" + metadata?.block}>
+              <Stat value={metadata?.block ? addCommas(metadata?.block) : 0} category={'Creation Block'} />
+            </UnstyledLink>
+            {/* <Divider /> */}
+            <Stat value={metadata?.epoch} category={'Epoch'} />
+          </Container>
+        </RowContainer>
+        <SectionContainer>
+          <TabButton>Inscriptions</TabButton>
+        </SectionContainer>
+        <RowContainer>
+            <Stack horizontal={true} center={false} style={{gap: '1rem'}}>
+              {/* <FilterButton>
+                <FilterIcon svgSize={'1rem'} svgColor={'#000000'}></FilterIcon>  
+                Filters
+              </FilterButton> */}
+              <VisibilityButton onClick={toggleNumberVisibility}>
+                <EyeIcon svgSize={'1rem'} svgColor={numberVisibility ? '#000000' : '#959595'}></EyeIcon>
+              </VisibilityButton>
+            </Stack>
+            <SortbyDropdown onOptionSelect={handleSortOptionChange} />
+        </RowContainer>
+        <RowContainer>
+          <GalleryContainer>
             <Gallery inscriptionList={inscriptions} displayJsonToggle={false} numberVisibility={numberVisibility} />
-          </RowContainer>
-        </Stack>
+          </GalleryContainer>
+        </RowContainer>
       </MainContainer>
     </PageContainer>
   )
@@ -167,8 +168,9 @@ const MainContainer = styled.div`
   padding: .5rem 1.5rem 2.5rem 1.5rem;
   margin: 0;
   display: flex;
-  flex-direction: row;
-  align-items: flex-start;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5rem;
 
   @media (max-width: 630px) {
     width: calc(100% - 3rem);
@@ -176,80 +178,30 @@ const MainContainer = styled.div`
   }
 `;
 
-const UnstyledLink = styled(Link)`
-  color: unset;
-  text-decoration: unset;
-`
-
-const LinksContainer = styled.div`
-  display: flex;
-  flex-direction: row;
-  flex: 1;
-  align-items: center;
-  justify-content: space-between;
-  position: relative;
-  width: 30%;
-  margin-top: 25px;
-  margin-bottom: 25px;
-`;
-
-const Heading = styled.h2`
-  font-family: monospace;
-  font-weight: normal;
-  margin-top: 50px;
-  margin-bottom: 50px;
-`
-
-const Masonry = styled.div`
-  column-rule: 1px solid #eee;
-  column-gap: 50px;
-  column-count: 3;
-  column-fill: initial;
-  transition: all .5s ease-in-out;
-`
-
-const Brick = styled.div`
-  padding-bottom: 25px;
-  margin-bottom: 25px;
-  border-bottom: 1px solid #eee;
-  //display: inline-block;
-  vertical-align: top;
-  display: flex;
-  justify-content: center;
-`
-
-const MetadataContainer = styled.div`
-  align-items: baseline;
-  display: flex;
-  margin-block-start: 1em;
-  margin-block-end: 1em;
-`
-
-const StyledP = styled.p`
-  margin-block-start: 0em;
-  margin-block-end: 0em;
-  margin-inline-end: 5px;
-`;
-
 const RowContainer = styled.div`
   display: flex;
   flex-direction: row;
-  align-items: center;
+  align-items: flex-start;
   justify-content: center;
   width: 100%;
 `;
 
-const PageText = styled.p`
-    font-family: ABC Camera Plain Unlicensed Trial Medium;
-    font-size: 1.25rem;
-    margin: 0;
+const GalleryContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+`;
+
+const UnstyledLink = styled(Link)`
+  color: unset;
+  text-decoration: unset;
 `;
 
 const BlockImgContainer = styled.div`
   width: 3.75rem;
   height: 3.75rem;
   background-color: #F5F5F5;
-  border-radius: 2rem;
+  border-radius: .5rem;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -292,8 +244,9 @@ const SectionContainer = styled.div`
   flex: 1;
   gap: 1rem;
   width: 100%;
-  padding-bottom: 1rem;
+  padding-bottom: 1.5rem;
   border-bottom: 1px #E9E9E9 solid;
+  // overflow: scroll;
 `;
 
 const ShareButton = styled.button`

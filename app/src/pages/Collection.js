@@ -127,15 +127,15 @@ const Collection = () => {
           </InfoButton>
         </RowContainer>
         <RowContainer>
-          <Container style={{gap: '1.5rem', flexFlow: 'wrap', justifyContent: 'center'}}>
+          <Container style={{gap: '2rem', flexFlow: 'wrap', justifyContent: 'center'}}>
             <Stat value={collectionSummary?.supply ? addCommas(collectionSummary?.supply) : 0} category={'Supply'} />
-            <Divider />
+            {/* <Divider /> */}
             <Stat value={collectionSummary?.total_volume ? formatSats(collectionSummary.total_volume) : "0 BTC"} category={'Traded Volume'} />
-            <Divider />
+            {/* <Divider /> */}
             <Stat value={collectionSummary?.range_start ? collectionSummary?.range_start + " to " + collectionSummary?.range_end : ""} category={'Range'} />
-            <Divider />
+            {/* <Divider /> */}
             <Stat value={collectionSummary?.total_inscription_size ? shortenBytes(collectionSummary.total_inscription_size) : 0} category={'Total Size'} />
-            <Divider />
+            {/* <Divider /> */}
             <Stat value={collectionSummary?.total_inscription_fees ? formatSats(collectionSummary.total_inscription_fees) : "0 BTC"} category={'Total Fees'} />
           </Container>
         </RowContainer>

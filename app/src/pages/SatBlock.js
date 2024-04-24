@@ -205,7 +205,7 @@ const BlockImgContainer = styled.div`
   width: 3.75rem;
   height: 3.75rem;
   background-color: #F5F5F5;
-  border-radius: 2rem;
+  border-radius: .5rem;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -250,7 +250,7 @@ const SectionContainer = styled.div`
   width: 100%;
   padding-bottom: 1.5rem;
   border-bottom: 1px #E9E9E9 solid;
-  overflow: scroll;
+  // overflow: scroll;
 `;
 
 const TabButton = styled.button`

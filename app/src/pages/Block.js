@@ -254,7 +254,7 @@ const SectionContainer = styled.div`
   width: 100%;
   padding-bottom: 1.5rem;
   border-bottom: 1px #E9E9E9 solid;
-  overflow: scroll;
+  // overflow: scroll;
 `;
 
 const TabButton = styled.button`
