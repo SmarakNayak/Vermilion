@@ -168,7 +168,10 @@ const MediaContainer = styled.div`
   width: 70%;
   height: auto;
   aspect-ratio: 1/1;
-  transition: all 350ms ease;
+  transition: 
+    background-color 350ms ease,
+    transform 150ms ease;
+  transform-origin: center center;
 
   ${ItemContainer}:hover & {
     background-color: #E9E9E9;
@@ -186,11 +189,14 @@ const ImageContainer = styled.img`
   aspect-ratio: 1/1;
   image-rendering: pixelated;
   filter: drop-shadow(0 8px 24px rgba(158,158,158,.2));
-  transition: all 350ms ease;
+  transition: 
+    background-color 350ms ease,
+    transform 150ms ease;
+  transform-origin: center center;
 
-  ${ItemContainer}:hover & {
-    transform: scale(1.03);
-  }
+  // ${ItemContainer}:hover & {
+  //   transform: scale(1.03);
+  // }
 `;
 
 const TextContainer = styled.div`
@@ -210,11 +216,14 @@ const TextContainer = styled.div`
   object-fit: contain;
   aspect-ratio: 1/1;
   filter: drop-shadow(0 8px 24px rgba(158,158,158,.2));
-  transition: all 350ms ease;
+  transition: 
+    background-color 350ms ease,
+    transform 150ms ease;
+  transform-origin: center center;
 
-  ${ItemContainer}:hover & {
-    transform: scale(1.03);
-  }
+  // ${ItemContainer}:hover & {
+  //   transform: scale(1.03);
+  // }
 
   white-space-collapse: preserve;
   overflow: hidden;
@@ -248,11 +257,14 @@ const HtmlContainer = styled.div`
   object-fit: contain;
   aspect-ratio: 1/1;
   filter: drop-shadow(0 8px 24px rgba(158,158,158,.2));
-  transition: all 350ms ease;
+  transition: all 350ms ease;  transition: 
+    background-color 350ms ease,
+    transform 150ms ease;
+  transform-origin: center center;
 
-  ${ItemContainer}:hover & {
-    transform: scale(1.03);
-  }
+  // ${ItemContainer}:hover & {
+  //   transform: scale(1.03);
+  // }
 
   overflow: hidden;
   text-overflow: ellipsis;
@@ -282,11 +294,14 @@ const SvgContainer = styled.div`
   aspect-ratio: 1/1;
   image-rendering: pixelated;
   filter: drop-shadow(0 8px 24px rgba(158,158,158,.2));
-  transition: all 350ms ease;
+  transition: 
+    background-color 350ms ease,
+    transform 150ms ease;
+  transform-origin: center center;
 
-  ${ItemContainer}:hover & {
-    transform: scale(1.03);
-  }
+  // ${ItemContainer}:hover & {
+  //   transform: scale(1.03);
+  // }
 `;
 
 const StyledIframe = styled.iframe`
@@ -314,7 +329,10 @@ const ItemText = styled.p`
   color: #959595;
   margin: 0;
 
-  transition: all 350ms ease;
+  transition: 
+    background-color 350ms ease,
+    transform 150ms ease;
+  transform-origin: center center;
 
   ${ItemContainer}:hover & {
     color: #000000;
