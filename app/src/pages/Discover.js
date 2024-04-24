@@ -185,6 +185,7 @@ const Discover = () => {
               : {
                   'image/png': <ImageContainer src={`/api/inscription_number/` + inscription.number} />,
                   'image/jpeg': <ImageContainer src={`/api/inscription_number/` + inscription.number} />,
+                  'image/jpg': <ImageContainer src={`/api/inscription_number/` + inscription.number} />,
                   'image/webp': <ImageContainer src={`/api/inscription_number/` + inscription.number} />,
                   'image/gif': <ImageContainer src={`/api/inscription_number/` + inscription.number} />,
                   'image/avif': <ImageContainer src={`/api/inscription_number/` + inscription.number} />,

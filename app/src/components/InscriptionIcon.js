@@ -33,6 +33,9 @@ const InscriptionIcon = (props) => {
         case "image/jpeg":
           setContentType("image");
           break;
+        case "image/jpg":
+          setContentType("image");
+          break;
         case "image/webp":
           setContentType("image");
           break;
