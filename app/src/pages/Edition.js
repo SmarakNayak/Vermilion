@@ -193,7 +193,7 @@ const Edition = () => {
                     hasMore={hasMore}
                     loader={
                       <LoaderContainer>
-                        <p style={{color: '#959595'}}>Loading...</p>
+                        <p style={{color: '#959595', margin: 0}}>Loading...</p>
                       </LoaderContainer>
                     }
                   >
@@ -219,6 +219,7 @@ const Edition = () => {
 
 const StyledInfiniteScroll = styled(InfiniteScroll)`
   overflow: hidden !important;
+  width: 100%;
 `
 
 const GalleryContainer = styled.div`
@@ -253,6 +254,9 @@ const ImageContainer = styled.img`
   width: auto;
   height: auto;
   image-rendering: pixelated;
+  object-fit: contain;
+  aspect-ratio: 1/1;
+  image-rendering: pixelated;
 `;
 
 const SvgContainer = styled.div`
@@ -267,18 +271,34 @@ const SvgContainer = styled.div`
 
 const TextContainer = styled.p`
   max-width: 4rem;
-  font-size: 1em;
-  display: block;
-  font-family: monospace;
+  max-height: 4rem;
+  font-family: Relative Trial Medium;
+  font-size: .75rem;
+  color: #000000;
+  margin: 0;
+  object-fit: contain;
+  aspect-ratio: 1/1;
+  overflow: hidden;
+  overflow-y: hidden;
+  text-wrap: wrap;
   white-space-collapse: preserve;
-  margin: 10em 10em;
+  border: 2px solid #F5F5F5;
 `
 
 const HtmlContainer = styled.div`
-  display: flex;
-  justify-content: center;
-  min-width: 4rem;
-  min-height: 4rem;
+  max-width: 4rem;
+  max-height: 4rem;
+  font-family: Relative Trial Medium;
+  font-size: .75rem;
+  color: #000000;
+  margin: 0;
+  object-fit: contain;
+  aspect-ratio: 1/1;
+  overflow: hidden;
+  overflow-y: hidden;
+  text-wrap: wrap;
+  white-space-collapse: preserve;
+  border: 2px solid #F5F5F5;
 `
 
 const StyledIframe = styled.iframe`
@@ -287,7 +307,7 @@ const StyledIframe = styled.iframe`
   //flex-grow: 1;
   width: 100%;
   resize: both;
-  //aspect-ratio: 1/1;
+  aspect-ratio: 1/1;
 `
 
 const RowContainer = styled.div`
@@ -354,14 +374,14 @@ const DivTable = styled.div`
   display: flex;
   flex-direction: column;
   align-items: center;
-  width: calc(100% - 5rem);
+  width: 100%;
   max-width: 40rem;
 `;
 
 const DivRow = styled.div`
   display: flex;
   flex-direction: row;
-  width: 100%;
+  width: calc(100% - 6rem);
   border-radius: .5rem;
   padding: ${props => props.header ? '0 3rem' : '1rem 3rem'};
   background-color: ${props => props.header ? 'transparent' : 'transparent'};
@@ -394,7 +414,7 @@ const DivCell = styled.div`
     justify-content: flex-start;
   }
 
-  @media (max-width: 425px) {
+  @media (max-width: 630px) {
     &:last-child {
       display: none;
     }
@@ -444,7 +464,8 @@ const LoaderContainer = styled.div`
   justify-content: center;
   align-items: center;
   width: 100%;
-  padding-top: 1.5rem;
+  max-width: 
+  max-height:
 `;
 
 
