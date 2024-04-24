@@ -7,8 +7,7 @@ import { Link } from 'react-router-dom';
 import BlockIcon from '../assets/icons/BlockIcon';
 import ArrowDownIcon from '../assets/icons/ArrowDownIcon';
 import ArrowUpIcon from '../assets/icons/ArrowUpIcon';
-import ChevronDownSmallIcon from '../assets/icons/ChevronDownSmallIcon';
-import ChevronUpSmallIcon from '../assets/icons/ChevronUpSmallIcon';
+import ChevronVerticalIcon from '../assets/icons/ChevronVerticalIcon';
 import { addCommas, formatTimestampMs } from '../helpers/utils';
 import { shortenBytes } from '../helpers/utils';
 import { formatSats } from '../helpers/utils';
@@ -124,39 +123,42 @@ const BlockTable = () => {
     event.target.style.height = "2rem"
   };
 
-
   return (
     <DivTable>
       <DivRow header>
         <SortableDivCell header onClick={() => handleBlockSort("block_number")} isActive={blockSortColumn === 'block_number'}>
           <HeaderWrapper isActive={blockSortColumn === 'block_number'}>
-            Block {renderSortIcon("block_number")}
+            Block {renderSortIcon("block_number")} {blockSortColumn != 'block_number' && (<ChevronVerticalIcon svgSize={'.875rem'} svgColor={'#959595'} />)}
           </HeaderWrapper>
         </SortableDivCell>
         <SortableDivCell header onClick={() => handleBlockSort("txs")} isActive={blockSortColumn === 'txs'}>
           <HeaderWrapper isActive={blockSortColumn === 'txs'}>
-            Transactions {renderSortIcon("txs")}
+            Transactions {renderSortIcon("txs")} {blockSortColumn != 'txs' && (<ChevronVerticalIcon svgSize={'.875rem'} svgColor={'#959595'} />)}
           </HeaderWrapper>
         </SortableDivCell>
         <SortableDivCell header onClick={() => handleBlockSort("inscriptions")} isActive={blockSortColumn === 'inscriptions'}>
           <HeaderWrapper isActive={blockSortColumn === 'inscriptions'}>
-            Inscriptions {renderSortIcon("inscriptions")}
+            Inscriptions {renderSortIcon("inscriptions")} {blockSortColumn != 'inscriptions' && (<ChevronVerticalIcon svgSize={'.875rem'} svgColor={'#959595'} />)}
           </HeaderWrapper>
         </SortableDivCell>
-        <DivCell header>Creation Date</DivCell>
+        <DivCell header>
+          <HeaderWrapper>
+            Creation Date
+          </HeaderWrapper>
+        </DivCell>
         <SortableDivCell header onClick={() => handleBlockSort("size")} isActive={blockSortColumn === 'size'}>
           <HeaderWrapper isActive={blockSortColumn === 'size'}>
-            Size {renderSortIcon("size")}
+            Size {renderSortIcon("size")} {blockSortColumn != 'size' && (<ChevronVerticalIcon svgSize={'.875rem'} svgColor={'#959595'} />)}
           </HeaderWrapper>
         </SortableDivCell>
         <SortableDivCell header onClick={() => handleBlockSort("volume")} isActive={blockSortColumn === 'volume'}>
           <HeaderWrapper isActive={blockSortColumn === 'volume'}>
-            Traded Volume {renderSortIcon("volume")}
+            Traded Volume {renderSortIcon("volume")} {blockSortColumn != 'volume' && (<ChevronVerticalIcon svgSize={'.875rem'} svgColor={'#959595'} />)}
           </HeaderWrapper>
         </SortableDivCell>
         <SortableDivCell header onClick={() => handleBlockSort("fees")} isActive={blockSortColumn === 'fees'}>
           <HeaderWrapper isActive={blockSortColumn === 'fees'}>
-            Total Fees {renderSortIcon("fees")}
+            Total Fees {renderSortIcon("fees")} {blockSortColumn != 'fees' && (<ChevronVerticalIcon svgSize={'.875rem'} svgColor={'#959595'} />)}
           </HeaderWrapper>
         </SortableDivCell>
       </DivRow>
@@ -257,9 +259,15 @@ const DivCell = styled.div`
   margin: 0;
   font-family: Relative Trial Medium;
   font-size: .875rem;
-  color: ${props => props.header ? '#959595' : '#000000'};;
+  color: ${props => props.header ? '#959595' : '#000000'};
   &:nth-child(1) {
     justify-content: flex-start;
+    padding-left: .5rem;
+  }
+
+  &:not(:first-child) {
+    /* Apply styles to all DivCell elements except the first one */
+    padding-right: .5rem;
   }
 
   // Hide "Transactions" column on screens smaller than 1200px
@@ -355,7 +363,7 @@ const HeaderWrapper = styled.span`
   flex-direction: row;
   align-items: center;
   gap: .25rem;
-  padding: ${props => props.isActive ? '0.25rem .5rem' : '0.25rem 0'};
+  padding: 0.25rem .5rem;
   background-color: ${props => props.isActive ? '#F5F5F5' : 'transparent'};
   border-radius: .5rem;
 `;

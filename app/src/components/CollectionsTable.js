@@ -6,8 +6,7 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import ImageIcon from '../assets/icons/ImageIcon';
 import ArrowDownIcon from '../assets/icons/ArrowDownIcon';
 import ArrowUpIcon from '../assets/icons/ArrowUpIcon';
-import ChevronDownSmallIcon from '../assets/icons/ChevronDownSmallIcon';
-import ChevronUpSmallIcon from '../assets/icons/ChevronUpSmallIcon';
+import ChevronVerticalIcon from '../assets/icons/ChevronVerticalIcon';
 import { addCommas, formatSats, formatTimestampSecs, shortenBytes } from '../helpers/utils';
 import { Link } from 'react-router-dom';
 
@@ -116,27 +115,39 @@ const CollectionsTable = () => {
   return (
     <DivTable>
       <DivRow header>
-        <DivCell header>Collection</DivCell>
-        <DivCell header>Range</DivCell>
+        <DivCell header>
+          <HeaderWrapper>
+            Collection
+          </HeaderWrapper>
+        </DivCell>
+        <DivCell header>
+          <HeaderWrapper>
+            Range
+          </HeaderWrapper>
+        </DivCell>
         <SortableDivCell header onClick={() => handleCollectionSort("date")} isActive={collectionSortColumn === 'date'}>
           <HeaderWrapper isActive={collectionSortColumn === 'date'}>
-            Creation Date {renderSortIcon("date")}
+            Creation Date {renderSortIcon("date")} {collectionSortColumn != 'date' && (<ChevronVerticalIcon svgSize={'.875rem'} svgColor={'#959595'} />)}
           </HeaderWrapper>
         </SortableDivCell>
-        <DivCell header>Supply</DivCell>
+        <DivCell header>
+          <HeaderWrapper>
+            Supply
+          </HeaderWrapper>
+        </DivCell>
         <SortableDivCell header onClick={() => handleCollectionSort("size")} isActive={collectionSortColumn === 'size'}>
           <HeaderWrapper isActive={collectionSortColumn === 'size'}>
-            Size {renderSortIcon("size")}
+            Size {renderSortIcon("size")} {collectionSortColumn != 'size' && (<ChevronVerticalIcon svgSize={'.875rem'} svgColor={'#959595'} />)}
           </HeaderWrapper>
         </SortableDivCell>
         <SortableDivCell header onClick={() => handleCollectionSort("volume")} isActive={collectionSortColumn === 'volume'}>
           <HeaderWrapper isActive={collectionSortColumn === 'volume'}>
-            Traded Volume {renderSortIcon("volume")}
+            Traded Volume {renderSortIcon("volume")} {collectionSortColumn != 'volume' && (<ChevronVerticalIcon svgSize={'.875rem'} svgColor={'#959595'} />)}
           </HeaderWrapper>
         </SortableDivCell>
         <SortableDivCell header onClick={() => handleCollectionSort("fees")} isActive={collectionSortColumn === 'fees'}>
           <HeaderWrapper isActive={collectionSortColumn === 'fees'}>
-            Total Fees {renderSortIcon("fees")}
+            Total Fees {renderSortIcon("fees")} {collectionSortColumn != 'fees' && (<ChevronVerticalIcon svgSize={'.875rem'} svgColor={'#959595'} />)}
           </HeaderWrapper>
         </SortableDivCell>
       </DivRow>
@@ -240,6 +251,12 @@ const DivCell = styled.div`
   color: ${props => props.header ? '#959595' : '#000000'};
   &:nth-child(1) {
     justify-content: flex-start;
+    padding-left: .5rem;
+  }
+
+  &:not(:first-child) {
+    /* Apply styles to all DivCell elements except the first one */
+    padding-right: .5rem;
   }
 
   // Hide "Creation Date" column on screens smaller than 1200px
@@ -335,7 +352,7 @@ const HeaderWrapper = styled.span`
   flex-direction: row;
   align-items: center;
   gap: .25rem;
-  padding: ${props => props.isActive ? '0.25rem .5rem' : '0.25rem 0'};
+  padding: 0.25rem .5rem;
   background-color: ${props => props.isActive ? '#F5F5F5' : 'transparent'};
   border-radius: .5rem;
 `;
