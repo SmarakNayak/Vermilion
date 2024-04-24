@@ -5,8 +5,8 @@ import styled from 'styled-components';
 import ChevronDownIcon from '../assets/icons/ChevronDownIcon';
 import { addCommas, formatAddress } from '../helpers/utils';
 
-const SearchMenu = ({ addressData, collectionData, inscriptionData, menuOpen, searchInput, searchResults, setMenuOpen }) => {
-  const [isOpen, setIsOpen] = useState(false);
+const SearchMenu = ({ addressData, collectionData, inscriptionData, menuOpen, searchInput, searchResults, setMenuOpen, setShowMobileSearch }) => {
+  const [isOpen, setIsOpen] = useState(true);
   const menuRef = useRef(null);
   const isNumberInput = !isNaN(searchInput);
 
@@ -14,6 +14,7 @@ const SearchMenu = ({ addressData, collectionData, inscriptionData, menuOpen, se
     const handleClickOutside = (event) => {
       if (menuRef.current && !menuRef.current.contains(event.target) && window.innerWidth > 630) {
         setIsOpen(false); // Close the menu if clicked outside
+        setMenuOpen(false);
       }
     };
 
@@ -41,6 +42,12 @@ const SearchMenu = ({ addressData, collectionData, inscriptionData, menuOpen, se
     }
   }, [searchInput]);
 
+  const handleLinkClick = () => {
+    setMenuOpen(false);
+    setShowMobileSearch(false);
+    //setIsOpen(false);
+  };
+
   return (
     <MenuContainer ref={menuRef}>
       {isNumberInput && (
@@ -48,7 +55,7 @@ const SearchMenu = ({ addressData, collectionData, inscriptionData, menuOpen, se
           <CategoryContainer>
             <CategoryHeader>Inscription</CategoryHeader>
             <CategoryOptions>
-              <UnstyledLink to={'/inscription/' + searchInput}>
+              <UnstyledLink to={'/inscription/' + searchInput} onClick={handleLinkClick}>
                 <Option>{addCommas(searchInput)}</Option>
               </UnstyledLink>
             </CategoryOptions>
@@ -56,7 +63,7 @@ const SearchMenu = ({ addressData, collectionData, inscriptionData, menuOpen, se
           <CategoryContainer>
             <CategoryHeader>Block</CategoryHeader>
             <CategoryOptions>
-              <UnstyledLink to={'/block/' + searchInput}>
+              <UnstyledLink to={'/block/' + searchInput} onClick={handleLinkClick}>
                 <Option>{addCommas(searchInput)}</Option>
               </UnstyledLink>
             </CategoryOptions>
@@ -64,7 +71,7 @@ const SearchMenu = ({ addressData, collectionData, inscriptionData, menuOpen, se
           <CategoryContainer>
             <CategoryHeader>Sat</CategoryHeader>
             <CategoryOptions>
-              <UnstyledLink to={'/sat/' + searchInput}>
+              <UnstyledLink to={'/sat/' + searchInput} onClick={handleLinkClick}>
                 <Option>{addCommas(searchInput)}</Option>
               </UnstyledLink>
             </CategoryOptions>
@@ -72,7 +79,7 @@ const SearchMenu = ({ addressData, collectionData, inscriptionData, menuOpen, se
           <CategoryContainer>
             <CategoryHeader>Sat Creation Block</CategoryHeader>
             <CategoryOptions>
-              <UnstyledLink to={'/sat_block/' + searchInput}>
+              <UnstyledLink to={'/sat_block/' + searchInput} onClick={handleLinkClick}>
                 <Option>{addCommas(searchInput)}</Option>
               </UnstyledLink>
             </CategoryOptions>
@@ -84,7 +91,7 @@ const SearchMenu = ({ addressData, collectionData, inscriptionData, menuOpen, se
           <CategoryHeader>Collection</CategoryHeader>
           <CategoryOptions>
             {searchResults['collections'].map((result) => (
-              <UnstyledLink to={'/collection/' + result.collection_symbol}>
+              <UnstyledLink to={'/collection/' + result.collection_symbol} onClick={handleLinkClick}>
                 <Option key={result.id}>{result.name}</Option>
               </UnstyledLink>
             ))}
@@ -95,7 +102,7 @@ const SearchMenu = ({ addressData, collectionData, inscriptionData, menuOpen, se
         <CategoryContainer>
           <CategoryHeader>Address</CategoryHeader>
           <CategoryOptions>
-            <UnstyledLink to={'/address/' + addressData}>
+            <UnstyledLink to={'/address/' + addressData} onClick={handleLinkClick}>
               <Option>{formatAddress(addressData)}</Option>
             </UnstyledLink>
           </CategoryOptions>
@@ -105,7 +112,7 @@ const SearchMenu = ({ addressData, collectionData, inscriptionData, menuOpen, se
         <CategoryContainer>
           <CategoryHeader>Inscription</CategoryHeader>
           <CategoryOptions>
-            <UnstyledLink to={'/inscription/' + inscriptionData?.number}>
+            <UnstyledLink to={'/inscription/' + inscriptionData?.number} onClick={handleLinkClick}>
               <Option>{addCommas(inscriptionData?.number)}</Option>
             </UnstyledLink>
           </CategoryOptions>

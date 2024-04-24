@@ -55,7 +55,7 @@ const TopSection = (props) => {
   };
 
   const fetchTextSearch = async (searchTerm) => {
-    if (searchTerm.trim() === "") {
+    if (searchTerm?.trim() === "") {
       return
     } else {
       setIsLoading(true); // Start loading
@@ -113,7 +113,7 @@ const TopSection = (props) => {
           </ClearButton>
         )}
         {menuOpen && (
-          <SearchMenu addressData={addressData} collectionData={collectionData} inscriptionData={inscriptionData} menuOpen={menuOpen} setMenuOpen={setMenuOpen} searchInput={searchInput} searchResults={searchResults} />
+          <SearchMenu addressData={addressData} collectionData={collectionData} inscriptionData={inscriptionData} menuOpen={menuOpen} setMenuOpen={setMenuOpen} setShowMobileSearch={setShowMobileSearch} searchInput={searchInput} searchResults={searchResults} />
         )}
       </SearchContainer>
       <ButtonContainer>
@@ -163,7 +163,7 @@ const TopSection = (props) => {
               </ClearButton>
             )}
             {menuOpen && (
-              <SearchMenu addressData={addressData} collectionData={collectionData} inscriptionData={inscriptionData} menuOpen={menuOpen} setMenuOpen={setMenuOpen} searchInput={searchInput} searchResults={searchResults} />
+              <SearchMenu addressData={addressData} collectionData={collectionData} inscriptionData={inscriptionData} menuOpen={menuOpen} setMenuOpen={setMenuOpen} setShowMobileSearch={setShowMobileSearch} searchInput={searchInput} searchResults={searchResults} />
             )}
           </SearchContainer>
         </MobileContainer>
