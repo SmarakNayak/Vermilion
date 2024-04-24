@@ -9,6 +9,7 @@ import ArrowUpIcon from '../assets/icons/ArrowUpIcon';
 import ChevronVerticalIcon from '../assets/icons/ChevronVerticalIcon';
 import { addCommas, formatSats, formatTimestampSecs, shortenBytes } from '../helpers/utils';
 import { Link } from 'react-router-dom';
+import InscriptionIcon from './InscriptionIcon';
 
 const CollectionsTable = () => {
   const [collectionSortColumn, setCollectionSortColumn] = useState('volume');
@@ -167,7 +168,7 @@ const CollectionsTable = () => {
               <DivCell>
                 <BlockImgContainer>
                   {row?.range_start ? 
-                    <CollectionIcon src ={"/api/inscription_number/"+row.range_start} onError={handleImageError}></CollectionIcon> :
+                    <InscriptionIcon number ={row.range_start}></InscriptionIcon> :
                     <ImageIcon svgSize={'2rem'} svgColor={'#E34234'}></ImageIcon>
                   }
                 </BlockImgContainer>

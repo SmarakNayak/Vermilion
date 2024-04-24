@@ -35,4 +35,36 @@ module.exports = function(app) {
       // },
     })
   );
+  app.use(
+    '/r',
+    createProxyMiddleware({
+      target: 'https://blue.vermilion.place/',
+      changeOrigin: true,
+      // target: 'http://localhost:2081',
+    })
+  );
+  app.use(
+    '/blockheight',
+    createProxyMiddleware({
+      target: 'https://blue.vermilion.place/',
+      changeOrigin: true,
+      // target: 'http://localhost:2081',
+    })
+  );
+  app.use(
+    '/blockhash',
+    createProxyMiddleware({
+      target: 'https://blue.vermilion.place/',
+      changeOrigin: true,
+      // target: 'http://localhost:2081',
+    })
+  );
+  app.use(
+    '/blocktime',
+    createProxyMiddleware({
+      target: 'https://blue.vermilion.place/',
+      changeOrigin: true,
+      // target: 'http://localhost:2081',
+    })
+  );
 };
