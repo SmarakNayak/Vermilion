@@ -118,6 +118,16 @@ const SearchMenu = ({ addressData, collectionData, inscriptionData, menuOpen, se
           </CategoryOptions>
         </CategoryContainer>
       )}
+      {searchInput.length > 0 && (
+        <CategoryContainer>
+          <CategoryHeader>Visual Search</CategoryHeader>
+          <CategoryOptions>
+            <UnstyledLink to={'/search/' + searchInput} onClick={handleLinkClick}>
+              <Option>{searchInput}</Option>
+            </UnstyledLink>
+          </CategoryOptions>
+        </CategoryContainer>
+      )}
     </MenuContainer>
   );
 };

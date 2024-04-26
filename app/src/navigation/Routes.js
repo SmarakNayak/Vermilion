@@ -25,6 +25,7 @@ const Navigation = () => {
         <Route path="/sat/:sat" element={<Sat />} />
         <Route path="/sat_block/:number" element={<SatBlock />} />
         <Route path="/search" element={<Search />} />
+        <Route path="/search/:query" element={<Search />} />
         <Route path="/discover" element={<Discover />} />
         <Route path="/collection/:symbol" element={<Collection />} />
         <Route path="/explore" element={<Explore />} />

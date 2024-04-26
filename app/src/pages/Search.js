@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import styled from 'styled-components';
 import Gallery from '../components/Gallery';
 import TopSection from '../components/TopSection';
@@ -17,6 +17,8 @@ import Stat from '../components/Stat';
 import SearchDropdown from '../components/SearchDropdown';
 
 const Search = () => {
+  let { query } = useParams();
+  const navigate = useNavigate();
   const [numberVisibility, setNumberVisibility] = useState(true);
   const [inscriptionList, setInscriptionList] = useState([]);
   const [searchInput, setSearchInput] = useState("");
@@ -25,6 +27,20 @@ const Search = () => {
   const [isError, setIsError] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [firstLoad, setFirstLoad] = useState(true);
+
+  useEffect(() => {
+    if(query !== undefined && query !== searchInput) {
+      console.log(query);
+      //path different to search input - start search
+      setFirstLoad(false);
+      console.log("path different to search input");
+      setSearchInput(query);
+      submitSearch(query);
+    } else {
+      //path same as search input - do nothing
+      console.log("path same as search input");
+    }
+  },[query])
 
   const handleTextChange = (e) => {
     e.preventDefault();
@@ -67,6 +83,7 @@ const Search = () => {
     let json = await response.json();
     setInscriptionList(json);
     setIsLoading(false); // End loading
+    navigate(`/search/${searchTerm}`);
   };
 
   // function to toggle visibility of inscription numbers
@@ -97,9 +114,9 @@ const Search = () => {
     };
     const response = await fetch('/search_api/search_by_image?n=50', requestOptions)
     let json = await response.json();
-    //json = json.sort((a,b)=>b.genesis_fee/b.content_size-a.genesis_fee/a.content_size);
     setInscriptionList(json);
     setIsLoading(false); // End loading
+    navigate(`/search`);
   };
 
   const clearSearch = () => {
@@ -107,6 +124,7 @@ const Search = () => {
     setSearchInput("");
     setlastSearch("");
     setImage(undefined); // Clear image if used
+    navigate(`/search`);
   };
 
   const handleSortOptionChange = (option) => {
