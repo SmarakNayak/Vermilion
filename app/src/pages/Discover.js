@@ -5,6 +5,7 @@ import { addCommas } from '../helpers/utils';
 import TopSection from '../components/TopSection';
 import CopyIcon from '../assets/icons/CopyIcon';
 import ArrowSquareIcon from '../assets/icons/ArrowSquareIcon';
+import { Toaster, toast } from 'sonner';
 const iframecontentwindow = require("../scripts/iframeResizer.contentWindow.min.txt");
 
 const Discover = () => {
@@ -214,6 +215,7 @@ const Discover = () => {
               <MediaTypeText>{inscription.content_type}</MediaTypeText>
             </MediaTextContainer> */}
             <ButtonContainer>
+              <Toaster />
               <ActionButton onClick={() => {copyToClipboard(`https://vermilion.place/inscription/` + inscription.number)}}>
                 <CopyIcon svgColor='#000000' svgSize='1.5rem' />
               </ActionButton>

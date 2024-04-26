@@ -5,9 +5,14 @@ import SearchIcon from '../assets/icons/SearchIcon';
 import BurgerMenuIcon from '../assets/icons/BurgerMenuIcon';
 import CrossIcon from '../assets/icons/CrossIcon';
 import BoltIcon from '../assets/icons/BoltIcon';
+import WalletIcon from '../assets/icons/WalletIcon';
 import ExploreIcon from '../assets/icons/ExploreIcon';
 import DiscoverIcon from '../assets/icons/DiscoverIcon';
+import LogoutIcon from '../assets/icons/LogoutIcon';
 import SearchMenu from './SearchMenu';
+import Wallet, { getAddress, Address, BitcoinNetworkType, AddressPurpose } from 'sats-connect';
+import { formatAddress } from '../helpers/utils';
+import MenuDropdown from './MenuDropdown';
 
 const TopSection = (props) => {
   const [searchInput, setSearchInput] = useState("");
@@ -20,6 +25,34 @@ const TopSection = (props) => {
   const [menuOpen, setMenuOpen] = useState('');
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [showMobileSearch, setShowMobileSearch] = useState(false);
+  const [optionsVisible, setOptionsVisible] = useState(false);
+
+  const [network, setNetwork] = useState('network', BitcoinNetworkType.Mainnet);
+  const [addressInfo, setAddressInfo] = useState('addresses', []);
+  const isConnected = addressInfo.length > 0;
+
+  const onConnect = async () => {
+    const response = await Wallet.request('getAccounts', {
+      purposes: [AddressPurpose.Payment, AddressPurpose.Ordinals, AddressPurpose.Stacks],
+      message: 'Cool app wants to know your addresses!',
+      network: {
+        type: network
+      },
+    });
+    if (response.status === 'success') {
+      setAddressInfo(response.result);
+      console.log(response.result);
+    }
+  }
+
+  const onDisconnect = () => {
+    Wallet.disconnect();
+    setAddressInfo([]);
+  };
+
+  const onWalletClick = () => {
+    setOptionsVisible(!optionsVisible);
+  }
 
   const handleTextChange = (e) => {
     e.preventDefault();
@@ -90,8 +123,6 @@ const TopSection = (props) => {
     setInscriptionData(null);
   }
 
-  console.log(searchInput, searchResults);
-
   return (
     <HeaderContainer>
       <SiteText to ={'/explore'}>vermilion</SiteText>
@@ -134,7 +165,19 @@ const TopSection = (props) => {
             <LinkButton>Search</LinkButton>
           </UnstyledLink>
         </LinkContainer>
-        <ConnectButton>Connect</ConnectButton>
+        {/* Click event to connect wallet */}
+        {!isConnected && (
+          <ConnectButton onClick={onConnect}>Connect</ConnectButton>
+        )}
+        {isConnected && (
+          <>
+            {/* Insert click event to navigate to wallet */}
+            <ProfileButton onClick={onWalletClick}>
+              {addressInfo}
+            </ProfileButton>
+            <MenuDropdown onWalletClick={onWalletClick} optionsVisible={optionsVisible} />
+          </>
+        )}
       </ButtonContainer>
       {showMobileSearch && (
         <MobileContainer>
@@ -196,7 +239,27 @@ const TopSection = (props) => {
                 <MenuText>Search</MenuText>
               </ItemContainer>
             </UnstyledLink>
-            <MobileButton>Connect</MobileButton>
+            {/* Insert click event to connect wallet */}
+            {!isConnected && (
+              <MobileButton>Connect</MobileButton>
+            )}
+            {isConnected && (
+              <>
+                <Divider />
+                {/* Insert link to connected wallet */}
+                <UnstyledLink to={'/search'}>
+                  <ItemContainer>
+                    <WalletIcon svgSize={'1.25rem'} svgColor={'#E34234'} />
+                    <MenuText>bc1p7...3b453</MenuText>
+                  </ItemContainer>
+                </UnstyledLink>
+                {/* Insert click event to disconnect wallet below */}
+                <ItemContainer>
+                  <LogoutIcon svgSize={'1.25rem'} svgColor={'#000000'} />
+                  <MenuText>Disconnect</MenuText>
+                </ItemContainer>
+              </>
+            )}
           </MenuLinkContainer>
         </MobileContainer>
       )}
@@ -238,6 +301,34 @@ const ConnectButton = styled.button`
   font-size: .875rem;
   color: #FFFFFF;  
   background-color:#000000;
+  transition: 
+    transform 150ms ease;
+  transform-origin: center center;
+
+  &:active {
+    transform: scale(0.96);
+  }
+
+  @media (max-width: 630px) {
+    display: none;
+  }
+`;
+
+const ProfileButton = styled.button`
+  height: 2.5rem;
+  border-radius: 2rem;
+  border: none;
+  padding: 0 1rem;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  gap: .5rem;
+  font-family: Relative Trial Bold;
+  font-size: .875rem;
+  color: #E34234;  
+  background-color:#F5F5F5;
   transition: 
     transform 150ms ease;
   transform-origin: center center;
@@ -542,6 +633,11 @@ const ClearButton = styled.button`
   &:hover {
     background-color: #E9E9E9;
   }
+`;
+
+const Divider = styled.div`
+  width: 100%;  
+  border-bottom: 1px solid #E9E9E9;
 `;
 
 export default TopSection;
