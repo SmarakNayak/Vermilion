@@ -360,12 +360,14 @@ const MainContainer = styled.div`
     flex-direction: column;;
     align-items: center;
     width: calc(100% - 3rem);
+    padding: 1rem 1.5rem 2.5rem 1.5rem;
+    gap: 2rem;
   }
 `;
 
 const ContentContainer = styled.div`
   background-color: #F7F7F7;
-  position: sticky;
+  // position: sticky;
   top: 5rem;
   max-height: 100vh;
   overflow-y: scroll;
@@ -530,6 +532,10 @@ const InfoContainer = styled.div`
   gap: 2.5rem;
   overflow-y: auto; // Enable scrolling for overflow content
   position: relative; // Adjust if necessary for layout
+
+  @media (max-width: 768px) {
+    padding: 0rem;
+  }
 `;
 
 const DataContainer = styled.div`

@@ -428,9 +428,6 @@ const MenuButton = styled.button`
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  font-family: 'ABC Camera Plain Unlicensed Trial Medium';
-  font-size: .875rem;
-  color: #000000;
   background-color: #FFFFFF;
   transition: 
     background-color 350ms ease,
