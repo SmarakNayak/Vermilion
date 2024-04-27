@@ -185,7 +185,7 @@ const Inscription = () => {
       }
     }
     updateText();
-  },[contentType])
+  },[contentType, metadata])
 
   console.log(metadata)
 

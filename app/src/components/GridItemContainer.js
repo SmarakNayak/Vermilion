@@ -97,13 +97,16 @@ const GridItemContainer = (props) => {
     fetchContent();
   },[props.number])
 
-  //Update text
+  //Update text & check for recursive svg
   useEffect(()=> {
     const updateText = async () => {
       //1. Update text state variable if text type
       if(contentType==="text" || contentType==="svg" || contentType==="html") {
         const text = await binaryContent.text();
         setTextContent(text);
+        if(contentType==="svg" && text.includes("/content")) {
+          setContentType("svg-recursive")
+        }
       }
     }
     updateText();    
