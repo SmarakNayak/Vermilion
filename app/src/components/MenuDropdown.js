@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
+import { Link } from "react-router-dom";
 import styled from 'styled-components';
 import ChevronDownIcon from '../assets/icons/ChevronDownIcon';
 
@@ -70,7 +71,12 @@ const DropdownItem = styled.li`
   }
 `;
 
-const MenuDropdown = ({ onWalletClick, optionsVisible }) => {
+const UnstyledLink = styled(Link)`
+  color: unset;
+  text-decoration: unset;
+`
+
+const MenuDropdown = ({ onWalletClick, optionsVisible, onDisconnect, addressInfo }) => {
   const [isOpen, setIsOpen] = useState(optionsVisible);
   const dropdownRef = useRef(null);
 
@@ -80,8 +86,12 @@ const MenuDropdown = ({ onWalletClick, optionsVisible }) => {
     <>
     {optionsVisible && (
       <DropdownMenu ref={dropdownRef}>
-        {/* Add click event to disconnect */}
-        <DropdownItem>
+        <UnstyledLink to ={'/address/' + addressInfo?.[0].address}>
+          <DropdownItem>
+            View Wallet
+          </DropdownItem>
+        </UnstyledLink>
+        <DropdownItem onClick={onDisconnect}>
           Disconnect
         </DropdownItem>
       </DropdownMenu>

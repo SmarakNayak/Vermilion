@@ -28,12 +28,14 @@ const TopSection = (props) => {
   const [optionsVisible, setOptionsVisible] = useState(false);
 
   const [network, setNetwork] = useState('network', BitcoinNetworkType.Mainnet);
-  const [addressInfo, setAddressInfo] = useState('addresses', []);
+  const [addressInfo, setAddressInfo] = useState([]);
+  const [shortAddress, setShortAddress] = useState(null);
   const isConnected = addressInfo.length > 0;
 
   const onConnect = async () => {
+    console.log("on connect hit")
     const response = await Wallet.request('getAccounts', {
-      purposes: [AddressPurpose.Payment, AddressPurpose.Ordinals, AddressPurpose.Stacks],
+      purposes: [AddressPurpose.Ordinals],
       message: 'Cool app wants to know your addresses!',
       network: {
         type: network
@@ -42,10 +44,13 @@ const TopSection = (props) => {
     if (response.status === 'success') {
       setAddressInfo(response.result);
       console.log(response.result);
+      let short_address = response.result[0].address.slice(0, 5) + "..." + response.result[0].address.slice(-5);
+      setShortAddress(short_address);
     }
   }
 
   const onDisconnect = () => {
+    console.log("on disconnect hit")
     Wallet.disconnect();
     setAddressInfo([]);
   };
@@ -173,9 +178,9 @@ const TopSection = (props) => {
           <>
             {/* Insert click event to navigate to wallet */}
             <ProfileButton onClick={onWalletClick}>
-              {addressInfo}
+              {shortAddress}
             </ProfileButton>
-            <MenuDropdown onWalletClick={onWalletClick} optionsVisible={optionsVisible} />
+            <MenuDropdown onWalletClick={onWalletClick} optionsVisible={optionsVisible} onDisconnect={onDisconnect} addressInfo={addressInfo}/>
           </>
         )}
       </ButtonContainer>
