@@ -286,7 +286,7 @@ const HtmlContainer = styled.div`
 //   image-rendering: pixelated;
 // `;
 
-const SvgContainer = styled.div`
+const SvgContainer = styled.iframe`
   max-width: 100%;
   max-height: 100%;
   min-width: 100%; /* Ensures scaling up */
