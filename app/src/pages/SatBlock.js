@@ -93,61 +93,57 @@ const SatBlock = () => {
   };
 
   return (
-    <PageContainer>
-      <TopSection />
-      <MainContainer>
-        <RowContainer>
-          <Container style={{gap: '1rem'}}>
-            <BlockImgContainer>
-            <InscriptionIcon endpoint = {"/api/sat_block_icon/"+number} useBlockIconDefault = {true}></InscriptionIcon>
-              {/* <BlockIcon svgSize={'2.25rem'} svgColor={'#E34234'}></BlockIcon> */}
-            </BlockImgContainer>
-            <BlockText>{"Sat Creation Block " + addCommas(number)}</BlockText>
-          </Container>
-        </RowContainer>
-        <RowContainer style={{gap: '1rem'}}>
-          <InfoButton>
-            <CheckIcon svgSize={'1rem'} svgColor={'#009859'} />
-            {formatTimestampMs(satBlockStats?.sat_block_timestamp)}
-          </InfoButton>
-          {/* <InfoButton isButton={true} onClick={() => copyText('text')}>
-            {'Hash: ' + '0045...9f45'}
-            <CopyIcon svgSize={'1rem'} svgColor={'#959595'} />
-          </InfoButton> */}
-        </RowContainer>
-        <RowContainer>
-          <Container style={{gap: '2rem', flexFlow: 'wrap', justifyContent: 'center'}}>
-            <Stat value={satBlockStats?.sat_block_inscription_count ? satBlockStats?.sat_block_inscription_count : 0} category={'Inscriptions'} />
-            {/* <Divider /> */}
-            <Stat value={satBlockStats?.sat_block_inscription_size ? shortenBytes(satBlockStats.sat_block_inscription_size) : 0} category={'Total Inscription Size'} />
-            {/* <Divider /> */}
-            <Stat value={satBlockStats?.sat_block_inscription_fees ? formatSats(satBlockStats.sat_block_inscription_fees) : "0 BTC"} category={'Total Inscription Fees'} />
-          </Container>
-        </RowContainer>
-        <SectionContainer>
-          <TabButton>Inscriptions</TabButton>
-        </SectionContainer>
-        <RowContainer>
-          <Stack horizontal={true} center={false} style={{gap: '1rem'}}>
-            <FilterButton onClick={toggleFilterVisibility}>
-              <FilterIcon svgSize={'1rem'} svgColor={'#000000'}></FilterIcon>
-              Filters
-            </FilterButton>
-            <VisibilityButton onClick={toggleNumberVisibility}>
-              <EyeIcon svgSize={'1rem'} svgColor={numberVisibility ? '#000000' : '#959595'}></EyeIcon>
-            </VisibilityButton>
-          </Stack>
-          <SortbyDropdown onOptionSelect={handleSortOptionChange} />
-        </RowContainer>
-        <RowContainer>
-          <FilterMenu isOpen={filterVisibility} onSelectionChange ={handleFilterOptionsChange} onClose={toggleFilterVisibility} initialSelection={selectedFilterOptions}></FilterMenu>
-          <GalleryContainer>
-            <GalleryInfiniteScroll baseApi={baseApi} numberVisibility={numberVisibility} />
-          </GalleryContainer>
-        </RowContainer>
-      </MainContainer>
-    </PageContainer>
-    
+    <MainContainer>
+      <RowContainer>
+        <Container style={{gap: '1rem'}}>
+          <BlockImgContainer>
+          <InscriptionIcon endpoint = {"/api/sat_block_icon/"+number} useBlockIconDefault = {true}></InscriptionIcon>
+            {/* <BlockIcon svgSize={'2.25rem'} svgColor={'#E34234'}></BlockIcon> */}
+          </BlockImgContainer>
+          <BlockText>{"Sat Creation Block " + addCommas(number)}</BlockText>
+        </Container>
+      </RowContainer>
+      <RowContainer style={{gap: '1rem'}}>
+        <InfoButton>
+          <CheckIcon svgSize={'1rem'} svgColor={'#009859'} />
+          {formatTimestampMs(satBlockStats?.sat_block_timestamp)}
+        </InfoButton>
+        {/* <InfoButton isButton={true} onClick={() => copyText('text')}>
+          {'Hash: ' + '0045...9f45'}
+          <CopyIcon svgSize={'1rem'} svgColor={'#959595'} />
+        </InfoButton> */}
+      </RowContainer>
+      <RowContainer>
+        <Container style={{gap: '2rem', flexFlow: 'wrap', justifyContent: 'center'}}>
+          <Stat value={satBlockStats?.sat_block_inscription_count ? satBlockStats?.sat_block_inscription_count : 0} category={'Inscriptions'} />
+          {/* <Divider /> */}
+          <Stat value={satBlockStats?.sat_block_inscription_size ? shortenBytes(satBlockStats.sat_block_inscription_size) : 0} category={'Total Inscription Size'} />
+          {/* <Divider /> */}
+          <Stat value={satBlockStats?.sat_block_inscription_fees ? formatSats(satBlockStats.sat_block_inscription_fees) : "0 BTC"} category={'Total Inscription Fees'} />
+        </Container>
+      </RowContainer>
+      <SectionContainer>
+        <TabButton>Inscriptions</TabButton>
+      </SectionContainer>
+      <RowContainer>
+        <Stack horizontal={true} center={false} style={{gap: '1rem'}}>
+          <FilterButton onClick={toggleFilterVisibility}>
+            <FilterIcon svgSize={'1rem'} svgColor={'#000000'}></FilterIcon>
+            Filters
+          </FilterButton>
+          <VisibilityButton onClick={toggleNumberVisibility}>
+            <EyeIcon svgSize={'1rem'} svgColor={numberVisibility ? '#000000' : '#959595'}></EyeIcon>
+          </VisibilityButton>
+        </Stack>
+        <SortbyDropdown onOptionSelect={handleSortOptionChange} />
+      </RowContainer>
+      <RowContainer>
+        <FilterMenu isOpen={filterVisibility} onSelectionChange ={handleFilterOptionsChange} onClose={toggleFilterVisibility} initialSelection={selectedFilterOptions}></FilterMenu>
+        <GalleryContainer>
+          <GalleryInfiniteScroll baseApi={baseApi} numberVisibility={numberVisibility} />
+        </GalleryContainer>
+      </RowContainer>
+    </MainContainer>    
   )
 }
 

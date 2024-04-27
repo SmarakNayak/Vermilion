@@ -76,69 +76,65 @@ const Explore = () => {
   };
 
   return (
-    <PageContainer>
-      <TopSection />
-      <MainContainer>
-        <RowContainer style={{justifyContent: 'flex-start'}}>
-          <PageText>Explore</PageText>
-        </RowContainer>
-        <SectionContainer>
-          {/* Update onClick to change active tab */}
-          <TabButton 
-            onClick={() => handleTabClick('Inscriptions')}
-            isActive={activeTab === 'Inscriptions'}
-            >
-            Inscriptions
-          </TabButton>
-          <TabButton 
-            onClick={() => handleTabClick('Blocks')}
-            isActive={activeTab === 'Blocks'}
-            >
-            Blocks
-          </TabButton>
-          <TabButton 
-            onClick={() => handleTabClick('Collections')}
-            isActive={activeTab === 'Collections'}
-            >
-            Collections
-          </TabButton>
-        </SectionContainer>
-          {/* 3. Conditional Rendering */}
-          {activeTab === 'Inscriptions' && (
-            <Stack horizontal={false} center={false} style={{gap: '1.5rem', width: '100%'}}>
-              <RowContainer>
-                <Stack horizontal={true} center={false} style={{gap: '1rem'}}>
-                  <FilterButton onClick={toggleFilterVisibility}>
-                    <FilterIcon svgSize={'1rem'} svgColor={'#000000'}></FilterIcon>
-                    Filters
-                  </FilterButton>
-                  <VisibilityButton onClick={toggleNumberVisibility}>
-                    <EyeIcon svgSize={'1rem'} svgColor={numberVisibility ? '#000000' : '#959595'}></EyeIcon>
-                  </VisibilityButton>
-                </Stack>
-                <SortbyDropdown onOptionSelect={handleSortOptionChange} />
-              </RowContainer>
-              <RowContainer>
-                <FilterMenu isOpen={filterVisibility} onSelectionChange ={handleFilterOptionsChange} onClose={toggleFilterVisibility} initialSelection={selectedFilterOptions}></FilterMenu>
-                <GalleryContainer>
-                  <GalleryInfiniteScroll baseApi={baseApi} numberVisibility={numberVisibility} />
-                </GalleryContainer>
-              </RowContainer>
-            </Stack>
-          )}
-          {activeTab === 'Blocks' && (
-            <ExploreContainer>
-              <BlockTable/>
-            </ExploreContainer>
-          )}
-          {activeTab === 'Collections' && (
-            <ExploreContainer>
-              <CollectionsTable/>
-            </ExploreContainer>
-          )}
-      </MainContainer>
-    </PageContainer>
-    
+    <MainContainer>
+      <RowContainer style={{justifyContent: 'flex-start'}}>
+        <PageText>Explore</PageText>
+      </RowContainer>
+      <SectionContainer>
+        {/* Update onClick to change active tab */}
+        <TabButton 
+          onClick={() => handleTabClick('Inscriptions')}
+          isActive={activeTab === 'Inscriptions'}
+          >
+          Inscriptions
+        </TabButton>
+        <TabButton 
+          onClick={() => handleTabClick('Blocks')}
+          isActive={activeTab === 'Blocks'}
+          >
+          Blocks
+        </TabButton>
+        <TabButton 
+          onClick={() => handleTabClick('Collections')}
+          isActive={activeTab === 'Collections'}
+          >
+          Collections
+        </TabButton>
+      </SectionContainer>
+        {/* 3. Conditional Rendering */}
+        {activeTab === 'Inscriptions' && (
+          <Stack horizontal={false} center={false} style={{gap: '1.5rem', width: '100%'}}>
+            <RowContainer>
+              <Stack horizontal={true} center={false} style={{gap: '1rem'}}>
+                <FilterButton onClick={toggleFilterVisibility}>
+                  <FilterIcon svgSize={'1rem'} svgColor={'#000000'}></FilterIcon>
+                  Filters
+                </FilterButton>
+                <VisibilityButton onClick={toggleNumberVisibility}>
+                  <EyeIcon svgSize={'1rem'} svgColor={numberVisibility ? '#000000' : '#959595'}></EyeIcon>
+                </VisibilityButton>
+              </Stack>
+              <SortbyDropdown onOptionSelect={handleSortOptionChange} />
+            </RowContainer>
+            <RowContainer>
+              <FilterMenu isOpen={filterVisibility} onSelectionChange ={handleFilterOptionsChange} onClose={toggleFilterVisibility} initialSelection={selectedFilterOptions}></FilterMenu>
+              <GalleryContainer>
+                <GalleryInfiniteScroll baseApi={baseApi} numberVisibility={numberVisibility} />
+              </GalleryContainer>
+            </RowContainer>
+          </Stack>
+        )}
+        {activeTab === 'Blocks' && (
+          <ExploreContainer>
+            <BlockTable/>
+          </ExploreContainer>
+        )}
+        {activeTab === 'Collections' && (
+          <ExploreContainer>
+            <CollectionsTable/>
+          </ExploreContainer>
+        )}
+    </MainContainer>    
   )
 }
   

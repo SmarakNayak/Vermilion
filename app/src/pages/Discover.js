@@ -172,12 +172,6 @@ const Discover = () => {
 
   return (
     <PageContainer>
-      <TopSection />
-      {/* <TopContainer>
-        <LinksContainer>
-        <SiteText to ={'/'}>vermilion</SiteText>
-        </LinksContainer>
-      </TopContainer> */}
       {inscriptions.map((inscription, i, inscriptions) => (
         <ContentContainer key={i+1} id={i+1} ref={el => inscriptionReferences.current[i] = el}>
           <InscriptionContainer>

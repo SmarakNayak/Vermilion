@@ -153,109 +153,106 @@ const Search = () => {
   };
 
   return (
-    <PageContainer>
-      <TopSection />
-      <MainContainer>
-        {/* Stack placed within main container to allow for filter section */}
-        <Stack horizontal={false} center={false} style={{gap: '1.5rem'}}>
-          <RowContainer style={{justifyContent: 'flex-start'}}>
-            <PageText>Search</PageText>
-          </RowContainer>
-          <RowContainer style={{gap: '1rem'}}>
-            <VisibilityButton onClick={toggleNumberVisibility}>
-              <EyeIcon svgSize={'1rem'} svgColor={numberVisibility ? '#000000' : '#959595'}></EyeIcon>
-            </VisibilityButton>
-            <SearchContainer>
-              <SearchIcon svgSize={'1rem'} svgColor={'#959595'}></SearchIcon>
-              <form onSubmit={handleTextSubmit}>
-                <SearchInput 
-                  placeholder='Search for inscriptions'
-                  type='text'
-                  onChange={handleTextChange}
-                  onKeyDown={handleKeyPress}
-                  value={searchInput}
-                  isError={isError}
-                />
-              </form>
-            </SearchContainer>
-            <Stack horizontal={true} style={{gap: '1rem', justifyContent: 'flex-end'}}>
-              {/* <form onSubmit={handleTextSubmit}>
-                <input  type="text"
-                        placeholder="Search Bitcoin"
-                        onChange={handleTextChange}
-                        value={searchInput} />
-                <input type="submit" value="Search by text" />
-              </form>
-              <form onSubmit={handleImageSubmit}>
-                <input type="file" multiple accept='image/*' onChange={onImageChange}/>
-                <input type="submit" value="Search by image" />
-              </form> */}
-              {/* <form onSubmit={handleImageSubmit}>
-                <input 
-                  type="file" multiple accept='image/*' onChange={onImageChange}
-                />
-              </form>
-              <FilterButton>
-                <UploadIcon svgSize={'1rem'} svgColor={'#000000'}></UploadIcon>
-                Upload image
-              </FilterButton> */}
-              <input 
-                type="file" 
-                multiple 
-                accept='image/*' 
-                onChange={onImageChange}
-                style={{ display: 'none' }} // Hide the file input
-                ref={fileInputRef} // Attach the ref
+    <MainContainer>
+      {/* Stack placed within main container to allow for filter section */}
+      <Stack horizontal={false} center={false} style={{gap: '1.5rem'}}>
+        <RowContainer style={{justifyContent: 'flex-start'}}>
+          <PageText>Search</PageText>
+        </RowContainer>
+        <RowContainer style={{gap: '1rem'}}>
+          <VisibilityButton onClick={toggleNumberVisibility}>
+            <EyeIcon svgSize={'1rem'} svgColor={numberVisibility ? '#000000' : '#959595'}></EyeIcon>
+          </VisibilityButton>
+          <SearchContainer>
+            <SearchIcon svgSize={'1rem'} svgColor={'#959595'}></SearchIcon>
+            <form onSubmit={handleTextSubmit}>
+              <SearchInput 
+                placeholder='Search for inscriptions'
+                type='text'
+                onChange={handleTextChange}
+                onKeyDown={handleKeyPress}
+                value={searchInput}
+                isError={isError}
               />
-              <FilterButton onClick={handleFileButtonClick}>
-                <UploadIcon svgSize={'1rem'} svgColor={'#000000'}></UploadIcon>
-                <UploadText>Upload image</UploadText>
-              </FilterButton>
-              <SearchDropdown onOptionSelect={handleSortOptionChange} />
+            </form>
+          </SearchContainer>
+          <Stack horizontal={true} style={{gap: '1rem', justifyContent: 'flex-end'}}>
+            {/* <form onSubmit={handleTextSubmit}>
+              <input  type="text"
+                      placeholder="Search Bitcoin"
+                      onChange={handleTextChange}
+                      value={searchInput} />
+              <input type="submit" value="Search by text" />
+            </form>
+            <form onSubmit={handleImageSubmit}>
+              <input type="file" multiple accept='image/*' onChange={onImageChange}/>
+              <input type="submit" value="Search by image" />
+            </form> */}
+            {/* <form onSubmit={handleImageSubmit}>
+              <input 
+                type="file" multiple accept='image/*' onChange={onImageChange}
+              />
+            </form>
+            <FilterButton>
+              <UploadIcon svgSize={'1rem'} svgColor={'#000000'}></UploadIcon>
+              Upload image
+            </FilterButton> */}
+            <input 
+              type="file" 
+              multiple 
+              accept='image/*' 
+              onChange={onImageChange}
+              style={{ display: 'none' }} // Hide the file input
+              ref={fileInputRef} // Attach the ref
+            />
+            <FilterButton onClick={handleFileButtonClick}>
+              <UploadIcon svgSize={'1rem'} svgColor={'#000000'}></UploadIcon>
+              <UploadText>Upload image</UploadText>
+            </FilterButton>
+            <SearchDropdown onOptionSelect={handleSortOptionChange} />
+          </Stack>
+        </RowContainer>
+        {firstLoad && (
+          <Stack horizontal={false} center={true} style={{gap: '1.5rem', width: '100%', marginTop: '1rem'}}>
+            <Stack horizontal={false} center={true} style={{gap: '.5rem', width: '100%'}}>
+              <BoltIcon svgSize={'1.5rem'} svgColor={'#E34234'} />
+              <MessageText header>Visual Search</MessageText>
             </Stack>
-          </RowContainer>
-          {firstLoad && (
-            <Stack horizontal={false} center={true} style={{gap: '1.5rem', width: '100%', marginTop: '1rem'}}>
-              <Stack horizontal={false} center={true} style={{gap: '.5rem', width: '100%'}}>
-                <BoltIcon svgSize={'1.5rem'} svgColor={'#E34234'} />
-                <MessageText header>Visual Search</MessageText>
-              </Stack>
-              <MessageText>
-                Type something or upload an image to discover similar inscriptions. Try with one of these keywords:
-              </MessageText>
-              <RowContainer style={{gap: '1rem', flexWrap: 'wrap'}}>
-                <SearchButton onClick={() => handleSearchButtonClick('running bitcoin')}>running bitcoin</SearchButton>
-                <SearchButton onClick={() => handleSearchButtonClick('messi')}>messi</SearchButton>
-                <SearchButton onClick={() => handleSearchButtonClick('world peace')}>world peace</SearchButton>
-              </RowContainer>
-            </Stack>
-          )}
-          {isLoading && <p style={{color: '#959595', fontSize: '.875rem', padding: '.5rem 0', margin: 0}}>Loading...</p>}
-          {/* Add search summary message */}
-          {!isLoading && inscriptionList.length > 0 && (
-            <RowContainer style={{justifyContent: 'flex-start', alignItems: 'center'}}>
-              <Stack horizontal={true} center={true} style={{gap: '.5rem'}}>
-                <SummaryText>Showing {inscriptionList.length} results for</SummaryText>
-                <SearchButton onClick={clearSearch}>
-                  <SearchButtonText>
-                    {image ? image.name : lastSearch}
-                  </SearchButtonText>
-                  <CrossIcon svgSize={'1rem'} svgColor={'#000000'} />
-                </SearchButton>
-              </Stack>
+            <MessageText>
+              Type something or upload an image to discover similar inscriptions. Try with one of these keywords:
+            </MessageText>
+            <RowContainer style={{gap: '1rem', flexWrap: 'wrap'}}>
+              <SearchButton onClick={() => handleSearchButtonClick('running bitcoin')}>running bitcoin</SearchButton>
+              <SearchButton onClick={() => handleSearchButtonClick('messi')}>messi</SearchButton>
+              <SearchButton onClick={() => handleSearchButtonClick('world peace')}>world peace</SearchButton>
             </RowContainer>
-          )}
-          <RowContainer>
-            {/* {inscriptionList.length ? (
-              <Gallery inscriptionList={inscriptionList} numberVisibility={numberVisibility} />
-            ) : (
-              <div>results</div>
-            )} */}
-            <Gallery inscriptionList={inscriptionList} numberVisibility={numberVisibility} />
+          </Stack>
+        )}
+        {isLoading && <p style={{color: '#959595', fontSize: '.875rem', padding: '.5rem 0', margin: 0}}>Loading...</p>}
+        {/* Add search summary message */}
+        {!isLoading && inscriptionList.length > 0 && (
+          <RowContainer style={{justifyContent: 'flex-start', alignItems: 'center'}}>
+            <Stack horizontal={true} center={true} style={{gap: '.5rem'}}>
+              <SummaryText>Showing {inscriptionList.length} results for</SummaryText>
+              <SearchButton onClick={clearSearch}>
+                <SearchButtonText>
+                  {image ? image.name : lastSearch}
+                </SearchButtonText>
+                <CrossIcon svgSize={'1rem'} svgColor={'#000000'} />
+              </SearchButton>
+            </Stack>
           </RowContainer>
-        </Stack>
-      </MainContainer>
-    </PageContainer>
+        )}
+        <RowContainer>
+          {/* {inscriptionList.length ? (
+            <Gallery inscriptionList={inscriptionList} numberVisibility={numberVisibility} />
+          ) : (
+            <div>results</div>
+          )} */}
+          <Gallery inscriptionList={inscriptionList} numberVisibility={numberVisibility} />
+        </RowContainer>
+      </Stack>
+    </MainContainer>
   )
 }
   

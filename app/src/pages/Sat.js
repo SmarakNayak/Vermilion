@@ -79,72 +79,69 @@ const Sat = () => {
 
   //TODO: Add pagination
   return (
-    <PageContainer>
-      <TopSection />
-      <MainContainer>
-        <RowContainer>
-          <Container style={{gap: '1rem'}}>
-            <BlockImgContainer>
-              <BlockIcon svgSize={'2.25rem'} svgColor={'#E34234'}></BlockIcon>
-            </BlockImgContainer>
-            <BlockText>Sat {addCommas(sat)}</BlockText>
-          </Container>
-        </RowContainer>
+    <MainContainer>
+      <RowContainer>
+        <Container style={{gap: '1rem'}}>
+          <BlockImgContainer>
+            <BlockIcon svgSize={'2.25rem'} svgColor={'#E34234'}></BlockIcon>
+          </BlockImgContainer>
+          <BlockText>Sat {addCommas(sat)}</BlockText>
+        </Container>
+      </RowContainer>
+      <RowContainer style={{gap: '1rem'}}>
+        <InfoButton>
+          <ClockIcon svgSize={'1rem'} svgColor={'#000000'} />
+          {metadata?.timestamp ? new Date(metadata?.timestamp*1000).toLocaleString(undefined, {day:"numeric", month: "short", year:"numeric", hour: 'numeric', minute: 'numeric', hour12: true}) : ""}
+        </InfoButton>
+        <InfoButton isButton={true} onClick={() => copyText(sat)}>
+          {'Sat Number: ' + sat}
+          <CopyIcon svgSize={'1rem'} svgColor={'#959595'} />
+        </InfoButton>
+      </RowContainer>
+      {metadata?.satributes.length > 0 && (
         <RowContainer style={{gap: '1rem'}}>
-          <InfoButton>
-            <ClockIcon svgSize={'1rem'} svgColor={'#000000'} />
-            {metadata?.timestamp ? new Date(metadata?.timestamp*1000).toLocaleString(undefined, {day:"numeric", month: "short", year:"numeric", hour: 'numeric', minute: 'numeric', hour12: true}) : ""}
-          </InfoButton>
-          <InfoButton isButton={true} onClick={() => copyText(sat)}>
-            {'Sat Number: ' + sat}
-            <CopyIcon svgSize={'1rem'} svgColor={'#959595'} />
-          </InfoButton>
+          {metadata?.satributes.map(
+              entry => 
+              <InfoButton> 
+                {entry}
+              </InfoButton>
+            )}
         </RowContainer>
-        {metadata?.satributes.length > 0 && (
-          <RowContainer style={{gap: '1rem'}}>
-            {metadata?.satributes.map(
-                entry => 
-                <InfoButton> 
-                  {entry}
-                </InfoButton>
-              )}
-          </RowContainer>
-        )}
-        <RowContainer>
-          <Container style={{gap: '2rem', flexFlow: 'wrap', justifyContent: 'center'}}>
-            <Stat value={metadata?.rarity ? metadata?.rarity.charAt(0).toUpperCase() + metadata?.rarity.slice(1) : ""} category={'Rarity'} />
-            {/* <Divider /> */}
-            <Stat value={metadata?.name ? metadata?.name : ""} category={'Name'} />
-            {/* <Divider /> */}
-            <UnstyledLink to={"/sat_block/" + metadata?.block}>
-              <Stat value={metadata?.block ? addCommas(metadata?.block) : 0} category={'Creation Block'} />
-            </UnstyledLink>
-            {/* <Divider /> */}
-            <Stat value={metadata?.epoch} category={'Epoch'} />
-          </Container>
-        </RowContainer>
-        <SectionContainer>
-          <TabButton>Inscriptions</TabButton>
-        </SectionContainer>
-        <RowContainer>
-            <Stack horizontal={true} center={false} style={{gap: '1rem'}}>
-              {/* <FilterButton>
-                <FilterIcon svgSize={'1rem'} svgColor={'#000000'}></FilterIcon>  
-                Filters
-              </FilterButton> */}
-              <VisibilityButton onClick={toggleNumberVisibility}>
-                <EyeIcon svgSize={'1rem'} svgColor={numberVisibility ? '#000000' : '#959595'}></EyeIcon>
-              </VisibilityButton>
-            </Stack>
-            <SortbyDropdown onOptionSelect={handleSortOptionChange} />
-        </RowContainer>
-        <RowContainer>
-          <GalleryContainer>
-            <Gallery inscriptionList={inscriptions} displayJsonToggle={false} numberVisibility={numberVisibility} />
-          </GalleryContainer>
-        </RowContainer>
-      </MainContainer>
-    </PageContainer>
+      )}
+      <RowContainer>
+        <Container style={{gap: '2rem', flexFlow: 'wrap', justifyContent: 'center'}}>
+          <Stat value={metadata?.rarity ? metadata?.rarity.charAt(0).toUpperCase() + metadata?.rarity.slice(1) : ""} category={'Rarity'} />
+          {/* <Divider /> */}
+          <Stat value={metadata?.name ? metadata?.name : ""} category={'Name'} />
+          {/* <Divider /> */}
+          <UnstyledLink to={"/sat_block/" + metadata?.block}>
+            <Stat value={metadata?.block ? addCommas(metadata?.block) : 0} category={'Creation Block'} />
+          </UnstyledLink>
+          {/* <Divider /> */}
+          <Stat value={metadata?.epoch} category={'Epoch'} />
+        </Container>
+      </RowContainer>
+      <SectionContainer>
+        <TabButton>Inscriptions</TabButton>
+      </SectionContainer>
+      <RowContainer>
+          <Stack horizontal={true} center={false} style={{gap: '1rem'}}>
+            {/* <FilterButton>
+              <FilterIcon svgSize={'1rem'} svgColor={'#000000'}></FilterIcon>  
+              Filters
+            </FilterButton> */}
+            <VisibilityButton onClick={toggleNumberVisibility}>
+              <EyeIcon svgSize={'1rem'} svgColor={numberVisibility ? '#000000' : '#959595'}></EyeIcon>
+            </VisibilityButton>
+          </Stack>
+          <SortbyDropdown onOptionSelect={handleSortOptionChange} />
+      </RowContainer>
+      <RowContainer>
+        <GalleryContainer>
+          <Gallery inscriptionList={inscriptions} displayJsonToggle={false} numberVisibility={numberVisibility} />
+        </GalleryContainer>
+      </RowContainer>
+    </MainContainer>
   )
 }
   

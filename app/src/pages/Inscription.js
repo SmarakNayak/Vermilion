@@ -192,142 +192,139 @@ const Inscription = () => {
   //TODO: add tz using moment.js or timeZoneName: "long"
   // <HtmlContainer><StyledIframe srcDoc={textContent} scrolling='no' sandbox='allow-scripts'></StyledIframe></HtmlContainer> alternative that doesn't require another network call - size is buggy though..
   return (
-    <PageContainer>
-      <TopSection />
-      <MainContainer>
-        <ContentContainer>
-          <MediaContainer>
+    <MainContainer>
+      <ContentContainer>
+        <MediaContainer>
+          {
             {
-              {
-                'image': <ImageContainer src={blobUrl} />,
-                'svg-recursive': <SvgContainer src={"/api/inscription_number/"+ number} scrolling='no' sandbox='allow-scripts allow-same-origin' loading="lazy"/>,
-                'svg': <ImageContainer src={"/api/inscription_number/"+ number}/>,
-                'html': <HtmlContainer><StyledIframe src={"/api/inscription_number/"+ number} scrolling='no' sandbox='allow-scripts allow-same-origin' loading="lazy"></StyledIframe></HtmlContainer>,
-                'text': <TextContainer><MediaText>{textContent}</MediaText></TextContainer>,
-                'video': <VideoContainer controls loop muted autoplay><source src={blobUrl} type={metadata?.content_type}/></VideoContainer>,
-                'audio': <AudioContainer controls><source src={blobUrl} type={metadata?.content_type}/></AudioContainer>,
-                'pdf': <TextContainer>PDF not yet supported</TextContainer>,
-                'model': <TextContainer>glTF model type not yet supported</TextContainer>,
-                'unsupported': <TextContainer unsupported isCentered>{metadata?.content_type} content type not yet supported</TextContainer>,
-                'loading': <TextContainer loading isCentered>Loading...</TextContainer>
-              }[contentType]
-            }
-          </MediaContainer>
-        </ContentContainer>
-        <InfoContainer>
-          <DataContainer info gapSize={'1rem'}>
-            <NumberText>{metadata?.number != null && metadata?.number != undefined ? addCommas(metadata?.number) : ""}</NumberText>
-            <PillContainer>
-              {editionNumber != null && editionNumber != undefined && (
-                <UnstyledLink to={'/edition/' + metadata?.sha256}>
-                  <DataButton>
-                    <HashIcon svgSize={'1rem'} svgColor={'#959595'}></HashIcon>
-                    {editionNumber ? "Edition " + editionNumber + " of " + editionCount : ""}
-                  </DataButton>
-                </UnstyledLink>
-              )}
-              <UnstyledLink to={'https://ordinals.com/inscription/' + metadata?.id} target='_blank'>
+              'image': <ImageContainer src={blobUrl} />,
+              'svg-recursive': <SvgContainer src={"/api/inscription_number/"+ number} scrolling='no' sandbox='allow-scripts allow-same-origin' loading="lazy"/>,
+              'svg': <ImageContainer src={"/api/inscription_number/"+ number}/>,
+              'html': <HtmlContainer><StyledIframe src={"/api/inscription_number/"+ number} scrolling='no' sandbox='allow-scripts allow-same-origin' loading="lazy"></StyledIframe></HtmlContainer>,
+              'text': <TextContainer><MediaText>{textContent}</MediaText></TextContainer>,
+              'video': <VideoContainer controls loop muted autoplay><source src={blobUrl} type={metadata?.content_type}/></VideoContainer>,
+              'audio': <AudioContainer controls><source src={blobUrl} type={metadata?.content_type}/></AudioContainer>,
+              'pdf': <TextContainer>PDF not yet supported</TextContainer>,
+              'model': <TextContainer>glTF model type not yet supported</TextContainer>,
+              'unsupported': <TextContainer unsupported isCentered>{metadata?.content_type} content type not yet supported</TextContainer>,
+              'loading': <TextContainer loading isCentered>Loading...</TextContainer>
+            }[contentType]
+          }
+        </MediaContainer>
+      </ContentContainer>
+      <InfoContainer>
+        <DataContainer info gapSize={'1rem'}>
+          <NumberText>{metadata?.number != null && metadata?.number != undefined ? addCommas(metadata?.number) : ""}</NumberText>
+          <PillContainer>
+            {editionNumber != null && editionNumber != undefined && (
+              <UnstyledLink to={'/edition/' + metadata?.sha256}>
                 <DataButton>
-                  <WebIcon svgSize={'1rem'} svgColor={'#959595'}></WebIcon>
-                  View on ordinals.com
+                  <HashIcon svgSize={'1rem'} svgColor={'#959595'}></HashIcon>
+                  {editionNumber ? "Edition " + editionNumber + " of " + editionCount : ""}
                 </DataButton>
               </UnstyledLink>
-            </PillContainer>
+            )}
+            <UnstyledLink to={'https://ordinals.com/inscription/' + metadata?.id} target='_blank'>
+              <DataButton>
+                <WebIcon svgSize={'1rem'} svgColor={'#959595'}></WebIcon>
+                View on ordinals.com
+              </DataButton>
+            </UnstyledLink>
+          </PillContainer>
+        </DataContainer>
+        <DataContainer gapSize={'.75rem'}>
+          <InfoSectionText>Details</InfoSectionText>
+          <DataContainer gapSize={'0'}>
+            <InfoRowContainer>
+              <InfoLabelContainer>
+                <InfoText isLabel={true}>Owner</InfoText>
+              </InfoLabelContainer>
+              <InfoDataContainer>
+                <UnstyledLink to={address?.address !== "unbound" ? '/address/' + address?.address : ""}>
+                  <InfoText isLink={true}>{address?.address ? shortAddress : ""}</InfoText>
+                </UnstyledLink>
+              </InfoDataContainer>
+            </InfoRowContainer>
+            <InfoRowContainer isMiddle={true}>
+              <InfoLabelContainer>
+                <InfoText isLabel={true}>Inscription ID</InfoText>
+              </InfoLabelContainer>
+              <InfoDataContainer>
+                <UnstyledButton onClick={() => copyText(metadata?.id)}>
+                  <InfoText>{metadata?.id ? shortId : ""}</InfoText>
+                  <CopyIcon svgSize={'1rem'} svgColor={'#D9D9D9'} />
+                </UnstyledButton>
+              </InfoDataContainer>
+            </InfoRowContainer>
+            <InfoRowContainer isMiddle={true}>
+              <InfoLabelContainer>
+                <InfoText isLabel={true}>File Type</InfoText>
+              </InfoLabelContainer>
+              <InfoDataContainer>
+                <InfoText>{metadata?.content_type ? metadata?.content_type : ""}</InfoText>
+              </InfoDataContainer>
+            </InfoRowContainer>
+            <InfoRowContainer isMiddle={true}>
+              <InfoLabelContainer>
+                <InfoText isLabel={true}>File Size</InfoText>
+              </InfoLabelContainer>
+              <InfoDataContainer>
+                <InfoText>{metadata?.content_length ? prettySize : ""}</InfoText>
+              </InfoDataContainer>
+            </InfoRowContainer>
+            <InfoRowContainer isMiddle={true}>
+              <InfoLabelContainer>
+                <InfoText isLabel={true}>Block Time</InfoText>
+              </InfoLabelContainer>
+              <InfoDataContainer>
+                <UnstyledLink to={'/block/' + metadata?.genesis_height}>
+                  <InfoText isLink={true}>{metadata?.genesis_height ? addCommas(metadata?.genesis_height) : ""}</InfoText>
+                </UnstyledLink>
+              </InfoDataContainer>
+            </InfoRowContainer>
+            <InfoRowContainer isMiddle={true}>
+              <InfoLabelContainer>
+                <InfoText isLabel={true}>Clock Time</InfoText>
+              </InfoLabelContainer>
+              <InfoDataContainer>
+                <InfoText>{metadata?.timestamp ? new Date(metadata?.timestamp*1000).toLocaleString(undefined, {day:"numeric", month: "short", year:"numeric", hour: 'numeric', minute: 'numeric', hour12: true}) : ""}</InfoText>
+              </InfoDataContainer>
+            </InfoRowContainer>
+            <InfoRowContainer isMiddle={true}>
+              <InfoLabelContainer>
+                <InfoText isLabel={true}>Fee</InfoText>
+              </InfoLabelContainer>
+              <InfoDataContainer>
+                <InfoText>{metadata?.genesis_fee ? addCommas(metadata?.genesis_fee) + " sats" : ""}</InfoText>
+              </InfoDataContainer>
+            </InfoRowContainer>
+            <InfoRowContainer isMiddle={true}>
+              <InfoLabelContainer>
+                <InfoText isLabel={true}>Sat Number</InfoText>
+              </InfoLabelContainer>
+              <InfoDataContainer>
+                <UnstyledLink to={'/sat/' + metadata?.sat}>
+                  <InfoText isLink={true}>{metadata?.sat ? addCommas(metadata?.sat) : ""}</InfoText>
+                </UnstyledLink>
+              </InfoDataContainer>
+            </InfoRowContainer>
           </DataContainer>
+        </DataContainer>
+        {metadata?.satributes.length > 0 && (
           <DataContainer gapSize={'.75rem'}>
-            <InfoSectionText>Details</InfoSectionText>
+            <InfoSectionText>Satributes</InfoSectionText>
             <DataContainer gapSize={'0'}>
-              <InfoRowContainer>
-                <InfoLabelContainer>
-                  <InfoText isLabel={true}>Owner</InfoText>
-                </InfoLabelContainer>
-                <InfoDataContainer>
-                  <UnstyledLink to={address?.address !== "unbound" ? '/address/' + address?.address : ""}>
-                    <InfoText isLink={true}>{address?.address ? shortAddress : ""}</InfoText>
-                  </UnstyledLink>
-                </InfoDataContainer>
-              </InfoRowContainer>
-              <InfoRowContainer isMiddle={true}>
-                <InfoLabelContainer>
-                  <InfoText isLabel={true}>Inscription ID</InfoText>
-                </InfoLabelContainer>
-                <InfoDataContainer>
-                  <UnstyledButton onClick={() => copyText(metadata?.id)}>
-                    <InfoText>{metadata?.id ? shortId : ""}</InfoText>
-                    <CopyIcon svgSize={'1rem'} svgColor={'#D9D9D9'} />
-                  </UnstyledButton>
-                </InfoDataContainer>
-              </InfoRowContainer>
-              <InfoRowContainer isMiddle={true}>
-                <InfoLabelContainer>
-                  <InfoText isLabel={true}>File Type</InfoText>
-                </InfoLabelContainer>
-                <InfoDataContainer>
-                  <InfoText>{metadata?.content_type ? metadata?.content_type : ""}</InfoText>
-                </InfoDataContainer>
-              </InfoRowContainer>
-              <InfoRowContainer isMiddle={true}>
-                <InfoLabelContainer>
-                  <InfoText isLabel={true}>File Size</InfoText>
-                </InfoLabelContainer>
-                <InfoDataContainer>
-                  <InfoText>{metadata?.content_length ? prettySize : ""}</InfoText>
-                </InfoDataContainer>
-              </InfoRowContainer>
-              <InfoRowContainer isMiddle={true}>
-                <InfoLabelContainer>
-                  <InfoText isLabel={true}>Block Time</InfoText>
-                </InfoLabelContainer>
-                <InfoDataContainer>
-                  <UnstyledLink to={'/block/' + metadata?.genesis_height}>
-                    <InfoText isLink={true}>{metadata?.genesis_height ? addCommas(metadata?.genesis_height) : ""}</InfoText>
-                  </UnstyledLink>
-                </InfoDataContainer>
-              </InfoRowContainer>
-              <InfoRowContainer isMiddle={true}>
-                <InfoLabelContainer>
-                  <InfoText isLabel={true}>Clock Time</InfoText>
-                </InfoLabelContainer>
-                <InfoDataContainer>
-                  <InfoText>{metadata?.timestamp ? new Date(metadata?.timestamp*1000).toLocaleString(undefined, {day:"numeric", month: "short", year:"numeric", hour: 'numeric', minute: 'numeric', hour12: true}) : ""}</InfoText>
-                </InfoDataContainer>
-              </InfoRowContainer>
-              <InfoRowContainer isMiddle={true}>
-                <InfoLabelContainer>
-                  <InfoText isLabel={true}>Fee</InfoText>
-                </InfoLabelContainer>
-                <InfoDataContainer>
-                  <InfoText>{metadata?.genesis_fee ? addCommas(metadata?.genesis_fee) + " sats" : ""}</InfoText>
-                </InfoDataContainer>
-              </InfoRowContainer>
-              <InfoRowContainer isMiddle={true}>
-                <InfoLabelContainer>
-                  <InfoText isLabel={true}>Sat Number</InfoText>
-                </InfoLabelContainer>
-                <InfoDataContainer>
-                  <UnstyledLink to={'/sat/' + metadata?.sat}>
-                    <InfoText isLink={true}>{metadata?.sat ? addCommas(metadata?.sat) : ""}</InfoText>
-                  </UnstyledLink>
-                </InfoDataContainer>
+              <InfoRowContainer style={{flexWrap: 'wrap'}}>
+                {metadata?.satributes.map( 
+                  satribute => 
+                    <DataButton>{satribute}</DataButton>
+                  )}
               </InfoRowContainer>
             </DataContainer>
           </DataContainer>
-          {metadata?.satributes.length > 0 && (
-            <DataContainer gapSize={'.75rem'}>
-              <InfoSectionText>Satributes</InfoSectionText>
-              <DataContainer gapSize={'0'}>
-                <InfoRowContainer style={{flexWrap: 'wrap'}}>
-                  {metadata?.satributes.map( 
-                    satribute => 
-                      <DataButton>{satribute}</DataButton>
-                    )}
-                </InfoRowContainer>
-              </DataContainer>
-            </DataContainer>
-          )}
-        </InfoContainer>
-      </MainContainer>
-    </PageContainer>
+        )}
+      </InfoContainer>
+    </MainContainer>
     
   )
 }

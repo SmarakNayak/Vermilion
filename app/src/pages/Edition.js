@@ -148,75 +148,72 @@ const Edition = () => {
   },[contentType])
   
   return (
-    <PageContainer>
-      <TopSection />
-      <MainContainer>
-        {/* Stack placed within main container to allow for filter section */}
-        <Stack horizontal={false} center={false} style={{gap: '1.5rem'}}>
-          <RowContainer>
-            <Container style={{gap: '1rem'}}>
+    <MainContainer>
+      {/* Stack placed within main container to allow for filter section */}
+      <Stack horizontal={false} center={false} style={{gap: '1.5rem'}}>
+        <RowContainer>
+          <Container style={{gap: '1rem'}}>
+            {
               {
-                {
-                  'image': <ImageContainer src={blobUrl} />,
-                  'svg': <SvgContainer dangerouslySetInnerHTML={{__html: textContent}} />,
-                  'html': <HtmlContainer><StyledIframe src={"/api/inscription_number/" + firstEdition} scrolling='no' sandbox='allow-scripts'></StyledIframe></HtmlContainer>,
-                  'text': <TextContainer>{textContent}</TextContainer>,
-                  'video': <video controls loop muted autoplay><source src={blobUrl} type={contentType}/></video>,
-                  'audio': <audio controls><source src={blobUrl} type={contentType}/></audio>,
-                  'pdf': <TextContainer>pdf unsupported'</TextContainer>,
-                  'model': <TextContainer>gltf model type unsupported</TextContainer>,
-                  'unsupported': <TextContainer>{contentType} content type unsupported</TextContainer>,
-                  'loading': <TextContainer>loading...</TextContainer>
-                }[contentType]
-              } 
-              <BlockText>{firstEdition !== null && firstEdition !== undefined ? 'Inscription ' + addCommas(firstEdition) : ''}</BlockText>
-            </Container>
-          </RowContainer>
-          <RowContainer style={{gap: '1rem', flexWrap: 'wrap'}}>
-            <InfoButton>
-              <HashIcon svgSize={'1rem'} svgColor={'#959595'} />
-              {editionCount + `${editionCount > 1 ? ' editions' : ' edition'}`}
-            </InfoButton>
-            <InfoButton isButton={true} onClick={() => copyText(sha256)}>
-              Sha256: {formatAddress(sha256)}
-              <CopyIcon svgSize={'1rem'} svgColor={'#959595'} />
-            </InfoButton>
-          </RowContainer>
-            <TableContainer>
-              <DivTable>
-                <DivRow header>
-                  <DivCell header>Edition #</DivCell>
-                  <DivCell header>Inscription #</DivCell>
-                  <DivCell header>Inscription ID</DivCell>
-                </DivRow>
-                <GalleryContainer>
-                  <StyledInfiniteScroll
-                    dataLength={editions?.length}
-                    next={fetchData}
-                    hasMore={hasMore}
-                    loader={
-                      <LoaderContainer>
-                        <p style={{color: '#959595', margin: 0}}>Loading...</p>
-                      </LoaderContainer>
-                    }
-                  >
-                    {editions.map((edition, index) => (
-                      <UnstyledLink to={'/inscription/' + edition.number}>
-                        <DivRow key={index}>
-                          <DivCell>{edition.edition}</DivCell>
-                          <DivCell>{addCommas(edition.number)}</DivCell>
-                          <DivCell>{formatAddress(edition.id)}</DivCell>
-                        </DivRow>
-                      </UnstyledLink>
-                    ))}
-                </StyledInfiniteScroll>
-              </GalleryContainer>
-              </DivTable>
-            </TableContainer>
-          
-        </Stack>
-      </MainContainer>
-    </PageContainer>
+                'image': <ImageContainer src={blobUrl} />,
+                'svg': <SvgContainer dangerouslySetInnerHTML={{__html: textContent}} />,
+                'html': <HtmlContainer><StyledIframe src={"/api/inscription_number/" + firstEdition} scrolling='no' sandbox='allow-scripts'></StyledIframe></HtmlContainer>,
+                'text': <TextContainer>{textContent}</TextContainer>,
+                'video': <video controls loop muted autoplay><source src={blobUrl} type={contentType}/></video>,
+                'audio': <audio controls><source src={blobUrl} type={contentType}/></audio>,
+                'pdf': <TextContainer>pdf unsupported'</TextContainer>,
+                'model': <TextContainer>gltf model type unsupported</TextContainer>,
+                'unsupported': <TextContainer>{contentType} content type unsupported</TextContainer>,
+                'loading': <TextContainer>loading...</TextContainer>
+              }[contentType]
+            } 
+            <BlockText>{firstEdition !== null && firstEdition !== undefined ? 'Inscription ' + addCommas(firstEdition) : ''}</BlockText>
+          </Container>
+        </RowContainer>
+        <RowContainer style={{gap: '1rem', flexWrap: 'wrap'}}>
+          <InfoButton>
+            <HashIcon svgSize={'1rem'} svgColor={'#959595'} />
+            {editionCount + `${editionCount > 1 ? ' editions' : ' edition'}`}
+          </InfoButton>
+          <InfoButton isButton={true} onClick={() => copyText(sha256)}>
+            Sha256: {formatAddress(sha256)}
+            <CopyIcon svgSize={'1rem'} svgColor={'#959595'} />
+          </InfoButton>
+        </RowContainer>
+          <TableContainer>
+            <DivTable>
+              <DivRow header>
+                <DivCell header>Edition #</DivCell>
+                <DivCell header>Inscription #</DivCell>
+                <DivCell header>Inscription ID</DivCell>
+              </DivRow>
+              <GalleryContainer>
+                <StyledInfiniteScroll
+                  dataLength={editions?.length}
+                  next={fetchData}
+                  hasMore={hasMore}
+                  loader={
+                    <LoaderContainer>
+                      <p style={{color: '#959595', margin: 0}}>Loading...</p>
+                    </LoaderContainer>
+                  }
+                >
+                  {editions.map((edition, index) => (
+                    <UnstyledLink to={'/inscription/' + edition.number}>
+                      <DivRow key={index}>
+                        <DivCell>{edition.edition}</DivCell>
+                        <DivCell>{addCommas(edition.number)}</DivCell>
+                        <DivCell>{formatAddress(edition.id)}</DivCell>
+                      </DivRow>
+                    </UnstyledLink>
+                  ))}
+              </StyledInfiniteScroll>
+            </GalleryContainer>
+            </DivTable>
+          </TableContainer>
+        
+      </Stack>
+    </MainContainer>
   )
 }
 

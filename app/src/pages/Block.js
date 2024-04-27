@@ -93,65 +93,61 @@ const Block = () => {
   };
 
   return (
-    <PageContainer>
-      <TopSection />
-      <MainContainer>
-        <RowContainer>
-          <Container style={{gap: '1rem'}}>
-            <BlockImgContainer>
-              <InscriptionIcon endpoint = {"/api/block_icon/"+number} useBlockIconDefault = {true}></InscriptionIcon>
-              {/* <BlockIcon svgSize={'2.25rem'} svgColor={'#E34234'}></BlockIcon> */}
-            </BlockImgContainer>
-            <BlockText>{addCommas(number)}</BlockText>
-          </Container>
-        </RowContainer>
-        <RowContainer style={{gap: '1rem'}}>
-          <InfoButton>
-            <CheckIcon svgSize={'1rem'} svgColor={'#009859'} />
-            {formatTimestampMs(blockStats?.block_timestamp)}
-          </InfoButton>
-          {/* <InfoButton isButton={true} onClick={() => copyText('text')}>
-            {'Hash: ' + '0045...9f45'}
-            <CopyIcon svgSize={'1rem'} svgColor={'#959595'} />
-          </InfoButton> */}
-        </RowContainer>
-        <RowContainer>
-          <Container style={{gap: '2rem', flexFlow: 'wrap', justifyContent: 'center'}}>
-            <Stat value={blockStats?.block_tx_count} category={'Transactions'} />
-            {/* <Divider /> */}
-            <Stat value={blockStats?.block_inscription_count ? blockStats?.block_inscription_count : 0} category={'Inscriptions'} />
-            {/* <Divider /> */}
-            <Stat value={blockStats?.block_size ? shortenBytes(blockStats.block_size) : 0} category={'Size'} />
-            {/* <Divider /> */}
-            <Stat value={blockStats?.block_volume ? formatSats(blockStats.block_volume) : "0 BTC"} category={'Traded Volume'} />
-            {/* <Divider /> */}
-            <Stat value={blockStats?.block_fees ? formatSats(blockStats.block_fees) : "0 BTC"} category={'Total Fees'} />
-          </Container>
-        </RowContainer>
-        <SectionContainer>
-          <TabButton>Inscriptions</TabButton>
-        </SectionContainer>
-        <RowContainer>
-          <Stack horizontal={true} center={false} style={{gap: '1rem'}}>
-            <FilterButton onClick={toggleFilterVisibility}>
-              <FilterIcon svgSize={'1rem'} svgColor={'#000000'}></FilterIcon>
-              Filters
-            </FilterButton>
-            <VisibilityButton onClick={toggleNumberVisibility}>
-              <EyeIcon svgSize={'1rem'} svgColor={numberVisibility ? '#000000' : '#959595'}></EyeIcon>
-            </VisibilityButton>
-          </Stack>
-          <SortbyDropdown onOptionSelect={handleSortOptionChange} />
-        </RowContainer>
-        <RowContainer>
-          <FilterMenu isOpen={filterVisibility} onSelectionChange ={handleFilterOptionsChange} onClose={toggleFilterVisibility} initialSelection={selectedFilterOptions}></FilterMenu>
-          <GalleryContainer>
-            <GalleryInfiniteScroll baseApi={baseApi} numberVisibility={numberVisibility} />
-          </GalleryContainer>
-        </RowContainer>
-      </MainContainer>
-    </PageContainer>
-    
+    <MainContainer>
+      <RowContainer>
+        <Container style={{gap: '1rem'}}>
+          <BlockImgContainer>
+            <InscriptionIcon endpoint = {"/api/block_icon/"+number} useBlockIconDefault = {true}></InscriptionIcon>
+            {/* <BlockIcon svgSize={'2.25rem'} svgColor={'#E34234'}></BlockIcon> */}
+          </BlockImgContainer>
+          <BlockText>{addCommas(number)}</BlockText>
+        </Container>
+      </RowContainer>
+      <RowContainer style={{gap: '1rem'}}>
+        <InfoButton>
+          <CheckIcon svgSize={'1rem'} svgColor={'#009859'} />
+          {formatTimestampMs(blockStats?.block_timestamp)}
+        </InfoButton>
+        {/* <InfoButton isButton={true} onClick={() => copyText('text')}>
+          {'Hash: ' + '0045...9f45'}
+          <CopyIcon svgSize={'1rem'} svgColor={'#959595'} />
+        </InfoButton> */}
+      </RowContainer>
+      <RowContainer>
+        <Container style={{gap: '2rem', flexFlow: 'wrap', justifyContent: 'center'}}>
+          <Stat value={blockStats?.block_tx_count} category={'Transactions'} />
+          {/* <Divider /> */}
+          <Stat value={blockStats?.block_inscription_count ? blockStats?.block_inscription_count : 0} category={'Inscriptions'} />
+          {/* <Divider /> */}
+          <Stat value={blockStats?.block_size ? shortenBytes(blockStats.block_size) : 0} category={'Size'} />
+          {/* <Divider /> */}
+          <Stat value={blockStats?.block_volume ? formatSats(blockStats.block_volume) : "0 BTC"} category={'Traded Volume'} />
+          {/* <Divider /> */}
+          <Stat value={blockStats?.block_fees ? formatSats(blockStats.block_fees) : "0 BTC"} category={'Total Fees'} />
+        </Container>
+      </RowContainer>
+      <SectionContainer>
+        <TabButton>Inscriptions</TabButton>
+      </SectionContainer>
+      <RowContainer>
+        <Stack horizontal={true} center={false} style={{gap: '1rem'}}>
+          <FilterButton onClick={toggleFilterVisibility}>
+            <FilterIcon svgSize={'1rem'} svgColor={'#000000'}></FilterIcon>
+            Filters
+          </FilterButton>
+          <VisibilityButton onClick={toggleNumberVisibility}>
+            <EyeIcon svgSize={'1rem'} svgColor={numberVisibility ? '#000000' : '#959595'}></EyeIcon>
+          </VisibilityButton>
+        </Stack>
+        <SortbyDropdown onOptionSelect={handleSortOptionChange} />
+      </RowContainer>
+      <RowContainer>
+        <FilterMenu isOpen={filterVisibility} onSelectionChange ={handleFilterOptionsChange} onClose={toggleFilterVisibility} initialSelection={selectedFilterOptions}></FilterMenu>
+        <GalleryContainer>
+          <GalleryInfiniteScroll baseApi={baseApi} numberVisibility={numberVisibility} />
+        </GalleryContainer>
+      </RowContainer>
+    </MainContainer>
   )
 }
 

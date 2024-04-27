@@ -86,46 +86,43 @@ const Address = () => {
 
   //TODO: Add pagination
   return (
-    <PageContainer>
-      <TopSection />
-      <MainContainer>
-        <RowContainer>
-          <Container style={{gap: '1rem'}}>
-            <BlockImgContainer>
-              <WalletIcon svgSize={'2.25rem'} svgColor={'#E34234'}></WalletIcon>
-            </BlockImgContainer>
-            <BlockText>{formatAddress(address)}</BlockText>
-          </Container>
-        </RowContainer>
-        <RowContainer style={{gap: '1rem'}}>
-          <InfoButton isButton={true} onClick={() => copyText(address)}>
-            Address: {formatAddress(address)}
-            <CopyIcon svgSize={'1rem'} svgColor={'#959595'} />
-          </InfoButton>
-        </RowContainer>
-        <SectionContainer>
-          <TabButton>Inscriptions</TabButton>
-        </SectionContainer>
-        <RowContainer>
-            <Stack horizontal={true} center={false} style={{gap: '1rem'}}>
-              <FilterButton onClick={toggleFilterVisibility}>
-                <FilterIcon svgSize={'1rem'} svgColor={'#000000'}></FilterIcon>
-                Filters
-              </FilterButton>
-              <VisibilityButton onClick={toggleNumberVisibility}>
-                <EyeIcon svgSize={'1rem'} svgColor={numberVisibility ? '#000000' : '#959595'}></EyeIcon>
-              </VisibilityButton>
-            </Stack>
-            <SortbyDropdown onOptionSelect={handleSortOptionChange} />
-        </RowContainer>
-        <RowContainer>
-          <FilterMenu isOpen={filterVisibility} onSelectionChange ={handleFilterOptionsChange} onClose={toggleFilterVisibility} initialSelection={selectedFilterOptions}></FilterMenu>
-          <GalleryContainer>
-            <GalleryInfiniteScroll baseApi={baseApi} numberVisibility={numberVisibility} />
-          </GalleryContainer>
-        </RowContainer>
-      </MainContainer>
-    </PageContainer>
+    <MainContainer>
+      <RowContainer>
+        <Container style={{gap: '1rem'}}>
+          <BlockImgContainer>
+            <WalletIcon svgSize={'2.25rem'} svgColor={'#E34234'}></WalletIcon>
+          </BlockImgContainer>
+          <BlockText>{formatAddress(address)}</BlockText>
+        </Container>
+      </RowContainer>
+      <RowContainer style={{gap: '1rem'}}>
+        <InfoButton isButton={true} onClick={() => copyText(address)}>
+          Address: {formatAddress(address)}
+          <CopyIcon svgSize={'1rem'} svgColor={'#959595'} />
+        </InfoButton>
+      </RowContainer>
+      <SectionContainer>
+        <TabButton>Inscriptions</TabButton>
+      </SectionContainer>
+      <RowContainer>
+          <Stack horizontal={true} center={false} style={{gap: '1rem'}}>
+            <FilterButton onClick={toggleFilterVisibility}>
+              <FilterIcon svgSize={'1rem'} svgColor={'#000000'}></FilterIcon>
+              Filters
+            </FilterButton>
+            <VisibilityButton onClick={toggleNumberVisibility}>
+              <EyeIcon svgSize={'1rem'} svgColor={numberVisibility ? '#000000' : '#959595'}></EyeIcon>
+            </VisibilityButton>
+          </Stack>
+          <SortbyDropdown onOptionSelect={handleSortOptionChange} />
+      </RowContainer>
+      <RowContainer>
+        <FilterMenu isOpen={filterVisibility} onSelectionChange ={handleFilterOptionsChange} onClose={toggleFilterVisibility} initialSelection={selectedFilterOptions}></FilterMenu>
+        <GalleryContainer>
+          <GalleryInfiniteScroll baseApi={baseApi} numberVisibility={numberVisibility} />
+        </GalleryContainer>
+      </RowContainer>
+    </MainContainer>
   )
 }
   
