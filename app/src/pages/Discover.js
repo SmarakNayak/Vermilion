@@ -248,6 +248,7 @@ const PageContainer = styled.div`
   overscroll-behavior-y: contain;
   scroll-snap-type: y mandatory;
   height: 100vh;
+  max-height: calc(100vh - 4.5rem);
   width: 100%;
   -ms-overflow-style: none;
   scrollbar-width: none;
