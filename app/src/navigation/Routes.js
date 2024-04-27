@@ -49,7 +49,7 @@ const PageContainer = styled.div`
   align-items: start;
   // justify-content: center;
   margin: 0;
-
+  background-color: #FFF;
   @media (max-width: 768px) {
     
   }
