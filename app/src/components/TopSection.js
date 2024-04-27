@@ -59,7 +59,9 @@ const TopSection = (props) => {
   const onMobileConnect = async () => {
     //Dismiss mobile menu so you can see wallet prompt
     setShowMobileMenu(false);
-    onConnect();
+    await onConnect();
+    //Bring mobile menu back up once onConnect has completed
+    setShowMobileMenu(true);
   }
 
   const onDisconnect = () => {
