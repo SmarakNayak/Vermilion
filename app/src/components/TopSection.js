@@ -56,6 +56,12 @@ const TopSection = (props) => {
     }
   }
 
+  const onMobileConnect = async () => {
+    //Dismiss mobile menu so you can see wallet prompt
+    setShowMobileMenu(false);
+    onConnect();
+  }
+
   const onDisconnect = () => {
     console.log("on disconnect hit")
     Wallet.disconnect();
@@ -259,7 +265,7 @@ const TopSection = (props) => {
             </UnstyledLink>
             {/* Insert click event to connect wallet */}
             {!isConnected && (
-              <MobileButton onClick={onConnect} >Connect</MobileButton>
+              <MobileButton onClick={onMobileConnect} >Connect</MobileButton>
             )}
             {isConnected && (
               <>
