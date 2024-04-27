@@ -14,10 +14,12 @@ import Dbscan from '../pages/Dbscan';
 import Collection from '../pages/Collection';
 import Explore from '../pages/Explore';
 import TopSection from '../components/TopSection';
+import GA from '../components/GA';
 
 const Navigation = () => {
   return (
     <BrowserRouter>
+      <GA/>
       <PageContainer>
         <TopSection/>
         <Routes>
