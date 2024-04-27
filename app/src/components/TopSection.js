@@ -1,4 +1,4 @@
-import React, { useState, useEffect, ChangeEvent } from 'react';
+import React, { useState, useEffect, ChangeEvent, useRef } from 'react';
 import { Link } from "react-router-dom";
 import styled from 'styled-components';
 import SearchIcon from '../assets/icons/SearchIcon';
@@ -32,15 +32,22 @@ const TopSection = (props) => {
   const [shortAddress, setShortAddress] = useState(null);
   const isConnected = addressInfo.length > 0;
 
+  const walletButtonRef = useRef(null);
+
   const onConnect = async () => {
     console.log("on connect hit")
+    if (Wallet === undefined || Wallet === null) {
+      console.log('Wallet is undefined or null');
+      return;
+    }
     const response = await Wallet.request('getAccounts', {
       purposes: [AddressPurpose.Ordinals],
-      message: 'Cool app wants to know your addresses!',
+      message: 'Sign in to see your inscriptions on Vermilion.Place',
       network: {
         type: network
       },
     });
+    console.log(response);
     if (response.status === 'success') {
       setAddressInfo(response.result);
       console.log(response.result);
@@ -53,10 +60,16 @@ const TopSection = (props) => {
     console.log("on disconnect hit")
     Wallet.disconnect();
     setAddressInfo([]);
+    setOptionsVisible(false);
   };
 
   const onWalletClick = () => {
+    console.log("options hit");
     setOptionsVisible(!optionsVisible);
+  }
+
+  const onWalletMenuClose = () => {
+    setOptionsVisible(false);
   }
 
   const handleTextChange = (e) => {
@@ -177,10 +190,10 @@ const TopSection = (props) => {
         {isConnected && (
           <>
             {/* Insert click event to navigate to wallet */}
-            <ProfileButton onClick={onWalletClick}>
+            <ProfileButton onClick={onWalletClick} ref={walletButtonRef}>
               {shortAddress}
             </ProfileButton>
-            <MenuDropdown onWalletClick={onWalletClick} optionsVisible={optionsVisible} onDisconnect={onDisconnect} addressInfo={addressInfo}/>
+            <MenuDropdown onWalletClick={onWalletClick} optionsVisible={optionsVisible} onDisconnect={onDisconnect} addressInfo={addressInfo} onWalletMenuClose={onWalletMenuClose} walletButtonRef={walletButtonRef}/>
           </>
         )}
       </ButtonContainer>
@@ -226,19 +239,19 @@ const TopSection = (props) => {
             </CloseButton>
           </MenuHeader>
           <MenuLinkContainer>
-            <UnstyledLink to={'/explore'}>
+            <UnstyledLink to={'/explore'} onClick={toggleMenuVisibility}>
               <ItemContainer>
                 <ExploreIcon svgSize={'1.25rem'} svgColor={'#000000'} />
                 <MenuText>Explore</MenuText>
               </ItemContainer>
             </UnstyledLink>
-            <UnstyledLink to={'/discover'}>
+            <UnstyledLink to={'/discover'} onClick={toggleMenuVisibility}>
               <ItemContainer>
                 <DiscoverIcon svgSize={'1.25rem'} svgColor={'#000000'} />
                 <MenuText>Discover</MenuText>
               </ItemContainer>
             </UnstyledLink>
-            <UnstyledLink to={'/search'}>
+            <UnstyledLink to={'/search'} onClick={toggleMenuVisibility}>
               <ItemContainer>
                 <BoltIcon svgSize={'1.25rem'} svgColor={'#000000'} />
                 <MenuText>Search</MenuText>
@@ -246,23 +259,23 @@ const TopSection = (props) => {
             </UnstyledLink>
             {/* Insert click event to connect wallet */}
             {!isConnected && (
-              <MobileButton>Connect</MobileButton>
+              <MobileButton onClick={onConnect} >Connect</MobileButton>
             )}
             {isConnected && (
               <>
                 <Divider />
-                {/* Insert link to connected wallet */}
-                <UnstyledLink to={'/search'}>
+                <UnstyledLink to={'/address/' + addressInfo?.[0].address} onClick={toggleMenuVisibility}>
                   <ItemContainer>
                     <WalletIcon svgSize={'1.25rem'} svgColor={'#E34234'} />
-                    <MenuText>bc1p7...3b453</MenuText>
+                    <MenuText>{shortAddress}</MenuText>
                   </ItemContainer>
                 </UnstyledLink>
-                {/* Insert click event to disconnect wallet below */}
-                <ItemContainer>
-                  <LogoutIcon svgSize={'1.25rem'} svgColor={'#000000'} />
-                  <MenuText>Disconnect</MenuText>
-                </ItemContainer>
+                <UnstyledLink onClick={onDisconnect}>
+                  <ItemContainer onClick={onDisconnect} >
+                    <LogoutIcon svgSize={'1.25rem'} svgColor={'#000000'} />
+                    <MenuText>Disconnect</MenuText>
+                  </ItemContainer>
+                </UnstyledLink>
               </>
             )}
           </MenuLinkContainer>

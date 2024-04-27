@@ -76,17 +76,41 @@ const UnstyledLink = styled(Link)`
   text-decoration: unset;
 `
 
-const MenuDropdown = ({ onWalletClick, optionsVisible, onDisconnect, addressInfo }) => {
+const MenuDropdown = ({ onWalletClick, optionsVisible, onDisconnect, addressInfo, onWalletMenuClose, walletButtonRef }) => {
   const [isOpen, setIsOpen] = useState(optionsVisible);
   const dropdownRef = useRef(null);
 
   // Add click outside to close dropdown
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target) && !walletButtonRef.current.contains(event.target) && window.innerWidth > 630) {
+        onWalletMenuClose(); // Close the menu if clicked outside
+      }
+    };
+
+    const handleResize = () => {
+      if (window.innerWidth > 630) {
+        document.addEventListener('mousedown', handleClickOutside);
+      } else {
+        document.removeEventListener('mousedown', handleClickOutside);
+      }
+    };
+
+    handleResize(); // Initial check on component mount
+
+    window.addEventListener('resize', handleResize);
+
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [dropdownRef, optionsVisible]);
 
   return (
     <>
     {optionsVisible && (
       <DropdownMenu ref={dropdownRef}>
-        <UnstyledLink to ={'/address/' + addressInfo?.[0].address}>
+        <UnstyledLink to ={'/address/' + addressInfo?.[0].address} onClick={onWalletMenuClose}>
           <DropdownItem>
             View Wallet
           </DropdownItem>
