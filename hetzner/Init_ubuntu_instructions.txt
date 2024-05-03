@@ -1,5 +1,7 @@
 1. Combine harddrives
 set SWRAID_LEVEL to 0 when using installimage
+set PART swap swap to 128G/256G
+add colour to hostname
 
 2. Create ubuntu user
 adduser --disabled-password ubuntu
@@ -10,12 +12,15 @@ sudo visudo
 ubuntu ALL=(ALL) NOPASSWD:ALL
 
 3. Allow SSH access for ubuntu
+su ubuntu
 mkdir .ssh
 nano .ssh/authorized_keys
 chown -R ubuntu:ubuntu ~/.ssh
 chmod -R 700 ~/.ssh
 chmod -f 600 ~/.ssh/authorized_keys
 sudo nano /etc/ssh/sshd_config
-## add next line to file
+## add next 2 lines to file
+PermitRootLogin without-password
 PasswordAuthentication no
-sudo systemctl restart sshd
+
+sudo systemctl restart ssh
