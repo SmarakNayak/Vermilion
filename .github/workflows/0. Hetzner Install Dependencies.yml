@@ -34,10 +34,8 @@ jobs:
           SSH_KEY: ${{ secrets.SERVER_SSH_KEY }}
           SSH_HOST: ${{ vars.SERVER_HOST }}
       
-      - name: Install AWS CLI
-        run: |
-          ssh staging 'sudo apt-get -y update'
-          ssh staging 'sudo apt-get -y install awscli'
+      - name: Update apt
+        run: ssh staging 'sudo apt-get -y update'
         
       - name: Install nginx
         run: ssh staging 'sudo apt-get -y install nginx'
