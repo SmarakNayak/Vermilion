@@ -35,4 +35,4 @@ jobs:
           SSH_HOST: ${{ vars.SERVER_HOST }}
 
       - name: Check out the new code from Github
-        run: ssh staging 'git -C ordinal-collections fetch && git -C ordinal-collections reset --hard origin/main || git clone git@github-vermilion:SmarakNayak/ordinal-collections.git' # This pulls if directory exists, otherwise clones
+        run: ssh staging 'git -C ordinal-collections fetch && git -C ordinal-collections reset --hard origin/main || git clone https://github.com/SmarakNayak/ordinal-collections.git' # This pulls if directory exists, otherwise clones
