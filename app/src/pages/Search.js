@@ -25,6 +25,7 @@ const Search = () => {
   const [lastSearch, setlastSearch] = useState("");
   const [image, setImage] = useState();
   const [isError, setIsError] = useState(false);
+  const [errorMsg, setErrorMsg] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [firstLoad, setFirstLoad] = useState(true);
 
@@ -104,6 +105,7 @@ const Search = () => {
     setImage(...e.target.files) 
     fetchImageSearch(...e.target.files);
     setSearchInput(""); // Clear search input when image search is run
+    e.target.value = null;
   };
 
   const fetchImageSearch = async (file) => {
@@ -113,10 +115,18 @@ const Search = () => {
       body: file
     };
     const response = await fetch('/search_api/search_by_image?n=50', requestOptions)
-    let json = await response.json();
-    setInscriptionList(json);
-    setIsLoading(false); // End loading
-    navigate(`/search`);
+    if (response.status != 200) {
+      setIsError(true);
+      setErrorMsg(response.statusText);
+      setIsLoading(false);
+      clearSearch();
+    } else {
+      let json = await response.json();
+      setIsError(false);
+      setInscriptionList(json);
+      setIsLoading(false); // End loading
+      navigate(`/search`);
+    }
   };
 
   const clearSearch = () => {
@@ -229,6 +239,7 @@ const Search = () => {
           </Stack>
         )}
         {isLoading && <p style={{color: '#959595', fontSize: '.875rem', padding: '.5rem 0', margin: 0}}>Loading...</p>}
+        {isError && <p style={{color: '#959595', fontSize: '.875rem', padding: '.5rem 0', margin: 0}}>{"Error: " + errorMsg}</p>}
         {/* Add search summary message */}
         {!isLoading && inscriptionList.length > 0 && (
           <RowContainer style={{justifyContent: 'flex-start', alignItems: 'center'}}>
