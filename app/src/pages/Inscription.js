@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useParams, Link } from "react-router-dom";
 import styled from 'styled-components';
 import TopSection from '../components/TopSection';
@@ -7,7 +7,12 @@ import { addCommas, copyText } from '../helpers/utils';
 import HashIcon from '../assets/icons/HashIcon';
 import WebIcon from '../assets/icons/WebIcon';
 import CopyIcon from '../assets/icons/CopyIcon';
+import IntersectionIcon from '../assets/icons/IntersectionIcon';
+import ChevronLeftIcon from '../assets/icons/ChevronLeftIcon';
+import ChevronRightIcon from '../assets/icons/ChevronRightIcon';
 import { shortenBytes } from '../helpers/utils';
+import GridItemContainer from '../components/GridItemContainer';
+import SmallItemContainer from '../components/SmallItemContainer';
 const iframecontentwindow = require("../scripts/iframeResizer.contentWindow.min.txt");
 
 const Inscription = () => {
@@ -28,6 +33,9 @@ const Inscription = () => {
   const [shortId, setShortId] = useState(null);
   const [shortAddress, setShortAddress] = useState(null);
   const [prettySize, setPrettySize] = useState(null);
+  const [sha256, setSha256] = useState(null);
+  const [similarInscriptions, setSimilarInscriptions] = useState(null);
+  // const [similarInscriptionsContent, setSimilarInscriptionsContent] = useState(null);
 
   useEffect(() => {
     const fetchContent = async () => {
@@ -120,6 +128,7 @@ const Inscription = () => {
       setShortId(short_id);
       const pretty_size = shortenBytes(json.content_length);
       setPrettySize(pretty_size);
+      setSha256(json.sha256); // for similar
     }
 
     const fetchEditions = async () => {
@@ -187,145 +196,198 @@ const Inscription = () => {
     updateText();
   },[contentType, metadata])
 
-  console.log(metadata)
+  const fetchSimilar = async () => {
+    //1. Get similar inscriptions
+    const response = await fetch("/search_api/similar/" + sha256);
+    const json = await response.json();
+    setSimilarInscriptions(json);
+    console.log('similar', json);
+  }
+
+  useEffect(()=> {
+    fetchSimilar();
+  },[sha256]);
+
+  const scrollContainer = useRef(null);
+
+  const scrollLeft = () => {
+    if (scrollContainer.current) {
+      scrollContainer.current.scrollBy({ left: -268, behavior: 'smooth' });
+    }
+  };
+
+  const scrollRight = () => {
+    if (scrollContainer.current) {
+      scrollContainer.current.scrollBy({ left: 268, behavior: 'smooth' });
+    }
+  };
+
+  useEffect(() => {
+    window.scrollTo(0, 0); // Scrolls to the top of the page
+  }, [number]);
 
   //TODO: add tz using moment.js or timeZoneName: "long"
   // <HtmlContainer><StyledIframe srcDoc={textContent} scrolling='no' sandbox='allow-scripts'></StyledIframe></HtmlContainer> alternative that doesn't require another network call - size is buggy though..
   return (
-    <MainContainer>
-      <ContentContainer>
-        <MediaContainer>
-          {
+    <>
+      <MainContainer>
+        <ContentContainer>
+          <MediaContainer>
             {
-              'image': <ImageContainer src={blobUrl} />,
-              'svg-recursive': <SvgContainer src={"/api/inscription_number/"+ number} scrolling='no' sandbox='allow-scripts allow-same-origin' loading="lazy"/>,
-              'svg': <ImageContainer src={"/api/inscription_number/"+ number}/>,
-              'html': <HtmlContainer><StyledIframe src={"/api/inscription_number/"+ number} scrolling='no' sandbox='allow-scripts allow-same-origin' loading="lazy"></StyledIframe></HtmlContainer>,
-              'text': <TextContainer><MediaText>{textContent}</MediaText></TextContainer>,
-              'video': <VideoContainer controls loop muted autoplay><source src={blobUrl} type={metadata?.content_type}/></VideoContainer>,
-              'audio': <AudioContainer controls><source src={blobUrl} type={metadata?.content_type}/></AudioContainer>,
-              'pdf': <TextContainer>PDF not yet supported</TextContainer>,
-              'model': <TextContainer>glTF model type not yet supported</TextContainer>,
-              'unsupported': <TextContainer unsupported isCentered>{metadata?.content_type} content type not yet supported</TextContainer>,
-              'loading': <TextContainer loading isCentered>Loading...</TextContainer>
-            }[contentType]
-          }
-        </MediaContainer>
-      </ContentContainer>
-      <InfoContainer>
-        <DataContainer info gapSize={'1rem'}>
-          <NumberText>{metadata?.number != null && metadata?.number != undefined ? addCommas(metadata?.number) : ""}</NumberText>
-          <PillContainer>
-            {editionNumber != null && editionNumber != undefined && (
-              <UnstyledLink to={'/edition/' + metadata?.sha256}>
+              {
+                'image': <ImageContainer src={blobUrl} />,
+                'svg-recursive': <SvgContainer src={"/api/inscription_number/"+ number} scrolling='no' sandbox='allow-scripts allow-same-origin' loading="lazy"/>,
+                'svg': <ImageContainer src={"/api/inscription_number/"+ number}/>,
+                'html': <HtmlContainer><StyledIframe src={"/api/inscription_number/"+ number} scrolling='no' sandbox='allow-scripts allow-same-origin' loading="lazy"></StyledIframe></HtmlContainer>,
+                'text': <TextContainer><MediaText>{textContent}</MediaText></TextContainer>,
+                'video': <VideoContainer controls loop muted autoplay><source src={blobUrl} type={metadata?.content_type}/></VideoContainer>,
+                'audio': <AudioContainer controls><source src={blobUrl} type={metadata?.content_type}/></AudioContainer>,
+                'pdf': <TextContainer>PDF not yet supported</TextContainer>,
+                'model': <TextContainer>glTF model type not yet supported</TextContainer>,
+                'unsupported': <TextContainer unsupported isCentered>{metadata?.content_type} content type not yet supported</TextContainer>,
+                'loading': <TextContainer loading isCentered>Loading...</TextContainer>
+              }[contentType]
+            }
+          </MediaContainer>
+        </ContentContainer>
+        <InfoContainer>
+          <DataContainer info gapSize={'1rem'}>
+            <NumberText>{metadata?.number != null && metadata?.number != undefined ? addCommas(metadata?.number) : ""}</NumberText>
+            <PillContainer>
+              {editionNumber != null && editionNumber != undefined && (
+                <UnstyledLink to={'/edition/' + metadata?.sha256}>
+                  <DataButton>
+                    <HashIcon svgSize={'1rem'} svgColor={'#959595'}></HashIcon>
+                    {editionNumber ? "Edition " + editionNumber + " of " + editionCount : ""}
+                  </DataButton>
+                </UnstyledLink>
+              )}
+              <UnstyledLink to={'https://ordinals.com/inscription/' + metadata?.id} target='_blank'>
                 <DataButton>
-                  <HashIcon svgSize={'1rem'} svgColor={'#959595'}></HashIcon>
-                  {editionNumber ? "Edition " + editionNumber + " of " + editionCount : ""}
+                  <WebIcon svgSize={'1rem'} svgColor={'#959595'}></WebIcon>
+                  View on ordinals.com
                 </DataButton>
               </UnstyledLink>
-            )}
-            <UnstyledLink to={'https://ordinals.com/inscription/' + metadata?.id} target='_blank'>
-              <DataButton>
-                <WebIcon svgSize={'1rem'} svgColor={'#959595'}></WebIcon>
-                View on ordinals.com
-              </DataButton>
-            </UnstyledLink>
-          </PillContainer>
-        </DataContainer>
-        <DataContainer gapSize={'.75rem'}>
-          <InfoSectionText>Details</InfoSectionText>
-          <DataContainer gapSize={'0'}>
-            <InfoRowContainer>
-              <InfoLabelContainer>
-                <InfoText isLabel={true}>Owner</InfoText>
-              </InfoLabelContainer>
-              <InfoDataContainer>
-                <UnstyledLink to={address?.address !== "unbound" ? '/address/' + address?.address : ""}>
-                  <InfoText isLink={true}>{address?.address ? shortAddress : ""}</InfoText>
-                </UnstyledLink>
-              </InfoDataContainer>
-            </InfoRowContainer>
-            <InfoRowContainer isMiddle={true}>
-              <InfoLabelContainer>
-                <InfoText isLabel={true}>Inscription ID</InfoText>
-              </InfoLabelContainer>
-              <InfoDataContainer>
-                <UnstyledButton onClick={() => copyText(metadata?.id)}>
-                  <InfoText>{metadata?.id ? shortId : ""}</InfoText>
-                  <CopyIcon svgSize={'1rem'} svgColor={'#D9D9D9'} />
-                </UnstyledButton>
-              </InfoDataContainer>
-            </InfoRowContainer>
-            <InfoRowContainer isMiddle={true}>
-              <InfoLabelContainer>
-                <InfoText isLabel={true}>File Type</InfoText>
-              </InfoLabelContainer>
-              <InfoDataContainer>
-                <InfoText>{metadata?.content_type ? metadata?.content_type : ""}</InfoText>
-              </InfoDataContainer>
-            </InfoRowContainer>
-            <InfoRowContainer isMiddle={true}>
-              <InfoLabelContainer>
-                <InfoText isLabel={true}>File Size</InfoText>
-              </InfoLabelContainer>
-              <InfoDataContainer>
-                <InfoText>{metadata?.content_length ? prettySize : ""}</InfoText>
-              </InfoDataContainer>
-            </InfoRowContainer>
-            <InfoRowContainer isMiddle={true}>
-              <InfoLabelContainer>
-                <InfoText isLabel={true}>Block Time</InfoText>
-              </InfoLabelContainer>
-              <InfoDataContainer>
-                <UnstyledLink to={'/block/' + metadata?.genesis_height}>
-                  <InfoText isLink={true}>{metadata?.genesis_height ? addCommas(metadata?.genesis_height) : ""}</InfoText>
-                </UnstyledLink>
-              </InfoDataContainer>
-            </InfoRowContainer>
-            <InfoRowContainer isMiddle={true}>
-              <InfoLabelContainer>
-                <InfoText isLabel={true}>Clock Time</InfoText>
-              </InfoLabelContainer>
-              <InfoDataContainer>
-                <InfoText>{metadata?.timestamp ? new Date(metadata?.timestamp*1000).toLocaleString(undefined, {day:"numeric", month: "short", year:"numeric", hour: 'numeric', minute: 'numeric', hour12: true}) : ""}</InfoText>
-              </InfoDataContainer>
-            </InfoRowContainer>
-            <InfoRowContainer isMiddle={true}>
-              <InfoLabelContainer>
-                <InfoText isLabel={true}>Fee</InfoText>
-              </InfoLabelContainer>
-              <InfoDataContainer>
-                <InfoText>{metadata?.genesis_fee ? addCommas(metadata?.genesis_fee) + " sats" : ""}</InfoText>
-              </InfoDataContainer>
-            </InfoRowContainer>
-            <InfoRowContainer isMiddle={true}>
-              <InfoLabelContainer>
-                <InfoText isLabel={true}>Sat Number</InfoText>
-              </InfoLabelContainer>
-              <InfoDataContainer>
-                <UnstyledLink to={'/sat/' + metadata?.sat}>
-                  <InfoText isLink={true}>{metadata?.sat ? addCommas(metadata?.sat) : ""}</InfoText>
-                </UnstyledLink>
-              </InfoDataContainer>
-            </InfoRowContainer>
+            </PillContainer>
           </DataContainer>
-        </DataContainer>
-        {metadata?.satributes.length > 0 && (
           <DataContainer gapSize={'.75rem'}>
-            <InfoSectionText>Satributes</InfoSectionText>
+            <InfoSectionText>Details</InfoSectionText>
             <DataContainer gapSize={'0'}>
-              <InfoRowContainer style={{flexWrap: 'wrap'}}>
-                {metadata?.satributes.map( 
-                  satribute => 
-                    <DataButton>{satribute}</DataButton>
-                  )}
+              <InfoRowContainer>
+                <InfoLabelContainer>
+                  <InfoText isLabel={true}>Owner</InfoText>
+                </InfoLabelContainer>
+                <InfoDataContainer>
+                  <UnstyledLink to={address?.address !== "unbound" ? '/address/' + address?.address : ""}>
+                    <InfoText isLink={true}>{address?.address ? shortAddress : ""}</InfoText>
+                  </UnstyledLink>
+                </InfoDataContainer>
+              </InfoRowContainer>
+              <InfoRowContainer isMiddle={true}>
+                <InfoLabelContainer>
+                  <InfoText isLabel={true}>Inscription ID</InfoText>
+                </InfoLabelContainer>
+                <InfoDataContainer>
+                  <UnstyledButton onClick={() => copyText(metadata?.id)}>
+                    <InfoText>{metadata?.id ? shortId : ""}</InfoText>
+                    <CopyIcon svgSize={'1rem'} svgColor={'#D9D9D9'} />
+                  </UnstyledButton>
+                </InfoDataContainer>
+              </InfoRowContainer>
+              <InfoRowContainer isMiddle={true}>
+                <InfoLabelContainer>
+                  <InfoText isLabel={true}>File Type</InfoText>
+                </InfoLabelContainer>
+                <InfoDataContainer>
+                  <InfoText>{metadata?.content_type ? metadata?.content_type : ""}</InfoText>
+                </InfoDataContainer>
+              </InfoRowContainer>
+              <InfoRowContainer isMiddle={true}>
+                <InfoLabelContainer>
+                  <InfoText isLabel={true}>File Size</InfoText>
+                </InfoLabelContainer>
+                <InfoDataContainer>
+                  <InfoText>{metadata?.content_length ? prettySize : ""}</InfoText>
+                </InfoDataContainer>
+              </InfoRowContainer>
+              <InfoRowContainer isMiddle={true}>
+                <InfoLabelContainer>
+                  <InfoText isLabel={true}>Block Time</InfoText>
+                </InfoLabelContainer>
+                <InfoDataContainer>
+                  <UnstyledLink to={'/block/' + metadata?.genesis_height}>
+                    <InfoText isLink={true}>{metadata?.genesis_height ? addCommas(metadata?.genesis_height) : ""}</InfoText>
+                  </UnstyledLink>
+                </InfoDataContainer>
+              </InfoRowContainer>
+              <InfoRowContainer isMiddle={true}>
+                <InfoLabelContainer>
+                  <InfoText isLabel={true}>Clock Time</InfoText>
+                </InfoLabelContainer>
+                <InfoDataContainer>
+                  <InfoText>{metadata?.timestamp ? new Date(metadata?.timestamp*1000).toLocaleString(undefined, {day:"numeric", month: "short", year:"numeric", hour: 'numeric', minute: 'numeric', hour12: true}) : ""}</InfoText>
+                </InfoDataContainer>
+              </InfoRowContainer>
+              <InfoRowContainer isMiddle={true}>
+                <InfoLabelContainer>
+                  <InfoText isLabel={true}>Fee</InfoText>
+                </InfoLabelContainer>
+                <InfoDataContainer>
+                  <InfoText>{metadata?.genesis_fee ? addCommas(metadata?.genesis_fee) + " sats" : ""}</InfoText>
+                </InfoDataContainer>
+              </InfoRowContainer>
+              <InfoRowContainer isMiddle={true}>
+                <InfoLabelContainer>
+                  <InfoText isLabel={true}>Sat Number</InfoText>
+                </InfoLabelContainer>
+                <InfoDataContainer>
+                  <UnstyledLink to={'/sat/' + metadata?.sat}>
+                    <InfoText isLink={true}>{metadata?.sat ? addCommas(metadata?.sat) : ""}</InfoText>
+                  </UnstyledLink>
+                </InfoDataContainer>
               </InfoRowContainer>
             </DataContainer>
           </DataContainer>
-        )}
-      </InfoContainer>
-    </MainContainer>
-    
+          {metadata?.satributes.length > 0 && (
+            <DataContainer gapSize={'.75rem'}>
+              <InfoSectionText>Satributes</InfoSectionText>
+              <DataContainer gapSize={'0'}>
+                <InfoRowContainer style={{flexWrap: 'wrap'}}>
+                  {metadata?.satributes.map( 
+                    satribute => 
+                      <DataButton>{satribute}</DataButton>
+                    )}
+                </InfoRowContainer>
+              </DataContainer>
+            </DataContainer>
+          )}
+        </InfoContainer>
+      </MainContainer>
+      {similarInscriptions?.length > 0 && (
+        <SimilarContentContainer>
+          <SectionContainer>
+            <SectionHeaderContainer>
+              <IntersectionIcon svgSize={'1.125rem'} svgColor={'#000000'} />
+              <SimilarText>Similar inscriptions</SimilarText>
+            </SectionHeaderContainer>
+            <ArrowContainer>
+              <ArrowButton onClick={scrollLeft}>
+                <ChevronLeftIcon svgSize={'1.25rem'} svgColor={'#959595'} />
+              </ArrowButton>
+              <ArrowButton onClick={scrollRight}>
+                <ChevronRightIcon svgSize={'1.25rem'} svgColor={'#959595'} />
+              </ArrowButton>
+            </ArrowContainer>
+          </SectionContainer>
+          <ImageRowContainer ref={scrollContainer}>
+            {similarInscriptions?.map(
+              entry =>
+                <SmallItemContainer key={entry.id} number={entry.number} />
+            )}
+          </ImageRowContainer>
+        </SimilarContentContainer>
+      )}
+    </>
   )
 }
 
@@ -367,7 +429,7 @@ const MainContainer = styled.div`
 
 const ContentContainer = styled.div`
   background-color: #F7F7F7;
-  // position: sticky;
+  position: sticky;
   top: 5rem;
   max-height: 100vh;
   overflow-y: scroll;
@@ -385,6 +447,7 @@ const ContentContainer = styled.div`
   min-width: 20rem;
 
   @media (max-width: 768px) {
+    position: static;
     background-color: #FFFFFF;
     width: 100%;
     min-width: unset;
@@ -660,6 +723,90 @@ const UnstyledButton = styled.button`
 
   &:active {
     transform: scale(0.96);
+  }
+`;
+
+const SectionContainer = styled.div`
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  margin: 0 0 1rem 0;
+`;
+
+const SectionHeaderContainer = styled.div`
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: .5rem;
+`;
+
+const SimilarContentContainer = styled.div`
+  width: calc(100% - 3rem);
+  padding: 2rem 1.5rem;
+  display: block; // Ensure it is a block element
+`;
+
+const SimilarText = styled.p`
+  font-family: Relative Trial Medium;
+  font-size: 1rem;
+  margin: 0;
+  padding: 0;
+`;
+
+const ArrowContainer = styled.div`
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: .5rem;
+`;
+
+const ArrowButton = styled.div`
+  border-radius: 2rem;
+  border: none;
+  height: 2rem;
+  width: 2rem;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  gap: .5rem;
+  font-family: Relative Trial Medium;
+  font-size: .875rem;
+  color: #959595;
+  background-color: #F5F5F5;
+  transition: 
+    background-color 350ms ease,
+    transform 150ms ease;
+  transform-origin: center center;
+  // opacity: .2;
+
+  &:hover {
+    background-color: #E9E9E9;
+  }
+
+  &:active {
+    transform: scale(0.96);
+  }
+`;
+
+const ImageRowContainer = styled.div`
+  display: flex; // Use flexbox for layout
+  flex-direction: row; // Arrange children in a row
+  gap: .75rem; // Space between items
+  overflow-x: auto; // Allow horizontal scrolling
+  width: 100%;
+  align-items: center; // Align items vertically in the center
+  white-space: nowrap; // Prevent wrapping of content within items
+
+  & > * {
+    flex: 1 0 192px; // Grow to fill available space, don't shrink, minimum width of 128px
+  }
+
+  &::-webkit-scrollbar {
+    display: none; // Optionally hide the scrollbar
   }
 `;
 
