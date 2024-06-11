@@ -1,5 +1,5 @@
 import React, { useState, useEffect, ChangeEvent, useRef } from 'react';
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import styled from 'styled-components';
 import SearchIcon from '../assets/icons/SearchIcon';
 import BurgerMenuIcon from '../assets/icons/BurgerMenuIcon';
@@ -31,6 +31,13 @@ const TopSection = (props) => {
   const [addressInfo, setAddressInfo] = useState([]);
   const [shortAddress, setShortAddress] = useState(null);
   const isConnected = addressInfo.length > 0;
+
+  const location = useLocation();
+
+    // Clear search input when the location changes
+    useEffect(() => {
+      setSearchInput('');
+    }, [location]);
 
   const walletButtonRef = useRef(null);
 
