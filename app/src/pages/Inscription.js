@@ -492,6 +492,7 @@ const SvgContainer = styled.iframe`
   object-fit: contain;
   aspect-ratio: 1/1;
   image-rendering: pixelated;
+  border: none;
 `;
 
 const TextContainer = styled.div`

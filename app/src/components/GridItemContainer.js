@@ -287,6 +287,7 @@ const HtmlContainer = styled.div`
 // `;
 
 const SvgContainer = styled.iframe`
+  border: none;
   max-width: 100%;
   max-height: 100%;
   min-width: 100%; /* Ensures scaling up */
