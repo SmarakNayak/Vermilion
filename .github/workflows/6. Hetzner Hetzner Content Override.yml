@@ -9,7 +9,7 @@ on:
       hetzner_server:
         description: 'Which server to deploy to? Hetzner_blue or Hetzner_green'
         required: true
-        default: 'Hetzner_blue'
+        default: 'Hetzner_'
         
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
