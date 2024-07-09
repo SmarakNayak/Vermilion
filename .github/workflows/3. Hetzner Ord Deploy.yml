@@ -43,7 +43,7 @@ jobs:
           ssh staging 'curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y' #rust
 
       - name: Get off chain collection data
-        run: ssh staging 'git -C ordinals-collections fetch && git -C ordinals-collections reset --hard origin/main || git clone git@github.com:okx/ordinals-collections.git' # This pulls if directory exists, otherwise clones
+        run: ssh staging 'aws s3 sync s3://ordinal-collections ordinal-collections'
               
       - name: Install ord
         run: ssh staging 'source /home/ubuntu/.cargo/env; cd ord; cargo build --release' #install
