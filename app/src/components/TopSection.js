@@ -1,5 +1,5 @@
 import React, { useState, useEffect, ChangeEvent, useRef } from 'react';
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import styled from 'styled-components';
 import SearchIcon from '../assets/icons/SearchIcon';
 import BurgerMenuIcon from '../assets/icons/BurgerMenuIcon';
@@ -156,14 +156,29 @@ const TopSection = (props) => {
     setInscriptionData(null);
   }
 
+  const navigate = useNavigate();
+
+  const handleNavigation = (path) => {
+    navigate(path); 
+  };
+
   return (
     <HeaderContainer>
-      <SiteText to ={'/explore'}>vermilion</SiteText>
-      <SearchContainer>
-        <SearchIcon svgSize={'1rem'} svgColor={'#959595'}></SearchIcon>
+      <NavSection>
+        <SiteText to ={'/explore'}>vermilion</SiteText>
+        <NavLinkContainer>
+          <NavButton onClick={() => handleNavigation('/explore')}>Explore</NavButton>
+          <NavButton collapse={true} onClick={() => handleNavigation('/discover')}>Discover</NavButton>
+          <NavButton collapse={true} onClick={() => handleNavigation('/search')}>Search</NavButton>
+        </NavLinkContainer>
+      </NavSection>
+
+      {/* old code */}
+      <SearchContainer mobile={false}>
+        <SearchIcon svgSize={'1.25rem'} svgColor={'#959595'}></SearchIcon>
         <form onSubmit={handleTextSubmit}>
           <SearchInput 
-            placeholder='Search'
+            placeholder='Search for inscriptions, collections, blocks, etc.'
             type='text'
             onChange={handleTextChange}
             onKeyDown={handleKeyPress}
@@ -173,7 +188,7 @@ const TopSection = (props) => {
         </form>
         {searchInput.length > 0 && (
           <ClearButton onClick={clearSearch}>
-            <CrossIcon svgSize={'1rem'} svgColor={'#959595'}></CrossIcon>
+            <CrossIcon svgSize={'1.25rem'} svgColor={'#959595'}></CrossIcon>
           </ClearButton>
         )}
         {menuOpen && (
@@ -182,12 +197,14 @@ const TopSection = (props) => {
       </SearchContainer>
       <ButtonContainer>
         <MenuButton onClick={toggleSearchVisibility}>
-          <SearchIcon svgSize='1rem' svgColor='black'></SearchIcon>
+          <SearchIcon svgSize='1.25rem' svgColor='black'></SearchIcon>
         </MenuButton>
         <MenuButton onClick={toggleMenuVisibility}>
-          <BurgerMenuIcon svgSize='1rem' svgColor='black'></BurgerMenuIcon>
+          <BurgerMenuIcon svgSize='1.25rem' svgColor='black'></BurgerMenuIcon>
         </MenuButton>
-        <LinkContainer>
+
+        {/* old link container */}
+        {/* <LinkContainer>
           <UnstyledLink to={'/explore/'}>
             <LinkButton>Explore</LinkButton>
           </UnstyledLink>
@@ -197,7 +214,8 @@ const TopSection = (props) => {
           <UnstyledLink to={'/search'}>
             <LinkButton>Search</LinkButton>
           </UnstyledLink>
-        </LinkContainer>
+        </LinkContainer> */}
+
         {/* Click event to connect wallet */}
         {!isConnected && (
           <ConnectButton onClick={onConnect}>Connect</ConnectButton>
@@ -217,15 +235,14 @@ const TopSection = (props) => {
           <MenuHeader>
             <MenuText>Search</MenuText>
             <CloseButton onClick={closeSearch}>
-              Close
-              <CrossIcon svgColor={'#959595'} svgSize={'1rem'} />
+              <CrossIcon svgSize={'1.125rem'} svgColor={'#959595'} />
             </CloseButton>
           </MenuHeader>
           <SearchContainer mobile>
-            <SearchIcon svgSize={'1rem'} svgColor={'#959595'}></SearchIcon>
+            <SearchIcon svgSize={'1.25rem'} svgColor={'#959595'}></SearchIcon>
             <form onSubmit={handleTextSubmit}>
               <SearchInput 
-                placeholder='Search'
+                placeholder='Search for inscriptions, collections, blocks, etc.'
                 type='text'
                 onChange={handleTextChange}
                 onKeyDown={handleKeyPress}
@@ -235,7 +252,7 @@ const TopSection = (props) => {
             </form>
             {searchInput.length > 0 && (
               <ClearButton onClick={clearSearch}>
-                <CrossIcon svgSize={'1rem'} svgColor={'#959595'}></CrossIcon>
+                <CrossIcon svgSize={'1.25rem'} svgColor={'#959595'}></CrossIcon>
               </ClearButton>
             )}
             {menuOpen && (
@@ -249,8 +266,7 @@ const TopSection = (props) => {
           <MenuHeader>
             <SiteText to ={'/explore'}>vermilion</SiteText>
             <CloseButton onClick={toggleMenuVisibility}>
-              Close
-              <CrossIcon svgColor={'#959595'} svgSize={'1rem'} />
+              <CrossIcon svgSize={'1.125rem'} svgColor={'#959595'} />
             </CloseButton>
           </MenuHeader>
           <MenuLinkContainer>
@@ -313,15 +329,62 @@ const HeaderContainer = styled.div`
   z-index: 1;
   padding: 0 1.5rem;
   margin: 0;
-  height: 4.5rem;
+  height: 5rem;
   background-color: #FFFFFF;
 
   z-index: 2;
 `;
 
+const NavSection = styled.div`
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 1rem;
+`;
+
+const NavLinkContainer = styled.div`
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: .5rem;
+
+  @media (max-width: 630px) {
+    display: none;
+  }
+`;
+
+const NavButton = styled.button`
+  height: 3rem;
+  border-radius: 1.5rem;
+  border: none;
+  margin: 0;
+  padding: 0 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-family: Relative Trial Bold;
+  font-size: 1rem;
+  background-color: #FFFFFF;
+  transition: 
+    background-color 350ms ease,
+    transform 150ms ease;
+  transform-origin: center center;
+
+  &:hover {
+    background-color: #F5F5F5;
+  }
+
+  @media (max-width: 834px) {
+    display: ${props => props.collapse ? 'none' : 'flex'}; 
+  }
+
+  // add click event animation
+`;
+
 const ConnectButton = styled.button`
-  height: 2.5rem;
-  border-radius: 2rem;
+  height: 3rem;
+  border-radius: 1.5rem;
   border: none;
   padding: 0 1rem;
   margin: 0;
@@ -331,7 +394,7 @@ const ConnectButton = styled.button`
   cursor: pointer;
   gap: .5rem;
   font-family: Relative Trial Bold;
-  font-size: .875rem;
+  font-size: 1rem;
   color: #FFFFFF;  
   background-color:#000000;
   transition: 
@@ -348,8 +411,8 @@ const ConnectButton = styled.button`
 `;
 
 const ProfileButton = styled.button`
-  height: 2.5rem;
-  border-radius: 2rem;
+  height: 3rem;
+  border-radius: 1.5rem;
   border: none;
   padding: 0 1rem;
   margin: 0;
@@ -359,7 +422,7 @@ const ProfileButton = styled.button`
   cursor: pointer;
   gap: .5rem;
   font-family: Relative Trial Bold;
-  font-size: .875rem;
+  font-size: 1rem;
   color: #E34234;  
   background-color:#F5F5F5;
   transition: 
@@ -382,7 +445,7 @@ const ButtonContainer = styled.div`
   gap: 1rem;
 
   @media (max-width: 630px) {
-    gap: .25rem;
+    gap: .75rem;
   }
 `;
 
@@ -426,23 +489,23 @@ const LinkButton = styled.div`
 `;
 
 const MenuButton = styled.button`
-  height: 40px;
-  width: 40px;
-  border-radius: .5rem;
+  height: 3rem;
+  width: 3rem;
+  border-radius: 1.5rem;
   border: none;
   margin: 0;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  background-color: #FFFFFF;
+  background-color: #F5F5F5;
   transition: 
     background-color 350ms ease,
     transform 150ms ease;
   transform-origin: center center;
 
   &:hover {
-    background-color: #F5F5F5;
+    background-color: #E9E9E9;
   }
 
   &:focus {
@@ -460,7 +523,7 @@ const MobileContainer = styled.div`
   width: 100%;
   background-color: #FFFFFF;
   max-width: calc(100% - 3rem);  
-  max-height: calc(100% - 2.4rem);
+  max-height: calc(100% - 2rem);
   margin-right: 0;  
   width: 100%;     
   height: 100%;    
@@ -468,7 +531,7 @@ const MobileContainer = styled.div`
   top: 0;          
   left: 0;          
   z-index: 1000;    
-  padding: 1.2rem 1.5rem;
+  padding: 1rem 1.5rem;
   gap: 2.5rem;
 `;
 
@@ -485,18 +548,15 @@ const MenuHeader = styled.div`
 `;
 
 const CloseButton = styled.button`
-  padding: .5rem 1rem;
-  border-radius: .5rem;
+  height: 3rem;
+  width: 3rem;
+  border-radius: 1.5rem;
   border: none;
   margin: 0;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  gap: .375rem;
-  font-family: Relative Trial Medium;
-  font-size: .875rem;
-  color: #959595;
   background-color: #F5F5F5;
   transition: 
     background-color 350ms ease,
@@ -551,15 +611,15 @@ const SiteText = styled(Link)`
 
 const SearchContainer = styled.div`
   width: 100%;
-  max-width: 25rem;
-  height: 2.5rem;
+  // max-width: 25rem;
+  height: 3rem;
   display: flex;
   flex-direction: row;
   align-items: center;
   justify-content: space-between;
   background-color: #F5F5F5;
   border: none;  
-  border-radius: .5rem;
+  border-radius: 1.5rem;
   padding: 0 1rem;
   gap: .5rem;
   position: relative;
@@ -600,7 +660,7 @@ const SearchInput = styled.input`
   width: auto;
   height: auto;
   border: 2px solid transparent;
-  border-radius: .5rem;
+  border-radius: 1.5rem;
   transition: all 150ms ease;
   background-color: transparent;
   white-space: nowrap;
@@ -611,7 +671,7 @@ const SearchInput = styled.input`
   font-family: Relative Trial Medium;
   font-weight: 500;
   color: #000000;
-  font-size: .875rem;
+  font-size: 1rem;
   position: absolute;
   top: 0;
   left: 0;
@@ -642,9 +702,9 @@ const SearchInput = styled.input`
 `;
 
 const ClearButton = styled.button`
-  height: 1.5rem;
-  width: 1.5rem;
-  border-radius: .5rem;
+  height: 1.75rem;
+  width: 1.75rem;
+  border-radius: 1rem;
   border: none;
   margin: 0;
   display: flex;
