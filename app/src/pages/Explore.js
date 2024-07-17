@@ -21,6 +21,7 @@ import { shortenBytes } from '../helpers/utils';
 import { formatSats } from '../helpers/utils';
 import BlockTable from '../components/BlockTable';
 import CollectionsTable from '../components/CollectionsTable';
+import ReactGA from 'react-ga';
 
 const Explore = () => {
   const [baseApi, setBaseApi] = useState(null); 
@@ -29,6 +30,11 @@ const Explore = () => {
   const [activeTab, setActiveTab] = useState('Inscriptions');
   const [selectedSortOption, setSelectedSortOption] = useState('newest');
   const [selectedFilterOptions, setSelectedFilterOptions] = useState({"Content Type": ["image"], "Satributes": [], "Charms":[]});
+
+  // record event in GA
+  useEffect(() => {
+    ReactGA.pageview(window.location.pathname)
+  }, [])
 
   //Get inscriptions endpoint
   useEffect(() => {
