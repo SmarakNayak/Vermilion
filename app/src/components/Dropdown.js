@@ -10,10 +10,10 @@ const DropdownWrapper = styled.div`
 `;
 
 const FilterButton = styled.button`
-  height: 40px;
-  border-radius: .5rem;
+  height: 3rem;
+  border-radius: 1.5rem;
   border: none;
-  padding: .5rem 1rem;
+  padding: .5rem 1rem .5rem 1.375rem;
   margin: 0;
   display: flex;
   align-items: center;
@@ -21,7 +21,7 @@ const FilterButton = styled.button`
   cursor: pointer;
   gap: .5rem;
   font-family: Relative Trial Medium;
-  font-size: .875rem;
+  font-size: 1rem;
   color: #000000;
   background-color: ${props => props.isActive ? '#E9E9E9' : '#F5F5F5'}; 
   transition: 

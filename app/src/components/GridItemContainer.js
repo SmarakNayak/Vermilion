@@ -157,7 +157,7 @@ const ItemContainer = styled.div`
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: .5rem;
+  gap: .75rem;
   cursor: pointer;
 `;
 
@@ -329,8 +329,8 @@ const ContentOverlay = styled.div`
 `;
 
 const ItemText = styled.p`
-  font-size: .875rem;
-  color: #959595;
+  font-size: 1rem;
+  color: #000000;
   margin: 0;
 
   transition: 
@@ -338,9 +338,9 @@ const ItemText = styled.p`
     transform 150ms ease;
   transform-origin: center center;
 
-  ${ItemContainer}:hover & {
-    color: #000000;
-  }
+  // ${ItemContainer}:hover & {
+  //   color: #000000;
+  // }
 `;
 
 export default GridItemContainer;
