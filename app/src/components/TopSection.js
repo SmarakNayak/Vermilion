@@ -13,6 +13,7 @@ import SearchMenu from './SearchMenu';
 import Wallet, { getAddress, Address, BitcoinNetworkType, AddressPurpose } from 'sats-connect';
 import { formatAddress } from '../helpers/utils';
 import MenuDropdown from './MenuDropdown';
+import ChevronDownSmallIcon from '../assets/icons/ChevronDownSmallIcon';
 
 const TopSection = (props) => {
   const [searchInput, setSearchInput] = useState("");
@@ -167,7 +168,10 @@ const TopSection = (props) => {
       <NavSection>
         <SiteText to ={'/explore'}>vermilion</SiteText>
         <NavLinkContainer>
-          <NavButton onClick={() => handleNavigation('/explore')}>Explore</NavButton>
+          <NavButton onClick={() => handleNavigation('/explore')}>
+            Explore
+            <ChevronDownSmallIcon svgSize={'1.25rem'} svgColor={'#000000'}></ChevronDownSmallIcon>
+          </NavButton>
           <NavButton collapse={true} onClick={() => handleNavigation('/discover')}>Discover</NavButton>
           <NavButton collapse={true} onClick={() => handleNavigation('/search')}>Search</NavButton>
         </NavLinkContainer>
@@ -362,6 +366,7 @@ const NavButton = styled.button`
   display: flex;
   align-items: center;
   justify-content: center;
+  gap: .125rem;
   cursor: pointer;
   font-family: Relative Trial Bold;
   font-size: 1rem;

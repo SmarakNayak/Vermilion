@@ -2,12 +2,11 @@ import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import InfiniteScroll from 'react-infinite-scroll-component';
 import { renderToStaticMarkup } from 'react-dom/server';
-
 import ImageIcon from '../assets/icons/ImageIcon';
 import ArrowDownIcon from '../assets/icons/ArrowDownIcon';
 import ArrowUpIcon from '../assets/icons/ArrowUpIcon';
 import ChevronVerticalIcon from '../assets/icons/ChevronVerticalIcon';
-import { addCommas, formatSats, formatTimestampSecs, shortenBytes } from '../helpers/utils';
+import { addCommas, formatSats, shortenBytes, shortenDate, shortenRange } from '../helpers/utils';
 import { Link } from 'react-router-dom';
 import InscriptionIcon from './InscriptionIcon';
 
@@ -29,9 +28,9 @@ const CollectionsTable = () => {
   },[selectedCollectionSortOption])
 
   const fetchInitial = async () => {
-    console.log("fetch initial data")
+    // console.log("fetch initial data")
     let query_string = "/api/collections?sort_by=" + selectedCollectionSortOption + "&page_size=" + pageSize + "&page_number=0";
-    console.log(query_string);
+    // console.log(query_string);
     const response = await fetch(query_string);
     const newBlocks = await response.json();
 
@@ -41,9 +40,9 @@ const CollectionsTable = () => {
   }
 
   const fetchData = async () => {
-    console.log("fetch data")
+    // console.log("fetch data")
     let query_string = "/api/collections?sort_by=" + selectedCollectionSortOption + "&page_size=" + pageSize + "&page_number=" + nextPageNo;
-    console.log(query_string);
+    // console.log(query_string);
     const response = await fetch(query_string);
     const newBlockData = await response.json();
 
@@ -60,7 +59,8 @@ const CollectionsTable = () => {
       setCollectionSortColumn(column);
       setCollectionSortDescending(true);
     }
-  }
+  };
+
   //Update block option
   useEffect(() => {
     // "biggest_on_chain_footprint", "smallest_on_chain_footprint",
@@ -95,7 +95,7 @@ const CollectionsTable = () => {
 
   const renderSortIcon = (column) => {
     if (collectionSortColumn === column) {
-      return collectionSortDescending ? <ArrowDownIcon svgSize={'.875rem'} svgColor={'#000000'}></ArrowDownIcon> : <ArrowUpIcon svgSize={'.875rem'} svgColor={'#000000'}></ArrowUpIcon>;
+      return collectionSortDescending ? <ArrowDownIcon svgSize={'.875rem'} svgColor={'#E34234'}></ArrowDownIcon> : <ArrowUpIcon svgSize={'.875rem'} svgColor={'#E34234'}></ArrowUpIcon>;
     }
     return null;
   };
@@ -105,7 +105,7 @@ const CollectionsTable = () => {
   );
 
   const handleImageError = (event) => {
-    console.log("error image triggered")
+    // console.log("error image triggered")
     event.target.onError = null;
     event.target.src = `data:image/svg+xml,${BlockIconDefault}`;
     //have to override default size of CollectionIcon
@@ -116,8 +116,8 @@ const CollectionsTable = () => {
   return (
     <DivTable>
       <DivRow header>
-        <DivCell header>
-          <HeaderWrapper>
+        <DivCell header first={true}>
+          <HeaderWrapper first={true}>
             Collection
           </HeaderWrapper>
         </DivCell>
@@ -165,21 +165,49 @@ const CollectionsTable = () => {
         {collectionData.map((row, index) => (
           <UnstyledLink to={"/collection/" + row?.collection_symbol}>
             <DivRow key={index}>
-              <DivCell>
-                <BlockImgContainer>
-                  {row?.range_start ? 
-                    <InscriptionIcon endpoint = {"/api/inscription_number/" + row.range_start} useBlockIconDefault = {false}></InscriptionIcon> :
-                    <ImageIcon svgSize={'2rem'} svgColor={'#E34234'}></ImageIcon>
-                  }
-                </BlockImgContainer>
-                {row?.name}
+              <DivCell first={true}>
+                <DataWrapper first={true}>
+                  <BlockImgContainer>
+                    {row?.range_start ? 
+                      <InscriptionIcon endpoint = {"/api/inscription_number/" + row.range_start} useBlockIconDefault = {false}></InscriptionIcon> :
+                      <ImageIcon svgSize={'3rem'} svgColor={'#E34234'}></ImageIcon>
+                    }
+                  </BlockImgContainer>
+                  <span style={{ minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {row?.name}
+                  </span>
+                </DataWrapper>
               </DivCell>
-              <DivCell>{row?.range_start ? addCommas(row?.range_start) + " - " + addCommas(row?.range_end) : ""}</DivCell>
-              <DivCell>{row?.first_inscribed_date ? formatTimestampSecs(row.first_inscribed_date) : ""}</DivCell>
-              <DivCell>{addCommas(row?.supply)}</DivCell>
-              <DivCell>{row?.total_inscription_size ? shortenBytes(row.total_inscription_size) : 0}</DivCell>
-              <DivCell>{row?.total_volume ? addCommas(formatSats(row.total_volume)) : "0 BTC"}</DivCell>
-              <DivCell>{row?.total_inscription_fees ? formatSats(row.total_inscription_fees) : "0 BTC"}</DivCell>
+              <DivCell>
+                <DataWrapper>
+                  {row?.range_start ? shortenRange(row?.range_start) + " to " + shortenRange(row?.range_end) : ""}
+                </DataWrapper>
+              </DivCell>
+              <DivCell>
+                <DataWrapper>
+                  {row?.first_inscribed_date ? shortenDate(row.first_inscribed_date) : ""}
+                </DataWrapper>
+              </DivCell>
+              <DivCell>
+                <DataWrapper>
+                  {addCommas(row?.supply)}
+                </DataWrapper>
+              </DivCell>
+              <DivCell>
+                <DataWrapper>
+                  {row?.total_inscription_size ? shortenBytes(row.total_inscription_size) : 0}
+                </DataWrapper>
+              </DivCell>
+              <DivCell>
+                <DataWrapper>
+                  {row?.total_volume ? addCommas(formatSats(row.total_volume)) : "0 BTC"}
+                </DataWrapper>
+              </DivCell>
+              <DivCell>
+                <DataWrapper>
+                  {row?.total_inscription_fees ? formatSats(row.total_inscription_fees) : "0 BTC"}
+                </DataWrapper>
+              </DivCell>
             </DivRow>
           </UnstyledLink>
         ))}
@@ -203,8 +231,8 @@ const CollectionIcon = styled.img`
 `
 
 const BlockImgContainer = styled.div`
-  width: 3.75rem;
-  height: 3.75rem;
+  width: 3rem;
+  height: 3rem;
   background-color: transparent;
   border-radius: .5rem;
   display: flex;
@@ -221,9 +249,10 @@ const DivTable = styled.div`
 const DivRow = styled.div`
   display: flex;
   flex-direction: row;
-  width: calc(100% - 2rem);
-  border-radius: .5rem;
-  padding: ${props => props.header ? '0 1rem' : '1rem'};
+  width: calc(100% - 3rem);
+  // width: 100%;
+  border-radius: 1rem;
+  padding: ${props => props.header ? '0 1.5rem' : '1rem 1.5rem'};
   background-color: ${props => props.header ? 'transparent' : 'transparent'};
   cursor: ${props => props.header ? 'default' : 'pointer'};
   transition: 
@@ -246,18 +275,23 @@ const DivCell = styled.div`
   justify-content: flex-end;
   gap: 1rem;
   flex: 1;
-  margin: 0;
+  margin: ${props => props.first ? '0 1rem 0 0' : '0'};
   font-family: Relative Trial Medium;
-  font-size: .875rem;
+  font-size: ${props => props.header ? '.875rem' : '1rem'};;
   color: ${props => props.header ? '#959595' : '#000000'};
+  min-width: 0;
+
   &:nth-child(1) {
     justify-content: flex-start;
-    padding-left: .5rem;
+    // padding-left: .5rem;
+    // padding-left: ${props => props.header ? 'none' : '.5rem'};
+    flex: 2;
   }
 
   &:not(:first-child) {
     /* Apply styles to all DivCell elements except the first one */
-    padding-right: .5rem;
+    // padding-right: .5rem;
+    // padding-right: ${props => props.header ? 'none' : '.5rem'};
   }
 
   // Hide "Creation Date" column on screens smaller than 1200px
@@ -267,16 +301,23 @@ const DivCell = styled.div`
     }
   }
 
-  // Hide "Size" column on screens smaller than 1000px
-  @media (max-width: 1000px) {
+  // Hide "Size" column on screens smaller than 1200px
+  @media (max-width: 1200px) {
     &:nth-child(5) {
       display: none;
     }
   }
 
-  // Hide "Total Fees" column on screens smaller than 800px
-  @media (max-width: 800px) {
+  // Hide "Total Fees" column on screens smaller than 1000px
+  @media (max-width: 1000px) {
     &:nth-child(7) {
+      display: none;
+    }
+  }
+
+  // Hide "Range" column on screens smaller than 800px
+  @media (max-width: 800px) {
+    &:nth-child(2) {
       display: none;
     }
   }
@@ -288,9 +329,9 @@ const DivCell = styled.div`
     }
   }
 
-  // Hide "Range" column on screens smaller than 400px
+  // Hide "Supply" column on screens smaller than 400px
   @media (max-width: 400px) {
-    &:nth-child(2) {
+    &:nth-child(4) {
       display: none;
     }
   }
@@ -307,9 +348,10 @@ const SortableDivCell = styled.div`
   font-family: Relative Trial Medium;
   font-size: .875rem;
   cursor: pointer;
-  color: ${props => props.isActive ? '#000000' : '#959595'};
+  color: ${props => props.isActive ? '#E34234' : '#959595'};
   &:nth-child(1) {
     justify-content: flex-start;
+    flex: 2;
   }
 
   // Hide "Creation Date" column on screens smaller than 1200px
@@ -319,16 +361,23 @@ const SortableDivCell = styled.div`
     }
   }
 
-  // Hide "Size" column on screens smaller than 1000px
-  @media (max-width: 1000px) {
+  // Hide "Size" column on screens smaller than 1200px
+  @media (max-width: 1200px) {
     &:nth-child(5) {
       display: none;
     }
   }
 
-  // Hide "Total Fees" column on screens smaller than 800px
-  @media (max-width: 800px) {
+  // Hide "Total Fees" column on screens smaller than 1000px
+  @media (max-width: 1000px) {
     &:nth-child(7) {
+      display: none;
+    }
+  }
+  
+  // Hide "Range" column on screens smaller than 800px
+  @media (max-width: 800px) {
+    &:nth-child(2) {
       display: none;
     }
   }
@@ -340,9 +389,9 @@ const SortableDivCell = styled.div`
     }
   }
 
-  // Hide "Range" column on screens smaller than 400px
+  // Hide "Supply" column on screens smaller than 400px
   @media (max-width: 400px) {
-    &:nth-child(2) {
+    &:nth-child(4) {
       display: none;
     }
   }
@@ -352,10 +401,24 @@ const HeaderWrapper = styled.span`
   display: flex;
   flex-direction: row;
   align-items: center;
-  gap: .25rem;
-  padding: 0.25rem .5rem;
+  padding: ${props => props.first ? '0.25rem .5rem 0.25rem 0' : '0.25rem .5rem'};
+  // padding: 0.25rem .5rem;
   background-color: ${props => props.isActive ? '#F5F5F5' : 'transparent'};
   border-radius: .5rem;
+`;
+
+const DataWrapper = styled.span`
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: ${props => props.first ? 'flex-start' : 'flex-end'};
+  padding: ${props => props.first ? '0' : '0 .5rem 0 0'};
+  gap: 1rem;
+  white-space: nowrap; // Prevent text from wrapping
+  overflow: hidden; // Hide overflow text
+  text-overflow: ellipsis; // Show ellipsis for overflow text
+  min-width: 0;
+  flex: 1;
 `;
 
 const UnstyledLink = styled(Link)`

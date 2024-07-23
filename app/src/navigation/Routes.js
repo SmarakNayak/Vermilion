@@ -4,6 +4,7 @@ import styled from 'styled-components';
 import Home from '../pages/Home';
 import Inscription from '../pages/Inscription';
 import ExploreInscriptions from '../pages/ExploreInscriptions';
+import ExploreCollections from '../pages/ExploreCollections';
 import Edition from '../pages/Edition';
 import Block from '../pages/Block';
 import Address from '../pages/Address';
@@ -37,6 +38,7 @@ const Navigation = () => {
           <Route path="/collection/:symbol" element={<Collection />} />
           <Route path="/explore" element={<Explore />} />
           <Route path="/explore/inscriptions" element={<ExploreInscriptions />} />
+          <Route path="/explore/collections" element={<ExploreCollections />} />
           <Route path="/dbscan/:dbclass" element={<Dbscan />} />          
         </Routes>
       </PageContainer>

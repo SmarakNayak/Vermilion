@@ -117,8 +117,8 @@ const InscriptionIcon = (props) => {
 }
 
 const IconContainer = styled.div`
-width: 3.75rem;
-height: 3.75rem;
+width: 3rem;
+height: 3rem;
 border-radius: 0.5rem;
 background-color: #F5F5F5;
 display: flex;
@@ -170,6 +170,7 @@ const HtmlContainer = styled.div`
   text-overflow: ellipsis;
   text-wrap: wrap;
   border-radius: 0.5rem;
+  resize: none;
 `;
 
 const VideoContainer = styled.video`
@@ -185,6 +186,7 @@ const StyledIframe = styled.iframe`
   width: 100%;
   resize: both;
   aspect-ratio: 1/1;
+  resize: none;
 `;
 
 export default InscriptionIcon;
