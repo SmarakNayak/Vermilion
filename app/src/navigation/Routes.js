@@ -3,8 +3,9 @@ import { BrowserRouter, Route, Routes } from 'react-router-dom';
 import styled from 'styled-components';
 import Home from '../pages/Home';
 import Inscription from '../pages/Inscription';
-import ExploreInscriptions from '../pages/ExploreInscriptions';
+import ExploreBlocks from '../pages/ExploreBlocks';
 import ExploreCollections from '../pages/ExploreCollections';
+import ExploreInscriptions from '../pages/ExploreInscriptions';
 import Edition from '../pages/Edition';
 import Block from '../pages/Block';
 import Address from '../pages/Address';
@@ -39,6 +40,7 @@ const Navigation = () => {
           <Route path="/explore" element={<Explore />} />
           <Route path="/explore/inscriptions" element={<ExploreInscriptions />} />
           <Route path="/explore/collections" element={<ExploreCollections />} />
+          <Route path="/explore/blocks" element={<ExploreBlocks />} />
           <Route path="/dbscan/:dbclass" element={<Dbscan />} />          
         </Routes>
       </PageContainer>

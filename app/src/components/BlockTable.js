@@ -9,7 +9,7 @@ import ArrowDownIcon from '../assets/icons/ArrowDownIcon';
 import ArrowUpIcon from '../assets/icons/ArrowUpIcon';
 import ChevronVerticalIcon from '../assets/icons/ChevronVerticalIcon';
 import { addCommas, formatTimestampMs } from '../helpers/utils';
-import { shortenBytes } from '../helpers/utils';
+import { shortenBytes, shortenDate } from '../helpers/utils';
 import { formatSats } from '../helpers/utils';
 import InscriptionIcon from './InscriptionIcon';
 
@@ -106,7 +106,7 @@ const BlockTable = () => {
 
   const renderSortIcon = (column) => {
     if (blockSortColumn === column) {
-      return blockSortDescending ? <ArrowDownIcon svgSize={'.875rem'} svgColor={'#000000'}></ArrowDownIcon> : <ArrowUpIcon svgSize={'.875rem'} svgColor={'#000000'}></ArrowUpIcon>;
+      return blockSortDescending ? <ArrowDownIcon svgSize={'.875rem'} svgColor={'#E34234'}></ArrowDownIcon> : <ArrowUpIcon svgSize={'.875rem'} svgColor={'#E34234'}></ArrowUpIcon>;
     }
     return null;
   };
@@ -127,19 +127,9 @@ const BlockTable = () => {
   return (
     <DivTable>
       <DivRow header>
-        <SortableDivCell header onClick={() => handleBlockSort("block_number")} isActive={blockSortColumn === 'block_number'}>
+        <SortableDivCell header first={true} onClick={() => handleBlockSort("block_number")} isActive={blockSortColumn === 'block_number'}>
           <HeaderWrapper isActive={blockSortColumn === 'block_number'}>
             Block {renderSortIcon("block_number")} {blockSortColumn != 'block_number' && (<ChevronVerticalIcon svgSize={'.875rem'} svgColor={'#959595'} />)}
-          </HeaderWrapper>
-        </SortableDivCell>
-        <SortableDivCell header onClick={() => handleBlockSort("txs")} isActive={blockSortColumn === 'txs'}>
-          <HeaderWrapper isActive={blockSortColumn === 'txs'}>
-            Transactions {renderSortIcon("txs")} {blockSortColumn != 'txs' && (<ChevronVerticalIcon svgSize={'.875rem'} svgColor={'#959595'} />)}
-          </HeaderWrapper>
-        </SortableDivCell>
-        <SortableDivCell header onClick={() => handleBlockSort("inscriptions")} isActive={blockSortColumn === 'inscriptions'}>
-          <HeaderWrapper isActive={blockSortColumn === 'inscriptions'}>
-            Inscriptions {renderSortIcon("inscriptions")} {blockSortColumn != 'inscriptions' && (<ChevronVerticalIcon svgSize={'.875rem'} svgColor={'#959595'} />)}
           </HeaderWrapper>
         </SortableDivCell>
         <DivCell header>
@@ -147,6 +137,16 @@ const BlockTable = () => {
             Creation Date
           </HeaderWrapper>
         </DivCell>
+        <SortableDivCell header onClick={() => handleBlockSort("inscriptions")} isActive={blockSortColumn === 'inscriptions'}>
+          <HeaderWrapper isActive={blockSortColumn === 'inscriptions'}>
+            Inscriptions {renderSortIcon("inscriptions")} {blockSortColumn != 'inscriptions' && (<ChevronVerticalIcon svgSize={'.875rem'} svgColor={'#959595'} />)}
+          </HeaderWrapper>
+        </SortableDivCell>
+        <SortableDivCell header onClick={() => handleBlockSort("txs")} isActive={blockSortColumn === 'txs'}>
+          <HeaderWrapper isActive={blockSortColumn === 'txs'}>
+            Transactions {renderSortIcon("txs")} {blockSortColumn != 'txs' && (<ChevronVerticalIcon svgSize={'.875rem'} svgColor={'#959595'} />)}
+          </HeaderWrapper>
+        </SortableDivCell>
         <SortableDivCell header onClick={() => handleBlockSort("size")} isActive={blockSortColumn === 'size'}>
           <HeaderWrapper isActive={blockSortColumn === 'size'}>
             Size {renderSortIcon("size")} {blockSortColumn != 'size' && (<ChevronVerticalIcon svgSize={'.875rem'} svgColor={'#959595'} />)}
@@ -176,21 +176,49 @@ const BlockTable = () => {
         {blockData.map((row, index) => (
           <UnstyledLink to={"/block/" + row?.block_number}>
             <DivRow key={index}>
-              <DivCell>
-                <BlockImgContainer>
-                  {row?.block_inscription_count > 0 ?
-                    <InscriptionIcon endpoint = {"/api/block_icon/"+row.block_number} useBlockIconDefault = {true}></InscriptionIcon> :
-                    <BlockIcon svgSize={'2rem'} svgColor={'#E34234'}></BlockIcon> 
-                  }
-                </BlockImgContainer>
-                {addCommas(row.block_number)}
+              <DivCell first={true}>
+                <DataWrapper first={true}>
+                  <BlockImgContainer>
+                    {row?.block_inscription_count > 0 ?
+                      <InscriptionIcon endpoint = {"/api/block_icon/"+row.block_number} useBlockIconDefault = {true}></InscriptionIcon> :
+                      <BlockIcon svgSize={'2rem'} svgColor={'#E34234'}></BlockIcon> 
+                    }
+                  </BlockImgContainer>
+                  <span style={{ minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {addCommas(row.block_number)}
+                  </span>
+                </DataWrapper>
               </DivCell>
-              <DivCell>{addCommas(row?.block_tx_count)}</DivCell>
-              <DivCell>{row?.block_inscription_count ? addCommas(row.block_inscription_count) : 0}</DivCell>
-              <DivCell>{row?.block_timestamp ? formatTimestampMs(row.block_timestamp) : ""}</DivCell>
-              <DivCell>{row?.block_size ? shortenBytes(row.block_size) : 0}</DivCell>
-              <DivCell>{row?.block_volume ? formatSats(row.block_volume) : "0 BTC"}</DivCell>
-              <DivCell>{row?.block_fees ? formatSats(row.block_fees) : "0 BTC"}</DivCell>
+              <DivCell>
+                <DataWrapper>
+                  {row?.block_timestamp ? formatTimestampMs(row.block_timestamp) : ""}
+                </DataWrapper>
+              </DivCell>
+              <DivCell>
+                <DataWrapper>
+                  {row?.block_inscription_count ? addCommas(row.block_inscription_count) : 0}
+                </DataWrapper>
+              </DivCell>
+              <DivCell>
+                <DataWrapper>
+                  {addCommas(row?.block_tx_count)}
+                </DataWrapper>
+              </DivCell>
+              <DivCell>
+                <DataWrapper>
+                  {row?.block_size ? shortenBytes(row.block_size) : 0}
+                </DataWrapper>
+              </DivCell>
+              <DivCell>
+                <DataWrapper>
+                  {row?.block_volume ? formatSats(row.block_volume) : "0 BTC"}
+                </DataWrapper>
+              </DivCell>
+              <DivCell>
+                <DataWrapper>
+                  {row?.block_fees ? formatSats(row.block_fees) : "0 BTC"}
+                </DataWrapper>
+              </DivCell>
             </DivRow>
           </UnstyledLink>
         ))}
@@ -214,8 +242,8 @@ const BlockImg = styled.img`
 `
 
 const BlockImgContainer = styled.div`
-  width: 3.75rem;
-  height: 3.75rem;
+  width: 3rem;
+  height: 3rem;
   background-color: transparent;
   border-radius: .5rem;
   display: flex;
@@ -232,9 +260,10 @@ const DivTable = styled.div`
 const DivRow = styled.div`
   display: flex;
   flex-direction: row;
-  width: calc(100% - 2rem);
-  border-radius: .5rem;
-  padding: ${props => props.header ? '0 1rem' : '1rem'};
+  width: calc(100% - 3rem);
+  // width: 100%;
+  border-radius: 1rem;
+  padding: ${props => props.header ? '0 1.5rem' : '1rem 1.5rem'};
   background-color: ${props => props.header ? 'transparent' : 'transparent'};
   cursor: ${props => props.header ? 'default' : 'pointer'};
   transition: 
@@ -257,51 +286,63 @@ const DivCell = styled.div`
   justify-content: flex-end;
   gap: 1rem;
   flex: 1;
-  margin: 0;
+  margin: ${props => props.first ? '0 1rem 0 0' : '0'};
   font-family: Relative Trial Medium;
-  font-size: .875rem;
+  font-size: ${props => props.header ? '.875rem' : '1rem'};;
   color: ${props => props.header ? '#959595' : '#000000'};
+  min-width: 0;
+
   &:nth-child(1) {
     justify-content: flex-start;
-    padding-left: .5rem;
+    // padding-left: .5rem;
+    // padding-left: ${props => props.header ? 'none' : '.5rem'};
+    flex: 2;
   }
 
   &:not(:first-child) {
     /* Apply styles to all DivCell elements except the first one */
-    padding-right: .5rem;
+    // padding-right: .5rem;
+    // padding-right: ${props => props.header ? 'none' : '.5rem'};
   }
 
-  // Hide "Transactions" column on screens smaller than 1200px
-  @media (max-width: 1200px) {
+  // Hide "Creation Date" column on screens smaller than 1600px
+  @media (max-width: 1600px) {
     &:nth-child(2) {
       display: none;
     }
   }
 
-  // Hide "Creation Date" column on screens smaller than 1000px
-  @media (max-width: 1000px) {
+  // Hide "Transactions" column on screens smaller than 1200px
+  @media (max-width: 1200px) {
     &:nth-child(4) {
       display: none;
     }
   }
 
-  // Hide "Size" column on screens smaller than 800px
-  @media (max-width: 800px) {
+  // Hide "Size" column on screens smaller than 1000px
+  @media (max-width: 1000px) {
     &:nth-child(5) {
       display: none;
     }
   }
 
-  // Hide "Traded Volume" column on screens smaller than 600px
-  @media (max-width: 600px) {
+  // Hide "Traded Volume" column on screens smaller than 800px
+  @media (max-width: 800px) {
     &:nth-child(6) {
       display: none;
     }
   }
 
-  // Hide "Total Fees" column on screens smaller than 400px
-  @media (max-width: 400px) {
+  // Hide "Total Fees" column on screens smaller than 600px
+  @media (max-width: 600px) {
     &:nth-child(7) {
+      display: none;
+    }
+  }
+
+  // Hide "Inscriptions" column on screens smaller than 400px
+  @media (max-width: 400px) {
+    &:nth-child(3) {
       display: none;
     }
   }
@@ -314,46 +355,54 @@ const SortableDivCell = styled.div`
   justify-content: flex-end;
   gap: 1rem;
   flex: 1;
-  margin: 0;
+  margin: ${props => props.first ? '0 1rem 0 0' : '0'};
   font-family: Relative Trial Medium;
   font-size: .875rem;
   cursor: pointer;
-  color: ${props => props.isActive ? '#000000' : '#959595'};
+  color: ${props => props.isActive ? '#E34234' : '#959595'};
   &:nth-child(1) {
     justify-content: flex-start;
+    flex: 2;
   }
 
-  // Hide "Transactions" column on screens smaller than 1200px
-  @media (max-width: 1200px) {
+  // Hide "Creation Date" column on screens smaller than 1600px
+  @media (max-width: 1600px) {
     &:nth-child(2) {
       display: none;
     }
   }
 
-  // Hide "Creation Date" column on screens smaller than 1000px
-  @media (max-width: 1000px) {
+  // Hide "Transactions" column on screens smaller than 1200px
+  @media (max-width: 1200px) {
     &:nth-child(4) {
       display: none;
     }
   }
 
-  // Hide "Size" column on screens smaller than 800px
-  @media (max-width: 800px) {
+  // Hide "Size" column on screens smaller than 1000px
+  @media (max-width: 1000px) {
     &:nth-child(5) {
       display: none;
     }
   }
 
-  // Hide "Traded Volume" column on screens smaller than 600px
-  @media (max-width: 600px) {
+  // Hide "Traded Volume" column on screens smaller than 800px
+  @media (max-width: 800px) {
     &:nth-child(6) {
       display: none;
     }
   }
 
-  // Hide "Total Fees" column on screens smaller than 400px
-  @media (max-width: 400px) {
+  // Hide "Total Fees" column on screens smaller than 600px
+  @media (max-width: 600px) {
     &:nth-child(7) {
+      display: none;
+    }
+  }
+
+  // Hide "Inscriptions" column on screens smaller than 400px
+  @media (max-width: 400px) {
+    &:nth-child(3) {
       display: none;
     }
   }
@@ -363,10 +412,23 @@ const HeaderWrapper = styled.span`
   display: flex;
   flex-direction: row;
   align-items: center;
-  gap: .25rem;
   padding: 0.25rem .5rem;
   background-color: ${props => props.isActive ? '#F5F5F5' : 'transparent'};
   border-radius: .5rem;
+`;
+
+const DataWrapper = styled.span`
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: ${props => props.first ? 'flex-start' : 'flex-end'};
+  padding: ${props => props.first ? '0 0 0 .5rem' : '0 .5rem 0 0'};
+  gap: 1rem;
+  white-space: nowrap; // Prevent text from wrapping
+  overflow: hidden; // Hide overflow text
+  text-overflow: ellipsis; // Show ellipsis for overflow text
+  min-width: 0;
+  flex: 1;
 `;
 
 const UnstyledLink = styled(Link)`

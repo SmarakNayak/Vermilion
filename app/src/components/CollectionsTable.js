@@ -170,7 +170,7 @@ const CollectionsTable = () => {
                   <BlockImgContainer>
                     {row?.range_start ? 
                       <InscriptionIcon endpoint = {"/api/inscription_number/" + row.range_start} useBlockIconDefault = {false}></InscriptionIcon> :
-                      <ImageIcon svgSize={'3rem'} svgColor={'#E34234'}></ImageIcon>
+                      <ImageIcon svgSize={'2rem'} svgColor={'#E34234'}></ImageIcon>
                     }
                   </BlockImgContainer>
                   <span style={{ minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
@@ -344,7 +344,7 @@ const SortableDivCell = styled.div`
   justify-content: flex-end;
   gap: 1rem;
   flex: 1;
-  margin: 0;
+  margin: ${props => props.first ? '0 1rem 0 0' : '0'};
   font-family: Relative Trial Medium;
   font-size: .875rem;
   cursor: pointer;
@@ -401,8 +401,7 @@ const HeaderWrapper = styled.span`
   display: flex;
   flex-direction: row;
   align-items: center;
-  padding: ${props => props.first ? '0.25rem .5rem 0.25rem 0' : '0.25rem .5rem'};
-  // padding: 0.25rem .5rem;
+  padding: 0.25rem .5rem;
   background-color: ${props => props.isActive ? '#F5F5F5' : 'transparent'};
   border-radius: .5rem;
 `;
@@ -412,7 +411,7 @@ const DataWrapper = styled.span`
   flex-direction: row;
   align-items: center;
   justify-content: ${props => props.first ? 'flex-start' : 'flex-end'};
-  padding: ${props => props.first ? '0' : '0 .5rem 0 0'};
+  padding: ${props => props.first ? '0 0 0 .5rem' : '0 .5rem 0 0'};
   gap: 1rem;
   white-space: nowrap; // Prevent text from wrapping
   overflow: hidden; // Hide overflow text
