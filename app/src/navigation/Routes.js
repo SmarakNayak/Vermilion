@@ -26,7 +26,7 @@ const Navigation = () => {
       <PageContainer>
         <TopSection/>
         <Routes>
-          <Route path="/" element={<Explore />} />
+          <Route path="/" element={<ExploreInscriptions />} />
           <Route path="/inscription/:number" element={<Inscription />} />
           <Route path="/edition/:sha256" element={<Edition />} />
           <Route path="/block/:number" element={<Block />} />
