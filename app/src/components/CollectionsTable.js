@@ -322,8 +322,8 @@ const DivCell = styled.div`
     }
   }
 
-  // Hide "Traded Volume" column on screens smaller than 600px
-  @media (max-width: 600px) {
+  // Hide "Traded Volume" column on screens smaller than 630px
+  @media (max-width: 630px) {
     &:nth-child(6) {
       display: none;
     }
@@ -382,8 +382,8 @@ const SortableDivCell = styled.div`
     }
   }
 
-  // Hide "Traded Volume" column on screens smaller than 600px
-  @media (max-width: 600px) {
+  // Hide "Traded Volume" column on screens smaller than 630px
+  @media (max-width: 630px) {
     &:nth-child(6) {
       display: none;
     }

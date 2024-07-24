@@ -15,6 +15,9 @@ import { formatAddress } from '../helpers/utils';
 import MenuDropdown from './MenuDropdown';
 import ChevronDownSmallIcon from '../assets/icons/ChevronDownSmallIcon';
 import ExploreDropdown from './ExploreDropdown';
+import PlayIcon from '../assets/icons/PlayIcon';
+import BlockIcon from '../assets/icons/BlockIcon';
+import GridIcon from '../assets/icons/GridIcon';
 
 const TopSection = (props) => {
   const [searchInput, setSearchInput] = useState("");
@@ -202,7 +205,7 @@ const TopSection = (props) => {
         )}
       </SearchContainer>
       <ButtonContainer>
-        <MenuButton onClick={toggleSearchVisibility}>
+        <MenuButton isSearch={true} onClick={toggleSearchVisibility}>
           <SearchIcon svgSize='1.25rem' svgColor='black'></SearchIcon>
         </MenuButton>
         <MenuButton onClick={toggleMenuVisibility}>
@@ -237,35 +240,34 @@ const TopSection = (props) => {
         )}
       </ButtonContainer>
       {showMobileSearch && (
-        <MobileContainer>
+        <MobileSearchContainer>
           <MenuHeader>
-            <MenuText>Search</MenuText>
+            <SearchContainer mobile>
+              <SearchIcon svgSize={'1.25rem'} svgColor={'#959595'}></SearchIcon>
+              <form onSubmit={handleTextSubmit}>
+                <SearchInput 
+                  placeholder='Search for inscriptions, collections, blocks, etc.'
+                  type='text'
+                  onChange={handleTextChange}
+                  onKeyDown={handleKeyPress}
+                  value={searchInput}
+                  isError={isError}
+                />
+              </form>
+              {searchInput.length > 0 && (
+                <ClearButton onClick={clearSearch}>
+                  <CrossIcon svgSize={'1.25rem'} svgColor={'#959595'}></CrossIcon>
+                </ClearButton>
+              )}
+              {menuOpen && (
+                <SearchMenu addressData={addressData} collectionData={collectionData} inscriptionData={inscriptionData} menuOpen={menuOpen} setMenuOpen={setMenuOpen} setShowMobileSearch={setShowMobileSearch} searchInput={searchInput} searchResults={searchResults} />
+              )}
+            </SearchContainer>
             <CloseButton onClick={closeSearch}>
               <CrossIcon svgSize={'1.125rem'} svgColor={'#959595'} />
             </CloseButton>
           </MenuHeader>
-          <SearchContainer mobile>
-            <SearchIcon svgSize={'1.25rem'} svgColor={'#959595'}></SearchIcon>
-            <form onSubmit={handleTextSubmit}>
-              <SearchInput 
-                placeholder='Search for inscriptions, collections, blocks, etc.'
-                type='text'
-                onChange={handleTextChange}
-                onKeyDown={handleKeyPress}
-                value={searchInput}
-                isError={isError}
-              />
-            </form>
-            {searchInput.length > 0 && (
-              <ClearButton onClick={clearSearch}>
-                <CrossIcon svgSize={'1.25rem'} svgColor={'#959595'}></CrossIcon>
-              </ClearButton>
-            )}
-            {menuOpen && (
-              <SearchMenu addressData={addressData} collectionData={collectionData} inscriptionData={inscriptionData} menuOpen={menuOpen} setMenuOpen={setMenuOpen} setShowMobileSearch={setShowMobileSearch} searchInput={searchInput} searchResults={searchResults} />
-            )}
-          </SearchContainer>
-        </MobileContainer>
+        </MobileSearchContainer>
       )}
       {showMobileMenu && (
         <MobileContainer>
@@ -276,10 +278,22 @@ const TopSection = (props) => {
             </CloseButton>
           </MenuHeader>
           <MenuLinkContainer>
-            <UnstyledLink to={'/explore'} onClick={toggleMenuVisibility}>
+            <UnstyledLink to={'/explore/inscriptions'} onClick={toggleMenuVisibility}>
               <ItemContainer>
-                <ExploreIcon svgSize={'1.25rem'} svgColor={'#000000'} />
-                <MenuText>Explore</MenuText>
+                <GridIcon svgSize={'1.25rem'} svgColor={'#000000'} />
+                <MenuText>Inscriptions</MenuText>
+              </ItemContainer>
+            </UnstyledLink>
+            <UnstyledLink to={'/explore/blocks'} onClick={toggleMenuVisibility}>
+              <ItemContainer>
+                <BlockIcon svgSize={'1.25rem'} svgColor={'#000000'} />
+                <MenuText>Blocks</MenuText>
+              </ItemContainer>
+            </UnstyledLink>
+            <UnstyledLink to={'/explore/collections'} onClick={toggleMenuVisibility}>
+              <ItemContainer>
+                <PlayIcon svgSize={'1.25rem'} svgColor={'#000000'} />
+                <MenuText>Collections</MenuText>
               </ItemContainer>
             </UnstyledLink>
             <UnstyledLink to={'/discover'} onClick={toggleMenuVisibility}>
@@ -354,7 +368,7 @@ const NavLinkContainer = styled.div`
   align-items: center;
   gap: .5rem;
 
-  @media (max-width: 630px) {
+  @media (max-width: 834px) {
     display: none;
   }
 `;
@@ -382,9 +396,9 @@ const NavButton = styled.button`
     background-color: #F5F5F5;
   }
 
-  @media (max-width: 834px) {
-    display: ${props => props.collapse ? 'none' : 'flex'}; 
-  }
+  // @media (max-width: 834px) {
+  //   display: ${props => props.collapse ? 'none' : 'flex'}; 
+  // }
 
   // add click event animation
 `;
@@ -412,7 +426,7 @@ const ConnectButton = styled.button`
     transform: scale(0.96);
   }
 
-  @media (max-width: 630px) {
+  @media (max-width: 834px) {
     display: none;
   }
 `;
@@ -440,7 +454,7 @@ const ProfileButton = styled.button`
     transform: scale(0.96);
   }
 
-  @media (max-width: 630px) {
+  @media (max-width: 834px) {
     display: none;
   }
 `;
@@ -451,7 +465,7 @@ const ButtonContainer = styled.div`
   align-items: center;
   gap: 1rem;
 
-  @media (max-width: 630px) {
+  @media (max-width: 834px) {
     gap: .75rem;
   }
 `;
@@ -519,8 +533,21 @@ const MenuButton = styled.button`
     transform: scale(0.96);
   }
 
-  @media (min-width: 630px) {
-    display: none;
+  // Default to hidden
+  display: none;
+
+  // Show the first MenuButton (search) when screen is 630px or smaller
+  &:nth-of-type(1) {
+    @media (max-width: 630px) {
+      display: flex;
+    }
+  }
+
+  // Show the second MenuButton (hamburger menu) when screen is 834px or smaller
+  &:nth-of-type(2) {
+    @media (max-width: 834px) {
+      display: flex;
+    }
   }
 `;
 
@@ -542,15 +569,32 @@ const MobileContainer = styled.div`
   gap: 2.5rem;
 `;
 
+const MobileSearchContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  background-color: #FFFFFF;
+  max-width: calc(100% - 3rem);  
+  margin-right: 0;  
+  width: 100%;     
+  position: fixed;  
+  top: 0;          
+  left: 0;          
+  z-index: 1000;    
+  padding: 1rem 1.5rem;
+  gap: 2.5rem;
+`;
+
 const MenuHeader = styled.div`
   display: none;
 
-  @media (max-width: 630px) {
+  @media (max-width: 834px) {
     display: flex;
     flex-direction: row;
     align-items: center;
     justify-content: space-between;
     width: 100%;
+    gap: .75rem;
   }
 `;
 
