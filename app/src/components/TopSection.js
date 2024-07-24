@@ -14,6 +14,7 @@ import Wallet, { getAddress, Address, BitcoinNetworkType, AddressPurpose } from 
 import { formatAddress } from '../helpers/utils';
 import MenuDropdown from './MenuDropdown';
 import ChevronDownSmallIcon from '../assets/icons/ChevronDownSmallIcon';
+import ExploreDropdown from './ExploreDropdown';
 
 const TopSection = (props) => {
   const [searchInput, setSearchInput] = useState("");
@@ -168,10 +169,11 @@ const TopSection = (props) => {
       <NavSection>
         <SiteText to ={'/explore'}>vermilion</SiteText>
         <NavLinkContainer>
-          <NavButton onClick={() => handleNavigation('/explore')}>
+          <ExploreDropdown />
+          {/* <NavButton onClick={() => handleNavigation('/explore')}>
             Explore
             <ChevronDownSmallIcon svgSize={'1.25rem'} svgColor={'#000000'}></ChevronDownSmallIcon>
-          </NavButton>
+          </NavButton> */}
           <NavButton collapse={true} onClick={() => handleNavigation('/discover')}>Discover</NavButton>
           <NavButton collapse={true} onClick={() => handleNavigation('/search')}>Search</NavButton>
         </NavLinkContainer>
