@@ -32,9 +32,9 @@ const Explore = () => {
   const [selectedFilterOptions, setSelectedFilterOptions] = useState({"Content Type": ["image"], "Satributes": [], "Charms":[]});
 
   // record event in GA
-  useEffect(() => {
-    ReactGA.pageview(window.location.pathname)
-  }, [])
+  // useEffect(() => {
+  //   ReactGA.pageview(window.location.pathname)
+  // }, [])
 
   //Get inscriptions endpoint
   useEffect(() => {
