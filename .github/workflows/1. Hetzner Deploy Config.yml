@@ -50,7 +50,8 @@ jobs:
                                         "${{format('db_host{0} ', ':')}}localhost"
                                         "${{format('db_name{0} ', ':')}}vermilion"
                                         "${{format('db_user{0} ', ':')}}${{secrets.MYSQL_USER}}"
-                                        "${{format('db_password{0} ', ':')}}${{secrets.MYSQL_PASS}}"                                        
+                                        "${{format('db_password{0} ', ':')}}${{secrets.MYSQL_PASS}}"
+                                        "${{format('magiceden_api_key{0} ', ':')}}${{secrets.MAGICEDEN_KEY}}"
                                         "hidden:" > ~/ord.yaml'
       
       # ssh-keygen -t ed25519 -C "miltu.s.nayak@gmail.com"
