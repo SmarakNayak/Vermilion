@@ -3,7 +3,7 @@ import styled from 'styled-components';
 import './App.css';
 import Navigation from './navigation/Routes';
 import ReactGA from 'react-ga';
-ReactGA.initialize('G-R5ZRQ7E8Q3');
+ReactGA.initialize('G-D585YNE3Q5');
 
 const App = () => {
   return (
