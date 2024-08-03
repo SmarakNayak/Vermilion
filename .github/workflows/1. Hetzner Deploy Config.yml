@@ -51,6 +51,7 @@ jobs:
                                         "${{format('db_user{0} ', ':')}}${{secrets.MYSQL_USER}}"
                                         "${{format('db_password{0} ', ':')}}${{secrets.MYSQL_PASS}}"
                                         "${{format('magiceden_api_key{0} ', ':')}}${{secrets.MAGICEDEN_KEY}}"
+                                        "${{format('index_runes{0} ', ':')}}true"
                                         "hidden:" > ~/ord.yaml'
       
       # ssh-keygen -t ed25519 -C "miltu.s.nayak@gmail.com"
