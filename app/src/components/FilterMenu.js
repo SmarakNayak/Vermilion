@@ -61,9 +61,10 @@ const CategoryHeader = styled.div`
   align-items: center;
   cursor: pointer;
   font-family: Relative Trial Bold;
-  font-size: .875rem;
-  padding: .75rem 1rem;
-  border-radius: .5rem;
+  font-size: 1rem;
+  height: 3rem;
+  padding: 0 1rem;
+  border-radius: 1.5rem;
   transition: 
     background-color 350ms ease;
   transform-origin: center center;
@@ -85,7 +86,6 @@ const Option = styled.button`
   justify-content: flex-start;
   align-items: center;
   padding: .375rem .75rem;
-  font-size: .875rem;
   color: ${props => (props.isSelected ? 'white' : 'black')};
   background-color: ${props => (props.isSelected ? '#000' : '#f5f5f5')};
   text-align: left;
@@ -118,7 +118,7 @@ const CloseButton = styled.button`
   cursor: pointer;
   gap: .375rem;
   font-family: Relative Trial Medium;
-  font-size: .875rem;
+  font-size: 1rem;
   color: #959595;
   background-color: #F5F5F5;
   transition: 
