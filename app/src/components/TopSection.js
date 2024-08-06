@@ -264,7 +264,7 @@ const TopSection = (props) => {
               )}
             </SearchContainer>
             <CloseButton onClick={closeSearch}>
-              <CrossIcon svgSize={'1.125rem'} svgColor={'#959595'} />
+              <CrossIcon svgSize={'1.25rem'} svgColor={'#959595'} />
             </CloseButton>
           </MenuHeader>
         </MobileSearchContainer>
@@ -274,7 +274,7 @@ const TopSection = (props) => {
           <MenuHeader>
             <SiteText to ={'/explore'}>vermilion</SiteText>
             <CloseButton onClick={toggleMenuVisibility}>
-              <CrossIcon svgSize={'1.125rem'} svgColor={'#959595'} />
+              <CrossIcon svgSize={'1.25rem'} svgColor={'#959595'} />
             </CloseButton>
           </MenuHeader>
           <MenuLinkContainer>
@@ -368,7 +368,7 @@ const NavLinkContainer = styled.div`
   align-items: center;
   gap: .5rem;
 
-  @media (max-width: 834px) {
+  @media (max-width: 864px) {
     display: none;
   }
 `;
@@ -396,7 +396,7 @@ const NavButton = styled.button`
     background-color: #F5F5F5;
   }
 
-  // @media (max-width: 834px) {
+  // @media (max-width: 864px) {
   //   display: ${props => props.collapse ? 'none' : 'flex'}; 
   // }
 
@@ -426,7 +426,7 @@ const ConnectButton = styled.button`
     transform: scale(0.96);
   }
 
-  @media (max-width: 834px) {
+  @media (max-width: 864px) {
     display: none;
   }
 `;
@@ -454,7 +454,7 @@ const ProfileButton = styled.button`
     transform: scale(0.96);
   }
 
-  @media (max-width: 834px) {
+  @media (max-width: 864px) {
     display: none;
   }
 `;
@@ -465,7 +465,7 @@ const ButtonContainer = styled.div`
   align-items: center;
   gap: 1rem;
 
-  @media (max-width: 834px) {
+  @media (max-width: 864px) {
     gap: .75rem;
   }
 `;
@@ -543,9 +543,9 @@ const MenuButton = styled.button`
     }
   }
 
-  // Show the second MenuButton (hamburger menu) when screen is 834px or smaller
+  // Show the second MenuButton (hamburger menu) when screen is 864px or smaller
   &:nth-of-type(2) {
-    @media (max-width: 834px) {
+    @media (max-width: 864px) {
       display: flex;
     }
   }
@@ -588,7 +588,7 @@ const MobileSearchContainer = styled.div`
 const MenuHeader = styled.div`
   display: none;
 
-  @media (max-width: 834px) {
+  @media (max-width: 864px) {
     display: flex;
     flex-direction: row;
     align-items: center;
@@ -601,6 +601,8 @@ const MenuHeader = styled.div`
 const CloseButton = styled.button`
   height: 3rem;
   width: 3rem;
+  min-width: 3rem;
+  max-width: 3rem;
   border-radius: 1.5rem;
   border: none;
   margin: 0;
