@@ -43,14 +43,15 @@ jobs:
                                          "aws_secret_access_key=${{secrets.S3_SECRET_ACCESS_KEY}}" > ~/.aws/credentials'
 
       - name: Create Ord config file
-        run: ssh staging 'printf "%s\n" "${{format('db_connection_string{0} ', ':')}}mysql://${{secrets.MYSQL_USER}}:${{secrets.MYSQL_PASS}}@localhost:3306/vermilion?pool_min=35&pool_max=60"
-                                        "${{format('s3_bucket_name{0} ', ':')}}vermilion-ordinals"
+        run: ssh staging 'printf "%s\n" "${{format('s3_bucket_name{0} ', ':')}}vermilion-ordinals"
                                         "${{format('s3_head_check{0} ', ':')}}true"
                                         "${{format('s3_upload_start_number{0} ', ':')}}1000000000"
                                         "${{format('db_host{0} ', ':')}}localhost"
                                         "${{format('db_name{0} ', ':')}}vermilion"
                                         "${{format('db_user{0} ', ':')}}${{secrets.MYSQL_USER}}"
-                                        "${{format('db_password{0} ', ':')}}${{secrets.MYSQL_PASS}}"                                        
+                                        "${{format('db_password{0} ', ':')}}${{secrets.MYSQL_PASS}}"
+                                        "${{format('magiceden_api_key{0} ', ':')}}${{secrets.MAGICEDEN_KEY}}"
+                                        "${{format('index_runes{0} ', ':')}}true"
                                         "hidden:" > ~/ord.yaml'
       
       # ssh-keygen -t ed25519 -C "miltu.s.nayak@gmail.com"

@@ -42,8 +42,8 @@ jobs:
           ssh staging 'git -C ord fetch && git -C ord pull origin vermilion || git clone git@github-ord:SmarakNayak/ord.git && git -C ord switch vermilion' #ord code
           ssh staging 'curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y' #rust
 
-      - name: Get off chain collection data
-        run: ssh staging 'aws s3 sync s3://ordinal-collections ordinal-collections'
+      #- name: Get off chain collection data
+      #  run: ssh staging 'aws s3 sync s3://ordinal-collections ordinal-collections'
               
       - name: Install ord
         run: ssh staging 'source /home/ubuntu/.cargo/env; cd ord; cargo build --release' #install
