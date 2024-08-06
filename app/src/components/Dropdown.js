@@ -57,9 +57,9 @@ const DropdownItem = styled.li`
   padding: .5rem 1rem;
   cursor: pointer;
   font-family: Relative Trial Medium;
-  font-size: .875rem;
+  font-size: 1rem;
   color: #000000;
-  border-radius: .375rem;
+  border-radius: .5rem;
   transition: 
     background-color 350ms ease,
     transform 150ms ease;
