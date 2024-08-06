@@ -58,7 +58,7 @@ const GalleryInfiniteScroll = (props) => {
       <GridContainer>
         {inscriptions.map(
             entry => 
-            <GridItemContainer key={entry.number} number={entry.number} numberVisibility={props.numberVisibility}></GridItemContainer>
+            <GridItemContainer collection={entry.collection_name} key={entry.number} number={entry.number} numberVisibility={props.numberVisibility} rune={entry.spaced_rune}></GridItemContainer>
         )}
       </GridContainer>
     </InfiniteScroll>

@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import { Link, useNavigate } from "react-router-dom";
 import { addCommas } from '../helpers/utils';
+import PaintIcon from '../assets/icons/PaintIcon';
+import RuneIcon from '../assets/icons/RuneIcon';
 
 const GridItemContainer = (props) => {
   const [binaryContent, setBinaryContent] = useState(null);
@@ -112,8 +114,14 @@ const GridItemContainer = (props) => {
     updateText();    
   },[contentType]);
 
+  const shouldApplyMargin = 
+    (props.numberVisibility && !props.collection && !props.rune);
+
   return(
-    <UnstyledLink to={'/inscription/' + props.number}>
+    <UnstyledLink 
+      to={'/inscription/' + props.number} 
+      applyMargin={shouldApplyMargin}
+    >
       <ItemContainer>
         <MediaContainer>
           {
@@ -132,8 +140,23 @@ const GridItemContainer = (props) => {
             }[contentType]
           }
         </MediaContainer>
-        {props.numberVisibility && <ItemText>{addCommas(props.number)}</ItemText>}
-        {/* <ItemText>{props.number}</ItemText> */}
+        {props.numberVisibility && (
+          <InfoContainer>
+            <ItemText>{addCommas(props.number)}</ItemText>
+            {props.collection && (
+              <MetadataContainer>
+                <PaintIcon svgSize={'1rem'} svgColor={'#E34234'} />
+                {props.collection}
+              </MetadataContainer>
+            )}
+            {props.rune && (
+              <MetadataContainer isRune={true}>
+                <RuneIcon svgSize={'1rem'} svgColor={'#D23B75'} />
+                {props.rune}
+              </MetadataContainer>
+            )}
+          </InfoContainer>
+        )}
       </ItemContainer>
 
     </UnstyledLink>
@@ -143,15 +166,8 @@ const GridItemContainer = (props) => {
 const UnstyledLink = styled(Link)`
   color: unset;
   text-decoration: unset;
+  margin-bottom: ${props => props.applyMargin ? '1.625rem' : '0'};
 `
-
-// const ImageContainer = styled.img`
-//   min-width:16rem;
-//   max-width:32rem;
-//   width: auto;
-//   height: auto;
-//   image-rendering: pixelated;
-// `;
 
 const ItemContainer = styled.div`
   display: flex;
@@ -274,18 +290,6 @@ const HtmlContainer = styled.div`
   text-wrap: wrap;
 `;
 
-// const SvgContainer = styled.div`
-//   display: flex;
-//   justify-content: center;
-//   align-items: center;
-//   min-height:12rem;
-//   min-width:24rem;
-//   max-width:32rem;
-//   width: auto;
-//   height: auto;
-//   image-rendering: pixelated;
-// `;
-
 const SvgContainer = styled.iframe`
   border: none;
   max-width: 100%;
@@ -341,6 +345,28 @@ const ItemText = styled.p`
   // ${ItemContainer}:hover & {
   //   color: #000000;
   // }
+`;
+
+const InfoContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: .5rem;
+  cursor: pointer;
+`;
+
+const MetadataContainer = styled.div`
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  height: 1.125rem;
+  gap: .25rem;
+  cursor: pointer;
+  margin: 0;
+  padding: 0;
+  font-size: .875rem;
+  font-family: Relative Trial Medium;
+  color: ${props => props.isRune ? '#D23B75' : '#E34234'};
 `;
 
 export default GridItemContainer;
