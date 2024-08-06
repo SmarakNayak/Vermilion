@@ -1,18 +1,30 @@
-import React, { useEffect, useRef, useState } from 'react';
 import { useParams, Link } from "react-router-dom";
 import styled from 'styled-components';
+import React, { useEffect, useRef, useState } from 'react';
 import TopSection from '../components/TopSection';
 import Stack from '../components/Stack';
-import { addCommas, copyText } from '../helpers/utils';
+import { addCommas, copyText, formatEditionRange } from '../helpers/utils';
 import HashIcon from '../assets/icons/HashIcon';
 import WebIcon from '../assets/icons/WebIcon';
 import CopyIcon from '../assets/icons/CopyIcon';
 import IntersectionIcon from '../assets/icons/IntersectionIcon';
 import ChevronLeftIcon from '../assets/icons/ChevronLeftIcon';
 import ChevronRightIcon from '../assets/icons/ChevronRightIcon';
+import InfoCircleIcon from '../assets/icons/InfoCircleIcon';
+import ConnectionIcon from '../assets/icons/ConnectionIcon';
 import { shortenBytes } from '../helpers/utils';
 import GridItemContainer from '../components/GridItemContainer';
 import SmallItemContainer from '../components/SmallItemContainer';
+import ChevronDownSmallIcon from '../assets/icons/ChevronDownSmallIcon';
+import ScrollIcon from '../assets/icons/ScrollIcon';
+import RibbonIcon from '../assets/icons/RibbonIcon';
+import SproutIcon from '../assets/icons/SproutIcon';
+import Person2Icon from '../assets/icons/Person2Icon';
+import RouteIcon from '../assets/icons/RouteIcon';
+import LayersIcon from '../assets/icons/LayersIcon';
+import RepeatIcon from '../assets/icons/RepeatIcon';
+import PaintIcon from '../assets/icons/PaintIcon';
+import RuneIcon from '../assets/icons/RuneIcon';
 const iframecontentwindow = require("../scripts/iframeResizer.contentWindow.min.txt");
 
 const Inscription = () => {
@@ -28,6 +40,7 @@ const Inscription = () => {
   const [nextNumber, setNextNumber] = useState(null);
   const [previousNumber, setPreviousNumber] = useState(null);
   const [randomNumber, setRandomNumber] = useState(null);
+  const [isCollectionItem, setIsCollectionItem] = useState(null);
   const [address, setAddress] = useState(null);
   const [transfers, setTransfers] = useState(null); //Not displayed yet
   const [shortId, setShortId] = useState(null);
@@ -35,7 +48,23 @@ const Inscription = () => {
   const [prettySize, setPrettySize] = useState(null);
   const [sha256, setSha256] = useState(null);
   const [similarInscriptions, setSimilarInscriptions] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
   // const [similarInscriptionsContent, setSimilarInscriptionsContent] = useState(null);
+
+  const [parentsData, setParentsData] = useState([]);
+  const [delegateData, setDelegateData] = useState(null);
+  const [recursiveSubmodulesData, setRecursiveSubmodulesData] = useState([]);
+  const [satributeEditions, setSatributeEditions] = useState(null);
+  const [referencedByData, setReferencedByData] = useState([]);
+  const [childrenInscriptions, setChildrenInscriptions] = useState([]);
+
+  // state to track section visibility (collapse/expand)
+  const [sectionVisibility, setSectionVisibility] = useState({
+    details: true,
+    collectionMetadata: true,
+    provenance: true,
+    satributes: true
+  });
 
   useEffect(() => {
     const fetchContent = async () => {
@@ -47,6 +76,7 @@ const Inscription = () => {
       //2. Assign local url
       const blob = await response.blob();
       const url = URL.createObjectURL(blob);
+      console.log('return', blob, url)
       setBinaryContent(blob);
       setBlobUrl(url);
       //3. Work out type
@@ -129,6 +159,7 @@ const Inscription = () => {
       const pretty_size = shortenBytes(json.content_length);
       setPrettySize(pretty_size);
       setSha256(json.sha256); // for similar
+      setIsLoading(false); // can display metadata
     }
 
     const fetchEditions = async () => {
@@ -177,9 +208,9 @@ const Inscription = () => {
     fetchAddress();
     //fetchTransfers();
     fetchEditions();
-    fetchRandom();
-    setNextNumber(parseInt(number)+1);
-    setPreviousNumber(parseInt(number)-1);
+    // fetchRandom();
+    // setNextNumber(parseInt(number)+1);
+    // setPreviousNumber(parseInt(number)-1);
   },[number])
 
   useEffect(()=> {
@@ -194,6 +225,7 @@ const Inscription = () => {
       }
     }
     updateText();
+    console.log('metadata' , metadata); // remove
   },[contentType, metadata])
 
   const fetchSimilar = async () => {
@@ -201,7 +233,6 @@ const Inscription = () => {
     const response = await fetch("/search_api/similar/" + sha256);
     const json = await response.json();
     setSimilarInscriptions(json);
-    console.log('similar', json);
   }
 
   useEffect(()=> {
@@ -225,6 +256,127 @@ const Inscription = () => {
   useEffect(() => {
     window.scrollTo(0, 0); // Scrolls to the top of the page
   }, [number]);
+
+  useEffect(() => {
+    if (metadata) {
+      const fetchInscriptionData = async (id) => {
+        try {
+          const metadataResponse = await fetch(`/api/inscription_metadata/${id}`);
+          const metadataJson = await metadataResponse.json();
+          // const contentResponse = await fetch(`/api/inscription_content_id/${metadataJson.number}`);
+          // const contentBlob = await contentResponse.blob();
+          return { 
+            metadata: metadataJson, 
+            // content: URL.createObjectURL(contentBlob),
+            // contentType: contentResponse.headers.get("content-type")
+          };
+        } catch (error) {
+          console.error(`Error fetching data for inscription ${id}:`, error);
+          return null;
+        }
+      };
+
+      const fetchRelatedInscriptions = async () => {
+        // Fetch parents data
+        if (metadata.parents && metadata.parents.length > 0) {
+          const parentsPromises = metadata.parents.map(fetchInscriptionData);
+          const parentsResults = await Promise.all(parentsPromises);
+          setParentsData(parentsResults.filter(result => result !== null));
+          console.log('parents', parentsResults)
+        }
+
+        // Fetch delegate data
+        if (metadata.delegate) {
+          const delegateResult = await fetchInscriptionData(metadata.delegate);
+          setDelegateData(delegateResult);
+          console.log('delegate', delegateResult)
+        }
+
+        // Fetch recursive submodules data
+        if (metadata.referenced_ids && metadata.referenced_ids.length > 0) {
+          const submodulesPromises = metadata.referenced_ids.map(fetchInscriptionData);
+          const submodulesResults = await Promise.all(submodulesPromises);
+          setRecursiveSubmodulesData(submodulesResults.filter(result => result !== null));
+          console.log('rec sub', submodulesResults)
+        }
+      };
+
+      fetchRelatedInscriptions();
+    }
+  }, [metadata]);
+
+  useEffect(() => {
+    const fetchSatributeEditions = async () => {
+      if (metadata?.number) {
+        try {
+          const response = await fetch(`/api/inscription_satribute_editions_number/${metadata.number}`);
+          const data = await response.json();
+          setSatributeEditions(data);
+        } catch (error) {
+          console.error("Error fetching satribute editions:", error);
+        }
+      }
+    };
+  
+    fetchSatributeEditions();
+  }, [metadata?.number]);
+
+  useEffect(() => {
+    const fetchReferencedBy = async () => {
+      if (metadata?.number) {
+        try {
+          const response = await fetch(`/api/inscription_referenced_by_number/${number}`);
+          const data = await response.json();
+          setReferencedByData(data);
+          console.log('ref by', data)
+        } catch (error) {
+          console.error("Error fetching referenced by data:", error);
+        }
+      }
+    };
+  
+    fetchReferencedBy();
+  }, [metadata?.number]);
+  
+  useEffect(() => {
+    const fetchChildrenInscriptions = async () => {
+      if (metadata?.number) {
+        try {
+          const response = await fetch(`/api/inscription_children_number/${metadata.number}`);
+          const data = await response.json();
+          setChildrenInscriptions(data);
+        } catch (error) {
+          console.error("Error fetching children inscriptions:", error);
+        }
+      }
+    };
+  
+    fetchChildrenInscriptions();
+  }, [metadata?.number]);  
+  
+  const toggleSectionVisibility = (section) => {
+    setSectionVisibility(prev => ({
+      ...prev,
+      [section]: !prev[section]
+    }));
+  }; 
+  
+  const renderLimitedTags = (data, limit = 6) => {
+    const displayedTags = data.slice(0, limit);
+  
+    return (
+      <>
+        {displayedTags.map((item, index) => (
+          <UnstyledLink key={index} to={`/inscription/${item.number}`}>
+            <TagContainer>
+              <TagSpan isValue={true}>{addCommas(item.number)}</TagSpan>
+              <TagSpan>{' • ' + item.content_category}</TagSpan>
+            </TagContainer>
+          </UnstyledLink>
+        ))}
+      </>
+    );
+  };
 
   //TODO: add tz using moment.js or timeZoneName: "long"
   // <HtmlContainer><StyledIframe srcDoc={textContent} scrolling='no' sandbox='allow-scripts'></StyledIframe></HtmlContainer> alternative that doesn't require another network call - size is buggy though..
@@ -251,115 +403,351 @@ const Inscription = () => {
           </MediaContainer>
         </ContentContainer>
         <InfoContainer>
-          <DataContainer info gapSize={'1rem'}>
-            <NumberText>{metadata?.number != null && metadata?.number != undefined ? addCommas(metadata?.number) : ""}</NumberText>
-            <PillContainer>
-              {editionNumber != null && editionNumber != undefined && (
-                <UnstyledLink to={'/edition/' + metadata?.sha256}>
-                  <DataButton>
-                    <HashIcon svgSize={'1rem'} svgColor={'#959595'}></HashIcon>
-                    {editionNumber ? "Edition " + editionNumber + " of " + editionCount : ""}
-                  </DataButton>
-                </UnstyledLink>
-              )}
-              <UnstyledLink to={'https://ordinals.com/inscription/' + metadata?.id} target='_blank'>
-                <DataButton>
-                  <WebIcon svgSize={'1rem'} svgColor={'#959595'}></WebIcon>
-                  View on ordinals.com
-                </DataButton>
-              </UnstyledLink>
-            </PillContainer>
-          </DataContainer>
-          <DataContainer gapSize={'.75rem'}>
-            <InfoSectionText>Details</InfoSectionText>
-            <DataContainer gapSize={'0'}>
-              <InfoRowContainer>
-                <InfoLabelContainer>
-                  <InfoText isLabel={true}>Owner</InfoText>
-                </InfoLabelContainer>
-                <InfoDataContainer>
-                  <UnstyledLink to={address?.address !== "unbound" ? '/address/' + address?.address : ""}>
-                    <InfoText isLink={true}>{address?.address ? shortAddress : ""}</InfoText>
+          {isLoading ? (
+            <SkeletonContainer parent gap={'2.5rem'}>
+              <SkeletonContainer gap={'.5rem'}>
+                <SkeletonElement width={'12.5rem'} height={'1.625rem'} />
+                <SkeletonElement width={'10rem'} height={'2.5rem'} />
+                <SkeletonElement width={'7.5rem'} height={'1.625rem'} />
+              </SkeletonContainer>
+              <SkeletonContainer gap={'1.5rem'}>
+                <SkeletonElement width={'100%'} height={'3rem'} />
+                <SkeletonElement width={'100%'} height={'1.125rem'} />
+                <SkeletonElement width={'100%'} height={'1.125rem'} />
+                <SkeletonElement width={'100%'} height={'1.125rem'} />
+                <SkeletonElement width={'100%'} height={'1.125rem'} />
+                <SkeletonElement width={'100%'} height={'1.125rem'} />
+                <SkeletonElement width={'100%'} height={'1.125rem'} />
+                <SkeletonElement width={'100%'} height={'1.125rem'} />
+                <SkeletonElement width={'100%'} height={'1.125rem'} />
+              </SkeletonContainer>
+            </SkeletonContainer>
+          ) : (
+            <>
+              <DataContainer info gapSize={'1rem'}>
+                <SectionPadding gap={'.75rem'}>
+                  {metadata?.collection_name != null && metadata?.collection_name != undefined && (
+                    <Stack gap={'.25rem'} horizontal={false}>
+                      <UnstyledLink to={'/collection/' + metadata?.collection_symbol}>
+                        <CollectionContainer>
+                          {metadata?.collection_name != null && metadata?.collection_name != undefined ? metadata?.collection_name : ""}
+                          <RibbonIcon svgSize={'1.25rem'} svgColor={'#E34234'} />
+                        </CollectionContainer>
+                      </UnstyledLink>
+                    </Stack>
+                  )}
+                  {metadata?.spaced_rune != null && metadata?.spaced_rune != undefined && (
+                    <Stack gap={'.25rem'} horizontal={false}>
+                      <CollectionContainer isRune={true}>
+                        <RuneIcon svgSize={'1.25rem'} svgColor={'#D23B75'} />
+                        {metadata?.spaced_rune != null && metadata?.spaced_rune != undefined ? metadata?.spaced_rune : ""}
+                      </CollectionContainer>
+                    </Stack>
+                  )}
+                  <NumberText>
+                    {metadata?.off_chain_metadata?.name 
+                      ? metadata.off_chain_metadata.name 
+                      : addCommas(metadata?.number)}
+                  </NumberText>
+                  {(metadata?.delegate || metadata?.is_recursive || metadata?.parents.length > 0) && (
+                    <Stack horizontal={true} gap={'.5rem'}>
+                      {metadata?.delegate && (
+                        <TagContainer>
+                          <LayersIcon svgSize={'1.125rem'} svgColor={'#000000'} />
+                          Delegate
+                        </TagContainer>
+                      )}
+                      {metadata?.is_recursive && (
+                        <TagContainer>
+                          <RepeatIcon svgSize={'1.125rem'} svgColor={'#000000'} />
+                          Recursive
+                        </TagContainer>
+                      )}
+                      {childrenInscriptions.length > 0 && (
+                        <TagContainer>
+                          <Person2Icon svgSize={'1.125rem'} svgColor={'#000000'} />
+                          Parent
+                        </TagContainer>
+                      )}
+                      {metadata?.parents.length > 0 && (
+                        <TagContainer>
+                          <SproutIcon svgSize={'1.125rem'} svgColor={'#000000'} />
+                          Child
+                        </TagContainer>
+                      )}
+                    </Stack>
+                  )}
+                </SectionPadding>
+                {/* <PillContainer>
+                  {editionNumber != null && editionNumber != undefined && (
+                    <UnstyledLink to={'/edition/' + metadata?.sha256}>
+                      <DataButton>
+                        <HashIcon svgSize={'1rem'} svgColor={'#959595'}></HashIcon>
+                        {editionNumber ? "Edition " + editionNumber + " of " + editionCount : ""}
+                      </DataButton>
+                    </UnstyledLink>
+                  )}
+                  <UnstyledLink to={'https://ordinals.com/inscription/' + metadata?.id} target='_blank'>
+                    <DataButton>
+                      <WebIcon svgSize={'1rem'} svgColor={'#959595'}></WebIcon>
+                      View on ordinals.com
+                    </DataButton>
                   </UnstyledLink>
-                </InfoDataContainer>
-              </InfoRowContainer>
-              <InfoRowContainer isMiddle={true}>
-                <InfoLabelContainer>
-                  <InfoText isLabel={true}>Inscription ID</InfoText>
-                </InfoLabelContainer>
-                <InfoDataContainer>
-                  <UnstyledButton onClick={() => copyText(metadata?.id)}>
-                    <InfoText>{metadata?.id ? shortId : ""}</InfoText>
-                    <CopyIcon svgSize={'1rem'} svgColor={'#D9D9D9'} />
-                  </UnstyledButton>
-                </InfoDataContainer>
-              </InfoRowContainer>
-              <InfoRowContainer isMiddle={true}>
-                <InfoLabelContainer>
-                  <InfoText isLabel={true}>File Type</InfoText>
-                </InfoLabelContainer>
-                <InfoDataContainer>
-                  <InfoText>{metadata?.content_type ? metadata?.content_type : ""}</InfoText>
-                </InfoDataContainer>
-              </InfoRowContainer>
-              <InfoRowContainer isMiddle={true}>
-                <InfoLabelContainer>
-                  <InfoText isLabel={true}>File Size</InfoText>
-                </InfoLabelContainer>
-                <InfoDataContainer>
-                  <InfoText>{metadata?.content_length ? prettySize : ""}</InfoText>
-                </InfoDataContainer>
-              </InfoRowContainer>
-              <InfoRowContainer isMiddle={true}>
-                <InfoLabelContainer>
-                  <InfoText isLabel={true}>Block Time</InfoText>
-                </InfoLabelContainer>
-                <InfoDataContainer>
-                  <UnstyledLink to={'/block/' + metadata?.genesis_height}>
-                    <InfoText isLink={true}>{metadata?.genesis_height ? addCommas(metadata?.genesis_height) : ""}</InfoText>
-                  </UnstyledLink>
-                </InfoDataContainer>
-              </InfoRowContainer>
-              <InfoRowContainer isMiddle={true}>
-                <InfoLabelContainer>
-                  <InfoText isLabel={true}>Clock Time</InfoText>
-                </InfoLabelContainer>
-                <InfoDataContainer>
-                  <InfoText>{metadata?.timestamp ? new Date(metadata?.timestamp*1000).toLocaleString(undefined, {day:"numeric", month: "short", year:"numeric", hour: 'numeric', minute: 'numeric', hour12: true}) : ""}</InfoText>
-                </InfoDataContainer>
-              </InfoRowContainer>
-              <InfoRowContainer isMiddle={true}>
-                <InfoLabelContainer>
-                  <InfoText isLabel={true}>Fee</InfoText>
-                </InfoLabelContainer>
-                <InfoDataContainer>
-                  <InfoText>{metadata?.genesis_fee ? addCommas(metadata?.genesis_fee) + " sats" : ""}</InfoText>
-                </InfoDataContainer>
-              </InfoRowContainer>
-              <InfoRowContainer isMiddle={true}>
-                <InfoLabelContainer>
-                  <InfoText isLabel={true}>Sat Number</InfoText>
-                </InfoLabelContainer>
-                <InfoDataContainer>
-                  <UnstyledLink to={'/sat/' + metadata?.sat}>
-                    <InfoText isLink={true}>{metadata?.sat ? addCommas(metadata?.sat) : ""}</InfoText>
-                  </UnstyledLink>
-                </InfoDataContainer>
-              </InfoRowContainer>
-            </DataContainer>
-          </DataContainer>
-          {metadata?.satributes.length > 0 && (
-            <DataContainer gapSize={'.75rem'}>
-              <InfoSectionText>Satributes</InfoSectionText>
-              <DataContainer gapSize={'0'}>
-                <InfoRowContainer style={{flexWrap: 'wrap'}}>
-                  {metadata?.satributes.map( 
-                    satribute => 
-                      <DataButton>{satribute}</DataButton>
-                    )}
-                </InfoRowContainer>
+                </PillContainer> */}
               </DataContainer>
-            </DataContainer>
+              <DataContainer gapSize={'.75rem'}>
+                <SectionHeader onClick={() => toggleSectionVisibility('details')}>
+                  <SectionTextSpan>
+                    <InfoCircleIcon svgSize={'1.25rem'} svgColor={'#000000'} />
+                    Details
+                  </SectionTextSpan>
+                  <RotatableChevron svgSize={'1.25rem'} svgColor={'#000000'} isOpen={sectionVisibility.details} />
+                </SectionHeader>
+                {/* <InfoSectionText>Details</InfoSectionText> */}
+                {sectionVisibility.details && (
+                  <SectionPadding>
+                    <DataContainer gapSize={'0'}>
+                      <InfoRowContainer>
+                        <InfoLabelContainer>
+                          <InfoText isLabel={true}>Owner</InfoText>
+                        </InfoLabelContainer>
+                        <InfoDataContainer>
+                          <UnstyledLink to={address?.address !== "unbound" ? '/address/' + address?.address : ""}>
+                            <InfoText isLink={true}>{address?.address ? shortAddress : ""}</InfoText>
+                          </UnstyledLink>
+                        </InfoDataContainer>
+                      </InfoRowContainer>
+                      <InfoRowContainer isMiddle={true}>
+                        <InfoLabelContainer>
+                          <InfoText isLabel={true}>Inscription ID</InfoText>
+                        </InfoLabelContainer>
+                        <InfoDataContainer>
+                          <UnstyledButton onClick={() => copyText(metadata?.id)}>
+                            <InfoText>{metadata?.id ? shortId : ""}</InfoText>
+                            <CopyIcon svgSize={'1rem'} svgColor={'#D9D9D9'} />
+                          </UnstyledButton>
+                        </InfoDataContainer>
+                      </InfoRowContainer>
+                      <InfoRowContainer isMiddle={true}>
+                        <InfoLabelContainer>
+                          <InfoText isLabel={true}>File Type</InfoText>
+                        </InfoLabelContainer>
+                        <InfoDataContainer>
+                          <InfoText>{metadata?.content_type ? metadata?.content_type : ""}</InfoText>
+                        </InfoDataContainer>
+                      </InfoRowContainer>
+                      <InfoRowContainer isMiddle={true}>
+                        <InfoLabelContainer>
+                          <InfoText isLabel={true}>File Size</InfoText>
+                        </InfoLabelContainer>
+                        <InfoDataContainer>
+                          <InfoText>{metadata?.content_length ? prettySize : ""}</InfoText>
+                        </InfoDataContainer>
+                      </InfoRowContainer>
+                      <InfoRowContainer isMiddle={true}>
+                        <InfoLabelContainer>
+                          <InfoText isLabel={true}>Block Time</InfoText>
+                        </InfoLabelContainer>
+                        <InfoDataContainer>
+                          <UnstyledLink to={'/block/' + metadata?.genesis_height}>
+                            <InfoText isLink={true}>{metadata?.genesis_height ? addCommas(metadata?.genesis_height) : ""}</InfoText>
+                          </UnstyledLink>
+                        </InfoDataContainer>
+                      </InfoRowContainer>
+                      <InfoRowContainer isMiddle={true}>
+                        <InfoLabelContainer>
+                          <InfoText isLabel={true}>Clock Time</InfoText>
+                        </InfoLabelContainer>
+                        <InfoDataContainer>
+                          <InfoText>{metadata?.timestamp ? new Date(metadata?.timestamp*1000).toLocaleString(undefined, {day:"numeric", month: "short", year:"numeric", hour: 'numeric', minute: 'numeric', hour12: true}) : ""}</InfoText>
+                        </InfoDataContainer>
+                      </InfoRowContainer>
+                      <InfoRowContainer isMiddle={true}>
+                        <InfoLabelContainer>
+                          <InfoText isLabel={true}>Fee</InfoText>
+                        </InfoLabelContainer>
+                        <InfoDataContainer>
+                          <InfoText>{metadata?.genesis_fee ? addCommas(metadata?.genesis_fee) + " sats" : ""}</InfoText>
+                        </InfoDataContainer>
+                      </InfoRowContainer>
+                      <InfoRowContainer isMiddle={true}>
+                        <InfoLabelContainer>
+                          <InfoText isLabel={true}>Sat Number</InfoText>
+                        </InfoLabelContainer>
+                        <InfoDataContainer>
+                          <UnstyledLink to={'/sat/' + metadata?.sat}>
+                            <InfoText isLink={true}>{metadata?.sat ? addCommas(metadata?.sat) : ""}</InfoText>
+                          </UnstyledLink>
+                        </InfoDataContainer>
+                      </InfoRowContainer>
+                    </DataContainer>
+                  </SectionPadding>
+                )}
+              </DataContainer>
+              {metadata?.off_chain_metadata?.attributes && metadata.off_chain_metadata.attributes.length > 0 && (
+                <DataContainer gapSize={'.75rem'}>
+                  <SectionHeader onClick={() => toggleSectionVisibility('collectionMetadata')}>
+                    <SectionTextSpan>
+                      <PaintIcon svgSize={'1.25rem'} svgColor={'#000000'} />
+                      Collection Metadata
+                    </SectionTextSpan>
+                    <ChevronDownSmallIcon svgSize={'1.25rem'} svgColor={'#000000'} />
+                  </SectionHeader>
+                  {sectionVisibility.collectionMetadata && (
+                    <SectionPadding gap={'1.5rem'}>
+                      <DataContainer gapSize={'0'}>
+                        <ElementContainer style={{flexWrap: 'wrap'}}>
+                          {metadata.off_chain_metadata.attributes.map((attribute, index) => (
+                            <TagContainer>
+                              <TagSpan isValue={true}>{attribute.value}</TagSpan>
+                              <TagSpan>{' • ' + attribute.trait_type}</TagSpan>
+                            </TagContainer>
+                          ))}
+                        </ElementContainer>
+                      </DataContainer>
+                      <InfoText isLabel={true}>Offchain metadata displayed</InfoText>
+                    </SectionPadding>
+                  )}
+                </DataContainer>
+              )}
+              <DataContainer gapSize={'.75rem'}>
+                <SectionHeader onClick={() => toggleSectionVisibility('provenance')}>
+                  <SectionTextSpan>
+                    <RouteIcon svgSize={'1.25rem'} svgColor={'#000000'} />
+                    Provenance
+                  </SectionTextSpan>
+                  <ChevronDownSmallIcon svgSize={'1.25rem'} svgColor={'#000000'} />
+                </SectionHeader>
+                {sectionVisibility.provenance && (
+                  <SectionPadding gap={'1.5rem'}>
+                    {metadata?.parents.length > 0 && (
+                      <SubSectionContainer>
+                        <SubSectionHeaderContainer>
+                          <Stack horizontal={true} center={true} gap={'.5rem'}>
+                            <SubSectionHeader>Parent Inscriptions</SubSectionHeader>
+                            {/* <ProvenanceCountText>{metadata?.parents.length}</ProvenanceCountText> */}
+                          </Stack>
+                        </SubSectionHeaderContainer>
+                        <ElementContainer style={{flexWrap: 'wrap'}}>
+                        {parentsData.map((parent, index) => (
+                          <UnstyledLink key={index} to={`/inscription/${parent.metadata.number}`}>
+                            <TagContainer>
+                              <TagSpan isValue={true}>{addCommas(parent.metadata.number)}</TagSpan>
+                              <TagSpan>{' • ' + parent.metadata.content_category}</TagSpan>
+                            </TagContainer>
+                          </UnstyledLink>
+                        ))}
+                        </ElementContainer>
+                      </SubSectionContainer>
+                    )}
+                    {metadata?.referenced_ids.length > 0 && (
+                      <SubSectionContainer>
+                        <SubSectionHeaderContainer>
+                          <Stack horizontal={true} center={true} gap={'.5rem'}>
+                            <SubSectionHeader>Recursive Submodules</SubSectionHeader>
+                            {/* <ProvenanceCountText>{metadata?.referenced_ids.length}</ProvenanceCountText> */}
+                          </Stack>
+                        </SubSectionHeaderContainer>
+                        <ElementContainer style={{flexWrap: 'wrap'}}>
+                        {recursiveSubmodulesData.map((submodule, index) => (
+                          <UnstyledLink key={index} to={`/inscription/${submodule.metadata.number}`}>
+                            <TagContainer>
+                              <TagSpan isValue={true}>{addCommas(submodule.metadata.number)}</TagSpan>
+                              <TagSpan>{' • ' + submodule.metadata.content_category}</TagSpan>
+                            </TagContainer>
+                          </UnstyledLink>
+                        ))}
+                        </ElementContainer>
+                      </SubSectionContainer>
+                    )}
+                    {childrenInscriptions.length > 0 && (
+                      <SubSectionContainer>
+                        <SubSectionHeaderContainer>
+                          <Stack horizontal={true} center={true} gap={'.5rem'}>
+                            <SubSectionHeader>Child Inscriptions</SubSectionHeader>
+                          </Stack>
+                        </SubSectionHeaderContainer>
+                        <ElementContainer style={{flexWrap: 'wrap'}}>
+                          {renderLimitedTags(childrenInscriptions)}
+                        </ElementContainer>
+                      </SubSectionContainer>
+                    )}
+                    {referencedByData.length > 0 && (
+                      <SubSectionContainer>
+                        <SubSectionHeaderContainer>
+                          <Stack horizontal={true} center={true} gap={'.5rem'}>
+                            <SubSectionHeader>Referenced By</SubSectionHeader>
+                          </Stack>
+                        </SubSectionHeaderContainer>
+                        <ElementContainer style={{flexWrap: 'wrap'}}>
+                          {renderLimitedTags(referencedByData)}
+                        </ElementContainer>
+                      </SubSectionContainer>
+                    )}
+                    {metadata?.delegate && (
+                      <SubSectionContainer>
+                        <SubSectionHeaderContainer>
+                          <Stack horizontal={true} center={true} gap={'.5rem'}>
+                            <SubSectionHeader>Delegate</SubSectionHeader>
+                          </Stack>
+                        </SubSectionHeaderContainer>
+                        <ElementContainer style={{flexWrap: 'wrap'}}>
+                          {delegateData?.metadata.number && (
+                            <TagContainer>
+                              <TagSpan isValue={true}>{addCommas(delegateData.metadata.number)}</TagSpan>
+                              <TagSpan>{' • ' + delegateData.metadata.content_category}</TagSpan>
+                            </TagContainer>
+                          )}
+                        </ElementContainer>
+                      </SubSectionContainer>
+                    )}
+                    {editionNumber != null && editionNumber != undefined && metadata?.delegate == null && (
+                      <SubSectionContainer>
+                        <SubSectionHeaderContainer>
+                          <Stack horizontal={true} center={true} gap={'.5rem'}>
+                            <SubSectionHeader>Editions</SubSectionHeader>
+                            <ProvenanceCountText>{editionNumber ? editionNumber + " of " + editionCount : ""}</ProvenanceCountText>
+                          </Stack>
+                          <UnstyledLink to={'/edition/' + metadata?.sha256}>
+                            <LinkButton isLink={true}>View all</LinkButton>
+                          </UnstyledLink>
+                        </SubSectionHeaderContainer>
+                      </SubSectionContainer>
+                    )}
+                  </SectionPadding>
+                )}
+              </DataContainer>
+              {metadata?.satributes.length > 0 && (
+                <DataContainer gapSize={'.75rem'}>
+                  <SectionHeader onClick={() => toggleSectionVisibility('satributes')}>
+                    <SectionTextSpan>
+                      <ScrollIcon svgSize={'1.25rem'} svgColor={'#000000'} />
+                      Satributes
+                    </SectionTextSpan>
+                    <ChevronDownSmallIcon svgSize={'1.25rem'} svgColor={'#000000'} />
+                  </SectionHeader>
+                  {sectionVisibility.satributes && (
+                    <SectionPadding isLast={true}>
+                      <DataContainer gapSize={'0'}>
+                        <ElementContainer style={{flexWrap: 'wrap'}}>
+                          {metadata?.satributes.map(satribute => {
+                            const editionInfo = satributeEditions?.find(se => se.satribute === satribute);
+                            return (
+                              <TagContainer key={satribute}>
+                                <TagSpan isValue={true}>{satribute}</TagSpan>
+                                {editionInfo && (
+                                  <TagSpan>{formatEditionRange(editionInfo.satribute_edition) + '/' + formatEditionRange(editionInfo.total)}</TagSpan>
+                                )}
+                              </TagContainer>
+                            );
+                          })}
+                        </ElementContainer>
+                      </DataContainer>
+                    </SectionPadding>
+                  )}
+                </DataContainer>
+              )}
+            </>
           )}
         </InfoContainer>
       </MainContainer>
@@ -418,7 +806,7 @@ const MainContainer = styled.div`
   flex-direction: row;
   align-items: flex-start;
 
-  @media (max-width: 768px) {
+  @media (max-width: 864px) {
     flex-direction: column;;
     align-items: center;
     width: calc(100% - 3rem);
@@ -438,15 +826,15 @@ const ContentContainer = styled.div`
   flex-wrap: nowrap;
   justify-content: center;
   align-items: center;
-  width: calc(100% - 25rem);
-  height: calc(100vh - 4.5rem);
+  width: calc(100% - 27rem);
+  height: calc(100vh - 5rem);
   flex: 1;
   overflow: hidden;
   margin: 0;
   padding: 0 1.5rem;
   min-width: 20rem;
 
-  @media (max-width: 768px) {
+  @media (max-width: 864px) {
     position: static;
     background-color: #FFFFFF;
     width: 100%;
@@ -588,17 +976,18 @@ const ContentOverlay = styled.div`
 `;
 
 const InfoContainer = styled.div`
-  padding: 3rem 3rem;
+  padding: 3rem 2rem;
   width: 100%;
-  max-width: 25rem;
+  max-width: 27rem;
   display: flex;
   flex-direction: column;
-  gap: 2.5rem;
+  // gap: 2.5rem;
   overflow-y: auto; // Enable scrolling for overflow content
   position: relative; // Adjust if necessary for layout
 
-  @media (max-width: 768px) {
-    padding: 0rem;
+  @media (max-width: 864px) {
+    padding: 1rem 0 0 0;
+    max-width: 100%; 
   }
 `;
 
@@ -628,6 +1017,7 @@ const NumberText = styled.p`
   font-family: Relative Trial Bold;
   font-size: 2em;
   margin: 0;
+  height: 2.5rem;
 `;
 
 const InfoRowContainer = styled.div`
@@ -640,6 +1030,17 @@ const InfoRowContainer = styled.div`
   gap: .5rem;
   padding: .75rem 0;
   border-top: ${(props) => props.isMiddle ? '1px solid #E9E9E9' : 'none'};
+`;
+
+const ElementContainer = styled.div`
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-start;
+  flex-wrap: nowrap;
+  width: 100%;
+  gap: .5rem;
+  padding: 0;
 `;
 
 const InfoLabelContainer = styled.div`
@@ -676,6 +1077,25 @@ const InfoText = styled.p`
   color: ${props => props.isLabel ? '#959595' : '#000000'};
   text-decoration: ${props => props.isLink ? 'underline' : 'none'};
   text-underline-offset: .25rem;
+`;
+
+const LinkButton = styled.p`
+  font-family: Relative Trial Medium;
+  font-size: .875rem;
+  border: none;
+  margin: 0;
+  padding: 0;
+  color: #959595;
+  text-decoration: underline;
+  text-underline-offset: .25rem;
+  transition: 
+    color 350ms ease,
+    transform 150ms ease;
+  transform-origin: center center;
+
+  &:hover {
+    color: #000000;
+  }
 `;
 
 const DataButton = styled.button`
@@ -809,6 +1229,197 @@ const ImageRowContainer = styled.div`
   &::-webkit-scrollbar {
     display: none; // Optionally hide the scrollbar
   }
+`;
+
+const SectionHeader = styled.div`
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  height: 3rem;
+  background-color: #FFFFFF;
+  padding: 0 1rem;
+  border-radius: 1.5rem;
+  cursor: pointer;
+  transition: 
+    background-color 350ms ease,
+    transform 150ms ease;
+  transform-origin: center center;
+  user-select: none;
+
+  &:hover {
+    background-color: #F5F5F5;
+  }
+
+  // &:active {
+  //   transform: scale(0.96);
+  // }
+`;
+
+const SectionTextSpan = styled.span`
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: .5rem;
+  font-family: Relative Trial Medium;
+  font-size: 1rem;
+`;
+
+const SectionPadding = styled.div`
+  width: 100%;
+  // max-width: 23rem;
+  box-sizing: border-box;
+  padding: ${props => props.isLast ? '0 1rem' : '0 1rem 2.5rem 1rem'};
+  display: flex;
+  flex-direction: column;
+  gap: ${(props) => props.gap};
+`; 
+
+const SubSectionContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: .75rem;
+`;
+
+const SubSectionHeaderContainer = styled.div`
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+`;
+
+const SubSectionHeader = styled.p`
+  font-family: Relative Trial Medium;
+  font-size: .875rem;
+  margin: 0;
+  padding: 0;
+`;
+
+const ProvenanceCountText = styled.div`
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  background-color: #F5F5F5;
+  padding: .125rem .375rem;
+  border-radius: .5rem;
+  box-sizing: border-box;
+  min-width: 1.375rem;
+  height: 1.375rem;
+  font-family: Relative Trial Medium;
+  font-size: .875rem;
+  color: #959595;
+`;
+
+const CollectionContainer = styled.div`
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: .25rem;
+  background-color: #F5F5F5;
+  padding: .25rem .5rem;
+  border-radius: .5rem;
+  font-family: Relative Trial Medium;
+  font-size: 1rem;
+  color: ${props => props.isRune ? '#D23B75' : '#E34234'}; 
+  width: fit-content;
+  cursor: pointer;
+  transition: 
+    background-color 350ms ease,
+    transform 150ms ease;
+  transform-origin: center center;
+
+  &:hover {
+    background-color: #E9E9E9;
+  }
+
+  // &:active {
+  //   transform: scale(0.96);
+  // }
+`;
+
+const CollectionText = styled.p`
+  font-family: Relative Trial Medium;
+  font-size: .875rem;
+  color: #000000;
+  margin: 0;
+  padding: 0;
+`;
+
+const SkeletonContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: ${(props) => props.gap};
+  width: 100%;
+  max-width: 23rem;
+  padding: ${props => props.parent ? '0 1rem' : '0'};
+`;
+
+const SkeletonBase = styled.div`
+  background-color: #F5F5F5;
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  border-radius: .5rem;
+
+  @keyframes pulse {
+    0%, 100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: .5;
+    }
+  }
+`;
+
+const SkeletonElement = styled(SkeletonBase)`
+  height: ${(props) => props.height};
+  width: ${(props) => props.width};
+`;
+
+const SkeletonNumberText = styled(SkeletonBase)`
+  height: 2.5rem;
+  width: 200px;
+`;
+
+const SkeletonDetailSection = styled(SkeletonBase)`
+  height: 3rem;
+  width: 100%;
+`;
+
+const TagContainer = styled.button`
+  border-radius: .5rem;
+  border: none;
+  padding: .25rem .5rem;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  gap: .25rem;
+  font-family: Relative Trial Medium;
+  font-size: .875rem;
+  color: #000000;
+  background-color: #F5F5F5;
+  transition: 
+    background-color 350ms ease,
+    transform 150ms ease;
+  transform-origin: center center;
+
+  &:hover {
+    background-color: #E9E9E9;
+  }
+
+  &:active {
+    transform: scale(0.96);
+  }
+`;
+
+const TagSpan = styled.span`
+  color: ${props => props.isValue ? '#000000' : '#959595'};
+`;
+
+const RotatableChevron = styled(ChevronDownSmallIcon)`
+  transition: transform 0.3s ease;
+  transform: ${props => props.isOpen ? 'rotate(0deg)' : 'rotate(-90deg)'};
 `;
 
 export default Inscription;

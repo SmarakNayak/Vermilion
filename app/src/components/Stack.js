@@ -1,10 +1,10 @@
 import React from 'react';
 import styled from 'styled-components';
 
-const Stack = ({center, horizontal, children, style }) => {
+const Stack = ({center, children, horizontal, gap, style }) => {
 
   return (
-    <StackContainer center={center} horizontal={horizontal} style={{...style}} >
+    <StackContainer center={center} horizontal={horizontal} gap={gap} style={{...style}} >
       {children}
     </StackContainer>
   )
@@ -15,6 +15,7 @@ const StackContainer = styled.div`
   flex-direction: ${(props) => props.horizontal ? 'row' : 'column'};
   align-items: ${(props) => props.center ? 'center' : 'flex-start'};
   flex: 1;
+  gap: ${(props) => props.gap};
 `;
 
 export default Stack;

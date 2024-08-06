@@ -20,6 +20,17 @@ export const formatAddress = (address) => {
   return text;
 };
 
+export const formatEditionRange = (num) => {
+  const absNum = Math.abs(num);
+  
+  if (absNum < 10000) {
+    return addCommas(num);
+  } else {
+    const shortened ='~' + (num / 1000).toFixed(1) + 'k';
+    return shortened;
+  }
+};
+
 export const formatSats = (sats) => {
   let btc = sats / Math.pow(10, 8);
   let string = btc.toFixed(btc % 1 !== 0 ? 2 : 0) + " BTC";
