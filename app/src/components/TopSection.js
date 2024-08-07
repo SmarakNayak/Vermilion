@@ -345,14 +345,19 @@ const HeaderContainer = styled.div`
   gap: 1rem;
   position: sticky;
   top: 0;
-  width: calc(100% - 3rem);
+  width: calc(100% - 6rem);
   z-index: 1;
-  padding: 0 1.5rem;
+  padding: 0 3rem;
   margin: 0;
   height: 5rem;
   background-color: #FFFFFF;
 
   z-index: 2;
+
+  @media (max-width: 630px) {
+    width: calc(100% - 3rem);
+    padding: 0 1.5rem;
+  }
 `;
 
 const NavSection = styled.div`
