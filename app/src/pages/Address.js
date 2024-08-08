@@ -28,7 +28,7 @@ const Address = () => {
 
   const [activeTab, setActiveTab] = useState('Inscriptions');
   const [selectedSortOption, setSelectedSortOption] = useState('newest');
-  const [selectedFilterOptions, setSelectedFilterOptions] = useState({"Content Type": ["image"], "Satributes": [], "Charms":[]});
+  const [selectedFilterOptions, setSelectedFilterOptions] = useState({"Content Type": ["image", "gif", "audio", "video", "html"], "Satributes": [], "Charms":[]});
 
   //1. Get links
   useEffect(() => {
@@ -87,7 +87,24 @@ const Address = () => {
   //TODO: Add pagination
   return (
     <MainContainer>
-      <RowContainer>
+      <HeaderContainer>
+        <MainContentStack>
+          <InfoText>Address</InfoText>
+          <InfoStack>
+            <AddressImageContainer>
+              <WalletIcon svgSize={'2rem'} svgColor={'#E34234'}></WalletIcon>
+            </AddressImageContainer>
+            <Stack gap={'.5rem'}>
+              <MainText>{formatAddress(address)}</MainText>
+              <InfoButton isButton={true} onClick={() => copyText(address)}>
+                {formatAddress(address)}
+                <CopyIcon svgSize={'1rem'} svgColor={'#959595'} />
+              </InfoButton>
+            </Stack>
+          </InfoStack>
+        </MainContentStack>
+      </HeaderContainer>
+      {/* <RowContainer>
         <Container style={{gap: '1rem'}}>
           <BlockImgContainer>
             <WalletIcon svgSize={'2.25rem'} svgColor={'#E34234'}></WalletIcon>
@@ -100,21 +117,18 @@ const Address = () => {
           Address: {formatAddress(address)}
           <CopyIcon svgSize={'1rem'} svgColor={'#959595'} />
         </InfoButton>
-      </RowContainer>
-      <SectionContainer>
-        <TabButton>Inscriptions</TabButton>
-      </SectionContainer>
+      </RowContainer> */}
+      <Divider></Divider>
       <RowContainer>
-          <Stack horizontal={true} center={false} style={{gap: '1rem'}}>
-            <FilterButton onClick={toggleFilterVisibility}>
-              <FilterIcon svgSize={'1rem'} svgColor={'#000000'}></FilterIcon>
-              Filters
-            </FilterButton>
-            <VisibilityButton onClick={toggleNumberVisibility}>
-              <EyeIcon svgSize={'1rem'} svgColor={numberVisibility ? '#000000' : '#959595'}></EyeIcon>
-            </VisibilityButton>
-          </Stack>
-          <SortbyDropdown onOptionSelect={handleSortOptionChange} />
+        <Stack horizontal={true} center={false} style={{gap: '1rem'}}>
+          <FilterButton onClick={toggleFilterVisibility}>
+            <FilterIcon svgSize={'1.25rem'} svgColor={'#000000'}></FilterIcon>
+          </FilterButton>
+          <VisibilityButton onClick={toggleNumberVisibility}>
+            <EyeIcon svgSize={'1.25rem'} svgColor={numberVisibility ? '#000000' : '#959595'}></EyeIcon>
+          </VisibilityButton>
+        </Stack>
+        <SortbyDropdown onOptionSelect={handleSortOptionChange} />
       </RowContainer>
       <RowContainer>
         <FilterMenu isOpen={filterVisibility} onSelectionChange ={handleFilterOptionsChange} onClose={toggleFilterVisibility} initialSelection={selectedFilterOptions}></FilterMenu>
@@ -142,18 +156,101 @@ const PageContainer = styled.div`
 `;
 
 const MainContainer = styled.div`
-  width: calc(100% - 3rem);
-  padding: .5rem 1.5rem 2.5rem 1.5rem;
+  width: calc(100% - 6rem);
+  padding: 1.5rem 3rem 2.5rem 3rem;
   margin: 0;
   display: flex;
   flex-direction: column;
-  align-items: center;
+  // align-items: flex-start;
   gap: 1.5rem;
 
   @media (max-width: 630px) {
     width: calc(100% - 3rem);
-    padding: 1rem 1.5rem 2.5rem 1.5rem;
+    padding: 1.5rem 1.5rem 2.5rem 1.5rem;
   }
+`;
+
+const HeaderContainer = styled.div`
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+
+  @media (max-width: 864px) {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1.5rem;
+  }
+`;
+
+const MainContentStack = styled.div`
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+  max-width: calc(100% - 10.5rem); // Adjust this value based on the maximum width of your social icons stack
+  gap: .5rem;
+
+  @media (max-width: 864px) {
+    max-width: 100%;
+  }
+`;
+
+const InfoStack = styled.div`
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 1rem;
+
+  @media (max-width: 480px) {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+`;
+
+const SocialStack = styled.div`
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: .75rem;
+  flex-shrink: 0;
+`;
+
+const RowContainer = styled.div`
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  // justify-content: center;
+  width: 100%;
+`;
+
+const GalleryContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+`;
+
+const AddressImageContainer = styled.div`
+  width: 8rem;
+  height: 8rem;
+  background-color: #F5F5F5;
+  border-radius: 4rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+`;
+
+const MainText = styled.p`
+  font-family: Relative Trial Bold;
+  font-size: 2rem;
+  margin: 0;
+`;
+
+const InfoText = styled.p`
+  font-family: Relative Trial Medium;
+  font-size: ${props => props.isLarge ? '1rem' : '.875rem'};
+  color: ${props => props.isPrimary ? '#000000' : '#959595'};
+  margin: 0;
 `;
 
 const UnstyledLink = styled(Link)`
@@ -171,20 +268,6 @@ const LinksContainer = styled.div`
   width: 30%;
   margin-top: 25px;
   margin-bottom: 25px;
-`;
-
-const RowContainer = styled.div`
-  display: flex;
-  flex-direction: row;
-  align-items: flex-start;
-  justify-content: center;
-  width: 100%;
-`;
-
-const GalleryContainer = styled.div`
-  display: flex;
-  flex-direction: column;
-  width: 100%;
 `;
 
 const BlockImgContainer = styled.div`
@@ -284,9 +367,9 @@ const TabButton = styled.button`
 `;
 
 const VisibilityButton = styled.button`
-  height: 40px;
-  width: 40px;
-  border-radius: .5rem;
+  height: 3rem;
+  width: 3rem;
+  border-radius: 1.5rem;
   border: none;
   padding: .5rem;
   margin: 0;
@@ -294,9 +377,6 @@ const VisibilityButton = styled.button`
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  font-family: Relative Trial Medium;
-  font-size: .875rem;
-  color: #959595;
   background-color: #F5F5F5;
   transition: 
     background-color 350ms ease,
@@ -313,19 +393,16 @@ const VisibilityButton = styled.button`
 `;
 
 const FilterButton = styled.button`
-  height: 40px;
-  border-radius: .5rem;
+  height: 3rem;
+  width: 3rem;
+  border-radius: 1.5rem;
   border: none;
-  padding: .5rem 1rem;
   margin: 0;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   gap: .5rem;
-  font-family: Relative Trial Medium;
-  font-size: .875rem;
-  color: #000000;
   background-color: #F5F5F5;
   transition: 
     background-color 350ms ease,
@@ -342,14 +419,14 @@ const FilterButton = styled.button`
 `;
 
 const Divider = styled.div`
-  height: 1.5rem;
-  border: 1px solid #E9E9E9;
+  width: 100%;
+  border-bottom: 1px solid #E9E9E9;
 `;
 
 const InfoButton = styled.button`
   border-radius: 1.5rem;
   border: none;
-  padding: .5rem 1rem;
+  padding: .25rem .75rem;
   margin: 0;
   display: flex;
   align-items: center;
@@ -358,7 +435,7 @@ const InfoButton = styled.button`
   gap: .5rem;
   font-family: Relative Trial Medium;
   font-size: .875rem;
-  color: #000000;  
+  color: #959595;  
   background-color:#F5F5F5;
   transition: 
     background-color 350ms ease,
