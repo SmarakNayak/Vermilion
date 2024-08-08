@@ -8,10 +8,12 @@ import TopSection from '../components/TopSection';
 import Stack from '../components/Stack';
 import EyeIcon from '../assets/icons/EyeIcon';
 import BlockIcon from '../assets/icons/BlockIcon';
-import { addCommas } from '../helpers/utils';
+import { addCommas, shortenDate } from '../helpers/utils';
 import FilterIcon from '../assets/icons/FilterIcon';
 import ChevronDownIcon from '../assets/icons/ChevronDownIcon';
-import CheckIcon from '../assets/icons/CheckIcon';
+import TwitterIcon from '../assets/icons/TwitterIcon';
+import DiscordIcon from '../assets/icons/DiscordIcon';
+import WebIcon from '../assets/icons/WebIcon';
 import Stat from '../components/Stat';
 
 import { formatSats } from '../helpers/utils';
@@ -20,8 +22,10 @@ import { formatTimestampSecs } from '../helpers/utils';
 
 import SortbyDropdown from '../components/Dropdown';
 import FilterMenu from '../components/FilterMenu';
-import GalleryInfiniteScroll from '../components/GalleryInfiniteScroll';
+import CollectionGallery from '../components/CollectionGallery';
+import CollectionIcon from '../components/CollectionIcon';
 import InscriptionIcon from '../components/InscriptionIcon';
+import Tag from '../components/Tag';
 
 const Collection = () => {
   const [baseApi, setBaseApi] = useState(null); 
@@ -31,7 +35,7 @@ const Collection = () => {
   const [numberVisibility, setNumberVisibility] = useState(true);
   const [filterVisibility, setFilterVisibility] = useState(false);
 
-  const [selectedSortOption, setSelectedSortOption] = useState('newest');
+  const [selectedSortOption, setSelectedSortOption] = useState('oldest');
   const [selectedFilterOptions, setSelectedFilterOptions] = useState({"Content Type": [], "Satributes": [], "Charms":[]});
 
   //1. Get links
@@ -105,68 +109,91 @@ const Collection = () => {
     event.target.style.height = "2.25rem"
   };
 
+  const hasSocialLinks = collectionSummary?.twitter || collectionSummary?.discord || collectionSummary?.website;
+
   return (
     <MainContainer>
-      <RowContainer>
-        <Container style={{gap: '1rem'}}>
-          <BlockImgContainer>
-            {collectionSummary?.range_start ? 
-              <InscriptionIcon endpoint = {"/api/inscription_number/" + collectionSummary?.range_start} useBlockIconDefault = {false}></InscriptionIcon> :
-              <BlockIcon svgSize={'2.25rem'} svgColor={'#E34234'}></BlockIcon>
-            }
-          </BlockImgContainer>
-          <BlockText>{collectionSummary?.name}</BlockText>
-        </Container>
+      <HeaderContainer>
+        <MainContentStack>
+          <InfoText>Collection</InfoText>
+          <CollectionStack>
+            <CollectionImageContainer>
+              {collectionSummary?.range_start ? 
+                <CollectionIcon endpoint={"/api/inscription_number/" + collectionSummary?.range_start} useBlockIconDefault={false} /> :
+                <BlockIcon svgSize={'2.5rem'} svgColor={'#E34234'} />
+              }
+            </CollectionImageContainer>
+            <Stack gap={'.5rem'}>
+              <MainText>{collectionSummary?.name}</MainText>
+              <InfoText>Created {collectionSummary?.first_inscribed_date ? shortenDate(collectionSummary.first_inscribed_date) : ""}</InfoText>
+            </Stack>
+          </CollectionStack>
+        </MainContentStack>
+        {hasSocialLinks && (
+          <SocialStack>
+            {collectionSummary?.twitter && (
+              <UnstyledLink to={collectionSummary.twitter} target='_blank'>
+                <SocialContainer>
+                  <TwitterIcon svgSize={'1.25rem'} svgColor={'#000000'} />
+                </SocialContainer>
+              </UnstyledLink>
+            )}
+            {collectionSummary?.discord && (
+              <UnstyledLink to={collectionSummary.discord} target='_blank'>
+                <SocialContainer>
+                  <DiscordIcon svgSize={'1.25rem'} svgColor={'#000000'} />
+                </SocialContainer>
+              </UnstyledLink>
+            )}
+            {collectionSummary?.website && (
+              <UnstyledLink to={collectionSummary.website} target='_blank'>
+                <SocialContainer>
+                  <WebIcon svgSize={'1.25rem'} svgColor={'#000000'} />
+                </SocialContainer>
+              </UnstyledLink>
+            )}
+          </SocialStack>
+        )}
+      </HeaderContainer>
+      {collectionSummary?.description && collectionSummary.description.trim() !== "" && (
+        <RowContainer>
+          <InfoText isLarge>{collectionSummary.description}</InfoText>
+        </RowContainer>
+      )}
+      <RowContainer style={{gap: '.5rem', flexFlow: 'wrap'}}>
+        <Tag isLarge={true} value={collectionSummary?.supply ? addCommas(collectionSummary?.supply) : 0} category={'Supply'} />
+        <Tag isLarge={true} value={collectionSummary?.total_volume ? formatSats(collectionSummary.total_volume) : "0 BTC"} category={'Traded Volume'} />
+        <Tag isLarge={true} value={collectionSummary?.range_start ? addCommas(collectionSummary?.range_start) + " to " + addCommas(collectionSummary?.range_end) : ""} category={'Range'} />
+        <Tag isLarge={true} value={collectionSummary?.total_inscription_size ? shortenBytes(collectionSummary.total_inscription_size) : 0} category={'Total Size'} />
+        <Tag isLarge={true} value={collectionSummary?.total_inscription_fees ? formatSats(collectionSummary.total_inscription_fees) : "0 BTC"} category={'Total Fees'} />
       </RowContainer>
-      <RowContainer style={{gap: '1rem'}}>
-        <InfoButton>
-          <CheckIcon svgSize={'1rem'} svgColor={'#009859'} />
-          {collectionSummary?.first_inscribed_date ? formatTimestampSecs(collectionSummary.first_inscribed_date) : ""}
-        </InfoButton>
-      </RowContainer>
-      <RowContainer>
-        <Container style={{gap: '2rem', flexFlow: 'wrap', justifyContent: 'center'}}>
-          <Stat value={collectionSummary?.supply ? addCommas(collectionSummary?.supply) : 0} category={'Supply'} />
-          {/* <Divider /> */}
-          <Stat value={collectionSummary?.total_volume ? formatSats(collectionSummary.total_volume) : "0 BTC"} category={'Traded Volume'} />
-          {/* <Divider /> */}
-          <Stat value={collectionSummary?.range_start ? collectionSummary?.range_start + " to " + collectionSummary?.range_end : ""} category={'Range'} />
-          {/* <Divider /> */}
-          <Stat value={collectionSummary?.total_inscription_size ? shortenBytes(collectionSummary.total_inscription_size) : 0} category={'Total Size'} />
-          {/* <Divider /> */}
-          <Stat value={collectionSummary?.total_inscription_fees ? formatSats(collectionSummary.total_inscription_fees) : "0 BTC"} category={'Total Fees'} />
-        </Container>
-      </RowContainer>
-      <SectionContainer>
-        <TabButton isActive>Inscriptions</TabButton>
-      </SectionContainer>
+      <Divider></Divider>
       <RowContainer>
         <Stack horizontal={true} center={false} style={{gap: '1rem'}}>
-          <FilterButton onClick={toggleFilterVisibility}>
-            <FilterIcon svgSize={'1rem'} svgColor={'#000000'}></FilterIcon>
-            Filters
-          </FilterButton>
-          <VisibilityButton onClick={toggleNumberVisibility}>
-            <EyeIcon svgSize={'1rem'} svgColor={numberVisibility ? '#000000' : '#959595'}></EyeIcon>
-          </VisibilityButton>
-        </Stack>
+            <FilterButton onClick={toggleFilterVisibility}>
+              <FilterIcon svgSize={'1.25rem'} svgColor={'#000000'}></FilterIcon>
+            </FilterButton>
+            <VisibilityButton onClick={toggleNumberVisibility}>
+              <EyeIcon svgSize={'1.25rem'} svgColor={numberVisibility ? '#000000' : '#959595'}></EyeIcon>
+            </VisibilityButton>
+          </Stack>
         <SortbyDropdown onOptionSelect={handleSortOptionChange} />
       </RowContainer>
       <RowContainer>
         <FilterMenu isOpen={filterVisibility} onSelectionChange ={handleFilterOptionsChange} onClose={toggleFilterVisibility} initialSelection={selectedFilterOptions}></FilterMenu>
         <GalleryContainer>
-          <GalleryInfiniteScroll baseApi={baseApi} numberVisibility={numberVisibility} />
+          <CollectionGallery baseApi={baseApi} numberVisibility={numberVisibility} />
         </GalleryContainer>
       </RowContainer>
     </MainContainer>
   )
 }
 
-const CollectionIcon = styled.img`
-  width: 3.75rem;
-  height: 3.75rem;
-  border-radius: 2rem;
-`
+// const CollectionIcon = styled.img`
+//   width: 3.75rem;
+//   height: 3.75rem;
+//   border-radius: 2rem;
+// `
   
 const PageContainer = styled.div`
   width: 100%;
@@ -184,25 +211,71 @@ const PageContainer = styled.div`
 `;
 
 const MainContainer = styled.div`
-  width: calc(100% - 3rem);
-  padding: .5rem 1.5rem 2.5rem 1.5rem;
+  width: calc(100% - 6rem);
+  padding: 1.5rem 3rem 2.5rem 3rem;
   margin: 0;
   display: flex;
   flex-direction: column;
-  align-items: center;
+  // align-items: flex-start;
   gap: 1.5rem;
 
   @media (max-width: 630px) {
     width: calc(100% - 3rem);
-    padding: 1rem 1.5rem 2.5rem 1.5rem;
+    padding: 1.5rem 1.5rem 2.5rem 1.5rem;
   }
+`;
+
+const HeaderContainer = styled.div`
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+
+  @media (max-width: 864px) {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1.5rem;
+  }
+`;
+
+const MainContentStack = styled.div`
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+  max-width: calc(100% - 10.5rem); // Adjust this value based on the maximum width of your social icons stack
+  gap: .5rem;
+
+  @media (max-width: 864px) {
+    max-width: 100%;
+  }
+`;
+
+const CollectionStack = styled.div`
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 1rem;
+
+  @media (max-width: 480px) {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+`;
+
+const SocialStack = styled.div`
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: .75rem;
+  flex-shrink: 0;
 `;
 
 const RowContainer = styled.div`
   display: flex;
   flex-direction: row;
   align-items: flex-start;
-  justify-content: center;
+  // justify-content: center;
   width: 100%;
 `;
 
@@ -212,26 +285,31 @@ const GalleryContainer = styled.div`
   width: 100%;
 `;
 
-const BlockImgContainer = styled.div`
-  width: 3.75rem;
-  height: 3.75rem;
+const CollectionImageContainer = styled.div`
+  width: 8rem;
+  height: 8rem;
   background-color: #F5F5F5;
-  border-radius: 2rem;
+  border-radius: .25rem;
   display: flex;
   align-items: center;
   justify-content: center;
 `;
 
-const BlockText = styled.p`
+const MainText = styled.p`
   font-family: Relative Trial Bold;
-  font-size: 1.5rem;
+  font-size: 2rem;
   margin: 0;
 `;
 
-const Container = styled.div`
-  display: flex;
-  flex-direction: row;
-  align-items: center;
+const InfoText = styled.p`
+  font-family: Relative Trial Medium;
+  font-size: ${props => props.isLarge ? '1rem' : '.875rem'};
+  color: ${props => props.isPrimary ? '#000000' : '#959595'};
+  margin: 0;
+`;
+
+const TextSpan = styled.span`
+  color: #959595;
 `;
 
 const StatusWrapper = styled.div`
@@ -309,9 +387,9 @@ const TabButton = styled.button`
 `;
 
 const VisibilityButton = styled.button`
-  height: 40px;
-  width: 40px;
-  border-radius: .5rem;
+  height: 3rem;
+  width: 3rem;
+  border-radius: 1.5rem;
   border: none;
   padding: .5rem;
   margin: 0;
@@ -319,9 +397,6 @@ const VisibilityButton = styled.button`
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  font-family: Relative Trial Medium;
-  font-size: .875rem;
-  color: #959595;
   background-color: #F5F5F5;
   transition: 
     background-color 350ms ease,
@@ -338,19 +413,16 @@ const VisibilityButton = styled.button`
 `;
 
 const FilterButton = styled.button`
-  height: 40px;
-  border-radius: .5rem;
+  height: 3rem;
+  width: 3rem;
+  border-radius: 1.5rem;
   border: none;
-  padding: .5rem 1rem;
   margin: 0;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   gap: .5rem;
-  font-family: Relative Trial Medium;
-  font-size: .875rem;
-  color: #000000;
   background-color: #F5F5F5;
   transition: 
     background-color 350ms ease,
@@ -367,8 +439,8 @@ const FilterButton = styled.button`
 `;
 
 const Divider = styled.div`
-  height: 1.5rem;
-  border: 1px solid #E9E9E9;
+  width: 100%;
+  border-bottom: 1px solid #E9E9E9;
 `;
 
 const InfoButton = styled.button`
@@ -385,6 +457,36 @@ const InfoButton = styled.button`
   font-size: .875rem;
   color: #000000;  
   background-color:#F5F5F5;
+  transition: 
+    background-color 350ms ease,
+    transform 150ms ease;
+  transform-origin: center center;
+
+  &:hover {
+    background-color: #E9E9E9;
+  }
+
+  &:active {
+    transform: scale(0.96);
+  }
+`;
+
+const UnstyledLink = styled(Link)`
+  color: unset;
+  text-decoration: unset;
+`;
+
+const SocialContainer = styled.div`
+  height: 3rem;
+  width: 3rem;
+  border-radius: 1.5rem;
+  border: none;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  background-color: #F5F5F5;
   transition: 
     background-color 350ms ease,
     transform 150ms ease;
