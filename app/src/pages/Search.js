@@ -171,10 +171,10 @@ const Search = () => {
         </RowContainer>
         <RowContainer style={{gap: '1rem'}}>
           <VisibilityButton onClick={toggleNumberVisibility}>
-            <EyeIcon svgSize={'1rem'} svgColor={numberVisibility ? '#000000' : '#959595'}></EyeIcon>
+            <EyeIcon svgSize={'1.25rem'} svgColor={numberVisibility ? '#000000' : '#959595'}></EyeIcon>
           </VisibilityButton>
           <SearchContainer>
-            <SearchIcon svgSize={'1rem'} svgColor={'#959595'}></SearchIcon>
+            <SearchIcon svgSize={'1.25rem'} svgColor={'#959595'}></SearchIcon>
             <form onSubmit={handleTextSubmit}>
               <SearchInput 
                 placeholder='Search for inscriptions'
@@ -187,26 +187,6 @@ const Search = () => {
             </form>
           </SearchContainer>
           <Stack horizontal={true} style={{gap: '1rem', justifyContent: 'flex-end'}}>
-            {/* <form onSubmit={handleTextSubmit}>
-              <input  type="text"
-                      placeholder="Search Bitcoin"
-                      onChange={handleTextChange}
-                      value={searchInput} />
-              <input type="submit" value="Search by text" />
-            </form>
-            <form onSubmit={handleImageSubmit}>
-              <input type="file" multiple accept='image/*' onChange={onImageChange}/>
-              <input type="submit" value="Search by image" />
-            </form> */}
-            {/* <form onSubmit={handleImageSubmit}>
-              <input 
-                type="file" multiple accept='image/*' onChange={onImageChange}
-              />
-            </form>
-            <FilterButton>
-              <UploadIcon svgSize={'1rem'} svgColor={'#000000'}></UploadIcon>
-              Upload image
-            </FilterButton> */}
             <input 
               type="file" 
               multiple 
@@ -216,8 +196,8 @@ const Search = () => {
               ref={fileInputRef} // Attach the ref
             />
             <FilterButton onClick={handleFileButtonClick}>
-              <UploadIcon svgSize={'1rem'} svgColor={'#000000'}></UploadIcon>
-              <UploadText>Upload image</UploadText>
+              <UploadIcon svgSize={'1.25rem'} svgColor={'#000000'}></UploadIcon>
+              {/* <UploadText>Upload image</UploadText> */}
             </FilterButton>
             <SearchDropdown onOptionSelect={handleSortOptionChange} />
           </Stack>
@@ -235,6 +215,7 @@ const Search = () => {
               <SearchButton onClick={() => handleSearchButtonClick('running bitcoin')}>running bitcoin</SearchButton>
               <SearchButton onClick={() => handleSearchButtonClick('messi')}>messi</SearchButton>
               <SearchButton onClick={() => handleSearchButtonClick('world peace')}>world peace</SearchButton>
+              <SearchButton onClick={() => handleSearchButtonClick('cordyceps')}>cordyceps</SearchButton>
             </RowContainer>
           </Stack>
         )}
@@ -279,17 +260,17 @@ const PageContainer = styled.div`
 `;
 
 const MainContainer = styled.div`
-  width: calc(100% - 3rem);
-  padding: .5rem 1.5rem 2.5rem 1.5rem;
+  width: calc(100% - 6rem);
+  padding: 1.5rem 3rem 2.5rem 3rem;
   margin: 0;
   display: flex;
   flex-direction: row;
   align-items: flex-start;
 
-  // @media (max-width: 630px) {
-  //   width: calc(100% - 3rem);
-  //   padding: 1rem 1.5rem 2.5rem 1.5rem;
-  // }
+  @media (max-width: 630px) {
+    width: calc(100% - 3rem);
+    padding: 1.5rem 1.5rem 2.5rem 1.5rem;
+  }
 `;
 
 const RowContainer = styled.div`
@@ -302,19 +283,19 @@ const RowContainer = styled.div`
 
 const PageText = styled.p`
     font-family: Relative Trial Bold;
-    font-size: 1.25rem;
+    font-size: 1.5rem;
     margin: 0;
 `;
 
 const SearchContainer = styled.div`
   width: 100%;
-  height: 2.5rem;
+  height: 3rem;
   display: flex;
   flex-direction: row;
   align-items: center;
   background-color: #F5F5F5;
   border: none;  
-  border-radius: .5rem;
+  border-radius: 1.5rem;
   padding: 0 1rem;
   gap: .5rem;
   position: relative;
@@ -324,7 +305,7 @@ const SearchInput = styled.input`
   width: auto;
   height: auto;
   border: 2px solid transparent;
-  border-radius: .5rem;
+  border-radius: 1.5rem;
   transition: all 150ms ease;
   background-color: transparent;
   white-space: nowrap;
@@ -335,7 +316,7 @@ const SearchInput = styled.input`
   font-family: Relative Trial Medium;
   font-weight: 500;
   color: #000000;
-  font-size: .875rem;
+  font-size: 1rem;
   position: absolute;
   top: 0;
   left: 0;
@@ -366,26 +347,25 @@ const SearchInput = styled.input`
 `;
 
 const SummaryText = styled.p`
-  font-size: .875rem;
+  font-size: 1rem;
   color: #000000;
   margin: 0;
   flex-shrink: 0;
 `;
 
 const VisibilityButton = styled.button`
-  height: 40px;
-  width: 40px;
-  border-radius: .5rem;
+  height: 3rem;
+  width: 3rem;
+  min-height: 3rem;
+  min-width: 3rem;
+  border-radius: 1.5rem;
   border: none;
+  padding: .5rem;
   margin: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  flex-shrink: 0;
   cursor: pointer;
-  font-family: Relative Trial Medium;
-  font-size: .875rem;
-  color: #959595;
   background-color: #F5F5F5;
   transition: 
     background-color 350ms ease,
@@ -399,14 +379,35 @@ const VisibilityButton = styled.button`
   &:active {
     transform: scale(0.96);
   }
-
-  @media (max-width: 425px) {
-    display: none;
-  }
 `;
 
 const FilterButton = styled.button`
-  height: 40px;
+  height: 3rem;
+  width: 3rem;
+  border-radius: 1.5rem;
+  border: none;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  gap: .5rem;
+  background-color: #F5F5F5;
+  transition: 
+    background-color 350ms ease,
+    transform 150ms ease;
+  transform-origin: center center;
+
+  &:hover {
+    background-color: #E9E9E9;
+  }
+
+  &:active {
+    transform: scale(0.96);
+  }
+`;
+
+const SearchButton = styled.button`
   border-radius: .5rem;
   border: none;
   padding: .5rem 1rem;
@@ -418,36 +419,7 @@ const FilterButton = styled.button`
   gap: .5rem;
   white-space: nowrap; 
   font-family: Relative Trial Medium;
-  font-size: .875rem;
-  color: #000000;
-  background-color: #F5F5F5;
-  transition: 
-    background-color 350ms ease,
-    transform 150ms ease;
-  transform-origin: center center;
-
-  &:hover {
-    background-color: #E9E9E9;
-  }
-
-  &:active {
-    transform: scale(0.96);
-  };
-`;
-
-const SearchButton = styled.button`
-  border-radius: .5rem;
-  border: none;
-  padding: .5rem .75rem;
-  margin: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  gap: .5rem;
-  white-space: nowrap; 
-  font-family: Relative Trial Medium;
-  font-size: .875rem;
+  font-size: 1rem;
   color: #000000;
   background-color: #F9E8E7;
   transition: 
@@ -485,7 +457,7 @@ const UploadText = styled.p`
 
 const MessageText = styled.p`
   font-family: ${props => props.header ? 'Relative Trial Bold' : 'Relative Trial Medium'}; 
-  font-size: ${props => props.header ? '1rem' : '.875rem'};
+  font-size: ${props => props.header ? '1.125rem' : '1rem'};
   color: ${props => props.header ? '#000000' : '#959595'};
   margin: 0;
   padding: 0;
