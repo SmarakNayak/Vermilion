@@ -1,17 +1,19 @@
 import React from 'react';
 import styled from 'styled-components';
 import { Link } from "react-router-dom";
-
 import { addCommas } from '../helpers/utils';
 import ArrowSquareIcon from '../assets/icons/ArrowSquareIcon';
 
-const Tag = ({ category, isLarge, value }) => (
-  <TagContainer>
-    <TagSpan isLarge={isLarge} isValue={true}>{value}</TagSpan>
-    {category && (
-      <TagSpan isLarge={isLarge}>{' • ' + category}</TagSpan>
-    )}
-  </TagContainer>
+const LinkTag = ({ category, isLarge, link, value }) => (
+  <UnstyledLink to={link} target='_blank'>
+    <TagContainer>
+      <TagSpan isLarge={isLarge} isValue={true}>{value}</TagSpan>
+      {category && (
+        <TagSpan isLarge={isLarge}>{' • ' + category}</TagSpan>
+      )}
+      <ArrowSquareIcon svgSize='1rem' svgColor='#959595' />
+    </TagContainer>
+  </UnstyledLink>
 );
 
 const TagContainer = styled.button`
@@ -51,4 +53,9 @@ const TagSpan = styled.span`
   text-overflow: ellipsis;
 `;
 
-export default Tag;
+const UnstyledLink = styled(Link)`
+  color: unset;
+  text-decoration: unset;
+`;
+
+export default LinkTag;
