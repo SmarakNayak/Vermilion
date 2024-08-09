@@ -21,6 +21,9 @@ import SortbyDropdown from '../components/Dropdown';
 import FilterMenu from '../components/FilterMenu';
 import GalleryInfiniteScroll from '../components/GalleryInfiniteScroll';
 import InscriptionIcon from '../components/InscriptionIcon';
+import CollectionIcon from '../components/CollectionIcon';
+import Tag from '../components/Tag';
+import LinkTag from '../components/LinkTag';
 
 const SatBlock = () => {
   const [baseApi, setBaseApi] = useState(null); 
@@ -94,45 +97,34 @@ const SatBlock = () => {
 
   return (
     <MainContainer>
-      <RowContainer>
-        <Container style={{gap: '1rem'}}>
-          <BlockImgContainer>
-          <InscriptionIcon endpoint = {"/api/sat_block_icon/"+number} useBlockIconDefault = {true}></InscriptionIcon>
-            {/* <BlockIcon svgSize={'2.25rem'} svgColor={'#E34234'}></BlockIcon> */}
-          </BlockImgContainer>
-          <BlockText>{"Sat Creation Block " + addCommas(number)}</BlockText>
-        </Container>
+      <HeaderContainer>
+        <MainContentStack>
+          <InfoText>Sat Creation Block</InfoText>
+          <InfoStack>
+            <BlockImageContainer>
+              <CollectionIcon endpoint = {"/api/block_icon/"+number} useBlockIconDefault = {true}></CollectionIcon>
+            </BlockImageContainer>
+            <Stack gap={'.5rem'}>
+              <MainText>{addCommas(number)}</MainText>
+              <InfoText>Created {satBlockStats?.sat_block_timestamp ? formatTimestampMs(satBlockStats?.sat_block_timestamp) : ""}</InfoText>
+            </Stack>
+          </InfoStack>
+        </MainContentStack>
+      </HeaderContainer>
+
+      <RowContainer style={{gap: '.5rem', flexFlow: 'wrap'}}>
+        <Tag isLarge={true} value={satBlockStats?.sat_block_inscription_count ? addCommas(satBlockStats?.sat_block_inscription_count) : 0} category={'Inscriptions'} />
+        <Tag isLarge={true} value={satBlockStats?.sat_block_inscription_size ? shortenBytes(satBlockStats.sat_block_inscription_size) : 0} category={'Total Inscription Size'} />
+        <Tag isLarge={true} value={satBlockStats?.sat_block_inscription_fees ? formatSats(satBlockStats.sat_block_inscription_fees) : "0 BTC"} category={'Total Inscription Fees'} />
       </RowContainer>
-      <RowContainer style={{gap: '1rem'}}>
-        <InfoButton>
-          <CheckIcon svgSize={'1rem'} svgColor={'#009859'} />
-          {formatTimestampMs(satBlockStats?.sat_block_timestamp)}
-        </InfoButton>
-        {/* <InfoButton isButton={true} onClick={() => copyText('text')}>
-          {'Hash: ' + '0045...9f45'}
-          <CopyIcon svgSize={'1rem'} svgColor={'#959595'} />
-        </InfoButton> */}
-      </RowContainer>
+      <Divider></Divider>
       <RowContainer>
-        <Container style={{gap: '2rem', flexFlow: 'wrap', justifyContent: 'center'}}>
-          <Stat value={satBlockStats?.sat_block_inscription_count ? satBlockStats?.sat_block_inscription_count : 0} category={'Inscriptions'} />
-          {/* <Divider /> */}
-          <Stat value={satBlockStats?.sat_block_inscription_size ? shortenBytes(satBlockStats.sat_block_inscription_size) : 0} category={'Total Inscription Size'} />
-          {/* <Divider /> */}
-          <Stat value={satBlockStats?.sat_block_inscription_fees ? formatSats(satBlockStats.sat_block_inscription_fees) : "0 BTC"} category={'Total Inscription Fees'} />
-        </Container>
-      </RowContainer>
-      <SectionContainer>
-        <TabButton>Inscriptions</TabButton>
-      </SectionContainer>
-      <RowContainer>
-        <Stack horizontal={true} center={false} style={{gap: '1rem'}}>
+        <Stack horizontal={true} center={false} style={{gap: '.75rem'}}>
           <FilterButton onClick={toggleFilterVisibility}>
-            <FilterIcon svgSize={'1rem'} svgColor={'#000000'}></FilterIcon>
-            Filters
+            <FilterIcon svgSize={'1.25rem'} svgColor={'#000000'}></FilterIcon>
           </FilterButton>
           <VisibilityButton onClick={toggleNumberVisibility}>
-            <EyeIcon svgSize={'1rem'} svgColor={numberVisibility ? '#000000' : '#959595'}></EyeIcon>
+            <EyeIcon svgSize={'1.25rem'} svgColor={numberVisibility ? '#000000' : '#959595'}></EyeIcon>
           </VisibilityButton>
         </Stack>
         <SortbyDropdown onOptionSelect={handleSortOptionChange} />
@@ -169,17 +161,55 @@ const PageContainer = styled.div`
 `;
 
 const MainContainer = styled.div`
-  width: calc(100% - 3rem);
-  padding: .5rem 1.5rem 2.5rem 1.5rem;
+  width: calc(100% - 6rem);
+  padding: 1.5rem 3rem 2.5rem 3rem;
   margin: 0;
   display: flex;
   flex-direction: column;
-  align-items: center;
+  // align-items: flex-start;
   gap: 1.5rem;
 
   @media (max-width: 630px) {
     width: calc(100% - 3rem);
-    padding: 1rem 1.5rem 2.5rem 1.5rem;
+    padding: 1.5rem 1.5rem 2.5rem 1.5rem;
+  }
+`;
+
+const HeaderContainer = styled.div`
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+
+  @media (max-width: 864px) {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1.5rem;
+  }
+`;
+
+const MainContentStack = styled.div`
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+  max-width: calc(100% - 10.5rem); // Adjust this value based on the maximum width of your social icons stack
+  gap: .5rem;
+
+  @media (max-width: 864px) {
+    max-width: 100%;
+  }
+`;
+
+const InfoStack = styled.div`
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 1rem;
+
+  @media (max-width: 480px) {
+    flex-direction: column;
+    align-items: flex-start;
   }
 `;
 
@@ -187,7 +217,7 @@ const RowContainer = styled.div`
   display: flex;
   flex-direction: row;
   align-items: flex-start;
-  justify-content: center;
+  // justify-content: center;
   width: 100%;
 `;
 
@@ -197,90 +227,33 @@ const GalleryContainer = styled.div`
   width: 100%;
 `;
 
-const BlockImgContainer = styled.div`
-  width: 3.75rem;
-  height: 3.75rem;
+const BlockImageContainer = styled.div`
+  width: 8rem;
+  height: 8rem;
   background-color: #F5F5F5;
-  border-radius: .5rem;
+  border-radius: .25rem;
   display: flex;
   align-items: center;
   justify-content: center;
 `;
 
-const BlockText = styled.p`
+const MainText = styled.p`
   font-family: Relative Trial Bold;
-  font-size: 1.5rem;
+  font-size: 2rem;
   margin: 0;
 `;
 
-const Container = styled.div`
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-`;
-
-const StatusWrapper = styled.div`
-  display: flex;
-  padding: .5rem 1rem;
-  border-radius: .5rem;
-  background-color: #EBFCF4;
-`;
-
-const StatusText = styled.p`
-  font-family: ABC Camera Plain Unlicensed Trial Medium;
-  font-size: .875rem;
-  color: #009859;
+const InfoText = styled.p`
+  font-family: Relative Trial Medium;
+  font-size: ${props => props.isLarge ? '1rem' : '.875rem'};
+  color: ${props => props.isPrimary ? '#000000' : '#959595'};
   margin: 0;
-`;
-
-const StatsText = styled.p`
-  font-size: .875rem;
-  margin: 0;
-`;
-
-const SectionContainer = styled.div`
-  display: flex;
-  flex-direction: row;
-  flex: 1;
-  gap: 1rem;
-  width: 100%;
-  padding-bottom: 1.5rem;
-  border-bottom: 1px #E9E9E9 solid;
-  // overflow: scroll;
-`;
-
-const TabButton = styled.button`
-  border-radius: .5rem;
-  border: none;
-  padding: .5rem 1rem;
-  margin: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  gap: .5rem;
-  font-family: Relative Trial Bold;
-  font-size: .875rem;
-  color: #E34234;  
-  background-color:#F9E8E7;
-  transition: 
-    background-color 350ms ease,
-    transform 150ms ease;
-  transform-origin: center center;
-
-  &:hover {
-    background-color: #F9E8E7;
-  }
-
-  &:active {
-    transform: scale(0.96);
-  }
 `;
 
 const VisibilityButton = styled.button`
-  height: 40px;
-  width: 40px;
-  border-radius: .5rem;
+  height: 3rem;
+  width: 3rem;
+  border-radius: 1.5rem;
   border: none;
   padding: .5rem;
   margin: 0;
@@ -288,9 +261,6 @@ const VisibilityButton = styled.button`
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  font-family: Relative Trial Medium;
-  font-size: .875rem;
-  color: #959595;
   background-color: #F5F5F5;
   transition: 
     background-color 350ms ease,
@@ -307,19 +277,16 @@ const VisibilityButton = styled.button`
 `;
 
 const FilterButton = styled.button`
-  height: 40px;
-  border-radius: .5rem;
+  height: 3rem;
+  width: 3rem;
+  border-radius: 1.5rem;
   border: none;
-  padding: .5rem 1rem;
   margin: 0;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   gap: .5rem;
-  font-family: Relative Trial Medium;
-  font-size: .875rem;
-  color: #000000;
   background-color: #F5F5F5;
   transition: 
     background-color 350ms ease,
@@ -336,8 +303,8 @@ const FilterButton = styled.button`
 `;
 
 const Divider = styled.div`
-  height: 1.5rem;
-  border: 1px solid #E9E9E9;
+  width: 100%;
+  border-bottom: 1px solid #E9E9E9;
 `;
 
 const InfoButton = styled.button`
