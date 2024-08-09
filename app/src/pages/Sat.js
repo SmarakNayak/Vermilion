@@ -114,7 +114,6 @@ const Sat = () => {
       <RowContainer style={{gap: '.5rem', flexFlow: 'wrap'}}>
         <Tag isLarge={true} value={metadata?.rarity ? metadata?.rarity.charAt(0).toUpperCase() + metadata?.rarity.slice(1) : ""} category={'Rarity'} />
         <Tag isLarge={true} value={metadata?.name ? metadata?.name : ""} category={'Name'} />
-        <Tag isLarge={true} value={metadata?.name ? metadata?.name : ""} category={'Name'} />
         <LinkTag isLarge={true} link={"/sat_block/" + metadata?.block} value={metadata?.block ? addCommas(metadata?.block) : 0} category={'Creation Block'} />
         <Tag isLarge={true} value={metadata?.epoch} category={'Epoch'} />
       </RowContainer>
