@@ -169,6 +169,7 @@ const Search = () => {
         <RowContainer style={{justifyContent: 'flex-start'}}>
           <PageText>Search</PageText>
         </RowContainer>
+        <Divider></Divider>
         <RowContainer style={{gap: '1rem'}}>
           <VisibilityButton onClick={toggleNumberVisibility}>
             <EyeIcon svgSize={'1.25rem'} svgColor={numberVisibility ? '#000000' : '#959595'}></EyeIcon>
@@ -203,19 +204,16 @@ const Search = () => {
           </Stack>
         </RowContainer>
         {firstLoad && (
-          <Stack horizontal={false} center={true} style={{gap: '1.5rem', width: '100%', marginTop: '1rem'}}>
-            <Stack horizontal={false} center={true} style={{gap: '.5rem', width: '100%'}}>
-              <BoltIcon svgSize={'1.5rem'} svgColor={'#E34234'} />
-              <MessageText header>Visual Search</MessageText>
-            </Stack>
+          <Stack horizontal={false} center={true} style={{gap: '1.5rem', width: '100%', marginTop: '1.5rem'}}>
             <MessageText>
               Type something or upload an image to discover similar inscriptions. Try with one of these keywords:
             </MessageText>
-            <RowContainer style={{gap: '1rem', flexWrap: 'wrap'}}>
+            <RowContainer style={{gap: '1rem', flexWrap: 'wrap', maxWidth: '30rem'}}>
               <SearchButton onClick={() => handleSearchButtonClick('running bitcoin')}>running bitcoin</SearchButton>
               <SearchButton onClick={() => handleSearchButtonClick('messi')}>messi</SearchButton>
               <SearchButton onClick={() => handleSearchButtonClick('world peace')}>world peace</SearchButton>
               <SearchButton onClick={() => handleSearchButtonClick('cordyceps')}>cordyceps</SearchButton>
+              <SearchButton onClick={() => handleSearchButtonClick('free ross')}>free ross</SearchButton>
             </RowContainer>
           </Stack>
         )}
@@ -230,7 +228,7 @@ const Search = () => {
                 <SearchButtonText>
                   {image ? image.name : lastSearch}
                 </SearchButtonText>
-                <CrossIcon svgSize={'1rem'} svgColor={'#000000'} />
+                <CrossIcon svgSize={'1.25rem'} svgColor={'#000000'} />
               </SearchButton>
             </Stack>
           </RowContainer>
@@ -421,7 +419,7 @@ const SearchButton = styled.button`
   font-family: Relative Trial Medium;
   font-size: 1rem;
   color: #000000;
-  background-color: #F9E8E7;
+  background-color: #F5F5F5;
   transition: 
     background-color 350ms ease,
     transform 150ms ease;
@@ -430,7 +428,7 @@ const SearchButton = styled.button`
   overflow: hidden;
 
   &:hover {
-    background-color: #F9D9D6;
+    background-color: #E9E9E9;
   }
 
   &:active {
@@ -463,6 +461,22 @@ const MessageText = styled.p`
   padding: 0;
   text-wrap: wrap;
   text-align: center;
+`;
+
+const IconWrapper = styled.div`
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  height: 3rem;
+  width: 3rem;
+  border-radius: 1.5rem;
+  background-color: #F5F5F5;
+`;
+
+const Divider = styled.div`
+  width: 100%;
+  border-bottom: 1px solid #E9E9E9;
 `;
 
 export default Search;
