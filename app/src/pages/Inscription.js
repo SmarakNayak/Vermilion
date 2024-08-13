@@ -7,7 +7,7 @@ import { addCommas, copyText, formatEditionRange } from '../helpers/utils';
 import HashIcon from '../assets/icons/HashIcon';
 import WebIcon from '../assets/icons/WebIcon';
 import CopyIcon from '../assets/icons/CopyIcon';
-import IntersectionIcon from '../assets/icons/IntersectionIcon';
+import SparklesIcon from '../assets/icons/SparklesIcon';
 import ChevronLeftIcon from '../assets/icons/ChevronLeftIcon';
 import ChevronRightIcon from '../assets/icons/ChevronRightIcon';
 import InfoCircleIcon from '../assets/icons/InfoCircleIcon';
@@ -25,6 +25,8 @@ import LayersIcon from '../assets/icons/LayersIcon';
 import RepeatIcon from '../assets/icons/RepeatIcon';
 import PaintIcon from '../assets/icons/PaintIcon';
 import RuneIcon from '../assets/icons/RuneIcon';
+import FlexItem from "../components/FlexItem";
+import MasonryGrid from "../components/MasonryGrid";
 const iframecontentwindow = require("../scripts/iframeResizer.contentWindow.min.txt");
 
 const Inscription = () => {
@@ -230,7 +232,7 @@ const Inscription = () => {
 
   const fetchSimilar = async () => {
     //1. Get similar inscriptions
-    const response = await fetch("/search_api/similar/" + sha256);
+    const response = await fetch("/search_api/similar/" + sha256 + "?n=50");
     const json = await response.json();
     setSimilarInscriptions(json);
   }
@@ -755,24 +757,25 @@ const Inscription = () => {
         <SimilarContentContainer>
           <SectionContainer>
             <SectionHeaderContainer>
-              <IntersectionIcon svgSize={'1.125rem'} svgColor={'#000000'} />
-              <SimilarText>Similar inscriptions</SimilarText>
+              <SparklesIcon svgSize={'1.5rem'} svgColor={'#000000'} />
+              <SimilarText>Similar Inscriptions</SimilarText>
             </SectionHeaderContainer>
-            <ArrowContainer>
+            {/* <ArrowContainer>
               <ArrowButton onClick={scrollLeft}>
                 <ChevronLeftIcon svgSize={'1.25rem'} svgColor={'#959595'} />
               </ArrowButton>
               <ArrowButton onClick={scrollRight}>
                 <ChevronRightIcon svgSize={'1.25rem'} svgColor={'#959595'} />
               </ArrowButton>
-            </ArrowContainer>
+            </ArrowContainer> */}
           </SectionContainer>
-          <ImageRowContainer ref={scrollContainer}>
+          {/* <ImageRowContainer ref={scrollContainer}>
             {similarInscriptions?.map(
               entry =>
                 <SmallItemContainer key={entry.id} number={entry.number} />
             )}
-          </ImageRowContainer>
+          </ImageRowContainer> */}
+          <MasonryGrid similarInscriptions={similarInscriptions} />
         </SimilarContentContainer>
       )}
     </>
@@ -1152,7 +1155,7 @@ const SectionContainer = styled.div`
   flex-direction: row;
   align-items: center;
   justify-content: space-between;
-  margin: 0 0 1rem 0;
+  margin: 0 0 1.5rem 0;
 `;
 
 const SectionHeaderContainer = styled.div`
@@ -1163,14 +1166,14 @@ const SectionHeaderContainer = styled.div`
 `;
 
 const SimilarContentContainer = styled.div`
-  width: calc(100% - 3rem);
-  padding: 2rem 1.5rem;
+  width: calc(100% - 6rem);
+  padding: 1.5rem 3rem;
   display: block; // Ensure it is a block element
 `;
 
 const SimilarText = styled.p`
-  font-family: Relative Trial Medium;
-  font-size: 1rem;
+  font-family: Relative Trial Bold;
+  font-size: 1.5rem;
   margin: 0;
   padding: 0;
 `;
@@ -1230,6 +1233,30 @@ const ImageRowContainer = styled.div`
     display: none; // Optionally hide the scrollbar
   }
 `;
+
+const GridContainer = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+  width: 100%;
+  overflow-x: auto;
+  padding-bottom: 1rem;
+
+  &::-webkit-scrollbar {
+    height: 6px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background-color: #D0D0D0;
+    border-radius: 3px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background-color: #F0F0F0;
+  }
+`;
+
+
 
 const SectionHeader = styled.div`
   display: flex;
