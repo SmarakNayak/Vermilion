@@ -170,7 +170,7 @@ const TopSection = (props) => {
   return (
     <HeaderContainer>
       <NavSection>
-        <SiteText to ={'/explore'}>vermilion</SiteText>
+        <SiteText to ={'/explore/inscriptions'}>vermilion</SiteText>
         <NavLinkContainer>
           <ExploreDropdown />
           {/* <NavButton onClick={() => handleNavigation('/explore')}>
@@ -272,7 +272,7 @@ const TopSection = (props) => {
       {showMobileMenu && (
         <MobileContainer>
           <MenuHeader>
-            <SiteText to ={'/explore'}>vermilion</SiteText>
+            <SiteText to ={'/explore/inscriptions'}>vermilion</SiteText>
             <CloseButton onClick={toggleMenuVisibility}>
               <CrossIcon svgSize={'1.25rem'} svgColor={'#959595'} />
             </CloseButton>

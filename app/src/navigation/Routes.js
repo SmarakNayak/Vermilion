@@ -37,7 +37,7 @@ const Navigation = () => {
           <Route path="/search/:query" element={<Search />} />
           <Route path="/discover" element={<Discover />} />
           <Route path="/collection/:symbol" element={<Collection />} />
-          <Route path="/explore" element={<Explore />} />
+          {/* <Route path="/explore" element={<Explore />} /> */}
           <Route path="/explore/inscriptions" element={<ExploreInscriptions />} />
           <Route path="/explore/collections" element={<ExploreCollections />} />
           <Route path="/explore/blocks" element={<ExploreBlocks />} />
