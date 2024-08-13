@@ -105,15 +105,18 @@ const ExploreInscriptions = () => {
 }
 
 const MainContainer = styled.div`
-  width: calc(100% - 3rem);
-  padding: 1rem 1.5rem 2.5rem 1.5rem;
-  // width: calc(100% - 6rem);
-  // padding: 1rem 3rem 2.5rem 3rem;
+  width: calc(100% - 6rem);
+  padding: 1.5rem 3rem 2.5rem 3rem;
   margin: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 1.5rem;
+
+  @media (max-width: 630px) {
+    width: calc(100% - 3rem);
+    padding: 1.5rem 1.5rem 2.5rem 1.5rem;
+  }
 `;
 
 const RowContainer = styled.div`
