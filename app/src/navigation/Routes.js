@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter, Route, Routes } from 'react-router-dom';
+import { BrowserRouter, Route, Routes, useParams } from 'react-router-dom';
 import styled from 'styled-components';
 import Home from '../pages/Home';
 import Inscription from '../pages/Inscription';
@@ -18,6 +18,34 @@ import Collection from '../pages/Collection';
 import Explore from '../pages/Explore';
 import TopSection from '../components/TopSection';
 import GA from '../components/GA';
+import useDocumentTitle from './useDocumentTitle'; // Import the custom hook
+import { addCommas, formatAddress } from '../helpers/utils';
+
+// Wrap each component with a title-setting component
+const TitledComponent = ({ title, Component }) => {
+  const params = useParams();
+  useDocumentTitle(typeof title === 'function' ? () => title(params) : title);
+  return <Component />;
+};
+
+// New component for Collection with dynamic title
+const CollectionWithDynamicTitle = () => {
+  const [collectionSummary, setCollectionSummary] = React.useState(null);
+  const { symbol } = useParams();
+
+  React.useEffect(() => {
+    const fetchCollectionSummary = async () => {
+      const response = await fetch("/api/collection_summary/" + symbol);
+      const json = await response.json();
+      setCollectionSummary(json);
+    };
+    fetchCollectionSummary();
+  }, [symbol]);
+
+  useDocumentTitle(() => collectionSummary?.name || 'Collection');
+
+  return <Collection />;
+};
 
 const Navigation = () => {
   return (
@@ -26,22 +54,71 @@ const Navigation = () => {
       <PageContainer>
         <TopSection/>
         <Routes>
-          <Route path="/" element={<ExploreInscriptions />} />
-          <Route path="/inscription/:number" element={<Inscription />} />
-          <Route path="/edition/:sha256" element={<Edition />} />
-          <Route path="/block/:number" element={<Block />} />
-          <Route path="/address/:address" element={<Address />} />
-          <Route path="/sat/:sat" element={<Sat />} />
-          <Route path="/sat_block/:number" element={<SatBlock />} />
-          <Route path="/search" element={<Search />} />
-          <Route path="/search/:query" element={<Search />} />
-          <Route path="/discover" element={<Discover />} />
-          <Route path="/collection/:symbol" element={<Collection />} />
-          {/* <Route path="/explore" element={<Explore />} /> */}
-          <Route path="/explore/inscriptions" element={<ExploreInscriptions />} />
-          <Route path="/explore/collections" element={<ExploreCollections />} />
-          <Route path="/explore/blocks" element={<ExploreBlocks />} />
-          <Route path="/dbscan/:dbclass" element={<Dbscan />} />          
+          <Route path="/" element={<TitledComponent title="Inscriptions" Component={ExploreInscriptions} />} />
+          <Route path="/explore/inscriptions" element={<TitledComponent title="Inscriptions" Component={ExploreInscriptions} />} />
+          <Route path="/explore/collections" element={<TitledComponent title="Collections" Component={ExploreCollections} />} />
+          <Route path="/explore/blocks" element={<TitledComponent title="Blocks" Component={ExploreBlocks} />} />
+          <Route 
+            path="/inscription/:number" 
+            element={
+              <TitledComponent 
+                title={(params) => `Inscription ${addCommas(params.number)}`} 
+                Component={Inscription} 
+              />
+            } 
+          />
+          <Route 
+            path="/edition/:sha256" 
+            element={
+              <TitledComponent 
+                title={(params) => `Editions of ${formatAddress(params.sha256)}`} 
+                Component={Edition} 
+              />
+            }
+          />
+          <Route 
+            path="/block/:number" 
+            element={
+              <TitledComponent 
+                title={(params) => `Block ${addCommas(params.number)}`} 
+                Component={Block} 
+              />
+            } 
+          />
+          <Route 
+            path="/address/:address" 
+            element={
+              <TitledComponent 
+                title={(params) => `Address ${formatAddress(params.address)}`} 
+                Component={Address} 
+              />
+            } 
+          />
+          <Route 
+            path="/sat/:sat" 
+            element={
+              <TitledComponent 
+                title={(params) => `Sat ${addCommas(params.sat)}`}  
+                Component={Sat} 
+              />
+            } 
+          />
+          <Route 
+            path="/sat_block/:number" 
+            element={
+              <TitledComponent 
+                title={(params) => `Sat Creation Block ${addCommas(params.number)}`} 
+                Component={SatBlock} 
+              />
+            } 
+          />
+          <Route path="/search" element={<TitledComponent title="Search" Component={Search} />} />
+          <Route path="/search/:query" element={<TitledComponent title="Search" Component={Search} />} />
+          <Route 
+            path="/collection/:symbol" 
+            element={<CollectionWithDynamicTitle />}
+          />
+          <Route path="/dbscan/:dbclass" element={<TitledComponent title="DBSCAN" Component={Dbscan} />} />          
         </Routes>
       </PageContainer>
     </BrowserRouter>
