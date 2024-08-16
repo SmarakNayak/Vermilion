@@ -177,8 +177,10 @@ const TopSection = (props) => {
             Explore
             <ChevronDownSmallIcon svgSize={'1.25rem'} svgColor={'#000000'}></ChevronDownSmallIcon>
           </NavButton> */}
-          <NavButton collapse={true} onClick={() => handleNavigation('/discover')}>Discover</NavButton>
-          <NavButton collapse={true} onClick={() => handleNavigation('/search')}>Search</NavButton>
+          {/* <NavButton collapse={true} onClick={() => handleNavigation('/discover')}>Discover</NavButton>
+          <NavButton collapse={true} onClick={() => handleNavigation('/search')}>Search</NavButton> */}
+          <NavButton collapse={true} to={'/discover'}>Discover</NavButton>
+          <NavButton collapse={true} to={'/search'}>Search</NavButton>
         </NavLinkContainer>
       </NavSection>
 
@@ -378,7 +380,7 @@ const NavLinkContainer = styled.div`
   }
 `;
 
-const NavButton = styled.button`
+const NavButton = styled(Link)`
   height: 3rem;
   border-radius: 1.5rem;
   border: none;
@@ -392,6 +394,8 @@ const NavButton = styled.button`
   font-family: Relative Trial Bold;
   font-size: 1rem;
   background-color: #FFFFFF;
+  color: unset;
+  text-decoration: unset;
   transition: 
     background-color 350ms ease,
     transform 150ms ease;

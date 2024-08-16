@@ -83,8 +83,9 @@ const DropdownMenu = styled.div`
   top: 3.5rem;
   left: -1rem;
   width: 12.5rem;
-  background-color: white;
+  background-color: #FFFFFF;
   border: 1px solid #E9E9E9;
+  box-shadow: 0px 1px 6px 0px rgba(0, 0, 0, 0.09);
   border-radius: .75rem;
   padding: 1rem;
   z-index: 1000;

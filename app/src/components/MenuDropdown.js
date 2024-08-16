@@ -41,9 +41,9 @@ const FilterButton = styled.button`
 const DropdownMenu = styled.ul`
   position: absolute;
   top: calc(100% - 1rem);
-  right: 1.5rem;
-  background-color: white;
-  border: 1px solid #F5F5F5;
+  right: 3rem;
+  background-color: #FFFFFF;
+  border: 1px solid #E9E9E9;
   box-shadow: 0px 1px 6px 0px rgba(0, 0, 0, 0.09);
   padding: .5rem;
   list-style-type: none;
@@ -57,9 +57,9 @@ const DropdownItem = styled.li`
   padding: .5rem 1rem;
   cursor: pointer;
   font-family: Relative Trial Medium;
-  font-size: .875rem;
+  font-size: 1rem;
   color: #000000;
-  border-radius: .375rem;
+  border-radius: .5rem;
   transition: 
     background-color 350ms ease,
     transform 150ms ease;
