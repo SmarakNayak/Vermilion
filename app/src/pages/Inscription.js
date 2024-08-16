@@ -1169,6 +1169,11 @@ const SimilarContentContainer = styled.div`
   width: calc(100% - 6rem);
   padding: 1.5rem 3rem;
   display: block; // Ensure it is a block element
+
+  @media (max-width: 864px) {
+    width: calc(100% - 3rem);
+    padding: 1.5rem;
+  }
 `;
 
 const SimilarText = styled.p`

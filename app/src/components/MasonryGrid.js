@@ -11,7 +11,8 @@ const MasonryGrid = ({ similarInscriptions }) => {
       if (width < 630) setColumnCount(2);
       else if (width < 960) setColumnCount(3);
       else if (width < 1346) setColumnCount(4);
-      else if (width < 1984) setColumnCount(5);
+      else if (width < 1600) setColumnCount(5);
+      else if (width < 1984) setColumnCount(6);
       else setColumnCount(6);
     };
 
@@ -45,12 +46,20 @@ const GridContainer = styled.div`
   gap: 2rem;
   width: 100%;
   overflow-x: hidden;
+
+  @media (max-width: 864px) {
+    gap: 1.5rem;
+  }
 `;
 
 const ColumnContainer = styled.div`
   display: flex;
   flex-direction: column;
   width: ${props => `calc(${100 / props.columnCount}% - ${(props.columnCount - 1) * 2 / props.columnCount}rem)`};
+
+  @media (max-width: 864px) {
+    width: ${props => `calc(${100 / props.columnCount}% - ${(props.columnCount - 1.25) * 2 / props.columnCount}rem)`};
+  }
 `;
 
 export default MasonryGrid;
