@@ -113,7 +113,7 @@ const MainContainer = styled.div`
   align-items: center;
   gap: 1.5rem;
 
-  @media (max-width: 630px) {
+  @media (max-width: 864px) {
     width: calc(100% - 3rem);
     padding: 1.5rem 1.5rem 2.5rem 1.5rem;
   }

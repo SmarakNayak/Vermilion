@@ -354,7 +354,7 @@ const HeaderContainer = styled.div`
 
   z-index: 2;
 
-  @media (max-width: 630px) {
+  @media (max-width: 864px) {
     width: calc(100% - 3rem);
     padding: 0 1.5rem;
   }
