@@ -217,8 +217,8 @@ const Search = () => {
             </RowContainer>
           </Stack>
         )}
-        {isLoading && <p style={{color: '#959595', fontSize: '.875rem', padding: '.5rem 0', margin: 0}}>Loading...</p>}
-        {isError && <p style={{color: '#959595', fontSize: '.875rem', padding: '.5rem 0', margin: 0}}>{"Error: " + errorMsg}</p>}
+        {isLoading && <p style={{color: '#959595', fontSize: '1rem', padding: '.5rem 0', margin: 0}}>Loading...</p>}
+        {isError && <p style={{color: '#959595', fontSize: '1rem', padding: '.5rem 0', margin: 0}}>{"Error: " + errorMsg}</p>}
         {/* Add search summary message */}
         {!isLoading && inscriptionList.length > 0 && (
           <RowContainer style={{justifyContent: 'flex-start', alignItems: 'center'}}>
