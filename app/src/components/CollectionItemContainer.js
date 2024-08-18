@@ -162,6 +162,7 @@ const ItemContainer = styled.div`
   align-items: flex-start;
   gap: .75rem;
   cursor: pointer;
+  width: 100%;
 `;
 
 const MediaContainer = styled.div`
@@ -323,6 +324,10 @@ const ItemText = styled.p`
   font-size: ${props => props.isPrimary ? '1rem' : '.875rem'};
   color: ${props => props.isPrimary ? '#000000' : '#959595'};
   margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  width: 100%;
 
   transition: 
     background-color 350ms ease,
@@ -340,6 +345,7 @@ const InfoContainer = styled.div`
   align-items: flex-start;
   gap: .5rem;
   cursor: pointer;
+  width: 100%;
 `;
 
 const MetadataContainer = styled.div`

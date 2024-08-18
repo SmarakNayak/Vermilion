@@ -146,13 +146,13 @@ const GridItemContainer = (props) => {
             {props.collection && (
               <MetadataContainer>
                 <PaintIcon svgSize={'1rem'} svgColor={'#E34234'} />
-                {props.collection}
+                <InfoText>{props.collection}</InfoText>
               </MetadataContainer>
             )}
             {props.rune && (
-              <MetadataContainer isRune={true}>
+              <MetadataContainer>
                 <RuneIcon svgSize={'1rem'} svgColor={'#D23B75'} />
-                {props.rune}
+                <InfoText isRune>{props.rune}</InfoText>
               </MetadataContainer>
             )}
           </InfoContainer>
@@ -175,6 +175,7 @@ const ItemContainer = styled.div`
   align-items: flex-start;
   gap: .75rem;
   cursor: pointer;
+  width: 100%;
 `;
 
 const MediaContainer = styled.div`
@@ -336,6 +337,10 @@ const ItemText = styled.p`
   font-size: 1rem;
   color: #000000;
   margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  width: 100%;
 
   transition: 
     background-color 350ms ease,
@@ -347,18 +352,35 @@ const ItemText = styled.p`
   // }
 `;
 
+const InfoText = styled.p`
+  font-size: .875rem;
+  color: ${props => props.isRune ? '#D23B75' : '#E34234'};
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  width: 100%;
+
+  transition: 
+    background-color 350ms ease,
+    transform 150ms ease;
+  transform-origin: center center;
+`;
+
 const InfoContainer = styled.div`
   display: flex;
   flex-direction: column;
   align-items: flex-start;
   gap: .5rem;
   cursor: pointer;
+  width: 100%;
 `;
 
 const MetadataContainer = styled.div`
   display: flex;
   flex-direction: row;
   align-items: center;
+  justify-content: flex-start;
   height: 1.125rem;
   gap: .25rem;
   cursor: pointer;
@@ -366,7 +388,10 @@ const MetadataContainer = styled.div`
   padding: 0;
   font-size: .875rem;
   font-family: Relative Trial Medium;
-  color: ${props => props.isRune ? '#D23B75' : '#E34234'};
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  width: 100%;
 `;
 
 export default GridItemContainer;
