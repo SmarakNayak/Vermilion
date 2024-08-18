@@ -16,6 +16,7 @@ import Discover from '../pages/Discover';
 import Dbscan from '../pages/Dbscan';
 import Collection from '../pages/Collection';
 import Explore from '../pages/Explore';
+import NotFound from '../pages/NotFound';
 import TopSection from '../components/TopSection';
 import GA from '../components/GA';
 import useDocumentTitle from './useDocumentTitle'; // Import the custom hook
@@ -119,6 +120,7 @@ const Navigation = () => {
             element={<CollectionWithDynamicTitle />}
           />
           <Route path="/dbscan/:dbclass" element={<TitledComponent title="DBSCAN" Component={Dbscan} />} />          
+          <Route path="*" element={<TitledComponent title="404 - Page Not Found" Component={NotFound} />} />
         </Routes>
       </PageContainer>
     </BrowserRouter>
