@@ -55,8 +55,8 @@ const SearchMenu = ({ addressData, collectionData, inscriptionData, menuOpen, se
           <CategoryContainer>
             <CategoryHeader>Inscription</CategoryHeader>
             <CategoryOptions>
-              <UnstyledLink to={'/inscription/' + searchInput} onClick={handleLinkClick}>
-                <Option>{addCommas(searchInput)}</Option>
+              <UnstyledLink to={'/search/' + searchInput.replace(/,/g, '')} onClick={handleLinkClick}>
+                <Option>{searchInput}</Option> {/* Display original input with commas */}
               </UnstyledLink>
             </CategoryOptions>
           </CategoryContainer>
@@ -161,7 +161,7 @@ const CategoryHeader = styled.div`
   justify-content: space-between;
   align-items: center;
   font-family: Relative Trial Bold;
-  font-size: .75rem;
+  font-size: .875rem;
   color: #959595;
 `;
 
@@ -194,7 +194,7 @@ const Option = styled.button`
   }
 
   &:hover {
-    background-color: ${props => (props.isSelected ? '#000' : '#e0e0e0')};
+    background-color: ${props => (props.isSelected ? '#000' : '#E9E9E9')};
   }
 `;
 

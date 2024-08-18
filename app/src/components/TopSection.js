@@ -94,15 +94,18 @@ const TopSection = (props) => {
 
   const handleTextChange = (e) => {
     e.preventDefault();
-    setSearchInput(e.target.value);
-    setMenuOpen(e.target.value.trim() !== ''); // Set isOpen based on input value
-    if (e.target.value.trim() !== '') {
-      fetchTextSearch(e.target.value); // Assuming fetchTextSearch can optionally take a searchTerm
-      setCollectionData([]); // clear collection results 
-      setAddressData(null); // clear address results
+    const value = e.target.value;
+    setSearchInput(value); // Keep the original input with commas
+    setMenuOpen(value.trim() !== '');
+    if (value.trim() !== '') {
+      // Remove commas for search functionality, but keep original input for display
+      const searchTerm = value.replace(/,/g, '');
+      fetchTextSearch(searchTerm);
+      setCollectionData([]);
+      setAddressData(null);
       setInscriptionData(null);
     }
-  };
+  };  
 
   const handleKeyPress = (e) => {
     if (e.key === 13) {      
@@ -118,10 +121,12 @@ const TopSection = (props) => {
   const handleTextSubmit = async (e) => {
     e.preventDefault();
     if (searchInput.trim() === "") {
-      setIsError(true); // Set error state if input is blank
+      setIsError(true);
     } else {
-      fetchTextSearch(); // Assuming fetchTextSearch can optionally take a searchTerm
-      setIsError(false); // Reset error state on valid submission
+      // Remove commas from the input if it's a number
+      const searchTerm = searchInput.replace(/,/g, '');
+      fetchTextSearch(searchTerm);
+      setIsError(false);
     }
   };
 
