@@ -4,14 +4,16 @@ import { Link } from "react-router-dom";
 import { addCommas } from '../helpers/utils';
 import ArrowSquareIcon from '../assets/icons/ArrowSquareIcon';
 
-const LinkTag = ({ category, isLarge, link, value }) => (
-  <UnstyledLink to={link} target='_blank'>
+const LinkTag = ({ category, hideIcon, isLarge, link, value }) => (
+  <UnstyledLink to={link} {...(!hideIcon && { target: '_blank' })}>
     <TagContainer>
       <TagSpan isLarge={isLarge} isValue={true}>{value}</TagSpan>
       {category && (
         <TagSpan isLarge={isLarge}>{' • ' + category}</TagSpan>
       )}
-      <ArrowSquareIcon svgSize='1rem' svgColor='#959595' />
+      {!hideIcon && (
+        <ArrowSquareIcon svgSize='1rem' svgColor='#959595' />
+      )}
     </TagContainer>
   </UnstyledLink>
 );

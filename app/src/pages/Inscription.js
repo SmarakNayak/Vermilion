@@ -27,6 +27,8 @@ import PaintIcon from '../assets/icons/PaintIcon';
 import RuneIcon from '../assets/icons/RuneIcon';
 import FlexItem from "../components/FlexItem";
 import MasonryGrid from "../components/MasonryGrid";
+import Tag from "../components/Tag";
+import LinkTag from "../components/LinkTag";
 const iframecontentwindow = require("../scripts/iframeResizer.contentWindow.min.txt");
 
 const Inscription = () => {
@@ -369,12 +371,7 @@ const Inscription = () => {
     return (
       <>
         {displayedTags.map((item, index) => (
-          <UnstyledLink key={index} to={`/inscription/${item.number}`}>
-            <TagContainer>
-              <TagSpan isValue={true}>{addCommas(item.number)}</TagSpan>
-              <TagSpan>{' • ' + item.content_category}</TagSpan>
-            </TagContainer>
-          </UnstyledLink>
+          <LinkTag key={index} hideIcon={true} link={`/inscription/${item.number}`} value={addCommas(item.number)} category={item.content_category} />
         ))}
       </>
     );
@@ -429,20 +426,26 @@ const Inscription = () => {
               <DataContainer info gapSize={'1rem'}>
                 <SectionPadding gap={'.75rem'}>
                   {metadata?.collection_name != null && metadata?.collection_name != undefined && (
-                    <Stack gap={'.25rem'} horizontal={false}>
-                      <UnstyledLink to={'/collection/' + metadata?.collection_symbol}>
+                    <CollectionWrapper>
+                      <CollectionLink to={'/collection/' + metadata?.collection_symbol}>
                         <CollectionContainer>
-                          {metadata?.collection_name != null && metadata?.collection_name != undefined ? metadata?.collection_name : ""}
-                          <RibbonIcon svgSize={'1.25rem'} svgColor={'#E34234'} />
+                          <CollectionText>
+                            {metadata?.collection_name}
+                          </CollectionText>
+                          <IconWrapper>
+                            <RibbonIcon svgSize={'1.25rem'} svgColor={'#E34234'} />
+                          </IconWrapper>
                         </CollectionContainer>
-                      </UnstyledLink>
-                    </Stack>
+                      </CollectionLink>
+                    </CollectionWrapper>
                   )}
                   {metadata?.spaced_rune != null && metadata?.spaced_rune != undefined && (
                     <Stack gap={'.25rem'} horizontal={false}>
                       <CollectionContainer isRune={true}>
                         <RuneIcon svgSize={'1.25rem'} svgColor={'#D23B75'} />
-                        {metadata?.spaced_rune != null && metadata?.spaced_rune != undefined ? metadata?.spaced_rune : ""}
+                        <CollectionText>
+                          {metadata?.spaced_rune != null && metadata?.spaced_rune != undefined ? metadata?.spaced_rune : ""}
+                        </CollectionText>
                       </CollectionContainer>
                     </Stack>
                   )}
@@ -451,8 +454,8 @@ const Inscription = () => {
                       ? metadata.off_chain_metadata.name 
                       : addCommas(metadata?.number)}
                   </NumberText>
-                  {(metadata?.delegate || metadata?.is_recursive || metadata?.parents.length > 0) && (
-                    <Stack horizontal={true} gap={'.5rem'}>
+                  {(metadata?.delegate || metadata?.is_recursive || metadata?.parents.length > 0 || childrenInscriptions.length > 0) && (
+                    <Stack horizontal={true} gap={'.5rem'} style={{flexWrap: 'wrap'}}>
                       {metadata?.delegate && (
                         <TagContainer>
                           <LayersIcon svgSize={'1.125rem'} svgColor={'#000000'} />
@@ -600,10 +603,7 @@ const Inscription = () => {
                       <DataContainer gapSize={'0'}>
                         <ElementContainer style={{flexWrap: 'wrap'}}>
                           {metadata.off_chain_metadata.attributes.map((attribute, index) => (
-                            <TagContainer>
-                              <TagSpan isValue={true}>{attribute.value}</TagSpan>
-                              <TagSpan>{' • ' + attribute.trait_type}</TagSpan>
-                            </TagContainer>
+                            <Tag value={attribute.value} category={attribute.trait_type} />
                           ))}
                         </ElementContainer>
                       </DataContainer>
@@ -632,12 +632,7 @@ const Inscription = () => {
                         </SubSectionHeaderContainer>
                         <ElementContainer style={{flexWrap: 'wrap'}}>
                         {parentsData.map((parent, index) => (
-                          <UnstyledLink key={index} to={`/inscription/${parent.metadata.number}`}>
-                            <TagContainer>
-                              <TagSpan isValue={true}>{addCommas(parent.metadata.number)}</TagSpan>
-                              <TagSpan>{' • ' + parent.metadata.content_category}</TagSpan>
-                            </TagContainer>
-                          </UnstyledLink>
+                          <LinkTag key={index} hideIcon={true} link={`/inscription/${parent.metadata.number}`} value={addCommas(parent.metadata.number)} category={parent.metadata.content_category} />
                         ))}
                         </ElementContainer>
                       </SubSectionContainer>
@@ -652,12 +647,7 @@ const Inscription = () => {
                         </SubSectionHeaderContainer>
                         <ElementContainer style={{flexWrap: 'wrap'}}>
                         {recursiveSubmodulesData.map((submodule, index) => (
-                          <UnstyledLink key={index} to={`/inscription/${submodule.metadata.number}`}>
-                            <TagContainer>
-                              <TagSpan isValue={true}>{addCommas(submodule.metadata.number)}</TagSpan>
-                              <TagSpan>{' • ' + submodule.metadata.content_category}</TagSpan>
-                            </TagContainer>
-                          </UnstyledLink>
+                          <LinkTag key={index} hideIcon={true} link={`/inscription/${submodule.metadata.number}`} value={addCommas(submodule.metadata.number)} category={submodule.metadata.content_category} />
                         ))}
                         </ElementContainer>
                       </SubSectionContainer>
@@ -1016,11 +1006,10 @@ const PillContainer = styled.div`
   }
 `;
 
-const NumberText = styled.p`
+const NumberText = styled.h1`
   font-family: Relative Trial Bold;
   font-size: 2em;
   margin: 0;
-  height: 2.5rem;
 `;
 
 const InfoRowContainer = styled.div`
@@ -1295,6 +1284,10 @@ const SectionTextSpan = styled.span`
   gap: .5rem;
   font-family: Relative Trial Medium;
   font-size: 1rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  width: 100%;
 `;
 
 const SectionPadding = styled.div`
@@ -1343,18 +1336,31 @@ const ProvenanceCountText = styled.div`
   color: #959595;
 `;
 
+const CollectionWrapper = styled.div`
+  width: 100%;
+  max-width: 100%;
+`;
+
+const CollectionLink = styled(Link)`
+  display: inline-block;
+  max-width: 100%;
+  color: unset;
+  text-decoration: unset;
+`;
+
 const CollectionContainer = styled.div`
-  display: flex;
+  display: inline-flex;
   flex-direction: row;
   align-items: center;
-  gap: .25rem;
+  box-sizing: border-box;
   background-color: #F5F5F5;
   padding: .25rem .5rem;
   border-radius: .5rem;
   font-family: Relative Trial Medium;
   font-size: 1rem;
   color: ${props => props.isRune ? '#D23B75' : '#E34234'}; 
-  width: fit-content;
+  max-width: 100%;
+  width: 100%;
   cursor: pointer;
   transition: 
     background-color 350ms ease,
@@ -1364,18 +1370,24 @@ const CollectionContainer = styled.div`
   &:hover {
     background-color: #E9E9E9;
   }
-
-  // &:active {
-  //   transform: scale(0.96);
-  // }
 `;
 
-const CollectionText = styled.p`
-  font-family: Relative Trial Medium;
-  font-size: .875rem;
-  color: #000000;
-  margin: 0;
-  padding: 0;
+const CollectionText = styled.span`
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex: 1;
+  min-width: 0;
+  max-width: calc(100% - 1.5rem); // Adjust based on icon size
+`;
+
+const IconWrapper = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-left: .25rem;
+  width: 1.25rem;
 `;
 
 const SkeletonContainer = styled.div`
