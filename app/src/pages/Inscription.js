@@ -440,14 +440,24 @@ const Inscription = () => {
                     </CollectionWrapper>
                   )}
                   {metadata?.spaced_rune != null && metadata?.spaced_rune != undefined && (
-                    <Stack gap={'.25rem'} horizontal={false}>
-                      <CollectionContainer isRune={true}>
-                        <RuneIcon svgSize={'1.25rem'} svgColor={'#D23B75'} />
+                    <RuneWrapper>
+                      <RuneContainer isRune={true}>
+                        <IconWrapper isRune={true}>
+                          <RuneIcon svgSize={'1.25rem'} svgColor={'#D23B75'} />
+                        </IconWrapper>
                         <CollectionText>
-                          {metadata?.spaced_rune != null && metadata?.spaced_rune != undefined ? metadata?.spaced_rune : ""}
+                          {metadata?.spaced_rune}
                         </CollectionText>
-                      </CollectionContainer>
-                    </Stack>
+                      </RuneContainer>
+                    </RuneWrapper>
+                    // <Stack gap={'.25rem'} horizontal={false}>
+                    //   <CollectionContainer isRune={true}>
+                    //     <RuneIcon svgSize={'1.25rem'} svgColor={'#D23B75'} />
+                    //     <CollectionText>
+                    //       {metadata?.spaced_rune != null && metadata?.spaced_rune != undefined ? metadata?.spaced_rune : ""}
+                    //     </CollectionText>
+                    //   </CollectionContainer>
+                    // </Stack>
                   )}
                   <NumberText>
                     {metadata?.off_chain_metadata?.name 
@@ -1372,6 +1382,15 @@ const CollectionContainer = styled.div`
   }
 `;
 
+const RuneWrapper = styled.div`
+  display: inline-block;
+  max-width: 100%;
+`;
+
+const RuneContainer = styled(CollectionContainer)`
+  width: auto;
+`;
+
 const CollectionText = styled.span`
   white-space: nowrap;
   overflow: hidden;
@@ -1386,7 +1405,7 @@ const IconWrapper = styled.div`
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  margin-left: .25rem;
+  margin: ${props => props.isRune ? '0 .25rem 0 0' : '0 0 0 .25rem'}; 
   width: 1.25rem;
 `;
 
