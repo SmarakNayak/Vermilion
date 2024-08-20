@@ -668,6 +668,11 @@ const Inscription = () => {
                           <Stack horizontal={true} center={true} gap={'.5rem'}>
                             <SubSectionHeader>Child Inscriptions</SubSectionHeader>
                           </Stack>
+                          {childrenInscriptions.length > 6 && (
+                            <UnstyledLink to={`/children/${number}`}>
+                              <LinkButton isLink={true}>View all</LinkButton>
+                            </UnstyledLink>
+                          )}
                         </SubSectionHeaderContainer>
                         <ElementContainer style={{flexWrap: 'wrap'}}>
                           {renderLimitedTags(childrenInscriptions)}

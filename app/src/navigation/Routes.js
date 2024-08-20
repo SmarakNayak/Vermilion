@@ -21,6 +21,7 @@ import TopSection from '../components/TopSection';
 import GA from '../components/GA';
 import useDocumentTitle from './useDocumentTitle'; // Import the custom hook
 import { addCommas, formatAddress } from '../helpers/utils';
+import Children from '../pages/Children';
 
 // Wrap each component with a title-setting component
 const TitledComponent = ({ title, Component }) => {
@@ -74,6 +75,15 @@ const Navigation = () => {
               <TitledComponent 
                 title={(params) => `Editions of ${formatAddress(params.sha256)}`} 
                 Component={Edition} 
+              />
+            }
+          />
+          <Route 
+            path="/children/:number" 
+            element={
+              <TitledComponent 
+                title={(params) => `Children of ${addCommas(params.number)}`} 
+                Component={Children} 
               />
             }
           />
