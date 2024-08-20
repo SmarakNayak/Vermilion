@@ -16,6 +16,7 @@ import { shortenBytes } from '../helpers/utils';
 import GridItemContainer from '../components/GridItemContainer';
 import SmallItemContainer from '../components/SmallItemContainer';
 import ChevronDownSmallIcon from '../assets/icons/ChevronDownSmallIcon';
+import ChevronUpSmallIcon from '../assets/icons/ChevronUpSmallIcon';
 import ScrollIcon from '../assets/icons/ScrollIcon';
 import RibbonIcon from '../assets/icons/RibbonIcon';
 import SproutIcon from '../assets/icons/SproutIcon';
@@ -215,6 +216,13 @@ const Inscription = () => {
     // fetchRandom();
     // setNextNumber(parseInt(number)+1);
     // setPreviousNumber(parseInt(number)-1);
+
+    setSectionVisibility({
+      details: true,
+      collectionMetadata: true,
+      provenance: true,
+      satributes: true
+    });
   },[number])
 
   useEffect(()=> {
@@ -516,7 +524,11 @@ const Inscription = () => {
                     <InfoCircleIcon svgSize={'1.25rem'} svgColor={'#000000'} />
                     Details
                   </SectionTextSpan>
-                  <RotatableChevron svgSize={'1.25rem'} svgColor={'#000000'} isOpen={sectionVisibility.details} />
+                  {sectionVisibility.details ? (
+                    <ChevronUpSmallIcon svgSize={'1.25rem'} svgColor={'#000000'} />
+                  ) : (
+                    <ChevronDownSmallIcon svgSize={'1.25rem'} svgColor={'#000000'} />
+                  )}
                 </SectionHeader>
                 {/* <InfoSectionText>Details</InfoSectionText> */}
                 {sectionVisibility.details && (
@@ -606,7 +618,11 @@ const Inscription = () => {
                       <PaintIcon svgSize={'1.25rem'} svgColor={'#000000'} />
                       Collection Metadata
                     </SectionTextSpan>
-                    <ChevronDownSmallIcon svgSize={'1.25rem'} svgColor={'#000000'} />
+                    {sectionVisibility.collectionMetadata ? (
+                      <ChevronUpSmallIcon svgSize={'1.25rem'} svgColor={'#000000'} />
+                    ) : (
+                      <ChevronDownSmallIcon svgSize={'1.25rem'} svgColor={'#000000'} />
+                    )}
                   </SectionHeader>
                   {sectionVisibility.collectionMetadata && (
                     <SectionPadding gap={'1.5rem'}>
@@ -628,7 +644,11 @@ const Inscription = () => {
                     <RouteIcon svgSize={'1.25rem'} svgColor={'#000000'} />
                     Provenance
                   </SectionTextSpan>
-                  <ChevronDownSmallIcon svgSize={'1.25rem'} svgColor={'#000000'} />
+                  {sectionVisibility.provenance ? (
+                    <ChevronUpSmallIcon svgSize={'1.25rem'} svgColor={'#000000'} />
+                  ) : (
+                    <ChevronDownSmallIcon svgSize={'1.25rem'} svgColor={'#000000'} />
+                  )}
                 </SectionHeader>
                 {sectionVisibility.provenance && (
                   <SectionPadding gap={'1.5rem'}>
@@ -736,7 +756,11 @@ const Inscription = () => {
                       <ScrollIcon svgSize={'1.25rem'} svgColor={'#000000'} />
                       Satributes
                     </SectionTextSpan>
-                    <ChevronDownSmallIcon svgSize={'1.25rem'} svgColor={'#000000'} />
+                    {sectionVisibility.satributes ? (
+                      <ChevronUpSmallIcon svgSize={'1.25rem'} svgColor={'#000000'} />
+                    ) : (
+                      <ChevronDownSmallIcon svgSize={'1.25rem'} svgColor={'#000000'} />
+                    )}
                   </SectionHeader>
                   {sectionVisibility.satributes && (
                     <SectionPadding isLast={true}>
@@ -1490,7 +1514,7 @@ const TagSpan = styled.span`
   color: ${props => props.isValue ? '#000000' : '#959595'};
 `;
 
-const RotatableChevron = styled(ChevronDownSmallIcon)`
+const RotatableChevron = styled(ChevronUpSmallIcon)`
   transition: transform 0.3s ease;
   transform: ${props => props.isOpen ? 'rotate(0deg)' : 'rotate(-90deg)'};
 `;
