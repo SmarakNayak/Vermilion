@@ -1,7 +1,6 @@
 import React from 'react';
 import { BrowserRouter, Route, Routes, useParams } from 'react-router-dom';
 import styled from 'styled-components';
-import Home from '../pages/Home';
 import Inscription from '../pages/Inscription';
 import ExploreBlocks from '../pages/ExploreBlocks';
 import ExploreCollections from '../pages/ExploreCollections';
@@ -15,7 +14,6 @@ import Search from '../pages/Search';
 import Discover from '../pages/Discover';
 import Dbscan from '../pages/Dbscan';
 import Collection from '../pages/Collection';
-import Explore from '../pages/Explore';
 import NotFound from '../pages/NotFound';
 import TopSection from '../components/TopSection';
 import GA from '../components/GA';
@@ -133,6 +131,7 @@ const Navigation = () => {
               />
             } 
           />
+          <Route path="/discover" element={<TitledComponent title="Discover" Component={Discover} />} />
           <Route path="/search" element={<TitledComponent title="Search" Component={Search} />} />
           <Route path="/search/:query" element={<TitledComponent title="Search" Component={Search} />} />
           <Route 
