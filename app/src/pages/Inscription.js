@@ -685,6 +685,11 @@ const Inscription = () => {
                           <Stack horizontal={true} center={true} gap={'.5rem'}>
                             <SubSectionHeader>Referenced By</SubSectionHeader>
                           </Stack>
+                          {referencedByData.length > 6 && (
+                            <UnstyledLink to={`/references/${number}`}>
+                              <LinkButton isLink={true}>View all</LinkButton>
+                            </UnstyledLink>
+                          )}
                         </SubSectionHeaderContainer>
                         <ElementContainer style={{flexWrap: 'wrap'}}>
                           {renderLimitedTags(referencedByData)}

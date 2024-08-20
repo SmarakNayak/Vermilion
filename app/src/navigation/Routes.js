@@ -22,6 +22,7 @@ import GA from '../components/GA';
 import useDocumentTitle from './useDocumentTitle'; // Import the custom hook
 import { addCommas, formatAddress } from '../helpers/utils';
 import Children from '../pages/Children';
+import References from '../pages/References';
 
 // Wrap each component with a title-setting component
 const TitledComponent = ({ title, Component }) => {
@@ -84,6 +85,15 @@ const Navigation = () => {
               <TitledComponent 
                 title={(params) => `Children of ${addCommas(params.number)}`} 
                 Component={Children} 
+              />
+            }
+          />
+          <Route 
+            path="/references/:number" 
+            element={
+              <TitledComponent 
+                title={(params) => `References of ${addCommas(params.number)}`} 
+                Component={References} 
               />
             }
           />
