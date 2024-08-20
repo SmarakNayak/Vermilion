@@ -158,15 +158,19 @@ const MainContentStack = styled.div`
 `;
 
 const BackButtonContainer = styled.div`
-  display: inline-block; // This makes the container only as wide as its content
+  display: flex;
+  align-items: center;
 `;
 
 const UnstyledLink = styled(Link)`
   color: unset;
   text-decoration: unset;
+  display: flex;
+  align-items: center;
+  height: auto; // This allows the height to be determined by its content
 `;
 
-const LinkButton = styled.p`
+const LinkButton = styled.span` 
   font-family: Relative Trial Medium;
   font-size: .875rem;
   border: none;
@@ -177,7 +181,8 @@ const LinkButton = styled.p`
     color 350ms ease,
     transform 150ms ease;
   transform-origin: center center;
-  display: inline-block; // This ensures the text doesn't wrap
+  display: inline-block;
+  white-space: nowrap; // Prevents wrapping
 
   &:hover {
     color: #000000;
