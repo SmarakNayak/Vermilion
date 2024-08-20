@@ -205,9 +205,11 @@ const Discover = () => {
           </InscriptionContainer>
           <InfoContainer>
             <NumberText>{addCommas(inscription.number)}</NumberText>
-            {/* <MediaTextContainer>
-              <MediaTypeText>{inscription.content_type}</MediaTypeText>
-            </MediaTextContainer> */}
+            {inscription.collection_name && (
+              <UnstyledLink to={'/collection/' + inscription.collection_symbol}>
+                <CollectionText>{inscription.collection_name}</CollectionText>
+              </UnstyledLink>
+            )}
             <ButtonContainer>
               <Toaster />
               <ActionButton onClick={() => {copyToClipboard(`https://vermilion.place/inscription/` + inscription.number)}}>
@@ -474,6 +476,20 @@ const ActionButton = styled.div`
   &:active {
     transform: scale(0.96);
   };
+`;
+
+const UnstyledLink = styled(Link)`
+  color: unset;
+  text-decoration: unset;
+`;
+
+const CollectionText = styled.p`
+  font-family: Relative Trial Medium;
+  font-size: 1rem;
+  border: none;
+  margin: 0;
+  padding: 0;
+  color: #E34234;
 `;
 
 export default Discover;
