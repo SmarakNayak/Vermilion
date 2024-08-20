@@ -34,7 +34,7 @@ const Discover = () => {
     //load both responses at same time to avoid lag after genesis/ out of order
     setInscriptions([genesis_json, ...random_json])
   }
-
+  
   useEffect(() => {
     console.log("Initial fetch");
     fetchInitial();
@@ -484,7 +484,7 @@ const UnstyledLink = styled(Link)`
 `;
 
 const CollectionText = styled.p`
-  font-family: Relative Trial Medium;
+  font-family: Relative Trial Bold;
   font-size: 1rem;
   border: none;
   margin: 0;

@@ -8,6 +8,8 @@ import Stack from '../components/Stack';
 import { addCommas, copyText, formatAddress } from '../helpers/utils';
 import CopyIcon from '../assets/icons/CopyIcon';
 import HashIcon from '../assets/icons/HashIcon';
+import Tag from '../components/Tag';
+import CopyTag from '../components/CopyTag';
 
 const Edition = () => {
   let { sha256 } = useParams();
@@ -122,6 +124,8 @@ const Edition = () => {
     setEditions(newEditions);
     setHasMore(newEditions?.length === pageSize);
     setNextPageNo(1);
+
+    console.log('ed', newEditions)
   }
 
   const fetchData = async () => {
@@ -149,84 +153,193 @@ const Edition = () => {
   
   return (
     <MainContainer>
-      {/* Stack placed within main container to allow for filter section */}
-      <Stack horizontal={false} center={false} style={{gap: '1.5rem'}}>
-        <RowContainer>
-          <Container style={{gap: '1rem'}}>
-            {
-              {
-                'image': <ImageContainer src={blobUrl} />,
-                'svg': <SvgContainer dangerouslySetInnerHTML={{__html: textContent}} />,
-                'html': <HtmlContainer><StyledIframe src={"/api/inscription_number/" + firstEdition} scrolling='no' sandbox='allow-scripts'></StyledIframe></HtmlContainer>,
-                'text': <TextContainer>{textContent}</TextContainer>,
-                'video': <video controls loop muted autoplay><source src={blobUrl} type={contentType}/></video>,
-                'audio': <audio controls><source src={blobUrl} type={contentType}/></audio>,
-                'pdf': <TextContainer>pdf unsupported'</TextContainer>,
-                'model': <TextContainer>gltf model type unsupported</TextContainer>,
-                'unsupported': <TextContainer>{contentType} content type unsupported</TextContainer>,
-                'loading': <TextContainer>loading...</TextContainer>
-              }[contentType]
-            } 
-            <BlockText>{firstEdition !== null && firstEdition !== undefined ? 'Inscription ' + addCommas(firstEdition) : ''}</BlockText>
-          </Container>
-        </RowContainer>
-        <RowContainer style={{gap: '1rem', flexWrap: 'wrap'}}>
-          <InfoButton>
-            <HashIcon svgSize={'1rem'} svgColor={'#959595'} />
-            {editionCount + `${editionCount > 1 ? ' editions' : ' edition'}`}
-          </InfoButton>
-          <InfoButton isButton={true} onClick={() => copyText(sha256)}>
-            Sha256: {formatAddress(sha256)}
-            <CopyIcon svgSize={'1rem'} svgColor={'#959595'} />
-          </InfoButton>
-        </RowContainer>
-          <TableContainer>
-            <DivTable>
-              <DivRow header>
-                <DivCell header>Edition #</DivCell>
-                <DivCell header>Inscription #</DivCell>
-                <DivCell header>Inscription ID</DivCell>
-              </DivRow>
-              <GalleryContainer>
-                <StyledInfiniteScroll
-                  dataLength={editions?.length}
-                  next={fetchData}
-                  hasMore={hasMore}
-                  loader={
-                    <LoaderContainer>
-                      <p style={{color: '#959595', margin: 0}}>Loading...</p>
-                    </LoaderContainer>
-                  }
-                >
-                  {editions.map((edition, index) => (
-                    <UnstyledLink to={'/inscription/' + edition.number}>
-                      <DivRow key={index}>
-                        <DivCell>{edition.edition}</DivCell>
-                        <DivCell>{addCommas(edition.number)}</DivCell>
-                        <DivCell>{formatAddress(edition.id)}</DivCell>
-                      </DivRow>
-                    </UnstyledLink>
-                  ))}
-              </StyledInfiniteScroll>
-            </GalleryContainer>
-            </DivTable>
-          </TableContainer>
-        
-      </Stack>
+      <HeaderContainer>
+        <MainContentStack>
+          <BackButtonContainer>
+            <UnstyledLink to={`/inscription/${firstEdition}`}>
+              <LinkButton isLink={true}>Back to Inscription page</LinkButton>
+            </UnstyledLink>
+          </BackButtonContainer>
+          <PageText>Editions of {firstEdition !== null && firstEdition !== undefined ? addCommas(firstEdition) : ''}</PageText>
+        </MainContentStack>
+      </HeaderContainer>
+      <RowContainer style={{gap: '.5rem', flexFlow: 'wrap'}}>
+        <Tag isLarge={true} value={addCommas(editionCount)} category={'Editions'} />
+        <CopyTag isLarge={true} value={formatAddress(sha256)} category={'SHA256'} copy={sha256} />
+      </RowContainer>
+      <Divider></Divider>
+      <TableContainer>
+        <DivTable>
+          <DivRow header>
+            <DivCell header>Edition #</DivCell>
+            <DivCell header>Inscription #</DivCell>
+            <DivCell header>Inscription ID</DivCell>
+          </DivRow>
+          <GalleryContainer>
+            <StyledInfiniteScroll
+              dataLength={editions?.length}
+              next={fetchData}
+              hasMore={hasMore}
+              loader={
+                <LoaderContainer>
+                  <p style={{color: '#959595', margin: 0}}>Loading...</p>
+                </LoaderContainer>
+              }
+            >
+              {editions.map((edition, index) => (
+                <UnstyledLink to={'/inscription/' + edition.number}>
+                  <DivRow key={index}>
+                    <DivCell>{edition.edition}</DivCell>
+                    <DivCell>{addCommas(edition.number)}</DivCell>
+                    <DivCell>{formatAddress(edition.id)}</DivCell>
+                  </DivRow>
+                </UnstyledLink>
+              ))}
+          </StyledInfiniteScroll>
+        </GalleryContainer>
+        </DivTable>
+      </TableContainer>
     </MainContainer>
   )
 }
 
-const StyledInfiniteScroll = styled(InfiniteScroll)`
-  overflow: hidden !important;
+const MainContainer = styled.div`
+  width: calc(100% - 6rem);
+  padding: 1.5rem 3rem 2.5rem 3rem;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+
+  @media (max-width: 630px) {
+    width: calc(100% - 3rem);
+    padding: 1.5rem 1.5rem 2.5rem 1.5rem;
+  }
+`;
+
+const HeaderContainer = styled.div`
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
   width: 100%;
-`
+
+  @media (max-width: 864px) {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1.5rem;
+  }
+`;
+
+const MainContentStack = styled.div`
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+  max-width: calc(100% - 10.5rem);
+  gap: .5rem;
+
+  @media (max-width: 864px) {
+    max-width: 100%;
+  }
+`;
+
+const BackButtonContainer = styled.div`
+  display: inline-block; // This makes the container only as wide as its content
+`;
+
+const UnstyledLink = styled(Link)`
+  color: unset;
+  text-decoration: unset;
+`;
+
+const LinkButton = styled.p`
+  font-family: Relative Trial Medium;
+  font-size: .875rem;
+  border: none;
+  margin: 0;
+  padding: 0;
+  color: #959595;
+  transition: 
+    color 350ms ease,
+    transform 150ms ease;
+  transform-origin: center center;
+  display: inline-block; // This ensures the text doesn't wrap
+
+  &:hover {
+    color: #000000;
+  }
+`;
+
+const RowContainer = styled.div`
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  width: 100%;
+`;
 
 const GalleryContainer = styled.div`
   display: flex;
   flex-direction: column;
   width: 100%;
 `;
+
+const PageText = styled.p`
+    font-family: Relative Trial Bold;
+    font-size: 1.5rem;
+    margin: 0;
+`;
+
+const InfoText = styled.p`
+  font-family: Relative Trial Medium;
+  font-size: ${props => props.isLarge ? '1rem' : '.875rem'};
+  color: ${props => props.isPrimary ? '#000000' : '#959595'};
+  margin: 0;
+`;
+
+const Divider = styled.div`
+  width: 100%;
+  border-bottom: 1px solid #E9E9E9;
+`;
+
+const FilterButton = styled.button`
+  height: 3rem;
+  width: 3rem;
+  border-radius: 1.5rem;
+  border: none;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  gap: .5rem;
+  background-color: #F5F5F5;
+  transition: 
+    background-color 350ms ease,
+    transform 150ms ease;
+  transform-origin: center center;
+
+  &:hover {
+    background-color: #E9E9E9;
+  }
+
+  &:active {
+    transform: scale(0.96);
+  }
+`;
+
+const VisibilityButton = styled(FilterButton)``;
+
+const LoadingText = styled.p`
+  font-family: Relative Trial Medium;
+  font-size: 1rem;
+  color: #959595;
+  text-align: center;
+`;
+
+const StyledInfiniteScroll = styled(InfiniteScroll)`
+  overflow: hidden !important;
+  width: 100%;
+`
 
 const PageContainer = styled.div`
   width: 100%;
@@ -237,15 +350,6 @@ const PageContainer = styled.div`
   align-items: start;
   // justify-content: center;
   margin: 0;
-`;
-
-const MainContainer = styled.div`
-  width: calc(100% - 3rem);
-  padding: .5rem 1.5rem 2.5rem 1.5rem;
-  margin: 0;
-  display: flex;
-  flex-direction: row;
-  align-items: flex-start;
 `;
 
 const ImageContainer = styled.img`
@@ -310,14 +414,6 @@ const StyledIframe = styled.iframe`
   aspect-ratio: 1/1;
 `
 
-const RowContainer = styled.div`
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  justify-content: center;
-  width: 100%;
-`;
-
 const Container = styled.div`
   display: flex;
   flex-direction: row;
@@ -366,8 +462,6 @@ const TableContainer = styled.div`
   width: 100%;
   flex; 1;
   gap: 1.5rem;
-  padding-top: 1.5rem;
-  border-top: 1px solid #E9E9E9;
 `;
 
 const DivTable = styled.div`
@@ -375,15 +469,14 @@ const DivTable = styled.div`
   flex-direction: column;
   align-items: center;
   width: 100%;
-  max-width: 40rem;
 `;
 
 const DivRow = styled.div`
   display: flex;
   flex-direction: row;
-  width: calc(100% - 6rem);
+  width: calc(100% - 3rem);
   border-radius: .5rem;
-  padding: ${props => props.header ? '0 3rem' : '1rem 3rem'};
+  padding: ${props => props.header ? '0 1.5rem' : '1rem 1.5rem'};
   background-color: ${props => props.header ? 'transparent' : 'transparent'};
   cursor: ${props => props.header ? 'default' : 'pointer'};
   transition: 
@@ -408,7 +501,7 @@ const DivCell = styled.div`
   flex: 1;
   margin: 0;
   font-family: 'Relative Trial Medium';
-  font-size: .875rem;
+  font-size: ${props => props.header ? '.875rem' : '1rem'};
   color: ${props => props.header ? '#959595' : '#000000'};
   &:nth-child(1) {
     justify-content: flex-start;
@@ -419,44 +512,6 @@ const DivCell = styled.div`
       display: none;
     }
   }
-`;
-
-const FilterButton = styled.button`
-  height: 40px;
-  border-radius: .5rem;
-  border: none;
-  padding: .5rem 1rem;
-  margin: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  gap: .5rem;
-  font-family: 'ABC Camera Plain Unlicensed Trial Medium';
-  font-size: .875rem;
-  color: #000000;
-  background-color: #F5F5F5;
-  transition: 
-    background-color 350ms ease,
-    transform 150ms ease;
-  transform-origin: center center;
-
-  &:hover {
-    background-color: #E9E9E9;
-  }
-
-  &:active {
-    transform: scale(0.96);
-  }
-`;
-
-const UnstyledLink = styled(Link)`
-  color: unset;
-  text-decoration: unset;
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
 `;
 
 const LoaderContainer = styled.div`
