@@ -247,8 +247,8 @@ const PageContainer = styled.div`
   overflow-y: auto;
   overscroll-behavior-y: contain;
   scroll-snap-type: y mandatory;
-  height: 100vh;
-  max-height: calc(100vh - 4.5rem);
+  height: 100%;
+  max-height: calc(100vh - 5rem);
   width: 100%;
   -ms-overflow-style: none;
   scrollbar-width: none;
@@ -414,7 +414,7 @@ const NumberText = styled.p`
 `;
 
 const ContentContainer = styled.div`
-  height: 100vh;
+  height: calc(100vh - 5rem);
   width: 100%;
   display: flex;
   flex-direction: column;
