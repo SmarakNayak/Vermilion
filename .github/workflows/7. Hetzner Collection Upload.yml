@@ -1,5 +1,5 @@
 # This is a workflow that add collection json to the server
-name: 6. Hetzner Collection json upload
+name: 7. Hetzner Collection json upload (deprecated)
 
 # Controls when the workflow will run
 on:
