@@ -13,8 +13,9 @@ ubuntu ALL=(ALL) NOPASSWD:ALL
 
 3. Allow SSH access for ubuntu
 su ubuntu
+cd ~
 mkdir .ssh
-nano .ssh/authorized_keys
+touch .ssh/authorized_keys
 chown -R ubuntu:ubuntu ~/.ssh
 chmod -R 700 ~/.ssh
 chmod -f 600 ~/.ssh/authorized_keys
