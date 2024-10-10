@@ -185,7 +185,7 @@ const CollectionsTable = () => {
               </DivCell>
               <DivCell>
                 <DataWrapper>
-                  {row?.first_inscribed_date ? shortenDate(row.first_inscribed_date) : ""}
+                  {row?.first_inscribed_date ? shortenDate(row?.first_inscribed_date) : ""}
                 </DataWrapper>
               </DivCell>
               <DivCell>
@@ -195,17 +195,17 @@ const CollectionsTable = () => {
               </DivCell>
               <DivCell>
                 <DataWrapper>
-                  {row?.total_inscription_size ? shortenBytes(row.total_inscription_size) : 0}
+                  {row?.total_inscription_size ? shortenBytes(row?.total_inscription_size) : 0}
                 </DataWrapper>
               </DivCell>
               <DivCell>
                 <DataWrapper>
-                  {row?.total_volume ? addCommas(formatSats(row.total_volume)) : "0 BTC"}
+                  {row?.total_volume ? addCommas(formatSats(row?.total_volume)) : "0 BTC"}
                 </DataWrapper>
               </DivCell>
               <DivCell>
                 <DataWrapper>
-                  {row?.total_inscription_fees ? formatSats(row.total_inscription_fees) : "0 BTC"}
+                  {row?.total_inscription_fees ? formatSats(row?.total_inscription_fees) : "0 BTC"}
                 </DataWrapper>
               </DivCell>
             </DivRow>
