@@ -56,7 +56,7 @@ const SearchMenu = ({ addressData, collectionData, inscriptionData, menuOpen, se
             <CategoryHeader>Inscription</CategoryHeader>
             <CategoryOptions>
               <UnstyledLink to={'/inscription/' + searchInput.replace(/,/g, '')} onClick={handleLinkClick}>
-                <Option>{searchInput}</Option> {/* Display original input with commas */}
+                <Option>{addCommas(searchInput)}</Option> {/* Display original input with commas */}
               </UnstyledLink>
             </CategoryOptions>
           </CategoryContainer>
