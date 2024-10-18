@@ -146,7 +146,7 @@ const FilterMenu = ({ isOpen, onClose, onSelectionChange, initialSelection }) =>
       "vintage", "nakamoto", "firsttransaction", "palindrome", "pizza", "block9", "block9_450", "block78", 
       "alpha", "omega", "uniform_palinception", "perfect_palinception", "block286", "jpeg", 
       "uncommon", "rare", "epic", "legendary", "mythic", 
-      // "black_uncommon", "black_rare", "black_epic", "black_legendary" BACKEND BUGGED, removing for now
+      "black_uncommon", "black_rare", "black_epic", "black_legendary" 
     ] },
   ];
 
