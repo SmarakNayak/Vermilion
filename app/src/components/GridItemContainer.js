@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import styled from 'styled-components';
 import { Link, useNavigate } from "react-router-dom";
 import { addCommas } from '../helpers/utils';
@@ -11,6 +11,10 @@ const GridItemContainer = (props) => {
   const [textContent, setTextContent] = useState(null);
   const [rawContentType, setRawContentType] =useState(null);
   const [contentType, setContentType] = useState(null);
+
+  // state for 3d
+  const [modelUrl, setModelUrl] = useState(null);
+  const modelViewerRef = useRef(null);
 
   //Update content
   useEffect(() => {
@@ -88,7 +92,11 @@ const GridItemContainer = (props) => {
           break;
         //Model types
         case "model/gltf-binary":
+          setContentType("unsupported");
+          break;
+        case "model/gltf+json":
           setContentType("model");
+          setModelUrl(url);  // Set the modelUrl for 3D models
           break;
         default:
           setContentType("unsupported");
@@ -117,6 +125,23 @@ const GridItemContainer = (props) => {
   const shouldApplyMargin = 
     (props.numberVisibility && !props.collection && !props.rune);
 
+  // render 3d inscriptions
+  useEffect(() => {
+    if (contentType === 'model' && modelUrl) {
+      const modelViewer = modelViewerRef.current;
+      if (modelViewer) {
+        modelViewer.src = modelUrl;
+        modelViewer.alt = "3D model";
+        modelViewer.autoRotate = true;
+        modelViewer.cameraControls = true;
+        modelViewer.environmentImage = "neutral";
+        modelViewer.shadowIntensity = 1;
+        modelViewer.exposure = 0.7;  // Adjust this for overall brightness
+        modelViewer.style.backgroundColor = "transparent";
+      }
+    }
+  }, [contentType, modelUrl]);
+
   return(
     <UnstyledLink 
       to={'/inscription/' + props.number} 
@@ -134,7 +159,25 @@ const GridItemContainer = (props) => {
               'video': <video controls loop muted autoplay style={{width: '100%', height: 'auto', aspectRatio: '1/1'}}><ContentOverlay /><source src={blobUrl} type={rawContentType}/></video>,
               'audio': <audio controls><ContentOverlay /><source src={blobUrl} type={rawContentType}/></audio>,
               'pdf': <TextContainer>PDF not yet supported</TextContainer>,
-              'model': <TextContainer>glTF model type not yet supported</TextContainer>,
+              'model': modelUrl ? (
+                <ModelViewerContainer>
+                  <model-viewer
+                  ref={modelViewerRef}
+                  // camera-controls
+                  disable-zoom
+                  auto-rotate
+                  ar
+                  ar-status="not-presenting"
+                  interaction-prompt="none"
+                  loading="lazy"
+                  touch-action="none"
+                  src={modelUrl}
+                  style={{height: '100%', width: '100%'}}
+                  >
+                    <div slot="progress-bar" />
+                  </model-viewer>
+                </ModelViewerContainer>
+              ) : <TextContainer loading isCentered>Loading 3D model...</TextContainer>,                
               'unsupported': <TextContainer isCentered>{rawContentType} content type not yet supported</TextContainer>,
               'loading': <TextContainer loading isCentered>Loading...</TextContainer>
             }[contentType]
@@ -320,6 +363,12 @@ const StyledIframe = styled.iframe`
   width: 100%;
   resize: both;
   //aspect-ratio: 1/1;
+`;
+
+const ModelViewerContainer = styled.div`
+  width: 100%;
+  height: 100%;
+  aspect-ratio: 1/1;
 `;
 
 const ContentOverlay = styled.div`
