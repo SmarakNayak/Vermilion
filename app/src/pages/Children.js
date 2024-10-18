@@ -4,7 +4,7 @@ import styled from 'styled-components';
 
 import TopSection from '../components/TopSection';
 import Stack from '../components/Stack';
-import { addCommas, copyText, formatTimestampMs } from '../helpers/utils';
+import { addCommas, copyText, formatTimestampMs, shortenDate } from '../helpers/utils';
 import FilterIcon from '../assets/icons/FilterIcon';
 import EyeIcon from '../assets/icons/EyeIcon';
 import ChevronDownIcon from '../assets/icons/ChevronDownIcon';
@@ -17,8 +17,9 @@ import FilterMenu from '../components/FilterMenu';
 import GalleryInfiniteScroll from '../components/GalleryInfiniteScroll';
 import InscriptionIcon from '../components/InscriptionIcon';
 import CollectionIcon from '../components/CollectionIcon';
+import Tag from '../components/Tag';
 
-const Children = () => {
+const Children = ({ setParentNumbers }) => {
   let { number } = useParams();
   const [baseApi, setBaseApi] = useState(null); 
   const [metadata, setMetadata] = useState(null);
@@ -31,9 +32,14 @@ const Children = () => {
   useEffect(() => {
     const fetchInscriptionData = async () => {
       try {
-        const metadataResponse = await fetch(`/api/inscription_metadata_number/${number}`);
+        const metadataResponse = await fetch(`/api/on_chain_collection_summary/${number}`);
         const metadataJson = await metadataResponse.json();
         setMetadata(metadataJson);
+        
+        // Pass parent numbers up to the parent component
+        if (metadataJson?.parent_numbers) {
+          setParentNumbers(metadataJson.parent_numbers);
+        }
         
       } catch (error) {
         console.error("Error fetching inscription data:", error);
@@ -41,10 +47,24 @@ const Children = () => {
     };
 
     fetchInscriptionData();
-  }, [number]);
+  }, [number, setParentNumbers]);
 
   useEffect(() => {
     let query_string = `/api/inscription_children_number/${number}?sort_by=${selectedSortOption}`;
+    if (selectedFilterOptions["Content Type"].length > 0) {
+      query_string += "&content_types=" + selectedFilterOptions["Content Type"].toString();
+    }
+    if (selectedFilterOptions["Satributes"].length > 0) {
+      query_string += "&satributes=" + selectedFilterOptions["Satributes"].toString();
+    }
+    if (selectedFilterOptions["Charms"].length > 0) {
+      query_string += "&charms=" + selectedFilterOptions["Charms"].toString();
+    }
+    setBaseApi(query_string);
+  }, [number, selectedSortOption, selectedFilterOptions]);
+
+  useEffect(() => {
+    let query_string = `/api/inscriptions_in_on_chain_collection/${number}?sort_by=${selectedSortOption}`;
     if (selectedFilterOptions["Content Type"].length > 0) {
       query_string += "&content_types=" + selectedFilterOptions["Content Type"].toString();
     }
@@ -79,14 +99,24 @@ const Children = () => {
     <MainContainer>
       <HeaderContainer>
         <MainContentStack>
-          <BackButtonContainer>
+          <InfoText>Children</InfoText>
+          <PageText>Children of {metadata?.parent_numbers ? metadata.parent_numbers.map(num => addCommas(num)).join(' • ') : ''}</PageText>
+          <InfoText>First Inscribed {shortenDate(metadata?.first_inscribed_date)} • Last Inscribed {shortenDate(metadata?.last_inscribed_date)}</InfoText>
+          {/* <BackButtonContainer>
             <UnstyledLink to={`/inscription/${number}`}>
               <LinkButton isLink={true}>Back to Inscription page</LinkButton>
             </UnstyledLink>
-          </BackButtonContainer>
-          <PageText>Children of {addCommas(number)}</PageText>
+          </BackButtonContainer> */}
+          {/* <PageText>Children of {addCommas(number)}</PageText> */}
         </MainContentStack>
       </HeaderContainer>
+      <RowContainer style={{gap: '.5rem', flexFlow: 'wrap'}}>
+        <Tag isLarge={true} value={metadata?.supply ? addCommas(metadata?.supply) : 0} category={'Supply'} />
+        <Tag isLarge={true} value={metadata?.total_volume ? formatSats(metadata.total_volume) : "0 BTC"} category={'Traded Volume'} />
+        <Tag isLarge={true} value={metadata?.range_start ? addCommas(metadata?.range_start) + " to " + addCommas(metadata?.range_end) : ""} category={'Range'} />
+        <Tag isLarge={true} value={metadata?.total_inscription_size ? shortenBytes(metadata.total_inscription_size) : 0} category={'Total Size'} />
+        <Tag isLarge={true} value={metadata?.total_inscription_fees ? formatSats(metadata.total_inscription_fees) : "0 BTC"} category={'Total Fees'} />
+      </RowContainer>
       <Divider></Divider>
       <RowContainer>
         <Stack horizontal={true} center={false} style={{gap: '.75rem'}}>

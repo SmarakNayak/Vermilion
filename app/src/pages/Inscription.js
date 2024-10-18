@@ -30,7 +30,7 @@ import FlexItem from "../components/FlexItem";
 import MasonryGrid from "../components/MasonryGrid";
 import Tag from "../components/Tag";
 import LinkTag from "../components/LinkTag";
-const iframecontentwindow = require("../scripts/iframeResizer.contentWindow.min.txt");
+// const iframecontentwindow = require("../scripts/iframeResizer.contentWindow.min.txt");
 
 const Inscription = () => {
   let { number } = useParams();
@@ -76,6 +76,7 @@ const Inscription = () => {
       setBlobUrl(null);
       setTextContent(null);
       setContentType("loading");
+
       //1. Get content
       const response = await fetch("/api/inscription_number/"+number);
       //2. Assign local url
@@ -689,7 +690,7 @@ const Inscription = () => {
                             <SubSectionHeader>Child Inscriptions</SubSectionHeader>
                           </Stack>
                           {childrenInscriptions.length > 6 && (
-                            <UnstyledLink to={`/children/${number}`}>
+                            <UnstyledLink to={`/children/${metadata.id}`}>
                               <LinkButton isLink={true}>View all</LinkButton>
                             </UnstyledLink>
                           )}
@@ -725,10 +726,7 @@ const Inscription = () => {
                         </SubSectionHeaderContainer>
                         <ElementContainer style={{flexWrap: 'wrap'}}>
                           {delegateData?.metadata.number && (
-                            <TagContainer>
-                              <TagSpan isValue={true}>{addCommas(delegateData.metadata.number)}</TagSpan>
-                              <TagSpan>{' • ' + delegateData.metadata.content_category}</TagSpan>
-                            </TagContainer>
+                            <LinkTag hideIcon={true} link={`/inscription/${delegateData.metadata.number}`} value={addCommas(delegateData.metadata.number)} category={delegateData.metadata.content_category} />
                           )}
                         </ElementContainer>
                       </SubSectionContainer>

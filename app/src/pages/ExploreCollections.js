@@ -12,6 +12,7 @@ import FilterIcon from '../assets/icons/FilterIcon';
 import ChevronDownIcon from '../assets/icons/ChevronDownIcon';
 import ChevronDownSmallIcon from '../assets/icons/ChevronDownSmallIcon';
 import ChevronUpSmallIcon from '../assets/icons/ChevronUpSmallIcon';
+import InfoCircleIcon from '../assets/icons/InfoCircleIcon';
 import Stat from '../components/Stat';
 import BlockRow from '../components/BlockRow';
 import SortbyDropdown from '../components/Dropdown';
@@ -22,6 +23,7 @@ import { formatSats } from '../helpers/utils';
 import BlockTable from '../components/BlockTable';
 import CollectionsTable from '../components/CollectionsTable';
 import ReactGA from 'react-ga';
+import OnChainCollectionsTable from '../components/OnChainCollectionsTable';
 
 const ExploreCollections = () => {
   const [baseApi, setBaseApi] = useState(null); 
@@ -29,6 +31,7 @@ const ExploreCollections = () => {
   const [filterVisibility, setFilterVisibility] = useState(false);
   const [selectedSortOption, setSelectedSortOption] = useState('newest');
   const [selectedFilterOptions, setSelectedFilterOptions] = useState({"Content Type": ["image"], "Satributes": [], "Charms":[]});
+  const [activeTab, setActiveTab] = useState('Offchain');
 
   // record event in GA
   useEffect(() => {
@@ -75,15 +78,61 @@ const ExploreCollections = () => {
     // console.log('Selected filter option:', filterOptions);
   };
 
+    // function to update active tab
+    const handleTabClick = (tabName) => {
+      setActiveTab(tabName);
+    };
+
   return (
     <MainContainer>
       <RowContainer style={{justifyContent: 'flex-start'}}>
         <PageText>Collections</PageText>
       </RowContainer>
       <Divider />
-      <ExploreContainer>
+      <RowContainer style={{justifyContent: 'flex-start'}}>
+        <ButtonContainer>
+          <TabButton 
+            onClick={() => handleTabClick('Offchain')}
+            isActive={activeTab === 'Offchain'}
+            >
+            Offchain
+          </TabButton>
+          <TabButton 
+            onClick={() => handleTabClick('Onchain')}
+            isActive={activeTab === 'Onchain'}
+            >
+            Onchain
+          </TabButton>
+        </ButtonContainer>
+      </RowContainer>
+      {activeTab === 'Offchain' && (
+        <ExploreContainer>
+          <NoteContainer>
+            <IconWrapper>
+              <InfoCircleIcon svgSize={'1rem'} svgColor={'#959595'} />
+            </IconWrapper>
+            <NoteText>
+              Collections that use JSON-based provenance, which is centrally controlled and offchain. This table includes both offchain collections and onchain collections as listed on marketplaces.
+            </NoteText>
+          </NoteContainer>
+          <CollectionsTable/>
+        </ExploreContainer>
+      )}
+      {activeTab === 'Onchain' && (
+        <ExploreContainer>
+          <NoteContainer>
+            <IconWrapper>
+              <InfoCircleIcon svgSize={'1rem'} svgColor={'#959595'} />
+            </IconWrapper>            <NoteText>
+            Collections that use parent-child provenance, the standard way to immutably record a collection on Bitcoin. Multi-parent collections are displayed both as combined entries and as separate entries for individual parents.
+            </NoteText>
+          </NoteContainer>
+          <OnChainCollectionsTable />
+        </ExploreContainer>
+      )}
+      {/* <ExploreContainer>
         <CollectionsTable/>
-      </ExploreContainer>
+      </ExploreContainer> */}
     </MainContainer>    
   )
 }
@@ -139,55 +188,33 @@ const Divider = styled.div`
   border-bottom: 1px solid #E9E9E9;
 `;
 
-const VisibilityButton = styled.button`
-  height: 3rem;
-  width: 3rem;
-  border-radius: 1.5rem;
-  border: none;
-  padding: .5rem;
-  margin: 0;
+const ButtonContainer = styled.div`
   display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  background-color: #F5F5F5;
-  transition: 
-    background-color 350ms ease,
-    transform 150ms ease;
-  transform-origin: center center;
-
-  &:hover {
-    background-color: #E9E9E9;
-  }
-
-  &:active {
-    transform: scale(0.96);
-  }
+  flex-direction: row;
+  gap: 1.5rem;
 `;
 
-const FilterButton = styled.button`
-  height: 3rem;
-  width: 3rem;
-  border-radius: 1.5rem;
+const TabButton = styled.button`
   border: none;
+  border-bottom: ${props => props.isActive ? '2px solid #E34234' : '2px solid transparent'};
+  padding: .75rem .25rem;
   margin: 0;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   gap: .5rem;
-  background-color: #F5F5F5;
+  font-family: Relative Trial Bold;
+  font-size: 1rem;
+  color: ${props => props.isActive ? '#E34234' : '#959595'}; 
+  background-color: transparent; 
   transition: 
     background-color 350ms ease,
     transform 150ms ease;
   transform-origin: center center;
 
   &:hover {
-    background-color: #E9E9E9;
-  }
-
-  &:active {
-    transform: scale(0.96);
+    color: ${props => props.isActive ? '#E34234' : '#E34234'};
   }
 `;
 
@@ -197,6 +224,31 @@ const ExploreContainer = styled.div`
   width: 100%;
   flex; 1;
   gap: 1.5rem;
+`;
+
+const NoteContainer = styled.div`
+  display: flex;
+  flex-direction: row;
+  width: 100%;
+  // flex: 1;
+  gap: .5rem;
+  align-items: flex-start;
+`;
+
+const IconWrapper = styled.div`
+  flex-shrink: 0; 
+  width: 16px; 
+  height: 16px;
+  margin-top: 1px;
+`;
+
+const NoteText = styled.p`
+  font-family: Relative Trial Medium;
+  font-size: .875rem;
+  color: #959595;
+  margin: 0;
+  padding: 0;
+  flex: 1;
 `;
 
 export default ExploreCollections;

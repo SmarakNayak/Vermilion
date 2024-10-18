@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { BrowserRouter, Route, Routes, useParams } from 'react-router-dom';
 import styled from 'styled-components';
 import Inscription from '../pages/Inscription';
@@ -48,6 +48,21 @@ const CollectionWithDynamicTitle = () => {
   return <Collection />;
 };
 
+// New wrapper component for Children
+const ChildrenWithDynamicTitle = () => {
+  const [parentNumbers, setParentNumbers] = useState([]);
+  const { number } = useParams();
+
+  useDocumentTitle(() => {
+    if (parentNumbers.length > 0) {
+      return `Children of ${parentNumbers.map(num => addCommas(num)).join(' • ')}`;
+    }
+    return `Children of ${addCommas(number)}`;
+  });
+
+  return <Children setParentNumbers={setParentNumbers} />;
+};
+
 const Navigation = () => {
   return (
     <BrowserRouter>
@@ -79,12 +94,7 @@ const Navigation = () => {
           />
           <Route 
             path="/children/:number" 
-            element={
-              <TitledComponent 
-                title={(params) => `Children of ${addCommas(params.number)}`} 
-                Component={Children} 
-              />
-            }
+            element={<ChildrenWithDynamicTitle />}
           />
           <Route 
             path="/references/:number" 
