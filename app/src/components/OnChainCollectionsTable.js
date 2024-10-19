@@ -180,8 +180,8 @@ const OnChainCollectionsTable = () => {
               <DivCell first={true}>
                 <DataWrapper first={true}>
                   <BlockImgContainer>
-                    {row?.range_start ? 
-                      <InscriptionIcon endpoint = {"/api/inscription_number/" + row.range_start} useBlockIconDefault = {false}></InscriptionIcon> :
+                    {row?.parent_numbers ? 
+                      <InscriptionIcon endpoint = {"/api/inscription_number/" + row.parent_numbers[0]} useBlockIconDefault = {false}></InscriptionIcon> :
                       <ImageIcon svgSize={'2rem'} svgColor={'#E34234'}></ImageIcon>
                     }
                   </BlockImgContainer>
