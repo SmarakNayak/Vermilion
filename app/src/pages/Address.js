@@ -13,6 +13,7 @@ import FilterIcon from '../assets/icons/FilterIcon';
 import ChevronDownIcon from '../assets/icons/ChevronDownIcon';
 import WalletIcon from '../assets/icons/WalletIcon';
 import CopyIcon from '../assets/icons/CopyIcon';
+import GridIcon from '../assets/icons/GridIcon';
 import Stat from '../components/Stat';
 import BlockRow from '../components/BlockRow';
 
@@ -25,6 +26,7 @@ const Address = () => {
   const [inscriptionList, setInscriptionList] = useState([]); 
   const [numberVisibility, setNumberVisibility] = useState(true);
   const [filterVisibility, setFilterVisibility] = useState(false);
+  const [zoomGrid, setZoomGrid] = useState(true);
 
   const [activeTab, setActiveTab] = useState('Inscriptions');
   const [selectedSortOption, setSelectedSortOption] = useState('newest');
@@ -66,6 +68,10 @@ const Address = () => {
 
   const toggleFilterVisibility = () => {
     setFilterVisibility(!filterVisibility);
+  };
+
+  const toggleGridType = () => {
+    setZoomGrid(!zoomGrid);
   };
 
   // function to update active tab
@@ -127,13 +133,16 @@ const Address = () => {
           <VisibilityButton onClick={toggleNumberVisibility}>
             <EyeIcon svgSize={'1.25rem'} svgColor={numberVisibility ? '#000000' : '#959595'}></EyeIcon>
           </VisibilityButton>
+          <GridTypeButton onClick={toggleGridType}>
+            <GridIcon svgSize={'1.25rem'} svgColor={zoomGrid ? '#959595' : '#000000'}></GridIcon>
+          </GridTypeButton>
         </Stack>
         <SortbyDropdown onOptionSelect={handleSortOptionChange} />
       </RowContainer>
       <RowContainer>
         <FilterMenu isOpen={filterVisibility} onSelectionChange ={handleFilterOptionsChange} onClose={toggleFilterVisibility} initialSelection={selectedFilterOptions}></FilterMenu>
         <GalleryContainer>
-          <GalleryInfiniteScroll baseApi={baseApi} numberVisibility={numberVisibility} />
+          <GalleryInfiniteScroll baseApi={baseApi} numberVisibility={numberVisibility} zoomGrid={zoomGrid} />
         </GalleryContainer>
       </RowContainer>
     </MainContainer>
@@ -367,6 +376,32 @@ const TabButton = styled.button`
 `;
 
 const VisibilityButton = styled.button`
+  height: 3rem;
+  width: 3rem;
+  border-radius: 1.5rem;
+  border: none;
+  padding: .5rem;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  background-color: #F5F5F5;
+  transition: 
+    background-color 350ms ease,
+    transform 150ms ease;
+  transform-origin: center center;
+
+  &:hover {
+    background-color: #E9E9E9;
+  }
+
+  &:active {
+    transform: scale(0.96);
+  }
+`;
+
+const GridTypeButton = styled.button`
   height: 3rem;
   width: 3rem;
   border-radius: 1.5rem;

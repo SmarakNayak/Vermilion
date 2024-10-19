@@ -19,7 +19,7 @@ const Gallery = (props) => {
   },[props.inscriptionList])
 
   return(
-    <GridContainer>
+    <GridContainer zoomGrid={props.zoomGrid}>
       {inscriptions.map(
         entry => 
         <GridItemContainer collection={entry.collection_name} key={entry.number} number={entry.number} numberVisibility={props.numberVisibility} rune={entry.spaced_rune}></GridItemContainer>
@@ -95,50 +95,45 @@ const GridContainer = styled.div`
   width: 100%;
   min-width: 100%;
 
-  // @media (max-width: 1984px) {
-  //   // grid-template-columns: repeat(5, 1fr);
-  //   grid-template-columns: repeat(5, minmax(0, 1fr));
-  // }
-
-  // @media (max-width: 1346px) {
-  //   grid-template-columns: repeat(4, minmax(0, 1fr));
-  // }
-
-  // @media (max-width: 960px) {
-  //   grid-template-columns: repeat(3, minmax(0, 1fr));
-  // }
-
-  // @media (max-width: 630px) {
-  //   grid-template-columns: repeat(2, minmax(0, 1fr));
-  // }
-
-  // @media (max-width: 320px) {
-  //   grid-template-columns: repeat(1, minmax(0, 1fr));
-  // }
-
   @media (min-width: 1984px) {
-    grid-template-columns: repeat(5, minmax(0, 1fr));
+    grid-template-columns: ${props => props.zoomGrid ? 'repeat(5, minmax(0, 1fr))' : 'repeat(12, minmax(0, 1fr))'};
   }
 
   @media (max-width: 1984px) {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-columns: ${props => props.zoomGrid ? 'repeat(4, minmax(0, 1fr))' : 'repeat(10, minmax(0, 1fr))'};
+  }
+
+  @media (max-width: 1750px) {
+    grid-template-columns: ${props => props.zoomGrid ? 'repeat(4, minmax(0, 1fr))' : 'repeat(9, minmax(0, 1fr))'};
+  }
+
+  @media (max-width: 1550px) {
+    grid-template-columns: ${props => props.zoomGrid ? 'repeat(4, minmax(0, 1fr))' : 'repeat(8, minmax(0, 1fr))'};
   }
 
   @media (max-width: 1346px) {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: ${props => props.zoomGrid ? 'repeat(3, minmax(0, 1fr))' : 'repeat(7, minmax(0, 1fr))'};
+  }
+
+  @media (max-width: 1080px) {
+    grid-template-columns: ${props => props.zoomGrid ? 'repeat(3, minmax(0, 1fr))' : 'repeat(6, minmax(0, 1fr))'};
   }
 
   @media (max-width: 960px) {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: ${props => props.zoomGrid ? 'repeat(2, minmax(0, 1fr))' : 'repeat(5, minmax(0, 1fr))'};
+  }
+
+  @media (max-width: 812px) {
+    grid-template-columns: ${props => props.zoomGrid ? 'repeat(2, minmax(0, 1fr))' : 'repeat(4, minmax(0, 1fr))'};
   }
 
   @media (max-width: 630px) {
-    grid-template-columns: repeat(1, minmax(0, 1fr));
+    grid-template-columns: ${props => props.zoomGrid ? 'repeat(1, minmax(0, 1fr))' : 'repeat(3, minmax(0, 1fr))'};
   }
 
-  // @media (max-width: 320px) {
-  //   grid-template-columns: repeat(1, minmax(0, 1fr));
-  // }
+  @media (max-width: 480px) {
+    grid-template-columns: ${props => props.zoomGrid ? 'repeat(1, minmax(0, 1fr))' : 'repeat(2, minmax(0, 1fr))'};
+  }
 `;
 
 const ItemContainer = styled.div`

@@ -3,26 +3,22 @@ import styled from 'styled-components';
 import CollectionItemContainer from './CollectionItemContainer';
 import InfiniteScroll from 'react-infinite-scroll-component';
 
-const CollectionGallery = (props) => {
+const CollectionGallery = ({ baseApi, numberVisibility, zoomGrid }) => {
   const [inscriptions, setInscriptions] = useState([]);
   const [hasMore, setHasMore] = useState(true);
-  const [baseApi, setBaseApi] = useState(null)
   const [pageSize, setPageSize] = useState(20);
   const [nextPageNo, setNextPageNo] = useState(0);
 
   //Update inscriptionList
   useEffect(() => {
-    console.log("prop change triggerred");
-    console.log(props.baseApi);
     setInscriptions([]);
-    setBaseApi(props.baseApi);
     setNextPageNo(0);
     fetchInital();
-  },[props.baseApi])
+  },[baseApi])
 
   const fetchInital = async () => {
     console.log("fetch initial data")
-    const query_string = props.baseApi + "&page_size=" + pageSize + "&page_number=0";
+    const query_string = baseApi + "&page_size=" + pageSize + "&page_number=0";
     console.log(query_string);
     const response = await fetch(query_string);
     const newInscriptions = await response.json();
@@ -34,7 +30,7 @@ const CollectionGallery = (props) => {
 
   const fetchData = async () => {
     console.log("fetch data")
-    const query_string = props.baseApi + "&page_size=" + pageSize + "&page_number=" + nextPageNo;
+    const query_string = baseApi + "&page_size=" + pageSize + "&page_number=" + nextPageNo;
     console.log(query_string);
     const response = await fetch(query_string);
     const newInscriptions = await response.json();
@@ -55,10 +51,10 @@ const CollectionGallery = (props) => {
         </LoaderContainer>
       }
     >
-      <GridContainer>
+      <GridContainer zoomGrid={zoomGrid}>
         {inscriptions.map(
             entry => 
-            <CollectionItemContainer collection={entry.collection_name} itemName={entry.off_chain_metadata.name} key={entry.number} number={entry.number} numberVisibility={props.numberVisibility} rune={entry.spaced_rune}></CollectionItemContainer>
+            <CollectionItemContainer collection={entry.collection_name} itemName={entry.off_chain_metadata.name} key={entry.number} number={entry.number} numberVisibility={numberVisibility} rune={entry.spaced_rune}></CollectionItemContainer>
         )}
       </GridContainer>
     </InfiniteScroll>
@@ -80,50 +76,45 @@ const GridContainer = styled.div`
   width: 100%;
   min-width: 100%;
 
-  // @media (max-width: 1984px) {
-  //   // grid-template-columns: repeat(5, 1fr);
-  //   grid-template-columns: repeat(5, minmax(0, 1fr));
-  // }
-
-  // @media (max-width: 1346px) {
-  //   grid-template-columns: repeat(4, minmax(0, 1fr));
-  // }
-
-  // @media (max-width: 960px) {
-  //   grid-template-columns: repeat(3, minmax(0, 1fr));
-  // }
-
-  // @media (max-width: 630px) {
-  //   grid-template-columns: repeat(2, minmax(0, 1fr));
-  // }
-
-  // @media (max-width: 320px) {
-  //   grid-template-columns: repeat(1, minmax(0, 1fr));
-  // }
-
   @media (min-width: 1984px) {
-    grid-template-columns: repeat(5, minmax(0, 1fr));
+    grid-template-columns: ${props => props.zoomGrid ? 'repeat(5, minmax(0, 1fr))' : 'repeat(12, minmax(0, 1fr))'};
   }
 
   @media (max-width: 1984px) {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-columns: ${props => props.zoomGrid ? 'repeat(4, minmax(0, 1fr))' : 'repeat(10, minmax(0, 1fr))'};
+  }
+
+  @media (max-width: 1750px) {
+    grid-template-columns: ${props => props.zoomGrid ? 'repeat(4, minmax(0, 1fr))' : 'repeat(9, minmax(0, 1fr))'};
+  }
+
+  @media (max-width: 1550px) {
+    grid-template-columns: ${props => props.zoomGrid ? 'repeat(4, minmax(0, 1fr))' : 'repeat(8, minmax(0, 1fr))'};
   }
 
   @media (max-width: 1346px) {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: ${props => props.zoomGrid ? 'repeat(3, minmax(0, 1fr))' : 'repeat(7, minmax(0, 1fr))'};
+  }
+
+  @media (max-width: 1080px) {
+    grid-template-columns: ${props => props.zoomGrid ? 'repeat(3, minmax(0, 1fr))' : 'repeat(6, minmax(0, 1fr))'};
   }
 
   @media (max-width: 960px) {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: ${props => props.zoomGrid ? 'repeat(2, minmax(0, 1fr))' : 'repeat(5, minmax(0, 1fr))'};
+  }
+
+  @media (max-width: 812px) {
+    grid-template-columns: ${props => props.zoomGrid ? 'repeat(2, minmax(0, 1fr))' : 'repeat(4, minmax(0, 1fr))'};
   }
 
   @media (max-width: 630px) {
-    grid-template-columns: repeat(1, minmax(0, 1fr));
+    grid-template-columns: ${props => props.zoomGrid ? 'repeat(1, minmax(0, 1fr))' : 'repeat(3, minmax(0, 1fr))'};
   }
 
-  // @media (max-width: 320px) {
-  //   grid-template-columns: repeat(1, minmax(0, 1fr));
-  // }
+  @media (max-width: 480px) {
+    grid-template-columns: ${props => props.zoomGrid ? 'repeat(1, minmax(0, 1fr))' : 'repeat(2, minmax(0, 1fr))'};
+  }
 `;
 
 export default CollectionGallery;
