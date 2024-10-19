@@ -3,6 +3,7 @@ import styled from 'styled-components';
 import { Link, useNavigate } from "react-router-dom";
 import { addCommas } from '../helpers/utils';
 import PaintIcon from '../assets/icons/PaintIcon';
+import GalleryIcon from '../assets/icons/GalleryIcon';
 import RuneIcon from '../assets/icons/RuneIcon';
 
 const GridItemContainer = (props) => {
@@ -188,7 +189,7 @@ const GridItemContainer = (props) => {
             <ItemText>{addCommas(props.number)}</ItemText>
             {props.collection && (
               <MetadataContainer>
-                <PaintIcon svgSize={'1rem'} svgColor={'#E34234'} />
+                <GalleryIcon svgSize={'1rem'} svgColor={'#E34234'} />
                 <InfoText>{props.collection}</InfoText>
               </MetadataContainer>
             )}
