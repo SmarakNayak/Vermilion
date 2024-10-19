@@ -110,7 +110,7 @@ const InscriptionContainer = (props) => {
         {
           'image': <ImageContainer src={blobUrl} />,
           'svg': <SvgContainer dangerouslySetInnerHTML={{__html: textContent}} />,
-          'html': <HtmlContainer><StyledIframe src={"/api/inscription_number/" + props.number} scrolling='no'></StyledIframe></HtmlContainer>,
+          'html': <HtmlContainer><StyledIframe src={"/content/" + props.id} scrolling='no'></StyledIframe></HtmlContainer>,
           'text': <TextContainer><p>{textContent}</p></TextContainer>,
           'video': <video controls loop muted autoplay><source src={blobUrl} type={rawContentType}/></video>,
           'audio': <audio controls><source src={blobUrl} type={rawContentType}/></audio>,

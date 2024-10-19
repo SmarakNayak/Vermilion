@@ -54,7 +54,7 @@ const GalleryInfiniteScroll = ({ baseApi, numberVisibility, zoomGrid }) => {
       <GridContainer zoomGrid={zoomGrid}>
         {inscriptions.map(
             entry => 
-            <GridItemContainer collection={entry.collection_name} key={entry.number} number={entry.number} numberVisibility={numberVisibility} rune={entry.spaced_rune}></GridItemContainer>
+            <GridItemContainer collection={entry.collection_name} key={entry.number} number={entry.number} id={entry.id} numberVisibility={numberVisibility} rune={entry.spaced_rune}></GridItemContainer>
         )}
       </GridContainer>
     </InfiniteScroll>

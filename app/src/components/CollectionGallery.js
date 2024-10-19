@@ -54,7 +54,7 @@ const CollectionGallery = ({ baseApi, numberVisibility, zoomGrid }) => {
       <GridContainer zoomGrid={zoomGrid}>
         {inscriptions.map(
             entry => 
-            <CollectionItemContainer collection={entry.collection_name} itemName={entry?.off_chain_metadata?.name} key={entry.number} number={entry.number} numberVisibility={numberVisibility} rune={entry.spaced_rune}></CollectionItemContainer>
+            <CollectionItemContainer collection={entry.collection_name} itemName={entry?.off_chain_metadata?.name} key={entry.number} number={entry.number} id={entry.id} numberVisibility={numberVisibility} rune={entry.spaced_rune}></CollectionItemContainer>
         )}
       </GridContainer>
     </InfiniteScroll>
