@@ -12,7 +12,8 @@ import FilterIcon from '../assets/icons/FilterIcon';
 import ChevronDownIcon from '../assets/icons/ChevronDownIcon';
 import UploadIcon from '../assets/icons/UploadIcon';
 import SearchIcon from '../assets/icons/SearchIcon';
-import CrossIcon from '../assets/icons/CrossIcon'; // Ensure this import is correct based on your project structure
+import CrossIcon from '../assets/icons/CrossIcon'; 
+import GridIcon from '../assets/icons/GridIcon';
 import Stat from '../components/Stat';
 import SearchDropdown from '../components/SearchDropdown';
 
@@ -28,6 +29,7 @@ const Search = () => {
   const [errorMsg, setErrorMsg] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [firstLoad, setFirstLoad] = useState(true);
+  const [zoomGrid, setZoomGrid] = useState(true);
 
   useEffect(() => {
     if(query !== undefined && query !== searchInput) {
@@ -90,6 +92,10 @@ const Search = () => {
   // function to toggle visibility of inscription numbers
   const toggleNumberVisibility = () => {
     setNumberVisibility(!numberVisibility);
+  };
+
+  const toggleGridType = () => {
+    setZoomGrid(!zoomGrid);
   };
 
   const fileInputRef = useRef(null); // Create a ref for the file input
@@ -174,6 +180,9 @@ const Search = () => {
           <VisibilityButton onClick={toggleNumberVisibility}>
             <EyeIcon svgSize={'1.25rem'} svgColor={numberVisibility ? '#000000' : '#959595'}></EyeIcon>
           </VisibilityButton>
+          <GridTypeButton onClick={toggleGridType}>
+            <GridIcon svgSize={'1.25rem'} svgColor={zoomGrid ? '#959595' : '#000000'}></GridIcon>
+          </GridTypeButton>
           <SearchContainer>
             <SearchIcon svgSize={'1.25rem'} svgColor={'#959595'}></SearchIcon>
             <form onSubmit={handleTextSubmit}>
@@ -239,7 +248,7 @@ const Search = () => {
           ) : (
             <div>results</div>
           )} */}
-          <Gallery inscriptionList={inscriptionList} numberVisibility={numberVisibility} />
+          <Gallery inscriptionList={inscriptionList} numberVisibility={numberVisibility} zoomGrid={zoomGrid} />
         </RowContainer>
       </Stack>
     </MainContainer>
@@ -352,6 +361,34 @@ const SummaryText = styled.p`
 `;
 
 const VisibilityButton = styled.button`
+  height: 3rem;
+  width: 3rem;
+  min-height: 3rem;
+  min-width: 3rem;
+  border-radius: 1.5rem;
+  border: none;
+  padding: .5rem;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  background-color: #F5F5F5;
+  transition: 
+    background-color 350ms ease,
+    transform 150ms ease;
+  transform-origin: center center;
+
+  &:hover {
+    background-color: #E9E9E9;
+  }
+
+  &:active {
+    transform: scale(0.96);
+  }
+`;
+
+const GridTypeButton = styled.button`
   height: 3rem;
   width: 3rem;
   min-height: 3rem;
