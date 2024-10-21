@@ -124,7 +124,7 @@ const ExploreCollections = () => {
             <IconWrapper>
               <InfoCircleIcon svgSize={'1rem'} svgColor={'#959595'} />
             </IconWrapper>            <NoteText>
-            Collections that use parent-child provenance, the standard way to immutably record a collection on Bitcoin. Multi-parent collections are displayed both as combined entries and as separate entries for individual parents.
+            Collections that use parent-child provenance, the standard way to immutably record a collection on Bitcoin. Collections are considered separate if not all parents are the same.
             </NoteText>
           </NoteContainer>
           <OnChainCollectionsTable />
