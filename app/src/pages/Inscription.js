@@ -1561,9 +1561,4 @@ const TagSpan = styled.span`
   color: ${props => props.isValue ? '#000000' : '#959595'};
 `;
 
-const RotatableChevron = styled(ChevronUpSmallIcon)`
-  transition: transform 0.3s ease;
-  transform: ${props => props.isOpen ? 'rotate(0deg)' : 'rotate(-90deg)'};
-`;
-
 export default Inscription;

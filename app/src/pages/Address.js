@@ -125,6 +125,22 @@ const Address = () => {
         </InfoButton>
       </RowContainer> */}
       <Divider></Divider>
+      <RowContainer style={{justifyContent: 'flex-start'}}>
+        <ButtonContainer>
+          <TabButton 
+            onClick={() => handleTabClick('Inscriptions')}
+            isActive={activeTab === 'Inscriptions'}
+            >
+            Inscriptions
+          </TabButton>
+          <TabButton 
+            onClick={() => handleTabClick('Bookmarks')}
+            isActive={activeTab === 'Bookmarks'}
+            >
+            Bookmarks
+          </TabButton>
+        </ButtonContainer>
+      </RowContainer>
       <RowContainer>
         <Stack horizontal={true} center={false} style={{gap: '1rem'}}>
           <FilterButton onClick={toggleFilterVisibility}>
@@ -139,12 +155,15 @@ const Address = () => {
         </Stack>
         <SortbyDropdown onOptionSelect={handleSortOptionChange} />
       </RowContainer>
-      <RowContainer>
-        <FilterMenu isOpen={filterVisibility} onSelectionChange ={handleFilterOptionsChange} onClose={toggleFilterVisibility} initialSelection={selectedFilterOptions}></FilterMenu>
-        <GalleryContainer>
-          <GalleryInfiniteScroll baseApi={baseApi} numberVisibility={numberVisibility} zoomGrid={zoomGrid} />
-        </GalleryContainer>
-      </RowContainer>
+
+      {activeTab === 'Inscriptions' && (
+        <RowContainer>
+          <FilterMenu isOpen={filterVisibility} onSelectionChange ={handleFilterOptionsChange} onClose={toggleFilterVisibility} initialSelection={selectedFilterOptions}></FilterMenu>
+          <GalleryContainer>
+            <GalleryInfiniteScroll baseApi={baseApi} numberVisibility={numberVisibility} zoomGrid={zoomGrid} />
+          </GalleryContainer>
+        </RowContainer>
+      )}
     </MainContainer>
   )
 }
@@ -347,10 +366,16 @@ const ShareButton = styled.button`
   background-color: #000000;
 `;
 
+const ButtonContainer = styled.div`
+  display: flex;
+  flex-direction: row;
+  gap: 1.5rem;
+`;
+
 const TabButton = styled.button`
-  border-radius: .5rem;
   border: none;
-  padding: .5rem 1rem;
+  border-bottom: ${props => props.isActive ? '2px solid #E34234' : '2px solid transparent'};
+  padding: .75rem .25rem;
   margin: 0;
   display: flex;
   align-items: center;
@@ -358,20 +383,16 @@ const TabButton = styled.button`
   cursor: pointer;
   gap: .5rem;
   font-family: Relative Trial Bold;
-  font-size: .875rem;
-  color: #E34234;  
-  background-color:#F9E8E7;
+  font-size: 1rem;
+  color: ${props => props.isActive ? '#E34234' : '#959595'}; 
+  background-color: transparent; 
   transition: 
     background-color 350ms ease,
     transform 150ms ease;
   transform-origin: center center;
 
   &:hover {
-    background-color: #F9E8E7;
-  }
-
-  &:active {
-    transform: scale(0.96);
+    color: ${props => props.isActive ? '#E34234' : '#E34234'};
   }
 `;
 

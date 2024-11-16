@@ -21,6 +21,7 @@ import useDocumentTitle from './useDocumentTitle'; // Import the custom hook
 import { addCommas, formatAddress } from '../helpers/utils';
 import Children from '../pages/Children';
 import References from '../pages/References';
+import Trending from '../pages/Trending';
 
 // Wrap each component with a title-setting component
 const TitledComponent = ({ title, Component }) => {
@@ -148,6 +149,7 @@ const Navigation = () => {
             path="/collection/:symbol" 
             element={<CollectionWithDynamicTitle />}
           />
+          <Route path="/trending" element={<TitledComponent title="Trending" Component={Trending} />} />          
           <Route path="/dbscan/:dbclass" element={<TitledComponent title="DBSCAN" Component={Dbscan} />} />          
           <Route path="*" element={<TitledComponent title="404 - Page Not Found" Component={NotFound} />} />
         </Routes>
