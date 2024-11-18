@@ -10,6 +10,7 @@ import GalleryIcon from '../assets/icons/GalleryIcon';
 import RuneIcon from '../assets/icons/RuneIcon';
 import LinkIcon from '../assets/icons/LinkIcon';
 import SkeletonImage from '../components/SkeletonImage';
+import Person2Icon from '../assets/icons/Person2Icon';
 
 const Trending = () => {
   const [inscriptions, setInscriptions] = useState([]);
@@ -131,12 +132,20 @@ const Trending = () => {
                         {inscription.inscriptions[0].spaced_rune}
                       </RuneTag>
                     )}
-                    {inscription.collection_name && (
+                    {inscription.inscriptions[0].collection_name && (
                       <UnstyledLink to={'/collection/' + inscription.inscriptions[0].collection_symbol}>
                         <CollectionTag>
                           <GalleryIcon svgSize={'1rem'} svgColor={'#E34234'} />
                           {inscription.inscriptions[0].collection_name}
                         </CollectionTag>
+                      </UnstyledLink>
+                    )}
+                    {inscription.activity.children_count > 0 && (
+                      <UnstyledLink to={'/children/' + inscription.inscriptions[0].id}>
+                        <ParentTag>
+                          <Person2Icon svgSize={'1rem'} svgColor={'#000000'} />
+                          Parent
+                        </ParentTag>
                       </UnstyledLink>
                     )}
                   </TitleContainer>
@@ -277,10 +286,8 @@ const LoadingHtml = ({ children, ...props }) => {
 
     const handleIframeLoad = () => {
       try {
-        // Get the iframe's document
         const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
         
-        // Add a style tag to the iframe's head
         const style = iframeDoc.createElement('style');
         style.textContent = `
           html, body {
@@ -289,17 +296,16 @@ const LoadingHtml = ({ children, ...props }) => {
             margin: 0 !important;
             padding: 0 !important;
             overflow: hidden !important;
-            pointer-events: none !important; /* Disable interactions */
+            pointer-events: none !important;
           }
           body * {
             max-width: 100% !important;
             transform-origin: top left !important;
-            pointer-events: none !important; /* Disable interactions */
+            pointer-events: none !important;
           }
         `;
         iframeDoc.head.appendChild(style);
 
-        // Function to scale content
         const scaleContent = () => {
           const content = iframeDoc.body;
           if (!content) return;
@@ -316,10 +322,8 @@ const LoadingHtml = ({ children, ...props }) => {
           content.style.transform = `scale(${scale})`;
         };
 
-        // Initial scale
         scaleContent();
 
-        // Add resize observer to handle container size changes
         const resizeObserver = new ResizeObserver(scaleContent);
         resizeObserver.observe(iframe);
 
@@ -343,10 +347,9 @@ const LoadingHtml = ({ children, ...props }) => {
             onLoad: () => setIsLoading(false),
             scrolling: 'no',
             sandbox: 'allow-scripts allow-same-origin',
-            style: { pointerEvents: 'none' } // Disable interactions on iframe itself
+            style: { pointerEvents: 'none' }
           })}
         </HtmlWrapper>
-        <OverlayDiv /> {/* Invisible div to capture clicks */}
       </HtmlContainer>
     </>
   );
@@ -373,7 +376,8 @@ const ContentWrapper = styled.div`
 
   @media (max-width: 1024px) {
     max-width: calc(100% - 3rem);
-    padding: 1.5rem 1.5rem 3rem 1.5rem;  
+    padding: 1.5rem 1.5rem 3rem 1.5rem;
+    justify-content: center;  
   }
 `;
 
@@ -398,7 +402,7 @@ const FeedContainer = styled.div`
   // padding: 1.5rem 1rem 3rem 1rem;
   gap: 1.5rem;
 
-  // @media (max-width: 544px) {
+  // @media (max-width: 560px) {
   //   max-width: calc(100% - 2rem);
   // }
 `;
@@ -436,7 +440,7 @@ const InscriptionContainer = styled.div`
   width: 32rem;
   max-width: 32rem;
 
-  @media (max-width: 544px) {
+  @media (max-width: 560px) {
     width: 100%;
     max-width: 100%;
   }
@@ -451,19 +455,30 @@ const ImageContainer = styled.img`
   border-radius: .5rem;
   border: .0625rem solid #E9E9E9;
 
-  @media (max-width: 544px) {
+  @media (max-width: 560px) {
     width: 100%;
     max-width: 100%;
   }
 `;
 
 const HtmlContainer = styled.div`
+  position: relative; /* Add this */
   width: 32rem;
   max-width: 32rem;
   cursor: pointer;
   border-radius: .5rem;
   border: .0625rem solid #E9E9E9;
   overflow: hidden;
+
+  &:after { /* Add overlay as a pseudo-element */
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+  }
 
   @media (max-width: 544px) {
     width: 100%;
@@ -486,15 +501,6 @@ const HtmlWrapper = styled.div`
   }
 `;
 
-const OverlayDiv = styled.div`
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  z-index: 1;
-`;
-
 const TextContainer = styled.div`
   width: 32rem;
   height: auto;
@@ -504,7 +510,7 @@ const TextContainer = styled.div`
   border: .0625rem solid #E9E9E9;
   overflow: overlay;
 
-  @media (max-width: 544px) {
+  @media (max-width: 560px) {
     width: 100%;
     max-width: 100%;
   }
@@ -539,6 +545,33 @@ const CollectionTag = styled.div`
 
   &:hover {
     background-color: #FBE3E1;
+  }
+
+  &:active {
+    transform: scale(0.96);
+  }
+`;
+
+const ParentTag = styled.div`
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: .25rem;
+  padding: .125rem .375rem;
+  border-radius: .5rem;
+  font-family: Relative Trial Medium;
+  font-size: .875rem;
+  margin: 0;
+  color: #000000;
+  background-color: #F5F5F5;
+  cursor: pointer;
+  transition: 
+    background-color 350ms ease,
+    transform 150ms ease;
+  transform-origin: center center;
+
+  &:hover {
+    background-color: #E9E9E9;
   }
 
   &:active {
