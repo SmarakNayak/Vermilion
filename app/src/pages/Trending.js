@@ -157,6 +157,8 @@ const Trending = () => {
                         'image/gif': <LoadingImage src={`/api/inscription_number/${inscription.inscriptions[0].number}`} />,
                         'image/avif': <LoadingImage src={`/api/inscription_number/${inscription.inscriptions[0].number}`} />,
                         'image/svg+xml': <LoadingImage src={`/api/inscription_number/${inscription.inscriptions[0].number}`} scrolling='no' sandbox='allow-scripts allow-same-origin'/>,
+                        'text/html;charset=utf-8': <LoadingHtml><StyledIframe src={"/content/"+ inscription.inscriptions[0].id}></StyledIframe></LoadingHtml>,
+                        'text/html': <LoadingHtml><StyledIframe src={"/content/"+ inscription.inscriptions[0].id}></StyledIframe></LoadingHtml>,      
                         'loading': <TextContainer>loading...</TextContainer>
                       }[inscription.inscriptions[0].content_type]
                     }
@@ -261,6 +263,91 @@ const LoadingImage = ({ src, ...props }) => {
         style={{ display: isLoading ? 'none' : 'block' }}
         {...props}
       />
+    </>
+  );
+};
+
+const LoadingHtml = ({ children, ...props }) => {
+  const [isLoading, setIsLoading] = useState(true);
+  const iframeRef = useRef(null);
+
+  useEffect(() => {
+    const iframe = iframeRef.current;
+    if (!iframe || isLoading) return;
+
+    const handleIframeLoad = () => {
+      try {
+        // Get the iframe's document
+        const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+        
+        // Add a style tag to the iframe's head
+        const style = iframeDoc.createElement('style');
+        style.textContent = `
+          html, body {
+            width: 100% !important;
+            height: 100% !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            overflow: hidden !important;
+            pointer-events: none !important; /* Disable interactions */
+          }
+          body * {
+            max-width: 100% !important;
+            transform-origin: top left !important;
+            pointer-events: none !important; /* Disable interactions */
+          }
+        `;
+        iframeDoc.head.appendChild(style);
+
+        // Function to scale content
+        const scaleContent = () => {
+          const content = iframeDoc.body;
+          if (!content) return;
+
+          const containerWidth = iframe.clientWidth;
+          const containerHeight = iframe.clientHeight;
+          const contentWidth = content.scrollWidth;
+          const contentHeight = content.scrollHeight;
+
+          const scaleX = containerWidth / contentWidth;
+          const scaleY = containerHeight / contentHeight;
+          const scale = Math.min(scaleX, scaleY, 1);
+
+          content.style.transform = `scale(${scale})`;
+        };
+
+        // Initial scale
+        scaleContent();
+
+        // Add resize observer to handle container size changes
+        const resizeObserver = new ResizeObserver(scaleContent);
+        resizeObserver.observe(iframe);
+
+        return () => resizeObserver.disconnect();
+      } catch (err) {
+        console.warn('Error scaling iframe content:', err);
+      }
+    };
+
+    iframe.addEventListener('load', handleIframeLoad);
+    return () => iframe.removeEventListener('load', handleIframeLoad);
+  }, [isLoading]);
+
+  return (
+    <>
+      {isLoading && <SkeletonImage />}
+      <HtmlContainer style={{ display: isLoading ? 'none' : 'block' }}>
+        <HtmlWrapper>
+          {React.cloneElement(children, {
+            ref: iframeRef,
+            onLoad: () => setIsLoading(false),
+            scrolling: 'no',
+            sandbox: 'allow-scripts allow-same-origin',
+            style: { pointerEvents: 'none' } // Disable interactions on iframe itself
+          })}
+        </HtmlWrapper>
+        <OverlayDiv /> {/* Invisible div to capture clicks */}
+      </HtmlContainer>
     </>
   );
 };
@@ -370,6 +457,44 @@ const ImageContainer = styled.img`
   }
 `;
 
+const HtmlContainer = styled.div`
+  width: 32rem;
+  max-width: 32rem;
+  cursor: pointer;
+  border-radius: .5rem;
+  border: .0625rem solid #E9E9E9;
+  overflow: hidden;
+
+  @media (max-width: 544px) {
+    width: 100%;
+    max-width: 100%;
+  }
+`;
+
+const HtmlWrapper = styled.div`
+  position: relative;
+  width: 100%;
+  padding-top: 100%;
+
+  iframe {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    border: none;
+  }
+`;
+
+const OverlayDiv = styled.div`
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+`;
+
 const TextContainer = styled.div`
   width: 32rem;
   height: auto;
@@ -383,6 +508,15 @@ const TextContainer = styled.div`
     width: 100%;
     max-width: 100%;
   }
+`;
+
+const StyledIframe = styled.iframe`
+  border: none;
+  //flex: 0 100%;
+  //flex-grow: 1;
+  width: 100%;
+  resize: both;
+  //aspect-ratio: 1/1;
 `;
 
 const CollectionTag = styled.div`
