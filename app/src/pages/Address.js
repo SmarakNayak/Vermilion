@@ -133,12 +133,12 @@ const Address = () => {
             >
             Inscriptions
           </TabButton>
-          <TabButton 
+          {/* <TabButton 
             onClick={() => handleTabClick('Bookmarks')}
             isActive={activeTab === 'Bookmarks'}
             >
             Bookmarks
-          </TabButton>
+          </TabButton> */}
         </ButtonContainer>
       </RowContainer>
       <RowContainer>
