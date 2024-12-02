@@ -11,29 +11,31 @@ import RuneIcon from '../assets/icons/RuneIcon';
 import LinkIcon from '../assets/icons/LinkIcon';
 import SkeletonImage from '../components/SkeletonImage';
 import Person2Icon from '../assets/icons/Person2Icon';
+import RecentBoosts from '../components/RecentBoosts';
 
 const Trending = () => {
   const [inscriptions, setInscriptions] = useState([]);
   const [moreInscriptions, setMoreInscriptions] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [hasMore, setHasMore] = useState(true);
+  const [activeWallets, setActiveWallets] = useState([]);
 
   // placeholder - recent inscriptions and most active wallets 
-  const mostRecent = [77150702, 74151024, 0];
-  const activeWallets = [
-    {
-      "address": "bc1pvkumrkmmr4jgp9u3xg6qjx52wupu5vcp0rh6zfpha2tlhslpf0eqt3c4m0",
-      "count": 26
-    },
-    {
-      "address": "bc1p66qckaaw5l8ecars7g7mxcgprk6e2tmhqs2ju95wjz8g0vt6xvlq505twd",
-      "count": 17
-    },
-    {
-      "address": "bc1pwc4gv8wdh703jg6c07jqpme6dhvs2zfq6kyarm9nx0dcj2sanzrsp2guex",
-      "count": 13
-    }
-  ];
+  // const mostRecent = [77150702, 74151024, 0];
+  // const activeWallets = [
+  //   {
+  //     "address": "bc1pvkumrkmmr4jgp9u3xg6qjx52wupu5vcp0rh6zfpha2tlhslpf0eqt3c4m0",
+  //     "count": 26
+  //   },
+  //   {
+  //     "address": "bc1p66qckaaw5l8ecars7g7mxcgprk6e2tmhqs2ju95wjz8g0vt6xvlq505twd",
+  //     "count": 17
+  //   },
+  //   {
+  //     "address": "bc1pwc4gv8wdh703jg6c07jqpme6dhvs2zfq6kyarm9nx0dcj2sanzrsp2guex",
+  //     "count": 13
+  //   }
+  // ];
   
   // Create a single observer ref
   const observerRef = useRef();
@@ -58,6 +60,17 @@ const Trending = () => {
       setIsLoading(false);
     }
   };
+
+  const fetchActiveWallets = async () => {
+    try {
+      const response = await fetch('/api/boost_leaderboard');
+      const data = await response.json();
+      // Take only the first 3 entries
+      setActiveWallets(data.slice(0, 3));
+    } catch (error) {
+      console.error('Error fetching active wallets:', error);
+    }
+  };  
 
   const fetchMoreInscriptions = async () => {
     try {
@@ -106,8 +119,9 @@ const Trending = () => {
 
   // Initial fetch
   useEffect(() => {
-    fetchInscriptions();
+    // fetchInscriptions();
     fetchMoreInscriptions();
+    fetchActiveWallets();
   }, []);
 
   return (
@@ -186,7 +200,7 @@ const Trending = () => {
                   </SocialContainer>
                   <BoostContainer>
                     <BoostButton>
-                      <BoostIcon svgSize={'1.25rem'} svgColor={'#000000'}></BoostIcon>
+                      <BoostIcon svgSize={'1.25rem'} svgColor={'#FFFFFF'}></BoostIcon>
                       Boost
                     </BoostButton>
                   </BoostContainer>
@@ -201,8 +215,11 @@ const Trending = () => {
           </LoadingContainer>
         </FeedContainer>
 
+        {/* Right sidebar placeholder to maintain layout */}
+        <SidebarPlaceholder />
+
         {/* Right column */}
-        <SidebarContainer>
+        <SidebarContainer className="right-fixed">
           <SectionContainer gapSize={'1rem'}>
             <SectionTitleWrapper>
               <SectionTitleText>Introducing Boosts</SectionTitleText>
@@ -227,7 +244,7 @@ const Trending = () => {
               </RefreshButton>
             </SectionTitleWrapper>
             <SectionText>
-              Placeholder...
+              <RecentBoosts />
             </SectionText>
           </SectionContainer>
           <Divider />
@@ -240,7 +257,7 @@ const Trending = () => {
               {activeWallets.map((inscription, i, inscriptions) => (
                 <ActiveContainer key={i}>
                   <ElementWrapper gapSize={'.75rem'}>
-                    <RankWrapper>#{i}</RankWrapper>
+                    <RankWrapper>#{i + 1}</RankWrapper>
                     <ElementWrapper gapSize={'.375rem'}>
                       <PlaceholderImage />
                       <UnstyledLink to={'/address/' + inscription.address}>
@@ -252,6 +269,14 @@ const Trending = () => {
                 </ActiveContainer>
               ))}
             </SectionContainer>
+          </SectionContainer>
+          <Divider />
+          <SectionContainer>
+            <UnstyledLink to={'https://x.com/vrmlndotplace'} target='_blank'>
+              <LinkText>
+                X (Twitter)
+              </LinkText>
+            </UnstyledLink>
           </SectionContainer>
         </SidebarContainer>
       </ContentWrapper>
@@ -360,24 +385,34 @@ const MainContainer = styled.div`
   padding: 0;
   margin: 0;
   display: flex;
-  // flex-direction: column;
-  // align-items: center;
 `;
 
 const ContentWrapper = styled.div`
   width: 100%;
-  max-width: calc(100% - 6rem);
-  padding: 1.5rem 3rem 3rem 3rem;
-  margin: 0;
+  max-width: calc(100% - 3rem);
+  padding: 1.5rem 1.5rem 3rem 1.5rem;
+  margin: 0 auto;
   display: flex;
   flex-direction: row;
   justify-content: space-between;
   gap: 2rem;
+  position: relative;
 
   @media (max-width: 1024px) {
     max-width: calc(100% - 3rem);
     padding: 1.5rem 1.5rem 3rem 1.5rem;
-    justify-content: center;  
+    justify-content: center;
+  }
+`;
+
+// This maintains the space for the fixed sidebar
+const SidebarPlaceholder = styled.div`
+  width: 20rem;
+  flex-shrink: 0;
+  display: none;
+
+  @media (min-width: 1024px) {
+    display: block;
   }
 `;
 
@@ -385,12 +420,28 @@ const SidebarContainer = styled.div`
   width: 20rem;
   flex-shrink: 0;
   display: none;
-  // background-color: red;
 
   @media (min-width: 1024px) {
     display: flex;
     flex-direction: column;
     gap: 2rem;
+
+    &.right-fixed {
+      position: fixed;
+      top: 6.5rem; /* Adjust based on your header height */
+      right: max(calc((100% - (100% - 3rem)) / 2 + 1.5rem), 1.5rem);
+      height: calc(100vh - 6.5rem); /* Adjust based on your header height */
+      overflow-y: auto;
+      
+      /* Hide scrollbar for Chrome, Safari and Opera */
+      &::-webkit-scrollbar {
+        display: none;
+      }
+      
+      /* Hide scrollbar for IE, Edge and Firefox */
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
   }
 `;
 
@@ -707,7 +758,7 @@ const BoostButton = styled.button`
   border-radius: 1.25rem;
   font-family: Relative Trial Bold;
   font-size: 1rem;
-  color: #000000;
+  color: #FFFFFF;
   border: none;
   padding: 1rem;
   margin: 0;
@@ -716,14 +767,14 @@ const BoostButton = styled.button`
   justify-content: center;
   gap: .5rem;
   cursor: pointer;
-  background-color: #F5F5F5;
+  background-color: #000000;
   transition: 
     background-color 350ms ease,
     transform 150ms ease;
   transform-origin: center center;
 
   &:hover {
-    background-color: #E9E9E9;
+    background-color: #000000;
   }
 
   &:active {
@@ -836,6 +887,21 @@ const AddressText = styled.p`
   font-family: Relative Trial Bold;
   font-size: .875rem;
   margin: 0;
+`;
+
+const LinkText = styled.p`
+  font-family: Relative Trial Medium;
+  font-size: .875rem;
+  color: #959595;
+  margin: 0;
+
+  transition: 
+    color 350ms ease;
+  transform-origin: center center;
+
+  &:hover {
+    color: #000000;
+  }
 `;
 
 const UnstyledLink = styled(Link)`
