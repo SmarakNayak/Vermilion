@@ -1,7 +1,7 @@
 1. Combine harddrives
 set SWRAID_LEVEL to 0 when using installimage
-set PART swap swap to 128G/256G
 add colour to hostname
+set PART swap swap to 256G
 
 2. Create ubuntu user
 adduser --disabled-password ubuntu
