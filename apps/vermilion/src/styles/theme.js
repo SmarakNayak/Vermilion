@@ -8,6 +8,7 @@ export const theme = {
       primary: '#121212',    // Main text color
       secondary: '#848281',  // Secondary text, captions, etc.
       tertiary: '#C2C2C2',   // Tertiary text, inactive, etc.
+      white: '#FFFFFF',      // White text
     },
 
     // Background colors

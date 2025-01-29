@@ -1,7 +1,7 @@
 import { BaseIcon } from '../BaseIcon'
 import { IconProps } from '../types'
 
-export const PLACEHOLDER = ({ size, color, className }) => (
+export const RepeatIcon = ({ size, color, className }) => (
   <BaseIcon size={size} color={color} className={className}>
     <path
       fillRule="evenodd"
@@ -12,4 +12,4 @@ export const PLACEHOLDER = ({ size, color, className }) => (
   </BaseIcon>
 )
 
-PLACEHOLDER.propTypes = IconProps
+RepeatIcon.propTypes = IconProps
