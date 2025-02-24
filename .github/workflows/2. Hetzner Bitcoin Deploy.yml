@@ -40,13 +40,13 @@ jobs:
       
       # Installs bitcoin if not already installed
       - name: Install bitcoin-core 
-        run: ssh staging '[ -d "bitcoin_install" ] && [ "$(cat bitcoin_install/version)" == "26.0" ] && echo "Bitcoin core already installed" 
-                                                   || (wget https://bitcoincore.org/bin/bitcoin-core-26.0/bitcoin-26.0-x86_64-linux-gnu.tar.gz
+        run: ssh staging '[ -d "bitcoin_install" ] && [ "$(cat bitcoin_install/version)" == "28.1" ] && echo "Bitcoin core already installed" 
+                                                   || (wget https://bitcoincore.org/bin/bitcoin-core-28.1/bitcoin-28.1-x86_64-linux-gnu.tar.gz
                                                        && mkdir -p ~/bitcoin_install 
                                                        && rm -f ~/bitcoin_install/* 
                                                        && tar -xzf bitcoin-*.tar.gz -C ~/bitcoin_install --strip-components 1 
                                                        && rm bitcoin-*.tar.gz
-                                                       && echo "26.0" > ~/bitcoin_install/version);'
+                                                       && echo "28.1" > ~/bitcoin_install/version);'
 
       - name: Check out the new code from Github
         run: ssh staging 'git -C Vermilion fetch && git -C Vermilion reset --hard origin/main || git clone git@github.com:SmarakNayak/Vermilion.git' # This pulls if directory exists, otherwise clones
