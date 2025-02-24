@@ -148,7 +148,7 @@ const Inscription = () => {
       const id = json.id;
       const short_id = id.slice(0, 5) + "..." + id.slice(-5);
       setShortId(short_id);
-      const pretty_size = shortenBytes(json.content_length);
+      const pretty_size = shortenBytes(json.content_length).value + ' ' + shortenBytes(json.content_length).unit;
       setPrettySize(pretty_size);
       setSha256(json.sha256); // for similar
       setIsLoading(false); // can display metadata
@@ -452,7 +452,7 @@ const Inscription = () => {
             </SkeletonContainer>
           ) : (
             <>
-              <DataContainer info gapSize={'1rem'}>
+              <DataContainer info gapsize={'1rem'}>
                 <SectionPadding gap={'.75rem'}>
                   {metadata?.collection_name != null && metadata?.collection_name != undefined && (
                     <CollectionWrapper>
@@ -539,7 +539,7 @@ const Inscription = () => {
                   </UnstyledLink>
                 </PillContainer> */}
               </DataContainer>
-              <DataContainer gapSize={'.75rem'}>
+              <DataContainer gapsize={'.75rem'}>
                 <SectionHeader onClick={() => toggleSectionVisibility('details')}>
                   <SectionTextSpan>
                     <InfoCircleIcon size={'1.25rem'} color={'#000000'} />
@@ -554,7 +554,7 @@ const Inscription = () => {
                 {/* <InfoSectionText>Details</InfoSectionText> */}
                 {sectionVisibility.details && (
                   <SectionPadding>
-                    <DataContainer gapSize={'0'}>
+                    <DataContainer gapsize={'0'}>
                       <InfoRowContainer>
                         <InfoLabelContainer>
                           <InfoText isLabel={true}>Owner</InfoText>
@@ -633,7 +633,7 @@ const Inscription = () => {
                 )}
               </DataContainer>
               {metadata?.off_chain_metadata?.attributes && metadata.off_chain_metadata.attributes.length > 0 && (
-                <DataContainer gapSize={'.75rem'}>
+                <DataContainer gapsize={'.75rem'}>
                   <SectionHeader onClick={() => toggleSectionVisibility('collectionMetadata')}>
                     <SectionTextSpan>
                       <PaintIcon size={'1.25rem'} color={'#000000'} />
@@ -647,7 +647,7 @@ const Inscription = () => {
                   </SectionHeader>
                   {sectionVisibility.collectionMetadata && (
                     <SectionPadding gap={'1.5rem'}>
-                      <DataContainer gapSize={'0'}>
+                      <DataContainer gapsize={'0'}>
                         <ElementContainer style={{flexWrap: 'wrap'}}>
                           {metadata.off_chain_metadata.attributes.map((attribute, index) => (
                             <Tag value={attribute.value} category={attribute.trait_type} />
@@ -659,7 +659,7 @@ const Inscription = () => {
                   )}
                 </DataContainer>
               )}
-              <DataContainer gapSize={'.75rem'}>
+              <DataContainer gapsize={'.75rem'}>
                 <SectionHeader onClick={() => toggleSectionVisibility('provenance')}>
                   <SectionTextSpan>
                     <RouteIcon size={'1.25rem'} color={'#000000'} />
@@ -768,7 +768,7 @@ const Inscription = () => {
                 )}
               </DataContainer>
               {metadata?.satributes.length > 0 && (
-                <DataContainer gapSize={'.75rem'}>
+                <DataContainer gapsize={'.75rem'}>
                   <SectionHeader onClick={() => toggleSectionVisibility('satributes')}>
                     <SectionTextSpan>
                       <ScrollIcon size={'1.25rem'} color={'#000000'} />
@@ -782,7 +782,7 @@ const Inscription = () => {
                   </SectionHeader>
                   {sectionVisibility.satributes && (
                     <SectionPadding isLast={true}>
-                      <DataContainer gapSize={'0'}>
+                      <DataContainer gapsize={'0'}>
                         <ElementContainer style={{flexWrap: 'wrap'}}>
                           {metadata?.satributes.map(satribute => {
                             const editionInfo = satributeEditions?.find(se => se.satribute === satribute);
@@ -1055,7 +1055,7 @@ const InfoContainer = styled.div`
 const DataContainer = styled.div`
   display: flex;
   flex-direction: column;
-  gap: ${(props) => props.gapSize};
+  gap: ${(props) => props.gapsize};
 
   @media (max-width: 768px) {
     align-items: ${(props) => props.info ? 'center' : ''};

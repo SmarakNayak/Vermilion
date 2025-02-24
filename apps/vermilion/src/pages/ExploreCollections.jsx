@@ -4,6 +4,7 @@ import ReactGA from 'react-ga';
 import CollectionsTable from '../components/CollectionsTable';
 import OnChainCollectionsTable from '../components/OnChainCollectionsTable';
 import { InfoCircleIcon } from '../components/common/Icon';
+import theme from '../styles/theme';
 
 const ExploreCollections = () => {
   const [baseApi, setBaseApi] = useState(null); 
@@ -65,11 +66,8 @@ const ExploreCollections = () => {
 
   return (
     <MainContainer>
-      <RowContainer style={{justifyContent: 'flex-start'}}>
+      <RowContainer style={{justifyContent: 'space-between'}}>
         <PageText>Collections</PageText>
-      </RowContainer>
-      <Divider />
-      <RowContainer style={{justifyContent: 'flex-start'}}>
         <ButtonContainer>
           <TabButton 
             onClick={() => handleTabClick('Offchain')}
@@ -85,11 +83,12 @@ const ExploreCollections = () => {
           </TabButton>
         </ButtonContainer>
       </RowContainer>
+      <Divider />
       {activeTab === 'Offchain' && (
         <ExploreContainer>
           <NoteContainer>
             <IconWrapper>
-              <InfoCircleIcon svgSize={'1rem'} svgColor={'#959595'} />
+              <InfoCircleIcon size={'1rem'} color={theme.colors.text.secondary} />
             </IconWrapper>
             <NoteText>
               Collections that use JSON-based provenance, which is centrally controlled and offchain. This table includes both offchain collections and onchain collections as listed on marketplaces.
@@ -102,9 +101,10 @@ const ExploreCollections = () => {
         <ExploreContainer>
           <NoteContainer>
             <IconWrapper>
-              <InfoCircleIcon svgSize={'1rem'} svgColor={'#959595'} />
-            </IconWrapper>            <NoteText>
-            Collections that use parent-child provenance, the standard way to immutably record a collection on Bitcoin. Collections are considered separate if not all parents are the same.
+              <InfoCircleIcon size={'1rem'} color={theme.colors.text.secondary} />
+            </IconWrapper>            
+            <NoteText>
+              Collections that use parent-child provenance, the standard way to immutably record a collection on Bitcoin. Collections are considered separate if not all parents are the same.
             </NoteText>
           </NoteContainer>
           <OnChainCollectionsTable />
@@ -147,7 +147,7 @@ const GalleryContainer = styled.div`
 `;
 
 const PageText = styled.p`
-  font-family: Relative Trial Bold;
+  font-family: relative-bold-pro;
   font-size: 1.5rem;
   margin: 0;
 `;
@@ -171,26 +171,24 @@ const Divider = styled.div`
 const ButtonContainer = styled.div`
   display: flex;
   flex-direction: row;
-  gap: 1.5rem;
+  gap: .5rem;
 `;
 
 const TabButton = styled.button`
   border: none;
-  border-bottom: ${props => props.isActive ? '2px solid #E34234' : '2px solid transparent'};
-  padding: .75rem .25rem;
+  padding: 0 .75rem;
+  height: 2rem;
+  border-radius: 1rem;
   margin: 0;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  gap: .5rem;
-  font-family: Relative Trial Bold;
+  font-family: relative-medium-pro;
   font-size: 1rem;
-  color: ${props => props.isActive ? '#E34234' : '#959595'}; 
-  background-color: transparent; 
-  transition: 
-    background-color 350ms ease,
-    transform 150ms ease;
+  color: ${props => props.isActive ? theme.colors.primary : theme.colors.text.tertiary}; 
+  background-color: ${props => props.isActive ? theme.colors.background.vermPale : theme.colors.background.primary}; 
+  transition: all 200ms ease;
   transform-origin: center center;
 
   &:hover {
@@ -225,7 +223,7 @@ const IconWrapper = styled.div`
 const NoteText = styled.p`
   font-family: Relative Trial Medium;
   font-size: .875rem;
-  color: #959595;
+  color: ${theme.colors.text.secondary};
   margin: 0;
   padding: 0;
   flex: 1;

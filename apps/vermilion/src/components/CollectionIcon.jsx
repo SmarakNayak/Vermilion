@@ -218,6 +218,7 @@ const VideoContainer = styled.video`
   width: 100%;
   height: auto;
   aspect-ratio: 1/1;
+  border-radius: 0.25rem;
 `;
 
 const StyledIframe = styled.iframe`
@@ -228,6 +229,7 @@ const StyledIframe = styled.iframe`
   resize: both;
   aspect-ratio: 1/1;
   resize: none;
+  border-radius: 0.25rem;
 `;
 
 const ModelViewerContainer = styled.div`
@@ -252,6 +254,7 @@ const TextContainer = styled.div`
   color: ${props => props.loading ? '#959595' : '#000000'};
   object-fit: contain;
   aspect-ratio: 1/1;
+  border-radius: 0.25rem;
   filter: drop-shadow(0 8px 24px rgba(158,158,158,.2));
   transition: 
     background-color 350ms ease,

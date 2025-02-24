@@ -23,8 +23,11 @@ export const formatAddress = (address) => {
 // Converts satoshis to BTC with appropriate decimal places
 
 export const formatSats = (sats) => {
-  const btc = sats / Math.pow(10, 8);
-  return `${btc.toFixed(btc % 1 !== 0 ? 2 : 0)} BTC`;
+  let btc = sats / Math.pow(10, 8);
+  return {
+    value: btc.toFixed(btc % 1 !== 0 ? 2 : 0),
+    unit: 'BTC'
+  };
 };
 
 // Formats byte sizes into human readable format (KB, MB, GB, TB)
@@ -32,11 +35,13 @@ export const formatSats = (sats) => {
 export const shortenBytes = (n) => {
   const k = n > 0 ? Math.floor(Math.log10(n) / 3) : 0;
   const rank = (k > 0 ? 'KMGT'[k - 1] : '') + 'B';
-  const rankClean = rank === 'B' ? 'Bytes' : rank;
   const count = Math.floor(n / Math.pow(1000, k));
   const decimal = n / Math.pow(1000, k) - count;
   const countString = decimal !== 0 ? (n / Math.pow(1000, k)).toFixed(2) : count.toString();
-  return `${countString} ${rankClean}`;
+  return {
+    value: countString,
+    unit: rank === 'B' ? 'Bytes' : rank
+  };
 };
 
 // Shortens large numbers using k/m suffixes

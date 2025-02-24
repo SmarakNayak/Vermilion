@@ -55,7 +55,7 @@ const SearchBar = () => {
   return (
     <SearchContainer>
       <IconWrapper>
-        <SearchIcon size="1.25rem" color="#959595" />
+        <SearchIcon size={"1.25rem"} color={theme.colors.text.tertiary} />
       </IconWrapper>
       <SearchInput 
         placeholder="Search inscriptions, collections, and more..."

@@ -126,10 +126,10 @@ const InscriptionIcon = (props) => {
           'image': <ImageContainer src={blobUrl} />,
           'svg': <ImageContainer src={props.endpoint} scrolling='no' sandbox='allow-scripts allow-same-origin' loading="lazy"/>,
           'html': <HtmlContainer><StyledIframe src={props.endpoint} scrolling='no' sandbox='allow-scripts allow-same-origin' loading="lazy"></StyledIframe></HtmlContainer>,
-          'text': props.useBlockIconDefault ? <BlockIcon size={'2rem'} color={'#E34234'} /> : <ImageIcon size={'2rem'} color={'#E34234'}></ImageIcon>,
+          'text': props.useBlockIconDefault ? <BlockIcon size={'1rem'} color={'#E34234'} /> : <ImageIcon size={'1rem'} color={'#E34234'}></ImageIcon>,
           'video': <VideoContainer controls loop muted autoplay><source src={blobUrl} type={rawContentType}/></VideoContainer>,
-          'audio': props.useBlockIconDefault ? <BlockIcon size={'2rem'} color={'#E34234'} /> : <ImageIcon size={'2rem'} color={'#E34234'}></ImageIcon>,
-          'pdf': props.useBlockIconDefault ? <BlockIcon size={'2rem'} color={'#E34234'} /> : <ImageIcon size={'2rem'} color={'#E34234'}></ImageIcon>,
+          'audio': props.useBlockIconDefault ? <BlockIcon size={'1rem'} color={'#E34234'} /> : <ImageIcon size={'1rem'} color={'#E34234'}></ImageIcon>,
+          'pdf': props.useBlockIconDefault ? <BlockIcon size={'1rem'} color={'#E34234'} /> : <ImageIcon size={'1rem'} color={'#E34234'}></ImageIcon>,
           'model': modelUrl ? (
             <ModelViewerContainer>
               <model-viewer
@@ -149,8 +149,8 @@ const InscriptionIcon = (props) => {
               </model-viewer>
             </ModelViewerContainer>
           ) : <TextContainer loading isCentered>Loading 3D model...</TextContainer>,   
-          'unsupported': props.useBlockIconDefault ? <BlockIcon size={'2rem'} color={'#E34234'} /> : <ImageIcon size={'2rem'} color={'#E34234'}></ImageIcon>,
-          'loading': props.useBlockIconDefault ? <BlockIcon size={'2rem'} color={'#E34234'} /> : <ImageIcon size={'2rem'} color={'#E34234'}></ImageIcon>
+          'unsupported': props.useBlockIconDefault ? <BlockIcon size={'1rem'} color={'#E34234'} /> : <ImageIcon size={'1rem'} color={'#E34234'}></ImageIcon>,
+          'loading': props.useBlockIconDefault ? <BlockIcon size={'1rem'} color={'#E34234'} /> : <ImageIcon size={'1rem'} color={'#E34234'}></ImageIcon>
         }[contentType]
       }
     </IconContainer>
@@ -158,13 +158,13 @@ const InscriptionIcon = (props) => {
 }
 
 const IconContainer = styled.div`
-width: 3rem;
-height: 3rem;
-border-radius: 0.5rem;
-background-color: #F5F5F5;
-display: flex;
-align-items: center;
-justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 0.25rem;
+  background-color: #F5F5F5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 `
 
 const ImageContainer = styled.img`
@@ -177,7 +177,7 @@ const ImageContainer = styled.img`
   object-fit: contain;
   aspect-ratio: 1/1;
   //image-rendering: pixelated;
-  border-radius: 0.5rem;
+  border-radius: 0.25rem;
 `;
 
 const SvgContainer = styled.iframe`
@@ -190,7 +190,7 @@ const SvgContainer = styled.iframe`
   object-fit: contain;
   aspect-ratio: 1/1;
   image-rendering: pixelated;
-  border-radius: 0.5rem;
+  border-radius: 0.25rem;
 `;
 
 const HtmlContainer = styled.div`
@@ -210,7 +210,7 @@ const HtmlContainer = styled.div`
   overflow: hidden;
   text-overflow: ellipsis;
   text-wrap: wrap;
-  border-radius: 0.5rem;
+  border-radius: 0.25rem;
   resize: none;
 `;
 
@@ -218,6 +218,7 @@ const VideoContainer = styled.video`
   width: 100%;
   height: auto;
   aspect-ratio: 1/1;
+  border-radius: 0.25rem;
 `
 
 const StyledIframe = styled.iframe`
@@ -228,6 +229,7 @@ const StyledIframe = styled.iframe`
   resize: both;
   aspect-ratio: 1/1;
   resize: none;
+  border-radius: 0.25rem;
 `;
 
 const ModelViewerContainer = styled.div`
@@ -252,6 +254,7 @@ const TextContainer = styled.div`
   color: ${props => props.loading ? '#959595' : '#000000'};
   object-fit: contain;
   aspect-ratio: 1/1;
+  border-radius: 0.25rem;
   filter: drop-shadow(0 8px 24px rgba(158,158,158,.2));
   transition: 
     background-color 350ms ease,

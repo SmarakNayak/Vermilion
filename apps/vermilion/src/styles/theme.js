@@ -13,8 +13,11 @@ export const theme = {
 
     // Background colors
     background: {
+      aqua: '#5EDED1',       // Aqua background (used in logo)
+      aquaLight: '#BFF2ED',   // Dark aqua background (used in logo)
       dark: '#121212',       // Dark background (used in important buttons)
-      primary: '#FBFAF9',    // Primary background (used in buttons, cards)
+      light: '#FBFAF9',
+      primary: '#F6F6F6',    // Primary background (used in buttons, cards)
       purp: '#D23B75',       // Runes color
       purpPale: '#FAEBF1',   // Runes color, pale
       secondary: '#EAEAEA',  // Secondary background (used in hover states)

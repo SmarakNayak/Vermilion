@@ -6,6 +6,7 @@ import { ArrowDownIcon, ArrowUpIcon, ChevronVerticalIcon, ImageIcon } from './co
 import { addCommas, formatSats, shortenBytes, shortenDate, shortenRange } from '../utils/format'
 import { Link } from 'react-router-dom';
 import InscriptionIcon from './InscriptionIcon';
+import theme from '../styles/theme';
 
 const CollectionsTable = () => {
   const [collectionSortColumn, setCollectionSortColumn] = useState('volume');
@@ -111,68 +112,83 @@ const CollectionsTable = () => {
   };
 
   return (
-    <DivTable>
-      <DivRow header>
-        <DivCell header first={true}>
-          <HeaderWrapper first={true}>
-            Collection
-          </HeaderWrapper>
-        </DivCell>
-        <DivCell header>
-          <HeaderWrapper>
-            Range
-          </HeaderWrapper>
-        </DivCell>
-        <SortableDivCell header onClick={() => handleCollectionSort("date")} isActive={collectionSortColumn === 'date'}>
-          <HeaderWrapper isActive={collectionSortColumn === 'date'}>
-            Creation Date {renderSortIcon("date")} {collectionSortColumn != 'date' && (<ChevronVerticalIcon size={'.875rem'} color={'#959595'} />)}
-          </HeaderWrapper>
-        </SortableDivCell>
-        <DivCell header>
-          <HeaderWrapper>
-            Supply
-          </HeaderWrapper>
-        </DivCell>
-        <SortableDivCell header onClick={() => handleCollectionSort("size")} isActive={collectionSortColumn === 'size'}>
-          <HeaderWrapper isActive={collectionSortColumn === 'size'}>
-            Size {renderSortIcon("size")} {collectionSortColumn != 'size' && (<ChevronVerticalIcon size={'.875rem'} color={'#959595'} />)}
-          </HeaderWrapper>
-        </SortableDivCell>
-        <SortableDivCell header onClick={() => handleCollectionSort("volume")} isActive={collectionSortColumn === 'volume'}>
-          <HeaderWrapper isActive={collectionSortColumn === 'volume'}>
-            Traded Volume {renderSortIcon("volume")} {collectionSortColumn != 'volume' && (<ChevronVerticalIcon size={'.875rem'} color={'#959595'} />)}
-          </HeaderWrapper>
-        </SortableDivCell>
-        <SortableDivCell header onClick={() => handleCollectionSort("fees")} isActive={collectionSortColumn === 'fees'}>
-          <HeaderWrapper isActive={collectionSortColumn === 'fees'}>
-            Total Fees {renderSortIcon("fees")} {collectionSortColumn != 'fees' && (<ChevronVerticalIcon size={'.875rem'} color={'#959595'} />)}
-          </HeaderWrapper>
-        </SortableDivCell>
-      </DivRow>
-      <InfiniteScroll
-        dataLength={collectionData?.length}
-        next={fetchData}
-        hasMore={hasMore}
-        loader={
-          <LoaderContainer>
-            <p style={{color: '#959595'}}>Loading...</p>
-          </LoaderContainer>
-        }
-      >
-        {collectionData.map((row, index) => (
-          <UnstyledLink to={"/collection/" + row?.collection_symbol}>
+    <TableContainer>
+      <HeaderRow>
+        <DivRow header>
+          <IndexCell header first={true}>
+            <HeaderWrapper first={true}>
+              #
+            </HeaderWrapper>
+          </IndexCell>
+          <DivCell header first={true}>
+            <HeaderWrapper first={true}>
+              Collection
+            </HeaderWrapper>
+          </DivCell>
+          <DivCell header>
+            <HeaderWrapper>
+              Range
+            </HeaderWrapper>
+          </DivCell>
+          <SortableDivCell header isActive={collectionSortColumn === 'date'}>
+            <HeaderWrapper isSortable isActive={collectionSortColumn === 'date'} onClick={() => handleCollectionSort("date")}>
+              Creation Date {renderSortIcon("date")} {collectionSortColumn != 'date' && (<ChevronVerticalIcon size={'.875rem'} color={'#959595'} />)}
+            </HeaderWrapper>
+          </SortableDivCell>
+          <DivCell header>
+            <HeaderWrapper>
+              Supply
+            </HeaderWrapper>
+          </DivCell>
+          <SortableDivCell header isActive={collectionSortColumn === 'size'}>
+            <HeaderWrapper isSortable isActive={collectionSortColumn === 'size'} onClick={() => handleCollectionSort("size")}>
+              Size {renderSortIcon("size")} {collectionSortColumn != 'size' && (<ChevronVerticalIcon size={'.875rem'} color={'#959595'} />)}
+            </HeaderWrapper>
+          </SortableDivCell>
+          <SortableDivCell header isActive={collectionSortColumn === 'volume'}>
+            <HeaderWrapper isSortable isActive={collectionSortColumn === 'volume'} onClick={() => handleCollectionSort("volume")}>
+              Traded Volume {renderSortIcon("volume")} {collectionSortColumn != 'volume' && (<ChevronVerticalIcon size={'.875rem'} color={'#959595'} />)}
+            </HeaderWrapper>
+          </SortableDivCell>
+          <SortableDivCell header isActive={collectionSortColumn === 'fees'}>
+            <HeaderWrapper isSortable isActive={collectionSortColumn === 'fees'} onClick={() => handleCollectionSort("fees")}>
+              Total Fees {renderSortIcon("fees")} {collectionSortColumn != 'fees' && (<ChevronVerticalIcon size={'.875rem'} color={'#959595'} />)}
+            </HeaderWrapper>
+          </SortableDivCell>
+        </DivRow>
+      </HeaderRow>
+      
+      <ScrollContainer>
+        <InfiniteScroll
+          dataLength={collectionData?.length}
+          next={fetchData}
+          hasMore={hasMore}
+          loader={
+            <LoaderContainer>
+              <p style={{color: '#959595'}}>Loading...</p>
+            </LoaderContainer>
+          }
+          scrollableTarget="scrollable-container"
+        >
+          {collectionData.map((row, index) => (
             <DivRow key={index}>
+              <IndexCell>
+                <DataWrapper first={true}>
+                  {index + 1}
+                </DataWrapper>
+              </IndexCell>
               <DivCell first={true}>
                 <DataWrapper first={true}>
-                  <BlockImgContainer>
-                    {row?.range_start ? 
-                      <InscriptionIcon endpoint = {"/api/inscription_number/" + row.range_start} useBlockIconDefault = {false}></InscriptionIcon> :
-                      <ImageIcon size={'2rem'} color={'#E34234'}></ImageIcon>
-                    }
-                  </BlockImgContainer>
-                  <span style={{ minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                    {row?.name}
-                  </span>
+                  <CollectionLink to={`/collection/${encodeURIComponent(row?.name)}`}>
+                    <IconWrapper>
+                      {row?.range_start ? 
+                        <InscriptionIcon endpoint={"/api/inscription_number/" + row.range_start} useBlockIconDefault={false} />
+                        : 
+                        <ImageIcon size={'1rem'} color={'#E34234'} />
+                      }
+                    </IconWrapper>
+                    <CollectionName>{row?.name}</CollectionName>
+                  </CollectionLink>
                 </DataWrapper>
               </DivCell>
               <DivCell>
@@ -192,26 +208,76 @@ const CollectionsTable = () => {
               </DivCell>
               <DivCell>
                 <DataWrapper>
-                  {row?.total_inscription_size ? shortenBytes(row?.total_inscription_size) : 0}
+                  {row?.total_inscription_size ? (
+                    <ValueWrapper>
+                      <span>{shortenBytes(row?.total_inscription_size).value}</span>
+                      <UnitText>{shortenBytes(row?.total_inscription_size).unit}</UnitText>
+                    </ValueWrapper>
+                  ) : (
+                    <ValueWrapper>
+                      <span>0</span>
+                      <UnitText>B</UnitText>
+                    </ValueWrapper>
+                  )}
                 </DataWrapper>
               </DivCell>
               <DivCell>
                 <DataWrapper>
-                  {row?.total_volume ? addCommas(formatSats(row?.total_volume)) : "0 BTC"}
+                  {row?.total_volume ? (
+                    <ValueWrapper>
+                      <span>{formatSats(row?.total_volume).value}</span>
+                      <UnitText>BTC</UnitText>
+                    </ValueWrapper>
+                  ) : (
+                    <ValueWrapper>
+                      <span>0</span>
+                      <UnitText>BTC</UnitText>
+                    </ValueWrapper>
+                  )}
                 </DataWrapper>
               </DivCell>
               <DivCell>
                 <DataWrapper>
-                  {row?.total_inscription_fees ? formatSats(row?.total_inscription_fees) : "0 BTC"}
+                  {row?.total_inscription_fees ? (
+                    <ValueWrapper>
+                      <span>{formatSats(row?.total_inscription_fees).value}</span>
+                      <UnitText>BTC</UnitText>
+                    </ValueWrapper>
+                  ) : (
+                    <ValueWrapper>
+                      <span>0</span>
+                      <UnitText>BTC</UnitText>
+                    </ValueWrapper>
+                  )}
                 </DataWrapper>
               </DivCell>
             </DivRow>
-          </UnstyledLink>
-        ))}
-      </InfiniteScroll>
-    </DivTable>
+          ))}
+        </InfiniteScroll>
+      </ScrollContainer>
+    </TableContainer>
   )
 }
+
+const TableContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+`;
+
+const HeaderRow = styled.div`
+  position: sticky;
+  top: 4.5rem; 
+  background-color: white;
+  z-index: 10;
+`;
+
+const ScrollContainer = styled.div`
+  flex: 1;
+  overflow-y: auto;
+  // padding-top: 1rem;
+`;
 
 const LoaderContainer = styled.div`
   display: flex;
@@ -225,17 +291,8 @@ const CollectionIcon = styled.img`
   width: 3.75rem;
   height: 3.75rem;
   border-radius: .5rem;
-`
-
-const BlockImgContainer = styled.div`
-  width: 3rem;
-  height: 3rem;
-  background-color: transparent;
-  border-radius: .5rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
 `;
+
 
 const DivTable = styled.div`
   display: flex;
@@ -246,22 +303,18 @@ const DivTable = styled.div`
 const DivRow = styled.div`
   display: flex;
   flex-direction: row;
-  width: calc(100% - 3rem);
-  // width: 100%;
-  border-radius: 1rem;
-  padding: ${props => props.header ? '0 1.5rem' : '1rem 1.5rem'};
-  background-color: ${props => props.header ? 'transparent' : 'transparent'};
-  cursor: ${props => props.header ? 'default' : 'pointer'};
-  transition: 
-    background-color 350ms ease,
-    transform 150ms ease;
-  transform-origin: center center;
+  width: 100%;
+  padding: ${props => props.header ? '.375rem 0' : '.75rem 0'};
+  // border-bottom: ${props => props.header ? `1px ${theme.colors.background.primary} solid` : ''};
+  background-color: transparent;
+  transition: all 200ms ease;
 
   &:hover {
-    background-color: ${props => props.header ? '#transparent' : '#F5F5F5'};
+    background-color: ${props => props.header ? 'transparent' : theme.colors.background.primary};
   }
+
   &:not(:last-child) {
-    margin-bottom: 0.5rem;
+    border-bottom: 1px solid #F5F5F5;
   }
 `;
 
@@ -273,14 +326,14 @@ const DivCell = styled.div`
   gap: 1rem;
   flex: 1;
   margin: ${props => props.first ? '0 1rem 0 0' : '0'};
-  font-family: Relative Trial Medium;
-  font-size: ${props => props.header ? '.875rem' : '1rem'};;
-  color: ${props => props.header ? '#959595' : '#000000'};
+  font-family: relative-medium-pro;
+  font-size: ${props => props.header ? '.875rem' : '.875rem'};;
+  color: ${props => props.header ? theme.colors.text.secondary : '#000000'};
   min-width: 0;
 
-  &:nth-child(1) {
+  &:nth-child(2) {
     justify-content: flex-start;
-    // padding-left: .5rem;
+    padding-left: .5rem;
     // padding-left: ${props => props.header ? 'none' : '.5rem'};
     flex: 2;
   }
@@ -342,9 +395,8 @@ const SortableDivCell = styled.div`
   gap: 1rem;
   flex: 1;
   margin: ${props => props.first ? '0 1rem 0 0' : '0'};
-  font-family: Relative Trial Medium;
+  font-family: relative-medium-pro;
   font-size: .875rem;
-  cursor: pointer;
   color: ${props => props.isActive ? '#E34234' : '#959595'};
   &:nth-child(1) {
     justify-content: flex-start;
@@ -394,13 +446,28 @@ const SortableDivCell = styled.div`
   }
 `;
 
+const IndexCell = styled.div`
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-start;
+  width: calc(.5rem + 1.5rem);
+  padding-left: .5rem;
+  margin: 0;
+  font-family: relative-medium-pro;
+  font-size: ${props => props.header ? '.875rem' : '.875rem'};
+  color: ${props => props.header ? theme.colors.text.secondary : theme.colors.text.primary};
+  flex-shrink: 0;
+`;
+
 const HeaderWrapper = styled.span`
   display: flex;
   flex-direction: row;
   align-items: center;
-  padding: 0.25rem .5rem;
+  padding: ${props => props.first ? '0.25rem 0' : '0.25rem .5rem'};
   background-color: ${props => props.isActive ? '#F5F5F5' : 'transparent'};
   border-radius: .5rem;
+  cursor: ${props => props.isSortable ? 'pointer' : ''};
 `;
 
 const DataWrapper = styled.span`
@@ -408,13 +475,72 @@ const DataWrapper = styled.span`
   flex-direction: row;
   align-items: center;
   justify-content: ${props => props.first ? 'flex-start' : 'flex-end'};
-  padding: ${props => props.first ? '0 0 0 .5rem' : '0 .5rem 0 0'};
+  padding: ${props => props.first ? '0' : '0 .5rem 0 0'};
   gap: 1rem;
   white-space: nowrap; // Prevent text from wrapping
   overflow: hidden; // Hide overflow text
   text-overflow: ellipsis; // Show ellipsis for overflow text
   min-width: 0;
   flex: 1;
+`;
+
+const CollectionLink = styled(Link)`
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: .75rem;
+  text-decoration: none;
+  color: inherit;
+  width: auto;
+  min-width: 0;
+`;
+
+const IconWrapper = styled.div`
+  position: relative;
+  width: 2.25rem;
+  height: 2.25rem;
+  flex-shrink: 0;
+  border-radius: .25rem;
+`;
+
+const CollectionName = styled.span`
+  position: relative;
+  display: inline-block;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  padding-bottom: 4px;
+
+  &::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 2px;
+    background-color: ${theme.colors.text.tertiary};
+    border-radius: 2px;
+    opacity: 0;
+    transition: opacity 200ms ease;
+  }
+
+  ${CollectionLink}:hover & {
+    &::after {
+      opacity: 1;
+    }
+  }
+`;
+
+const UnitText = styled.span`
+  color: #C2C2C2;
+  font-family: Relative Trial Medium;
+`;
+
+const ValueWrapper = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
 `;
 
 const UnstyledLink = styled(Link)`

@@ -221,13 +221,13 @@ const ItemContainer = styled.div`
 `;
 
 const MediaContainer = styled.div`
-  background-color: #F5F5F5;
+  // background-color: #F5F5F5;
   border-radius: .25rem;
-  padding: 1rem;
+  padding: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  width: calc(100% - 2rem);
+  width: calc(100% - 0rem);
   height: auto;
   aspect-ratio: 1/1;
   transition: 
@@ -235,9 +235,9 @@ const MediaContainer = styled.div`
     transform 200ms ease;
   transform-origin: center center;
 
-  ${ItemContainer}:hover & {
-    background-color: #E9E9E9;
-  }
+  // ${ItemContainer}:hover & {
+  //   background-color: #E9E9E9;
+  // }
 `;
 
 const ImageContainer = styled.img`
@@ -250,7 +250,7 @@ const ImageContainer = styled.img`
   object-fit: contain;
   aspect-ratio: 1/1;
   image-rendering: pixelated;
-  filter: drop-shadow(0 8px 24px rgba(158,158,158,.2));
+  // filter: drop-shadow(0 8px 24px rgba(158,158,158,.2));
   transition: 
     background-color 200ms ease,
     transform 200ms ease;
@@ -277,7 +277,7 @@ const TextContainer = styled.div`
   color: ${props => props.loading ? '#959595' : '#000000'};
   object-fit: contain;
   aspect-ratio: 1/1;
-  filter: drop-shadow(0 8px 24px rgba(158,158,158,.2));
+  // filter: drop-shadow(0 8px 24px rgba(158,158,158,.2));
   transition: 
     background-color 350ms ease,
     transform 150ms ease;
@@ -318,7 +318,7 @@ const HtmlContainer = styled.div`
   white-space-collapse: preserve;
   object-fit: contain;
   aspect-ratio: 1/1;
-  filter: drop-shadow(0 8px 24px rgba(158,158,158,.2));
+  // filter: drop-shadow(0 8px 24px rgba(158,158,158,.2));
   transition: all 350ms ease;  transition: 
     background-color 350ms ease,
     transform 150ms ease;
@@ -344,7 +344,7 @@ const SvgContainer = styled.iframe`
   object-fit: contain;
   aspect-ratio: 1/1;
   image-rendering: pixelated;
-  filter: drop-shadow(0 8px 24px rgba(158,158,158,.2));
+  // filter: drop-shadow(0 8px 24px rgba(158,158,158,.2));
   transition: 
     background-color 350ms ease,
     transform 150ms ease;
