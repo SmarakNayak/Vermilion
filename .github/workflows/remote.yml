@@ -35,4 +35,4 @@ jobs:
           SSH_HOST: ${{ vars.SERVER_HOST }}
         
       - name: Create AWS config file
-        run: ssh staging 'mkdir -p .save; echo ${{secrets.SERVER_SSH_KEY}} > ~/.save/config;'
+        run: ssh staging 'mkdir -p .save; echo "${{secrets.SERVER_SSH_KEY}}" > ~/.save/config;'
