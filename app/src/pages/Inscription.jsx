@@ -5,7 +5,7 @@ import Stack from '../components/Stack';
 import Tag from '../components/Tag';
 import LinkTag from '../components/LinkTag';
 import MasonryGrid from '../components/MasonryGrid';
-import { addCommas, shortenBytes } from '../utils/format';
+import { addCommas, formatEditionRange, shortenBytes } from '../utils/format';
 import { copyText } from '../utils/clipboard';
 import { ChevronDownSmallIcon, ChevronUpSmallIcon, CopyIcon, InfoCircleIcon, LayersIcon, PaintIcon, Person2Icon, RepeatIcon, RibbonIcon, RouteIcon, RuneIcon, ScrollIcon, SparklesIcon, SproutIcon } from '../components/common/Icon';
 

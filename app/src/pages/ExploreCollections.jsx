@@ -221,7 +221,7 @@ const IconWrapper = styled.div`
 `;
 
 const NoteText = styled.p`
-  font-family: Relative Trial Medium;
+  font-family: relative-medium-pro;
   font-size: .875rem;
   color: ${theme.colors.text.secondary};
   margin: 0;

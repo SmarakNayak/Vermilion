@@ -11,7 +11,6 @@ import Tag from '../components/Tag';
 import CollectionIcon from '../components/CollectionIcon';
 import { BlockIcon, EyeIcon, FilterIcon, GridIcon } from '../components/common/Icon';
 
-
 const Block = () => {
   const [baseApi, setBaseApi] = useState(null); 
   let { number } = useParams();

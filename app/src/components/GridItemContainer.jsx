@@ -155,28 +155,38 @@ const GridItemContainer = (props) => {
               'svg-recursive': <SvgContainer src={"/api/inscription_number/"+ props.number} scrolling='no' sandbox='allow-scripts allow-same-origin' loading="lazy"/>,
               'html': <HtmlContainer><ContentOverlay /><StyledIframe src={"/content/" + props.id} sandbox='allow-scripts allow-same-origin' loading='lazy' controls muted></StyledIframe></HtmlContainer>,
               'text': <TextContainer><MediaText>{textContent}</MediaText></TextContainer>,
-              'video': <video controls loop muted autoplay style={{width: '100%', height: 'auto', aspectRatio: '1/1'}}><ContentOverlay /><source src={blobUrl} type={rawContentType}/></video>,
-              'audio': <audio controls><ContentOverlay /><source src={blobUrl} type={rawContentType}/></audio>,
+              'video': <div style={{position: 'relative', width: '100%', height: 'auto'}}>
+                        <ContentOverlay />
+                        <video controls loop muted autoplay style={{width: '100%', height: 'auto', aspectRatio: '1/1'}}>
+                          <source src={blobUrl} type={rawContentType}/>
+                        </video>
+                      </div>,
+              'audio': <div style={{position: 'relative'}}>
+                        <ContentOverlay />
+                        <audio controls>
+                          <source src={blobUrl} type={rawContentType}/>
+                        </audio>
+                      </div>,
               'pdf': <TextContainer>PDF not yet supported</TextContainer>,
               'model': modelUrl ? (
-                <ModelViewerContainer>
-                  <model-viewer
-                  ref={modelViewerRef}
-                  // camera-controls
-                  disable-zoom
-                  auto-rotate
-                  ar
-                  ar-status="not-presenting"
-                  interaction-prompt="none"
-                  loading="lazy"
-                  touch-action="none"
-                  src={modelUrl}
-                  style={{height: '100%', width: '100%'}}
-                  >
-                    <div slot="progress-bar" />
-                  </model-viewer>
-                </ModelViewerContainer>
-              ) : <TextContainer loading isCentered>Loading 3D model...</TextContainer>,                
+                        <ModelViewerContainer>
+                          <model-viewer
+                          ref={modelViewerRef}
+                          // camera-controls
+                          disable-zoom
+                          auto-rotate
+                          ar
+                          ar-status="not-presenting"
+                          interaction-prompt="none"
+                          loading="lazy"
+                          touch-action="none"
+                          src={modelUrl}
+                          style={{height: '100%', width: '100%'}}
+                          >
+                            <div slot="progress-bar" />
+                          </model-viewer>
+                        </ModelViewerContainer>
+                      ) : <TextContainer loading isCentered>Loading 3D model...</TextContainer>,                
               'unsupported': <TextContainer isCentered>{rawContentType} content type not yet supported</TextContainer>,
               'loading': <TextContainer loading isCentered>Loading...</TextContainer>
             }[contentType]
@@ -221,23 +231,23 @@ const ItemContainer = styled.div`
 `;
 
 const MediaContainer = styled.div`
-  // background-color: #F5F5F5;
+  background-color: #F5F5F5;
   border-radius: .25rem;
-  padding: 0;
+  padding: 8%;
   display: flex;
   align-items: center;
   justify-content: center;
-  width: calc(100% - 0rem);
+  width: 84%;
   height: auto;
   aspect-ratio: 1/1;
   transition: 
-    background-color 200ms ease,
-    transform 200ms ease;
+    background-color 350ms ease,
+    transform 150ms ease;
   transform-origin: center center;
 
-  // ${ItemContainer}:hover & {
-  //   background-color: #E9E9E9;
-  // }
+  ${ItemContainer}:hover & {
+    background-color: #E9E9E9;
+  }
 `;
 
 const ImageContainer = styled.img`
@@ -305,6 +315,7 @@ const MediaText = styled.p`
 `;
 
 const HtmlContainer = styled.div`
+  position: relative;
   max-width: 100%;
   max-height: 100%;
   min-width: 100%; /* Ensures scaling up */
@@ -365,6 +376,7 @@ const StyledIframe = styled.iframe`
 `;
 
 const ModelViewerContainer = styled.div`
+  position: relative;
   width: 100%;
   height: 100%;
   aspect-ratio: 1/1;

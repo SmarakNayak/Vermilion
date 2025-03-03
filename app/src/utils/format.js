@@ -74,6 +74,18 @@ export const shortenRange = (num) => {
   }
 };
 
+// Formats edition numbers, using commas for <10k and abbreviated k format for larger numbers
+
+export const formatEditionRange = (num) => {
+  const absNum = Math.abs(num);
+  
+  if (absNum < 10000) {
+    return addCommas(num);
+  } else {
+    return `~${(num / 1000).toFixed(1)}k`;
+  }
+};
+
 // Date/Time
 
 // Formats millisecond timestamp into human readable date/time
