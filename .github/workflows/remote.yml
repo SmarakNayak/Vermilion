@@ -1,0 +1,38 @@
+# This is a workflow that update Vermilion Frontend
+name: 1. Hetzner Remote Deploy
+
+# Controls when the workflow will run
+on:
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+    inputs:
+      hetzner_server:
+        description: 'Which server to deploy to? Hetzner_blue or Hetzner_green'
+        required: true
+        default: 'Hetzner_'
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  Config-Deploy:
+    runs-on: ubuntu-latest
+    environment: '${{ github.event.inputs.hetzner_server }}'
+    steps:
+      - name: Configure SSH
+        run: |
+          mkdir -p ~/.ssh/
+          echo "$SSH_KEY" > ~/.ssh/staging.key
+          chmod 600 ~/.ssh/staging.key
+          cat >>~/.ssh/config <<END
+          Host staging
+            HostName $SSH_HOST
+            User $SSH_USER
+            IdentityFile ~/.ssh/staging.key
+            StrictHostKeyChecking no
+          END
+        env:
+          SSH_USER: ${{ vars.SERVER_USER }}
+          SSH_KEY: ${{ secrets.SERVER_SSH_KEY }}
+          SSH_HOST: ${{ vars.SERVER_HOST }}
+        
+      - name: Create AWS config file
+        run: ssh staging 'mkdir -p .save; echo ${{secrets.SERVER_SSH_KEY}} > ~/.save/config;'
