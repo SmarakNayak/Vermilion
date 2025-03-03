@@ -1,5 +1,5 @@
 # This is a workflow that update Vermilion Frontend
-name: 1. Hetzner Remote Deploy
+name: Hetzner Remote Deploy
 
 # Controls when the workflow will run
 on:
