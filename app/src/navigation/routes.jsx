@@ -7,6 +7,7 @@ import ExploreBlocks from '../pages/ExploreBlocks'
 import ExploreCollections from '../pages/ExploreCollections'
 import ExploreInscriptions from '../pages/ExploreInscriptions'
 import Block from '../pages/Block'
+import Collection from '../pages/Collection'
 import Inscription from '../pages/Inscription'
 import Discover from '../pages/Discover'
 import Trending from '../pages/Trending'
@@ -105,6 +106,15 @@ const Navigation = () => {
                 Component={Edition} 
               />
             }
+          />
+          <Route 
+            path="/collection/:symbol" 
+            element={
+              <TitledComponent 
+                title={(params) => `${params.symbol}`}
+                Component={Collection} 
+              />
+            } 
           />
           <Route path="/discover" element={<TitledComponent title="Discover" Component={Discover} />} />
           <Route path="/trending" element={<TitledComponent title="Trending" Component={Trending} />} />

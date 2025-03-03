@@ -30,6 +30,12 @@ export const formatSats = (sats) => {
   };
 };
 
+export const formatSatsString = (sats) => {
+  let btc = sats / Math.pow(10, 8);
+  let string = btc.toFixed(btc % 1 !== 0 ? 2 : 0) + " BTC";
+  return string;
+};
+
 // Formats byte sizes into human readable format (KB, MB, GB, TB)
 
 export const shortenBytes = (n) => {
@@ -42,6 +48,16 @@ export const shortenBytes = (n) => {
     value: countString,
     unit: rank === 'B' ? 'Bytes' : rank
   };
+};
+
+export const shortenBytesString = (n) => {
+  const k = n > 0 ? Math.floor(Math.log10(n) / 3) : 0;
+  const rank = (k > 0 ? 'KMGT'[k - 1] : '') + 'B';
+  const rank_clean = rank === 'B' ? 'Bytes' : rank;
+  const count = Math.floor(n / Math.pow(1000, k));
+  const decimal = n / Math.pow(1000, k) - count;
+  const countString = decimal !== 0 ? (n / Math.pow(1000, k)).toFixed(2) : count.toString();
+  return countString + ' ' + rank_clean;
 };
 
 // Shortens large numbers using k/m suffixes

@@ -179,7 +179,7 @@ const CollectionsTable = () => {
               </IndexCell>
               <DivCell first={true}>
                 <DataWrapper first={true}>
-                  <CollectionLink to={`/collection/${encodeURIComponent(row?.name)}`}>
+                  <CollectionLink to={`/collection/${encodeURIComponent(row?.collection_symbol)}`}>
                     <IconWrapper>
                       {row?.range_start ? 
                         <InscriptionIcon endpoint={"/api/inscription_number/" + row.range_start} useBlockIconDefault={false} />

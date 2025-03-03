@@ -1,42 +1,54 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from "react-router-dom";
-import styled from 'styled-components';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { addCommas, formatSatsString, formatTimestampMs, shortenBytesString } from '../utils/format';
+
+import styled from 'styled-components';
 import Stack from '../components/Stack';
+import { addCommas, shortenDate, formatSatsString, shortenBytesString } from '../utils/format';
 import SortbyDropdown from '../components/Dropdown';
 import FilterMenu from '../components/FilterMenu';
 import GalleryInfiniteScroll from '../components/GalleryInfiniteScroll';
-import Tag from '../components/Tag';
 import CollectionIcon from '../components/CollectionIcon';
-import { BlockIcon, EyeIcon, FilterIcon, GridIcon } from '../components/common/Icon';
+import Tag from '../components/Tag';
+import { BlockIcon, EyeIcon, FilterIcon, GridIcon, TwitterIcon, DiscordIcon, WebIcon } from '../components/common/Icon';
 
-
-const Block = () => {
+const Collection = () => {
   const [baseApi, setBaseApi] = useState(null); 
-  let { number } = useParams();
+  let { symbol } = useParams();
+  const [collectionSummary, setCollectionSummary] = useState(null);
+  const [inscriptionList, setInscriptionList] = useState([]); 
   const [numberVisibility, setNumberVisibility] = useState(true);
   const [filterVisibility, setFilterVisibility] = useState(false);
-  const [blockStats, setBlockStats]  = useState(null); 
   const [zoomGrid, setZoomGrid] = useState(true);
-  
-  const [selectedSortOption, setSelectedSortOption] = useState('newest');
-  const [selectedFilterOptions, setSelectedFilterOptions] = useState({"Content Type": ["image"], "Satributes": [], "Charms":[]});
 
-  //1. Get block statistics
+  const [selectedSortOption, setSelectedSortOption] = useState('oldest');
+  const [selectedFilterOptions, setSelectedFilterOptions] = useState({"Content Type": [], "Satributes": [], "Charms":[]});
+
+  //1. Get links
   useEffect(() => {
     const fetchContent = async () => {
-      const response = await fetch("/api/block_statistics/" + number);
+      //1. Get inscription numbers
+      setInscriptionList([]);
+      const response = await fetch("/api/inscriptions_in_collection/" + symbol);
       let json = await response.json();
-      console.log('jason', json);
-      setBlockStats(json);
+      setInscriptionList(json);
     }
     fetchContent();
-  },[number]);
+  },[symbol]);
+
+  useEffect(() => {
+    const fetchContent = async () => {
+      const response = await fetch("/api/collection_summary/" + symbol);
+      let json = await response.json();
+      console.log(json);
+      setCollectionSummary(json);
+    }
+    fetchContent();
+  },[symbol]);
 
   //2. get endpoint
   useEffect(() => {
-    let query_string = "/api/inscriptions_in_block/" + number + "?sort_by=" + selectedSortOption;
+    let query_string = "/api/inscriptions_in_collection/" + symbol + "?sort_by=" + selectedSortOption;
     if (selectedFilterOptions["Content Type"] !== undefined && selectedFilterOptions["Content Type"].length > 0) {
       console.log("hit");
       query_string += "&content_types=" + selectedFilterOptions["Content Type"].toString();
@@ -48,7 +60,7 @@ const Block = () => {
       query_string += "&charms=" + selectedFilterOptions["Charms"].toString();
     }
     setBaseApi(query_string);
-  },[number, selectedSortOption, selectedFilterOptions]);
+  },[symbol, selectedSortOption, selectedFilterOptions]);
 
   // function to toggle visibility of inscription numbers
   const toggleNumberVisibility = () => {
@@ -87,55 +99,81 @@ const Block = () => {
     event.target.style.height = "2.25rem"
   };
 
+  const hasSocialLinks = collectionSummary?.twitter || collectionSummary?.discord || collectionSummary?.website;
+
   return (
     <MainContainer>
       <HeaderContainer>
         <MainContentStack>
-          <InfoText>Block</InfoText>
-          <InfoStack>
-            <BlockImageContainer>
-              <CollectionIcon endpoint = {"/api/block_icon/"+number} useBlockIconDefault = {true}></CollectionIcon>
-            </BlockImageContainer>
+          <InfoText>Collection</InfoText>
+          <CollectionStack>
+            <CollectionImageContainer>
+              {collectionSummary?.range_start ? 
+                <CollectionIcon endpoint={"/api/inscription_number/" + collectionSummary?.range_start} useBlockIconDefault={false} /> :
+                <BlockIcon size={'2.5rem'} color={'#E34234'} />
+              }
+            </CollectionImageContainer>
             <Stack gap={'.5rem'}>
-              <MainText>{addCommas(number)}</MainText>
-              <InfoText>Created {formatTimestampMs(blockStats?.block_timestamp)}</InfoText>
+              <MainText>{collectionSummary?.name}</MainText>
+              <InfoText>Created {collectionSummary?.first_inscribed_date ? shortenDate(collectionSummary.first_inscribed_date) : ""}</InfoText>
             </Stack>
-          </InfoStack>
+          </CollectionStack>
         </MainContentStack>
+        {hasSocialLinks && (
+          <SocialStack>
+            {collectionSummary?.twitter && (
+              <UnstyledLink to={collectionSummary.twitter} target='_blank'>
+                <SocialContainer>
+                  <TwitterIcon size={'1.25rem'} color={'#000000'} />
+                </SocialContainer>
+              </UnstyledLink>
+            )}
+            {collectionSummary?.discord && (
+              <UnstyledLink to={collectionSummary.discord} target='_blank'>
+                <SocialContainer>
+                  <DiscordIcon size={'1.25rem'} color={'#000000'} />
+                </SocialContainer>
+              </UnstyledLink>
+            )}
+            {collectionSummary?.website && (
+              <UnstyledLink to={collectionSummary.website} target='_blank'>
+                <SocialContainer>
+                  <WebIcon size={'1.25rem'} color={'#000000'} />
+                </SocialContainer>
+              </UnstyledLink>
+            )}
+          </SocialStack>
+        )}
       </HeaderContainer>
+      {collectionSummary?.description && collectionSummary.description.trim() !== "" && (
+        <RowContainer>
+          <InfoText isLarge>{collectionSummary.description}</InfoText>
+        </RowContainer>
+      )}
       <RowContainer style={{gap: '.5rem', flexFlow: 'wrap'}}>
-        <Tag isLarge={true} value={blockStats?.block_inscription_count ? addCommas(blockStats?.block_inscription_count) : 0} category={'Inscriptions'} />
-        <Tag isLarge={true} value={blockStats?.block_tx_count ? addCommas(blockStats?.block_tx_count) : 0} category={'Transactions'} />
-        <Tag isLarge={true} value={blockStats?.block_size ? shortenBytesString(blockStats.block_size) : 0} category={'Size'} />
-        <Tag isLarge={true} value={blockStats?.block_volume ? formatSatsString(blockStats.block_volume) : "0 BTC"} category={'Traded Volume'} />
-        <Tag isLarge={true} value={blockStats?.block_fees ? formatSatsString(blockStats.block_fees) : "0 BTC"} category={'Total Fees'} />
+        <Tag isLarge={true} value={collectionSummary?.supply ? addCommas(collectionSummary?.supply) : 0} category={'Supply'} />
+        <Tag isLarge={true} value={collectionSummary?.total_volume ? formatSatsString(collectionSummary.total_volume) : "0 BTC"} category={'Traded Volume'} />
+        <Tag isLarge={true} value={collectionSummary?.range_start ? addCommas(collectionSummary?.range_start) + " to " + addCommas(collectionSummary?.range_end) : ""} category={'Range'} />
+        <Tag isLarge={true} value={collectionSummary?.total_inscription_size ? shortenBytesString(collectionSummary.total_inscription_size) : 0} category={'Total Size'} />
+        <Tag isLarge={true} value={collectionSummary?.total_inscription_fees ? formatSatsString(collectionSummary.total_inscription_fees) : "0 BTC"} category={'Total Fees'} />
       </RowContainer>
-      {/* <RowContainer>
-        <Container style={{gap: '2rem', flexFlow: 'wrap', justifyContent: 'center'}}>
-          <Stat value={blockStats?.block_tx_count} category={'Transactions'} />
-          <Stat value={blockStats?.block_inscription_count ? blockStats?.block_inscription_count : 0} category={'Inscriptions'} />
-          <Stat value={blockStats?.block_size ? shortenBytes(blockStats.block_size) : 0} category={'Size'} />
-          <Stat value={blockStats?.block_volume ? formatSats(blockStats.block_volume) : "0 BTC"} category={'Traded Volume'} />
-          <Stat value={blockStats?.block_fees ? formatSats(blockStats.block_fees) : "0 BTC"} category={'Total Fees'} />
-        </Container>
-      </RowContainer> */}
       <Divider></Divider>
       <RowContainer>
-        <Stack horizontal={true} center={false} style={{gap: '.75rem'}}>
-          <FilterButton onClick={toggleFilterVisibility}>
-            <FilterIcon size={'1.25rem'} color={'#000000'}></FilterIcon>
-          </FilterButton>
-          <VisibilityButton onClick={toggleNumberVisibility}>
-            <EyeIcon size={'1.25rem'} color={numberVisibility ? '#000000' : '#959595'}></EyeIcon>
-          </VisibilityButton>
-          <GridTypeButton onClick={toggleGridType}>
-            <GridIcon size={'1.25rem'} color={zoomGrid ? '#959595' : '#000000'}></GridIcon>
-          </GridTypeButton>
-        </Stack>
+        <Stack horizontal={true} center={false} style={{gap: '1rem'}}>
+            <FilterButton onClick={toggleFilterVisibility}>
+              <FilterIcon size={'1.25rem'} color={'#000000'} />
+            </FilterButton>
+            <VisibilityButton onClick={toggleNumberVisibility}>
+              <EyeIcon size={'1.25rem'} color={numberVisibility ? '#000000' : '#959595'} />
+            </VisibilityButton>
+            <GridTypeButton onClick={toggleGridType}>
+              <GridIcon size={'1.25rem'} color={zoomGrid ? '#959595' : '#000000'} />
+            </GridTypeButton>
+          </Stack>
         <SortbyDropdown onOptionSelect={handleSortOptionChange} />
       </RowContainer>
       <RowContainer>
-        <FilterMenu isOpen={filterVisibility} onSelectionChange ={handleFilterOptionsChange} onClose={toggleFilterVisibility} initialSelection={selectedFilterOptions}></FilterMenu>
+        <FilterMenu isOpen={filterVisibility} onSelectionChange={handleFilterOptionsChange} onClose={toggleFilterVisibility} initialSelection={selectedFilterOptions} />
         <GalleryContainer>
           <GalleryInfiniteScroll baseApi={baseApi} numberVisibility={numberVisibility} zoomGrid={zoomGrid} />
         </GalleryContainer>
@@ -144,12 +182,7 @@ const Block = () => {
   )
 }
 
-const BlockImg = styled.img`
-  width: 3.75rem;
-  height: 3.75rem;
-  border-radius: 2rem;
-`
-  
+// Styled components remain unchanged
 const PageContainer = styled.div`
   width: 100%;
   min-height: 100vh;
@@ -206,7 +239,7 @@ const MainContentStack = styled.div`
   }
 `;
 
-const InfoStack = styled.div`
+const CollectionStack = styled.div`
   display: flex;
   flex-direction: row;
   align-items: center;
@@ -216,6 +249,14 @@ const InfoStack = styled.div`
     flex-direction: column;
     align-items: flex-start;
   }
+`;
+
+const SocialStack = styled.div`
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: .75rem;
+  flex-shrink: 0;
 `;
 
 const RowContainer = styled.div`
@@ -232,7 +273,7 @@ const GalleryContainer = styled.div`
   width: 100%;
 `;
 
-const BlockImageContainer = styled.div`
+const CollectionImageContainer = styled.div`
   width: 8rem;
   height: 8rem;
   background-color: #F5F5F5;
@@ -243,7 +284,7 @@ const BlockImageContainer = styled.div`
 `;
 
 const MainText = styled.p`
-  font-family: relative-bold-pro;
+  font-family: Relative Trial Bold;
   font-size: 2rem;
   margin: 0;
 `;
@@ -255,26 +296,8 @@ const InfoText = styled.p`
   margin: 0;
 `;
 
-const BlockImgContainer = styled.div`
-  width: 3.75rem;
-  height: 3.75rem;
-  background-color: #F5F5F5;
-  border-radius: 2rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-`;
-
-const BlockText = styled.p`
-  font-family: Relative Trial Bold;
-  font-size: 1.5rem;
-  margin: 0;
-`;
-
-const Container = styled.div`
-  display: flex;
-  flex-direction: row;
-  align-items: center;
+const TextSpan = styled.span`
+  color: #959595;
 `;
 
 const StatusWrapper = styled.div`
@@ -307,6 +330,22 @@ const SectionContainer = styled.div`
   // overflow: scroll;
 `;
 
+const ShareButton = styled.button`
+  height: 36px;
+  border-radius: .5rem;
+  border: none;
+  padding: .5rem 1rem;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-family: 'ABC Camera Plain Unlicensed Trial Medium';
+  font-size: .875rem;
+  color: #FFFFFF;
+  background-color: #000000;
+`;
+
 const TabButton = styled.button`
   border-radius: .5rem;
   border: none;
@@ -319,15 +358,15 @@ const TabButton = styled.button`
   gap: .5rem;
   font-family: Relative Trial Bold;
   font-size: .875rem;
-  color: #E34234;  
-  background-color:#F9E8E7;
+  color: ${props => props.isActive ? '#E34234' : '#959595'}; // Change text color based on isActive
+  background-color: ${props => props.isActive ? '#F9E8E7' : '#FFFFFF'}; // Change background based on isActive
   transition: 
     background-color 350ms ease,
     transform 150ms ease;
   transform-origin: center center;
 
   &:hover {
-    background-color: #F9E8E7;
+    background-color: ${props => props.isActive ? '#F9E8E7' : '#F5F5F5'};
   }
 
   &:active {
@@ -446,4 +485,34 @@ const InfoButton = styled.button`
   }
 `;
 
-export default Block;
+const UnstyledLink = styled(Link)`
+  color: unset;
+  text-decoration: unset;
+`;
+
+const SocialContainer = styled.div`
+  height: 3rem;
+  width: 3rem;
+  border-radius: 1.5rem;
+  border: none;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  background-color: #F5F5F5;
+  transition: 
+    background-color 350ms ease,
+    transform 150ms ease;
+  transform-origin: center center;
+
+  &:hover {
+    background-color: #E9E9E9;
+  }
+
+  &:active {
+    transform: scale(0.96);
+  }
+`;
+
+export default Collection;
