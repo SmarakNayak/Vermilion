@@ -10,10 +10,6 @@ on:
         description: 'Which server to deploy to? Hetzner_blue or Hetzner_green'
         required: true
         default: 'Hetzner_'
-      branch:
-        description: 'Which branch to deploy?'
-        required: true
-        default: ${{ github.ref_name }}
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
@@ -42,10 +38,10 @@ jobs:
         run: |
           ssh staging 'if [ -d "Vermilion" ]; then 
             git -C Vermilion fetch && 
-            git -C Vermilion checkout ${{ github.event.inputs.branch }} && 
-            git -C Vermilion pull origin ${{ github.event.inputs.branch }}; 
+            git -C Vermilion checkout ${{ github.ref_name }} && 
+            git -C Vermilion reset --hard origin/${{ github.ref_name }}; 
           else 
-            git clone -b ${{ github.event.inputs.branch }} git@github.com:SmarakNayak/Vermilion.git; 
+            git clone -b ${{ github.ref_name }} git@github.com:SmarakNayak/Vermilion.git; 
           fi'
       
       - name: Setup nginx config
