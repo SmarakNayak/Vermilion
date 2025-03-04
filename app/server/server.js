@@ -5,7 +5,7 @@ Bun.serve({
     '/content/:id': async req => {
       const url = new URL(req.url)
       let searchParams = url.searchParams;
-      searchParams.delete('ssr');
+      searchParams.delete('vermilion_ssr');
       console.log('https://blue.vermilion.place/api/inscription/' + req.params.id + url.search);
       return await fetchContent(req.params.id, url.search);
     }
