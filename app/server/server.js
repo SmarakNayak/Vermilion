@@ -149,34 +149,38 @@ async function extractPrefetchLinksPuppeteer(url) {
   if (!puppeteerBrowser) {
     puppeteerBrowser = await puppeteer.launch({ headless: true, args: ['--no-sandbox'] });
   }
-  const browser = await puppeteer.launch();
-  const page = await browser.newPage();
-  const contentLinks = new Set();
+  const page = await puppeteerBrowser.newPage();
+  try {
+    const contentLinks = new Set();
 
-  // Intercept requests similar to Playwright's route
-  await page.setRequestInterception(true);
-  page.on('request', request => {
-    let path = new URL(request.url()).pathname;
-    if (path.startsWith('/content')) {
-      contentLinks.add(path);
-    }
-    request.continue();
-  });
+    // Intercept requests similar to Playwright's route
+    await page.setRequestInterception(true);
+    page.on('request', request => {
+      let path = new URL(request.url()).pathname;
+      if (path.startsWith('/content')) {
+        contentLinks.add(path);
+      }
+      request.continue();
+    });
 
-  // Navigate to page with similar options
-  await page.goto(url, { 
-    waitUntil: 'domcontentloaded',
-    timeout: 10000 
-  });
-  
-  // Wait for network idle
-  await page.waitForNetworkIdle({ timeout: 10000 });
+    // Navigate to page with similar options
+    await page.goto(url, { 
+      waitUntil: 'domcontentloaded',
+      timeout: 10000 
+    });
+    
+    // Wait for network idle
+    await page.waitForNetworkIdle({ timeout: 10000 });
 
-  const prefetchLinks = Array.from(contentLinks).map(
-    path => `<link rel="prefetch" href="${path}" />`
-  );
-
-  await browser.close();
+    const prefetchLinks = Array.from(contentLinks).map(
+      path => `<link rel="prefetch" href="${path}" />`
+    );
+  } catch (error) {
+    console.error('Error extracting prefetch links:', error);
+    return [];
+  } finally {
+    await page.close();
+  }
   let endTime = performance.now();
   console.log('Puppeteer extract time:', endTime - startTime);
   
@@ -185,7 +189,6 @@ async function extractPrefetchLinksPuppeteer(url) {
 
 function appendPrefetchLinks(htmlContent, prefetchLinks) {
   const prefetchTags = prefetchLinks.join('\n    ');
-  console.log(htmlContent);
   let modifiedHtml = htmlContent;
   if (htmlContent.includes('<head>')) {
     modifiedHtml = htmlContent.replace(
@@ -195,7 +198,6 @@ function appendPrefetchLinks(htmlContent, prefetchLinks) {
   } else {
     modifiedHtml = `<!DOCTYPE html><html><head>\n    ${prefetchTags}\n</head><body>${htmlContent}</body></html>`;
   }
-  console.log(modifiedHtml);
   return modifiedHtml;
 }
 
