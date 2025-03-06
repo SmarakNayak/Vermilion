@@ -52,7 +52,7 @@ const server = Bun.serve({
         decompress: false,
       });
       let htmlContent = await htmlResponse.text();
-      const prefetchLinks = await extractPrefetchLinksPuppeteer(newUrl);
+      const prefetchLinks = await extractPrefetchLinksPlaywright(newUrl);
       // Join prefetch links with newlines and inject into head section
       let modifiedHtml = appendPrefetchLinks(htmlContent, prefetchLinks);
 
@@ -123,24 +123,37 @@ async function renderContentPuppeteer(url) {
 // This renders the content using Playwright, capturing all /content requests made
 // we can then inject the prefetch links into the head section
 // saving the client side waterfall as all requests are made in parallel
-async function extractPrefetchLinks(url) {
-  const page = await playwrightBrowser.newPage();
-  const contentLinks = new Set();
+async function extractPrefetchLinksPlaywright(url) {
+  let startTime = performance.now();
+  if (!playwrightBrowser) {
+    playwrightBrowser = await chromium.launch({ headless: true, args: ['--no-sandbox'] });
+  }
+  let prefetchLinks;
+  try {
+    const page = await playwrightBrowser.newPage();
+    const contentLinks = new Set();
 
-  await page.route('**/*', async route => {
-    let path = new URL(route.request().url()).pathname;
-    if (path.startsWith('/content')) {
-      contentLinks.add(path);
-    }
-    await route.continue();
-  });
-  await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 10000 });
-  await page.waitForLoadState('networkidle', { timeout: 10000 });
+    await page.route('**/*', async route => {
+      let path = new URL(route.request().url()).pathname;
+      if (path.startsWith('/content')) {
+        contentLinks.add(path);
+      }
+      await route.continue();
+    });
+    await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 10000 });
+    await page.waitForLoadState('networkidle', { timeout: 10000 });
 
-  const prefetchLinks = Array.from(contentLinks).map(
-    path => `<link rel="prefetch" href="${path}" />`
-  );
-  
+    prefetchLinks = Array.from(contentLinks).map(
+      path => `<link rel="prefetch" href="${path}" />`
+    );
+  } catch (error) {
+    console.error('Error extracting prefetch links:', error);
+    return [];
+  } finally {
+    await page.close();
+  }
+  let endTime = performance.now();
+  console.log('Playwright extract time:', endTime - startTime);  
   return prefetchLinks;
 }
 
