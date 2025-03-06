@@ -29,6 +29,37 @@ const server = Bun.serve({
       return new Response(ss, {
         headers: { 'Content-Type': 'image/png' },
       });
+    },
+    '/content/:id': async req => {
+      const url = new URL(req.url)
+      let searchParams = url.searchParams;
+
+      // This should only trigger for recursive html, nginx will not route other requests here
+      // We reroute just in case
+      if (!searchParams.has('vermilion_ssr')) {
+        let newHeaders = new Headers();
+        newHeaders.set('accept-encoding', req.headers.get('accept-encoding') || 'identity');
+        return fetch(apiBaseUrl + "/content/" + req.params.id + url.search, {
+          headers: newHeaders,
+          decompress: false, // Do not decompress response
+        });
+      }
+
+      // Otherwise, remove the flag and continue
+      searchParams.delete('vermilion_ssr');
+      let newUrl = apiBaseUrl + "/content/" + req.params.id + url.search;
+      let htmlResponse = await fetch(newUrl, {
+        decompress: false,
+      });
+      let htmlContent = await htmlResponse.text();
+      const prefetchLinks = await extractPrefetchLinksPuppeteer(newUrl);
+      // Join prefetch links with newlines and inject into head section
+      let modifiedHtml = appendPrefetchLinks(htmlContent, prefetchLinks);
+
+      console.log(modifiedHtml);
+      return new Response(modifiedHtml, {
+        headers: { 'Content-Type': 'text/html' },
+      });
     }
   }
 });
@@ -87,6 +118,85 @@ async function renderContentPuppeteer(url) {
   } finally {
     await page.close();
   }
+}
+
+// This renders the content using Playwright, capturing all /content requests made
+// we can then inject the prefetch links into the head section
+// saving the client side waterfall as all requests are made in parallel
+async function extractPrefetchLinks(url) {
+  const page = await playwrightBrowser.newPage();
+  const contentLinks = new Set();
+
+  await page.route('**/*', async route => {
+    let path = new URL(route.request().url()).pathname;
+    if (path.startsWith('/content')) {
+      contentLinks.add(path);
+    }
+    await route.continue();
+  });
+  await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 10000 });
+  await page.waitForLoadState('networkidle', { timeout: 10000 });
+
+  const prefetchLinks = Array.from(contentLinks).map(
+    path => `<link rel="prefetch" href="${path}" />`
+  );
+  
+  return prefetchLinks;
+}
+
+async function extractPrefetchLinksPuppeteer(url) {
+  let startTime = performance.now();
+  if (!puppeteerBrowser) {
+    puppeteerBrowser = await puppeteer.launch({ headless: true, args: ['--no-sandbox'] });
+  }
+  const browser = await puppeteer.launch();
+  const page = await browser.newPage();
+  const contentLinks = new Set();
+
+  // Intercept requests similar to Playwright's route
+  await page.setRequestInterception(true);
+  page.on('request', request => {
+    let path = new URL(request.url()).pathname;
+    if (path.startsWith('/content')) {
+      contentLinks.add(path);
+    }
+    request.continue();
+  });
+
+  // Navigate to page with similar options
+  await page.goto(url, { 
+    waitUntil: 'domcontentloaded',
+    timeout: 10000 
+  });
+  
+  // Wait for network idle
+  await page.waitForNetworkIdle({ timeout: 10000 });
+
+  const prefetchLinks = Array.from(contentLinks).map(
+    path => `<link rel="prefetch" href="${path}" />`
+  );
+
+  await browser.close();
+  let endTime = performance.now();
+  console.log('Puppeteer extract time:', endTime - startTime);
+  
+  return prefetchLinks;
+}
+
+function appendPrefetchLinks(htmlContent, prefetchLinks) {
+  const prefetchTags = prefetchLinks.join('\n    ');
+  console.log(htmlContent);
+  let modifiedHtml = htmlContent;
+  if (htmlContent.includes('<head>')) {
+    modifiedHtml = htmlContent.replace(
+      '<head>',
+      `<head>\n    ${prefetchTags}`
+    );
+  } else {
+    modifiedHtml = `<!DOCTYPE html><html><head>\n    ${prefetchTags}\n</head><body>${htmlContent}</body></html>`;
+  }
+  console.log(modifiedHtml);
+  return modifiedHtml;
 }
 
 // Shutdown function to clean up everything
