@@ -6,6 +6,7 @@ After=network.target
 Type=simple
 User=ubuntu
 WorkingDirectory=/home/ubuntu/Vermilion/app/server
+Environment=NODE_ENV=production
 ExecStart=/home/ubuntu/.bun/bin/bun run server.js
 Restart=on-failure
 
