@@ -150,6 +150,7 @@ async function extractPrefetchLinksPuppeteer(url) {
     puppeteerBrowser = await puppeteer.launch({ headless: true, args: ['--no-sandbox'] });
   }
   const page = await puppeteerBrowser.newPage();
+  let prefetchLinks;
   try {
     const contentLinks = new Set();
 
@@ -172,7 +173,7 @@ async function extractPrefetchLinksPuppeteer(url) {
     // Wait for network idle
     await page.waitForNetworkIdle({ timeout: 10000 });
 
-    const prefetchLinks = Array.from(contentLinks).map(
+    prefetchLinks = Array.from(contentLinks).map(
       path => `<link rel="prefetch" href="${path}" />`
     );
   } catch (error) {
