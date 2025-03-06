@@ -3,12 +3,12 @@ import puppeteer from 'puppeteer';
 
 // Configuration - use local address in production or fall back to external URL
 const isProd = process.env.NODE_ENV === 'production';
-const apiBaseUrl = isProd ? 'http://127.0.0.1:1081' : 'https://blue.vermilion.place/api';
+const apiBaseUrl = isProd ? 'http://127.0.0.1:1080' : 'https://blue.vermilion.place/';
 
 let playwrightBrowser;
 let puppeteerBrowser;
 
-Bun.serve({
+const server = Bun.serve({
   port: 1082,
   routes: {
     '/': new Response('Hello World!'),
@@ -21,7 +21,7 @@ Bun.serve({
       if (!searchParams.has('vermilion_ssr')) {
         let newHeaders = new Headers();
         newHeaders.set('accept-encoding', req.headers.get('accept-encoding') || 'identity');
-        return fetch(apiBaseUrl + "/inscription/" + req.params.id + url.search, {
+        return fetch(apiBaseUrl + "/content/" + req.params.id + url.search, {
           headers: newHeaders,
           decompress: false, // Do not decompress response
         });
@@ -32,7 +32,7 @@ Bun.serve({
       if (!playwrightBrowser) {
         playwrightBrowser = await chromium.launch({ headless: true, args: ['--no-sandbox'] });
       }
-      let newUrl = apiBaseUrl + "/inscription/" + req.params.id + url.search;
+      let newUrl = apiBaseUrl + "/content/" + req.params.id + url.search;
       let htmlResponse = await fetch(newUrl, {
         decompress: false,
       });
@@ -47,7 +47,7 @@ Bun.serve({
       });
     },
     '/renderedContentPlaywright/:id': async req => {
-      let ss = await renderContentPlaywright(apiBaseUrl + "/inscription/" + req.params.id);
+      let ss = await renderContentPlaywright(apiBaseUrl + "/content/" + req.params.id);
       if (!ss) {
         return new Response('Error rendering content', { status: 404 });
       }
@@ -56,7 +56,7 @@ Bun.serve({
       });
     },
     '/renderedContent/:id': async req => {
-      let ss = await renderContentPuppeteer(apiBaseUrl + "/inscription/" + req.params.id);
+      let ss = await renderContentPuppeteer(apiBaseUrl + "/content/" + req.params.id);
       if (!ss) {
         return new Response('Error rendering content', { status: 404 });
       }
@@ -196,3 +196,34 @@ async function renderContentPuppeteer(url) {
     await page.close();
   }
 }
+
+// Shutdown function to clean up everything
+async function shutdown() {
+  console.log("Shutting down...");
+  // Stop Bun server
+  server.stop();
+  console.log("Bun server stopped");
+  // Close Puppeteer browser
+  if (puppeteerBrowser) {
+    await puppeteerBrowser.close();
+    console.log("Puppeteer browser closed");
+  }
+  // Close Playwright browser
+  if (playwrightBrowser) {
+    await playwrightBrowser.close();
+    console.log("Playwright browser closed");
+  }
+  process.exit(0);
+}
+
+
+// Close the browsers when the server is stopped
+// Handle SIGINT (Ctrl+C)
+process.on("SIGINT", async () => {
+  await shutdown();
+});
+
+// Handle SIGTERM (termination signal)
+process.on("SIGTERM", async () => {
+  await shutdown();
+});
