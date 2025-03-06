@@ -124,12 +124,8 @@ async function shutdown() {
   
   // Close all browsers in the pool
   await browserPool.closeAll();
+  console.log("Browser pool closed");
   
-  // Close Playwright browser
-  if (playwrightBrowser) {
-    await playwrightBrowser.close();
-    console.log("Playwright browser closed");
-  }
   process.exit(0);
 }
 
