@@ -12,15 +12,6 @@ const server = Bun.serve({
   port: 1082,
   routes: {
     '/': new Response('Hello World!'),
-    '/renderedContentPlaywright/:id': async req => {
-      let ss = await renderContentPlaywright(apiBaseUrl + "/content/" + req.params.id);
-      if (!ss) {
-        return new Response('Error rendering content', { status: 404 });
-      }
-      return new Response(ss, {
-        headers: { 'Content-Type': 'image/png' },
-      });
-    },
     '/renderedContent/:id': async req => {
       let ss = await renderContentPuppeteer(apiBaseUrl + "/content/" + req.params.id);
       if (!ss) {
@@ -32,34 +23,6 @@ const server = Bun.serve({
     }
   }
 });
-
-async function renderContentPlaywright(url) {
-  let startTime = performance.now();
-  if (!playwrightBrowser) {
-    playwrightBrowser = await chromium.launch({ headless: true, args: ['--no-sandbox'], dumpio: true });
-  }
-  let launchTime = performance.now();
-  const page = await playwrightBrowser.newPage();
-  try {
-    await page.setViewportSize({ width: 600, height: 600 });
-    const response = await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 25000 });
-    if (response.status() !== 200) {
-      throw new Error(`Page load failed with status: ${response.status()} ${response.statusText()}`);
-    }
-    await page.waitForLoadState('networkidle', { timeout: 25000 });
-    const screenshotBuffer = await page.screenshot({ fullPage: true });
-    console.log('Screenshot captured in memory.');
-    let endTime = performance.now();
-    console.log('Launch time:', launchTime - startTime);
-    console.log('Render time:', endTime - launchTime);
-    return screenshotBuffer;
-  } catch (error) {
-    console.error('Error rendering content:', error);
-    return null;
-  } finally {
-    await page.close();
-  }
-}
 
 async function renderContentPuppeteer(url) {
   let startTime = performance.now();
