@@ -7,31 +7,31 @@ export default defineConfig({
   server: {
     proxy: {
       '/api': {
-        target: 'https://green.vermilion.place/',
+        target: 'https://blue.vermilion.place/',
         changeOrigin: true
       },
       '/content': {
-        target: 'https://green.vermilion.place/',
+        target: 'https://blue.vermilion.place/',
         changeOrigin: true
       },
       '/search_api': {
-        target: 'https://green.vermilion.place/',
+        target: 'https://blue.vermilion.place/',
         changeOrigin: true
       },
       '/r': {
-        target: 'https://green.vermilion.place/',
+        target: 'https://blue.vermilion.place/',
         changeOrigin: true
       },
       '/blockheight': {
-        target: 'https://green.vermilion.place/',
+        target: 'https://blue.vermilion.place/',
         changeOrigin: true
       },
       '/blockhash': {
-        target: 'https://green.vermilion.place/',
+        target: 'https://blue.vermilion.place/',
         changeOrigin: true
       },
       '/blocktime': {
-        target: 'https://green.vermilion.place/',
+        target: 'https://blue.vermilion.place/',
         changeOrigin: true
       }
     }

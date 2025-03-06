@@ -94,14 +94,34 @@ function appendPrefetchLinks(htmlContent, prefetchLinks) {
   const prefetchTags = prefetchLinks.join('\n    ');
   console.log(htmlContent);
   let modifiedHtml = htmlContent;
+
+  const cspMetaTag = `<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self';">`;
+
   if (htmlContent.includes('<head>')) {
-    modifiedHtml = htmlContent.replace(
-      '<head>',
-      `<head>\n    ${prefetchTags}`
-    );
+    // Check for existing CSP meta tag
+    if (htmlContent.includes('http-equiv="Content-Security-Policy"')) {
+      // Replace the existing CSP meta tag (or merge policies if needed)
+      modifiedHtml = htmlContent.replace(
+        /<meta http-equiv="Content-Security-Policy"[^>]+>/i,
+        cspMetaTag
+      );
+      // Append prefetch tags after <head>
+      modifiedHtml = modifiedHtml.replace(
+        '<head>',
+        `<head>\n    ${prefetchTags}`
+      );
+    } else {
+      // No existing CSP, add both CSP and prefetch tags
+      modifiedHtml = htmlContent.replace(
+        '<head>',
+        `<head>\n    ${cspMetaTag}\n    ${prefetchTags}`
+      );
+    }
   } else {
-    modifiedHtml = `<!DOCTYPE html><html><head>\n    ${prefetchTags}\n</head><body>${htmlContent}</body></html>`;
+    // No <head>, create full HTML structure
+    modifiedHtml = `<!DOCTYPE html><html><head>\n    ${cspMetaTag}\n    ${prefetchTags}\n</head><body>${htmlContent}</body></html>`;
   }
+
   console.log(modifiedHtml);
   return modifiedHtml;
 }
