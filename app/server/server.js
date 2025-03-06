@@ -42,11 +42,11 @@ async function renderContentPlaywright(url) {
   const page = await playwrightBrowser.newPage();
   try {
     await page.setViewportSize({ width: 600, height: 600 });
-    const response = await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 10000 });
+    const response = await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 25000 });
     if (response.status() !== 200) {
       throw new Error(`Page load failed with status: ${response.status()} ${response.statusText()}`);
     }
-    await page.waitForLoadState('networkidle', { timeout: 10000 });
+    await page.waitForLoadState('networkidle', { timeout: 25000 });
     const screenshotBuffer = await page.screenshot({ fullPage: true });
     console.log('Screenshot captured in memory.');
     let endTime = performance.now();
