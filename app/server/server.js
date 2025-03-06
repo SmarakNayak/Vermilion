@@ -1,4 +1,3 @@
-import { chromium } from 'playwright';
 import puppeteer from 'puppeteer';
 
 // Configuration - use local address in production or fall back to external URL
@@ -6,7 +5,7 @@ const isProd = process.env.NODE_ENV === 'production';
 const apiBaseUrl = isProd ? 'http://127.0.0.1:1080' : 'https://blue.vermilion.place/';
 
 // Browser Pool Configuration
-const POOL_SIZE = 10; // Number of browser instances in the pool
+const POOL_SIZE = 100; // Number of browser instances in the pool
 const browserPool = {
   browsers: [],
   inUse: new Set(),

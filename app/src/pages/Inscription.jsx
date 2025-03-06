@@ -401,7 +401,7 @@ const Inscription = () => {
                 'image': <ImageContainer src={blobUrl} />,
                 'svg-recursive': <SvgContainer src={"/api/inscription_number/"+ number} scrolling='no' sandbox='allow-scripts allow-same-origin' loading="lazy"/>,
                 'svg': <ImageContainer src={"/api/inscription_number/"+ number}/>,
-                'html': <HtmlContainer><StyledIframe src={`/content/${metadata?.id}?vermilion_ssr=true`} scrolling='no' sandbox='allow-scripts allow-same-origin' loading="lazy"></StyledIframe></HtmlContainer>,
+                'html': <HtmlContainer><StyledIframe src={`/content/${metadata?.id}`} scrolling='no' sandbox='allow-scripts allow-same-origin' loading="lazy"></StyledIframe></HtmlContainer>,
                 'text': <TextContainer><MediaText>{textContent}</MediaText></TextContainer>,
                 'video': <VideoContainer controls loop muted autoplay><source src={blobUrl} type={metadata?.content_type}/></VideoContainer>,
                 'audio': <AudioContainer controls><source src={blobUrl} type={metadata?.content_type}/></AudioContainer>,
