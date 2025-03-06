@@ -107,14 +107,47 @@ function appendPrefetchLinks(htmlContent, prefetchLinks) {
   return modifiedHtml;
 }
 
-// Can use this function for later, to take screenshots
 async function renderContentPlaywright(url) {
   // let startTime = performance.now();
   if (!playwrightBrowser) {
-    playwrightBrowser = await chromium.launch({ headless: true, args: ['--no-sandbox'] });
+    playwrightBrowser = await chromium.launch({ headless: true, args: ['--no-sandbox'], dumpio: true });
   }
   // let launchTime = performance.now();
   const page = await playwrightBrowser.newPage();
+  page.on('console', (msg) => {
+    console.log('console',msg);
+  });
+  page.on('pageerror', (msg) => {
+    console.log('pageerror',msg);
+  });
+  page.on('requestfailed', (request) => {
+    console.log('requestfailed',request.url(), request.failure().errorText);
+  }
+  );
+  page.on('response', (response) => {
+    console.log('response',response.url(), response.status());
+  }
+  );
+  page.on('request', (request) => {
+    console.log('request',request.url());
+  }
+  );
+  page.on('load', () => {
+    console.log('Page loaded');
+  }
+  );
+  page.on('domcontentloaded', () => {
+    console.log('DOM content loaded');
+  }
+  );
+  page.on('close', () => {
+    console.log('Page closed');
+  }
+  );
+  page.on('error', (error) => {
+    console.log('error', error);
+  }
+  );
   try {
     await page.setViewportSize({ width: 600, height: 600 });
     const response = await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 10000 });
