@@ -153,7 +153,7 @@ const GridItemContainer = (props) => {
               'image': <ImageContainer src={blobUrl} />,
               'svg': <ImageContainer src={"/api/inscription_number/"+ props.number} />,
               'svg-recursive': <SvgContainer src={"/api/inscription_number/"+ props.number} scrolling='no' sandbox='allow-scripts allow-same-origin' loading="lazy"/>,
-              'html': <HtmlContainer><ContentOverlay /><StyledIframe src={"https://iframe.vermilion.place/content/" + props.id + "?vermilion_ssr=true"} sandbox='allow-scripts allow-same-origin' loading='lazy' controls muted></StyledIframe></HtmlContainer>,
+              'html': <ImageContainer src={"/bun/renderedContent/" + props.id}></ImageContainer>,
               'text': <TextContainer><MediaText>{textContent}</MediaText></TextContainer>,
               'video': <div style={{position: 'relative', width: '100%', height: 'auto'}}>
                         <ContentOverlay />

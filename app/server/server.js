@@ -1,11 +1,12 @@
 import { chromium } from 'playwright';
-//import puppeteer from 'puppeteer';
+import puppeteer from 'puppeteer';
 
 // Configuration - use local address in production or fall back to external URL
 const isProd = process.env.NODE_ENV === 'production';
 const apiBaseUrl = isProd ? 'http://127.0.0.1:1081' : 'https://blue.vermilion.place/api';
 
-let browser;
+let playwrightBrowser;
+let puppeteerBrowser;
 
 Bun.serve({
   port: 1082,
@@ -28,8 +29,8 @@ Bun.serve({
 
       // Otherwise, remove the flag and continue
       searchParams.delete('vermilion_ssr');
-      if (!browser) {
-        browser = await chromium.launch({ headless: true, args: ['--no-sandbox'] });
+      if (!playwrightBrowser) {
+        playwrightBrowser = await chromium.launch({ headless: true, args: ['--no-sandbox'] });
       }
       let newUrl = apiBaseUrl + "/inscription/" + req.params.id + url.search;
       let htmlResponse = await fetch(newUrl, {
@@ -45,22 +46,22 @@ Bun.serve({
         headers: { 'Content-Type': 'text/html' },
       });
     },
-    '/test': async req => {
-      if (!browser) {
-        browser = await chromium.launch({ headless: true, args: ['--no-sandbox'] });
+    '/renderedContentPlaywright/:id': async req => {
+      let ss = await renderContentPlaywright(apiBaseUrl + "/inscription/" + req.params.id);
+      if (!ss) {
+        return new Response('Error rendering content', { status: 404 });
       }
-      let htmlResponse = await fetch(apiBaseUrl + '/inscription/4b31771df21656d2a77e6fa18720a6dd94b04510b9065a7c67250d5c89ad2079i0', {
-        decompress: false,
+      return new Response(ss, {
+        headers: { 'Content-Type': 'image/png' },
       });
-
-      let htmlContent = await htmlResponse.text();
-      const prefetchLinks = await extractPrefetchLinks(apiBaseUrl + '/inscription/4b31771df21656d2a77e6fa18720a6dd94b04510b9065a7c67250d5c89ad2079i0');      
-      // Join prefetch links with newlines and inject into head section
-      let modifiedHtml = appendPrefetchLinks(htmlContent, prefetchLinks);
-      
-      console.log(modifiedHtml);
-      return new Response(modifiedHtml, {
-        headers: { 'Content-Type': 'text/html' },
+    },
+    '/renderedContent/:id': async req => {
+      let ss = await renderContentPuppeteer(apiBaseUrl + "/inscription/" + req.params.id);
+      if (!ss) {
+        return new Response('Error rendering content', { status: 404 });
+      }
+      return new Response(ss, {
+        headers: { 'Content-Type': 'image/png' },
       });
     }
   }
@@ -70,7 +71,7 @@ Bun.serve({
 // we can then inject the prefetch links into the head section
 // saving the client side waterfall as all requests are made in parallel
 async function extractPrefetchLinks(url) {
-  const page = await browser.newPage();
+  const page = await playwrightBrowser.newPage();
   const contentLinks = new Set();
 
   await page.route('**/*', async route => {
@@ -94,56 +95,70 @@ function appendPrefetchLinks(htmlContent, prefetchLinks) {
   const prefetchTags = prefetchLinks.join('\n    ');
   console.log(htmlContent);
   let modifiedHtml = htmlContent;
-
-  const cspMetaTag = `<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self';">`;
-
   if (htmlContent.includes('<head>')) {
-    // Check for existing CSP meta tag
-    if (htmlContent.includes('http-equiv="Content-Security-Policy"')) {
-      // Replace the existing CSP meta tag (or merge policies if needed)
-      modifiedHtml = htmlContent.replace(
-        /<meta http-equiv="Content-Security-Policy"[^>]+>/i,
-        cspMetaTag
-      );
-      // Append prefetch tags after <head>
-      modifiedHtml = modifiedHtml.replace(
-        '<head>',
-        `<head>\n    ${prefetchTags}`
-      );
-    } else {
-      // No existing CSP, add both CSP and prefetch tags
-      modifiedHtml = htmlContent.replace(
-        '<head>',
-        `<head>\n    ${cspMetaTag}\n    ${prefetchTags}`
-      );
-    }
+    modifiedHtml = htmlContent.replace(
+      '<head>',
+      `<head>\n    ${prefetchTags}`
+    );
   } else {
-    // No <head>, create full HTML structure
-    modifiedHtml = `<!DOCTYPE html><html><head>\n    ${cspMetaTag}\n    ${prefetchTags}\n</head><body>${htmlContent}</body></html>`;
+    modifiedHtml = `<!DOCTYPE html><html><head>\n    ${prefetchTags}\n</head><body>${htmlContent}</body></html>`;
   }
-
   console.log(modifiedHtml);
   return modifiedHtml;
 }
 
 // Can use this function for later, to take screenshots
 async function renderContentPlaywright(url) {
-  const page = await browser.newPage();
+  // let startTime = performance.now();
+  if (!playwrightBrowser) {
+    playwrightBrowser = await chromium.launch({ headless: true, args: ['--no-sandbox'] });
+  }
+  // let launchTime = performance.now();
+  const page = await playwrightBrowser.newPage();
   try {
-    await page.route('**/*.html', async route => {
-      const res = await fetch(route.request().url());
-      const content = await res.text();
-      await route.fulfill({ body: content, contentType: 'text/html' });
-    });
-
-    await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 10000 });
+    await page.setViewportSize({ width: 600, height: 600 });
+    const response = await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 10000 });
+    if (response.status() !== 200) {
+      throw new Error(`Page load failed with status: ${response.status()} ${response.statusText()}`);
+    }
     await page.waitForLoadState('networkidle', { timeout: 10000 });
-    await page.screenshot({ path: 'debug-screenshot.png', fullPage: true });
-    console.log('Screenshot saved as debug-screenshot.png.');
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    return await page.content();
+    const screenshotBuffer = await page.screenshot({ fullPage: true });
+    // console.log('Screenshot captured in memory.');
+    // let endTime = performance.now();
+    // console.log('Launch time:', launchTime - startTime);
+    // console.log('Render time:', endTime - launchTime);
+    return screenshotBuffer;
   } catch (error) {
-    return `<p>Error: ${error.message}</p>`;
+    console.error('Error rendering content:', error);
+    return null;
+  } finally {
+    await page.close();
+  }
+}
+
+async function renderContentPuppeteer(url) {
+  // let startTime = performance.now();
+  if (!puppeteerBrowser) {
+    puppeteerBrowser = await puppeteer.launch({ headless: true, args: ['--no-sandbox'] });
+  }
+  // let launchTime = performance.now();
+  const page = await puppeteerBrowser.newPage();
+  try {
+    await page.setViewport({ width: 600, height: 600 });
+    const response = await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 10000 });
+    if (response.status() !== 200) {
+      throw new Error(`Page load failed with status: ${response.status()} ${response.statusText()}`);
+    }
+    await page.waitForNetworkIdle({ timeout: 10000 });
+    const screenshotBuffer = await page.screenshot({ fullPage: true });
+    // console.log('Screenshot captured in memory.');
+    // let endTime = performance.now();
+    // console.log('Launch time:', launchTime - startTime);
+    // console.log('Render time:', endTime - launchTime);
+    return screenshotBuffer;
+  } catch (error) {
+    console.error('Error rendering content:', error);
+    return null;
   } finally {
     await page.close();
   }

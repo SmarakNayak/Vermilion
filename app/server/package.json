@@ -8,6 +8,7 @@
     "typescript": "^5"
   },
   "dependencies": {
-    "playwright": "^1.50.1"
+    "playwright": "^1.50.1",
+    "puppeteer": "^24.3.1"
   }
 }
