@@ -74,37 +74,7 @@ async function renderContentPuppeteer(url) {
     if (response.status() !== 200) {
       throw new Error(`Page load failed with status: ${response.status()} ${response.statusText()}`);
     }
-    // wait for idle network, animation frame and DOM mutation
-    await Promise.all([
-      page.waitForNetworkIdle({ timeout: 10000 }),
-      page.waitForFunction(() => {
-        return new Promise(resolve => {
-          let lastFrameTime = performance.now();
-          const checkIdle = () => {
-            const now = performance.now();
-            if (now - lastFrameTime > 500) {
-              resolve(true);
-            } else {
-              lastFrameTime = now;
-              requestAnimationFrame(checkIdle);
-            }
-          };
-          requestAnimationFrame(checkIdle);
-        });
-      }, { timeout: 10000 }),
-      page.waitForFunction(() => {
-        return new Promise(resolve => {
-          const observer = new MutationObserver(() => {
-            clearTimeout(window.domIdleTimeout);
-            window.domIdleTimeout = setTimeout(() => {
-              observer.disconnect();
-              resolve(true);
-            }, 500);
-          });
-          observer.observe(document.body, { childList: true, subtree: true });
-        });
-      }, { timeout: 10000 })
-    ]);
+    await page.waitForNetworkIdle({ timeout: 10000 });
     const screenshotBuffer = await page.screenshot({ fullPage: true });
     console.log('Screenshot captured in memory.');
     let endTime = performance.now();
