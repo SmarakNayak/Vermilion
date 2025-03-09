@@ -110,11 +110,11 @@ const server = Bun.serve({
          AND (content_type LIKE 'image%' OR content_type LIKE 'text/html%')
          ORDER BY content_length DESC NULLS LAST
          LIMIT 1`;
+      if (!row) return new Response('No inscriptions found in block', { status: 404 });
+
       if (row.content_type.startsWith('text/html')) {
         let ss = await renderContentPuppeteer(apiBaseUrl + "/content/" + row.id);
-        if (!ss) {
-          return new Response('Error rendering content', { status: 404 });
-        }
+        if (!ss) return new Response('Error rendering content', { status: 404 });
         return new Response(ss, {
           headers: { 'Content-Type': 'image/png' },
         });
@@ -122,6 +122,7 @@ const server = Bun.serve({
         let image = await fetch(apiBaseUrl + "/content/" + row.id, {
           decompress: false
         });
+        if (!image.ok) return new Response('Image fetch failed', { status: image.status });
         return image;
       }
     },
@@ -131,11 +132,11 @@ const server = Bun.serve({
          AND (content_type LIKE 'image%' OR content_type LIKE 'text/html%')
          ORDER BY content_length DESC NULLS LAST
          LIMIT 1`;
+      if (!row) return new Response('No inscriptions found in block', { status: 404 });
+      
       if (row.content_type.startsWith('text/html')) {
         let ss = await renderContentPuppeteer(apiBaseUrl + "/content/" + row.id);
-        if (!ss) {
-          return new Response('Error rendering content', { status: 404 });
-        }
+        if (!ss) return new Response('Error rendering content', { status: 404 });
         return new Response(ss, {
           headers: { 'Content-Type': 'image/png' },
         });
@@ -143,6 +144,7 @@ const server = Bun.serve({
         let image = await fetch(apiBaseUrl + "/content/" + row.id, {
           decompress: false
         });
+        if (!image.ok) return new Response('Image fetch failed', { status: image.status });
         return image;
       }
     },
