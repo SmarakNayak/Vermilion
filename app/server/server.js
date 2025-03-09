@@ -7,6 +7,7 @@ const isProd = process.env.NODE_ENV === 'production';
 const apiBaseUrl = isProd ? 'http://127.0.0.1:80' : 'https://blue.vermilion.place';
 const configFile = Bun.file(`${process.env.HOME}/ord.yaml`);
 const config = parse(await configFile.text());
+process.env.POSTGRES_URL = `postgres://${config.db_user}:${config.db_password}@${config.db_host}:5432/${config.db_name}`;
 const db = new SQL({
   url: `postgres://${config.db_user}:${config.db_password}@${config.db_host}:5432/${config.db_name}`,
   hostname: config.db_host,
@@ -104,13 +105,13 @@ const server = Bun.serve({
       });
     },
     '/block_icon/:block': async req => {
-      const [icon_id, content_type] = await sql`SELECT id, content_type FROM ordinals 
+      const response = await sql`SELECT id, content_type FROM ordinals 
          WHERE genesis_height = ${req.params.block} 
          AND (content_type LIKE 'image%' OR content_type LIKE 'text/html%')
          ORDER BY content_length DESC NULLS LAST
          LIMIT 1`;
-      if (content_type.startsWith('text/html')) {
-        let ss = await renderContentPuppeteer(apiBaseUrl + "/content/" + icon_id);
+      if (response[1].startsWith('text/html')) {
+        let ss = await renderContentPuppeteer(apiBaseUrl + "/content/" + response[0]);
         if (!ss) {
           return new Response('Error rendering content', { status: 404 });
         }
@@ -118,41 +119,20 @@ const server = Bun.serve({
           headers: { 'Content-Type': 'image/png' },
         });
       } else {
-        let image = await fetch(apiBaseUrl + "/content/" + icon_id, {
-          decompress: false
-        });
-        return image;
-      }
-    },
-    '/block_icon/:block': async req => {
-      const [icon_id, content_type] = await sql`SELECT id, content_type FROM ordinals 
-         WHERE genesis_height = ${req.params.block} 
-         AND (content_type LIKE 'image%' OR content_type LIKE 'text/html%')
-         ORDER BY content_length DESC NULLS LAST
-         LIMIT 1`;
-      if (content_type.startsWith('text/html')) {
-        let ss = await renderContentPuppeteer(apiBaseUrl + "/content/" + icon_id);
-        if (!ss) {
-          return new Response('Error rendering content', { status: 404 });
-        }
-        return new Response(ss, {
-          headers: { 'Content-Type': 'image/png' },
-        });
-      } else {
-        let image = await fetch(apiBaseUrl + "/content/" + icon_id, {
+        let image = await fetch(apiBaseUrl + "/content/" + response[0], {
           decompress: false
         });
         return image;
       }
     },
     '/sat_block_icon/:block': async req => {
-      const [icon_id, content_type] = await sql`SELECT id FROM ordinals 
+      const response = await sql`SELECT id, content_type FROM ordinals 
          WHERE sat IN (SELECT sat FROM sat WHERE block = ${req.params.block})
          AND (content_type LIKE 'image%' OR content_type LIKE 'text/html%')
          ORDER BY content_length DESC NULLS LAST
          LIMIT 1`;
-      if (content_type.startsWith('text/html')) {
-        let ss = await renderContentPuppeteer(apiBaseUrl + "/content/" + icon_id);
+      if (response[1].startsWith('text/html')) {
+        let ss = await renderContentPuppeteer(apiBaseUrl + "/content/" + response[0]);
         if (!ss) {
           return new Response('Error rendering content', { status: 404 });
         }
@@ -160,7 +140,7 @@ const server = Bun.serve({
           headers: { 'Content-Type': 'image/png' },
         });
       } else {
-        let image = await fetch(apiBaseUrl + "/content/" + icon_id, {
+        let image = await fetch(apiBaseUrl + "/content/" + response[0], {
           decompress: false
         });
         return image;
