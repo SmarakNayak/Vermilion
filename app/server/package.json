@@ -9,6 +9,7 @@
   },
   "dependencies": {
     "playwright": "^1.50.1",
-    "puppeteer": "^24.3.1"
+    "puppeteer": "^24.3.1",
+    "yaml": "^2.7.0"
   }
 }
