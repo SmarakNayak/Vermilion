@@ -105,7 +105,7 @@ const server = Bun.serve({
       });
     },
     '/block_icon/:block': async req => {
-      const row = await sql`SELECT id, content_type FROM ordinals 
+      const [row] = await sql`SELECT id, content_type FROM ordinals 
          WHERE genesis_height = ${req.params.block} 
          AND (content_type LIKE 'image%' OR content_type LIKE 'text/html%')
          ORDER BY content_length DESC NULLS LAST
@@ -126,7 +126,7 @@ const server = Bun.serve({
       }
     },
     '/sat_block_icon/:block': async req => {
-      const row = await sql`SELECT id, content_type FROM ordinals 
+      const [row] = await sql`SELECT id, content_type FROM ordinals 
          WHERE sat IN (SELECT sat FROM sat WHERE block = ${req.params.block})
          AND (content_type LIKE 'image%' OR content_type LIKE 'text/html%')
          ORDER BY content_length DESC NULLS LAST
