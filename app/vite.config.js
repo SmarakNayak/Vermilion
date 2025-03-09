@@ -18,6 +18,10 @@ export default defineConfig({
         target: 'https://blue.vermilion.place/',
         changeOrigin: true
       },
+      '/bun': {
+        target: 'https://blue.vermilion.place/',
+        changeOrigin: true
+      },
       '/r': {
         target: 'https://blue.vermilion.place/',
         changeOrigin: true
@@ -33,7 +37,7 @@ export default defineConfig({
       '/blocktime': {
         target: 'https://blue.vermilion.place/',
         changeOrigin: true
-      }
+      },
     }
   }
 })

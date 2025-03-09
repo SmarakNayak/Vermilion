@@ -179,7 +179,7 @@ const BlockTable = () => {
                   <CollectionLink to={"/block/" + row?.block_number}>
                     <IconWrapper>
                       {row?.block_inscription_count > 0 ?
-                        <InscriptionIcon endpoint={"/bun/block_icon/"+row.block_number} useBlockIconDefault={false} />
+                        <InscriptionIcon endpoint={"/bun/block_icon/"+row.block_number} useBlockIconDefault={true} />
                         : 
                         <BlockIcon size={'1rem'} color={'#E34234'} />
                       }

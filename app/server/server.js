@@ -24,18 +24,24 @@ const browserPool = {
   initialized: false,
   
   async initialize() {
-    if (this.initialized) return;
+    if (this.initialized) return;    
+    this.initialized = true;
     
     console.log(`Initializing browser pool with ${POOL_SIZE} instances...`);
-    for (let i = 0; i < POOL_SIZE; i++) {
-      const browser = await puppeteer.launch({ 
-        headless: true, 
-        args: ['--no-sandbox', '--disable-dev-shm-usage'] 
-      });
-      this.browsers.push(browser);
+    try {
+      for (let i = 0; i < POOL_SIZE; i++) {
+        const browser = await puppeteer.launch({ 
+          headless: true, 
+          args: ['--no-sandbox', '--disable-dev-shm-usage'] 
+        });
+        this.browsers.push(browser);
+      }
+      console.log("Browser pool ready");
+    } catch (err) {
+      this.initialized = false;
+      console.error("Browser pool failed to start:", err);
+      return;
     }
-    this.initialized = true;
-    console.log("Browser pool ready");
   },
   
   async getBrowser() {
@@ -87,30 +93,30 @@ const server = Bun.serve({
     '/rendered_content/:id': async req => {
       let metadata =  await fetch(apiBaseUrl + "/api/inscription_metadata/" + req.params.id);
       let metadataJson = await metadata.json();
-      return getRenderedContentResponse(metadataJson.id, metadataJson.content_type);  
+      return getRenderedContentResponse(metadataJson.id, metadataJson.content_type, metadataJson.is_recursive);  
     },
     '/rendered_content_number/:number': async req => {
       let metadata =  await fetch(apiBaseUrl + "/api/inscription_metadata_number/" + req.params.number);
       let metadataJson = await metadata.json();
-      return getRenderedContentResponse(metadataJson.id, metadataJson.content_type);     
+      return getRenderedContentResponse(metadataJson.id, metadataJson.content_type, metadataJson.is_recursive);     
     },
     '/block_icon/:block': async req => {
-      const [row] = await sql`SELECT id, content_type FROM ordinals 
+      const [row] = await sql`SELECT id, content_type, is_recursive FROM ordinals 
          WHERE genesis_height = ${req.params.block} 
          AND (content_type LIKE 'image%' OR content_type LIKE 'text/html%')
          ORDER BY content_length DESC NULLS LAST
          LIMIT 1`;
       if (!row) return new Response('No inscriptions found in block', { status: 404 });
-      return getRenderedContentResponse(row.id, row.content_type);     
+      return getRenderedContentResponse(row.id, row.content_type, row.is_recursive);     
     },
     '/sat_block_icon/:block': async req => {
-      const [row] = await sql`SELECT id, content_type FROM ordinals 
+      const [row] = await sql`SELECT id, content_type, is_recursive FROM ordinals 
          WHERE sat IN (SELECT sat FROM sat WHERE block = ${req.params.block})
          AND (content_type LIKE 'image%' OR content_type LIKE 'text/html%')
          ORDER BY content_length DESC NULLS LAST
          LIMIT 1`;
       if (!row) return new Response('No inscriptions found in block', { status: 404 });
-      return getRenderedContentResponse(row.id, row.content_type);      
+      return getRenderedContentResponse(row.id, row.content_type, row.is_recursive);      
     },
   }
 });
@@ -125,11 +131,11 @@ async function renderContentPuppeteer(url) {
   const page = await browser.newPage();
   try {
     await page.setViewport({ width: 600, height: 600 });
-    const response = await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 10000 });
+    const response = await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 25000 });
     if (response.status() !== 200) {
       throw new Error(`Page load failed with status: ${response.status()} ${response.statusText()}`);
     }
-    await page.waitForNetworkIdle({ timeout: 10000 });
+    await page.waitForNetworkIdle({ timeout: 25000 });
     const screenshotBuffer = await page.screenshot({ fullPage: true });
     console.log('Screenshot captured in memory.');
     let endTime = performance.now();
@@ -146,8 +152,8 @@ async function renderContentPuppeteer(url) {
   }
 }
 
-async function getRenderedContentResponse(id, content_type) {
-  if (content_type.startsWith('text/html')) {
+async function getRenderedContentResponse(id, content_type, is_recursive) {
+  if (content_type?.startsWith('text/html') || (content_type?.startsWith('image/svg') && is_recursive)) {
     let ss = await renderContentPuppeteer(apiBaseUrl + "/content/" + id);
     if (!ss) return new Response('Error rendering content', { status: 404 });
     return new Response(ss, {
