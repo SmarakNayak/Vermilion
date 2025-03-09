@@ -8,6 +8,7 @@ const CollectionIcon = (props) => {
   const [blobUrl, setBlobUrl] = useState(null);
   const [rawContentType, setRawContentType] = useState(null);
   const [contentType, setContentType] = useState(null);
+  const [textContent, setTextContent] = useState(null);
 
   // state for 3d
   const [modelUrl, setModelUrl] = useState(null);
@@ -119,13 +120,29 @@ const CollectionIcon = (props) => {
     }
   }, [contentType, modelUrl]);
 
+  // adjust for recursive svg
+  useEffect(()=> {
+    const updateText = async () => {
+      //1. Update text state variable if text type
+      if(contentType==="text" || contentType==="svg" || contentType==="html") {
+        const text = await binaryContent.text();
+        setTextContent(text);
+        if(contentType==="svg" && text.includes("/content")) {
+          setContentType("svg-recursive")
+        }
+      }
+    }
+    updateText();    
+  },[contentType]);
+
   return (
     <IconContainer>
       {
         {
           'image': <ImageContainer src={blobUrl} />,
           'svg': <ImageContainer src={props.endpoint} scrolling='no' sandbox='allow-scripts allow-same-origin' loading="lazy"/>,
-          'html': <ImageContainer src={blobUrl} />,
+          'svg-recursive': <HtmlContainer><StyledIframe src={props.endpoint} scrolling='no' sandbox='allow-scripts allow-same-origin' loading="lazy"></StyledIframe></HtmlContainer>,
+          'html': <ImageContainer src={blobUrl} />, //this shouldn't trigger as endpoint renders html as png
           'text': props.useBlockIconDefault ? <BlockIcon size={'2rem'} color={'#E34234'} /> : <ImageIcon size={'2rem'} color={'#E34234'}></ImageIcon>,
           'video': <VideoContainer controls loop muted autoplay><source src={blobUrl} type={rawContentType}/></VideoContainer>,
           'audio': props.useBlockIconDefault ? <BlockIcon size={'2rem'} color={'#E34234'} /> : <ImageIcon size={'2rem'} color={'#E34234'}></ImageIcon>,
