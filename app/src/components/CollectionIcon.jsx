@@ -19,6 +19,7 @@ const CollectionIcon = (props) => {
       setBlobUrl(null);
       setContentType("loading");
       //1. Get content
+      console.log("Fetching content from: ", props.endpoint);
       const response = await fetch(props.endpoint);
       //2. Assign local url
       const blob = await response.blob();
@@ -27,6 +28,7 @@ const CollectionIcon = (props) => {
       setBlobUrl(url);
       //3. Work out type
       let content_type = response.headers.get("content-type");
+      console.log("Content type: ", content_type);
       setRawContentType(content_type);
       switch (content_type) {
         //Image types
@@ -141,8 +143,9 @@ const CollectionIcon = (props) => {
         {
           'image': <ImageContainer src={blobUrl} />,
           'svg': <ImageContainer src={props.endpoint} scrolling='no' sandbox='allow-scripts allow-same-origin' loading="lazy"/>,
+          // iframes are fine in this context, as parent will pass rendered_content endpoints if they do not want iframes
           'svg-recursive': <HtmlContainer><StyledIframe src={props.endpoint} scrolling='no' sandbox='allow-scripts allow-same-origin' loading="lazy"></StyledIframe></HtmlContainer>,
-          'html': <ImageContainer src={blobUrl} />, //this shouldn't trigger as endpoint renders html as png
+          'html': <HtmlContainer><StyledIframe src={props.endpoint} scrolling='no' sandbox='allow-scripts allow-same-origin' loading="lazy"></StyledIframe></HtmlContainer>,
           'text': props.useBlockIconDefault ? <BlockIcon size={'2rem'} color={'#E34234'} /> : <ImageIcon size={'2rem'} color={'#E34234'}></ImageIcon>,
           'video': <VideoContainer controls loop muted autoplay><source src={blobUrl} type={rawContentType}/></VideoContainer>,
           'audio': props.useBlockIconDefault ? <BlockIcon size={'2rem'} color={'#E34234'} /> : <ImageIcon size={'2rem'} color={'#E34234'}></ImageIcon>,
