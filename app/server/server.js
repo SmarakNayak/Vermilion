@@ -143,7 +143,7 @@ async function renderContentPuppeteer(url) {
     console.log('Render time:', endTime - launchTime);
     return screenshotBuffer;
   } catch (error) {
-    console.error('Error rendering content:', error);
+    console.error('Error rendering content for: ', url, error);
     return null;
   } finally {
     await page.close();
