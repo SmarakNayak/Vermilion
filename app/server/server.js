@@ -105,13 +105,13 @@ const server = Bun.serve({
       });
     },
     '/block_icon/:block': async req => {
-      const response = await sql`SELECT id, content_type FROM ordinals 
+      const row = await sql`SELECT id, content_type FROM ordinals 
          WHERE genesis_height = ${req.params.block} 
          AND (content_type LIKE 'image%' OR content_type LIKE 'text/html%')
          ORDER BY content_length DESC NULLS LAST
          LIMIT 1`;
-      if (response[1].startsWith('text/html')) {
-        let ss = await renderContentPuppeteer(apiBaseUrl + "/content/" + response[0]);
+      if (row.content_type.startsWith('text/html')) {
+        let ss = await renderContentPuppeteer(apiBaseUrl + "/content/" + row.id);
         if (!ss) {
           return new Response('Error rendering content', { status: 404 });
         }
@@ -119,20 +119,20 @@ const server = Bun.serve({
           headers: { 'Content-Type': 'image/png' },
         });
       } else {
-        let image = await fetch(apiBaseUrl + "/content/" + response[0], {
+        let image = await fetch(apiBaseUrl + "/content/" + row.id, {
           decompress: false
         });
         return image;
       }
     },
     '/sat_block_icon/:block': async req => {
-      const response = await sql`SELECT id, content_type FROM ordinals 
+      const row = await sql`SELECT id, content_type FROM ordinals 
          WHERE sat IN (SELECT sat FROM sat WHERE block = ${req.params.block})
          AND (content_type LIKE 'image%' OR content_type LIKE 'text/html%')
          ORDER BY content_length DESC NULLS LAST
          LIMIT 1`;
-      if (response[1].startsWith('text/html')) {
-        let ss = await renderContentPuppeteer(apiBaseUrl + "/content/" + response[0]);
+      if (row.content_type.startsWith('text/html')) {
+        let ss = await renderContentPuppeteer(apiBaseUrl + "/content/" + row.id);
         if (!ss) {
           return new Response('Error rendering content', { status: 404 });
         }
@@ -140,7 +140,7 @@ const server = Bun.serve({
           headers: { 'Content-Type': 'image/png' },
         });
       } else {
-        let image = await fetch(apiBaseUrl + "/content/" + response[0], {
+        let image = await fetch(apiBaseUrl + "/content/" + row.id, {
           decompress: false
         });
         return image;
