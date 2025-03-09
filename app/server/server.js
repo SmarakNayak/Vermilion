@@ -8,7 +8,11 @@ const apiBaseUrl = isProd ? 'http://127.0.0.1:80' : 'https://blue.vermilion.plac
 const configFile = Bun.file(`${process.env.HOME}/ord.yaml`);
 const config = parse(await configFile.text());
 const db = new SQL({
-  url: `postgres://${config.db_user}:${config.db_password}@${config.db_host}:5432/${config.db_name}`
+  url: `postgres://${config.db_user}:${config.db_password}@${config.db_host}:5432/${config.db_name}`,
+  hostname: config.db_host,
+  database: config.db_name,
+  user: config.db_user,
+  password: config.db_password
 });
 
 // Browser Pool Configuration
