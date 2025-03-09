@@ -4,8 +4,8 @@ import puppeteer from 'puppeteer';
 
 // Configuration - use local address in production or fall back to external URL
 const isProd = process.env.NODE_ENV === 'production';
-const apiBaseUrl = isProd ? 'http://127.0.0.1:1080' : 'https://blue.vermilion.place';
-const configFile = Bun.file('~/ord.yaml');
+const apiBaseUrl = isProd ? 'http://127.0.0.1:80' : 'https://blue.vermilion.place';
+const configFile = Bun.file(`${process.env.HOME}/ord.yaml`);
 const config = parse(await configFile.text());
 const db = new SQL({
   url: `postgres://${config.db_user}:${config.db_password}@${config.db_host}:5432/${config.db_name}`
