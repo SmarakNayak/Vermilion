@@ -150,7 +150,7 @@ const CollectionItemContainer = (props) => {
               'image': <ImageContainer src={blobUrl} />,
               'svg': <ImageContainer src={"/api/inscription_number/"+ props.number} />,
               'svg-recursive': <SvgContainer src={"/api/inscription_number/"+ props.number} scrolling='no' sandbox='allow-scripts allow-same-origin' loading="lazy"/>,
-              'html': <HtmlContainer><ContentOverlay /><StyledIframe src={"/content/" + props.id} sandbox='allow-scripts allow-same-origin' loading='lazy' controls muted></StyledIframe></HtmlContainer>,
+              'html': <ImageContainer src={"/bun/rendered_content/" + props.id}></ImageContainer>,
               'text': <TextContainer><MediaText>{textContent}</MediaText></TextContainer>,
               'video': <video controls loop muted autoplay style={{width: '100%', height: 'auto', aspectRatio: '1/1'}}><ContentOverlay /><source src={blobUrl} type={rawContentType}/></video>,
               'audio': <audio controls><ContentOverlay /><source src={blobUrl} type={rawContentType}/></audio>,

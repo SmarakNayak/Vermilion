@@ -194,7 +194,7 @@ const OnChainCollectionsTable = () => {
                   <CollectionLink to={"/children/" + formatParents(row?.parents)}>
                     <IconWrapper>
                       {row?.range_start ? 
-                        <InscriptionIcon endpoint={"/api/inscription_number/" + row.parent_numbers[0]} useBlockIconDefault={false} />
+                        <InscriptionIcon endpoint={"/bun/rendered_content_number/" + row.parent_numbers[0]} useBlockIconDefault={false} />
                         : 
                         <ImageIcon size={'1rem'} color={'#E34234'} />
                       }

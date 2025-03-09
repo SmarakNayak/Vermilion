@@ -1,8 +1,15 @@
+import { SQL, sql } from 'bun';
+import { parse } from 'yaml';
 import puppeteer from 'puppeteer';
 
 // Configuration - use local address in production or fall back to external URL
 const isProd = process.env.NODE_ENV === 'production';
-const apiBaseUrl = isProd ? 'http://127.0.0.1:1080' : 'https://blue.vermilion.place/';
+const apiBaseUrl = isProd ? 'http://127.0.0.1:1080' : 'https://blue.vermilion.place';
+const configFile = Bun.file('~/ord.yaml');
+const config = parse(await configFile.text());
+const db = new SQL({
+  url: `postgres://${config.db_user}:${config.db_password}@${config.db_host}:5432/${config.db_name}`
+});
 
 // Browser Pool Configuration
 const POOL_SIZE = 100; // Number of browser instances in the pool
@@ -71,8 +78,8 @@ const browserPool = {
 const server = Bun.serve({
   port: 1082,
   routes: {
-    '/': new Response('Hello World!'),
-    '/renderedContent/:id': async req => {
+    '/': new Response('If Bitcoin is to change the culture of money, it needs to be cool. Ordinals was the missing piece. The path to $1m is preordained'),
+    '/rendered_content/:id': async req => {
       let ss = await renderContentPuppeteer(apiBaseUrl + "/content/" + req.params.id);
       if (!ss) {
         return new Response('Error rendering content', { status: 404 });
@@ -80,7 +87,81 @@ const server = Bun.serve({
       return new Response(ss, {
         headers: { 'Content-Type': 'image/png' },
       });
-    }
+    },
+    '/rendered_content_number/:number': async req => {
+      let metadata =  await fetch(apiBaseUrl + "/api/inscription_metadata_number/" + req.params.number);
+      let metadataJson = await metadata.json();
+      let ss = await renderContentPuppeteer(apiBaseUrl + "/content/" + metadataJson.id);
+      if (!ss) {
+        return new Response('Error rendering content', { status: 404 });
+      }
+      return new Response(ss, {
+        headers: { 'Content-Type': 'image/png' },
+      });
+    },
+    '/block_icon/:block': async req => {
+      const [icon_id, content_type] = await sql`SELECT id, content_type FROM ordinals 
+         WHERE genesis_height = ${req.params.block} 
+         AND (content_type LIKE 'image%' OR content_type LIKE 'text/html%')
+         ORDER BY content_length DESC NULLS LAST
+         LIMIT 1`;
+      if (content_type.startsWith('text/html')) {
+        let ss = await renderContentPuppeteer(apiBaseUrl + "/content/" + icon_id);
+        if (!ss) {
+          return new Response('Error rendering content', { status: 404 });
+        }
+        return new Response(ss, {
+          headers: { 'Content-Type': 'image/png' },
+        });
+      } else {
+        let image = await fetch(apiBaseUrl + "/content/" + icon_id, {
+          decompress: false
+        });
+        return image;
+      }
+    },
+    '/block_icon/:block': async req => {
+      const [icon_id, content_type] = await sql`SELECT id, content_type FROM ordinals 
+         WHERE genesis_height = ${req.params.block} 
+         AND (content_type LIKE 'image%' OR content_type LIKE 'text/html%')
+         ORDER BY content_length DESC NULLS LAST
+         LIMIT 1`;
+      if (content_type.startsWith('text/html')) {
+        let ss = await renderContentPuppeteer(apiBaseUrl + "/content/" + icon_id);
+        if (!ss) {
+          return new Response('Error rendering content', { status: 404 });
+        }
+        return new Response(ss, {
+          headers: { 'Content-Type': 'image/png' },
+        });
+      } else {
+        let image = await fetch(apiBaseUrl + "/content/" + icon_id, {
+          decompress: false
+        });
+        return image;
+      }
+    },
+    '/sat_block_icon/:block': async req => {
+      const [icon_id, content_type] = await sql`SELECT id FROM ordinals 
+         WHERE sat IN (SELECT sat FROM sat WHERE block = ${req.params.block})
+         AND (content_type LIKE 'image%' OR content_type LIKE 'text/html%')
+         ORDER BY content_length DESC NULLS LAST
+         LIMIT 1`;
+      if (content_type.startsWith('text/html')) {
+        let ss = await renderContentPuppeteer(apiBaseUrl + "/content/" + icon_id);
+        if (!ss) {
+          return new Response('Error rendering content', { status: 404 });
+        }
+        return new Response(ss, {
+          headers: { 'Content-Type': 'image/png' },
+        });
+      } else {
+        let image = await fetch(apiBaseUrl + "/content/" + icon_id, {
+          decompress: false
+        });
+        return image;
+      }
+    },
   }
 });
 

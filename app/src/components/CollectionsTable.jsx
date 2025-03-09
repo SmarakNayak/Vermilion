@@ -182,7 +182,7 @@ const CollectionsTable = () => {
                   <CollectionLink to={`/collection/${encodeURIComponent(row?.collection_symbol)}`}>
                     <IconWrapper>
                       {row?.range_start ? 
-                        <InscriptionIcon endpoint={"/api/inscription_number/" + row.range_start} useBlockIconDefault={false} />
+                        <InscriptionIcon endpoint={"/bun/rendered_content_number/" + row.range_start} useBlockIconDefault={false} />
                         : 
                         <ImageIcon size={'1rem'} color={'#E34234'} />
                       }

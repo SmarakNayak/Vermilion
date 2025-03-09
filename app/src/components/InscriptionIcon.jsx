@@ -125,7 +125,7 @@ const InscriptionIcon = (props) => {
         {
           'image': <ImageContainer src={blobUrl} />,
           'svg': <ImageContainer src={props.endpoint} scrolling='no' sandbox='allow-scripts allow-same-origin' loading="lazy"/>,
-          'html': <HtmlContainer><StyledIframe src={props.endpoint} scrolling='no' sandbox='allow-scripts allow-same-origin' loading="lazy"></StyledIframe></HtmlContainer>,
+          'html': <ImageContainer src={blobUrl} />,
           'text': props.useBlockIconDefault ? <BlockIcon size={'1rem'} color={'#E34234'} /> : <ImageIcon size={'1rem'} color={'#E34234'}></ImageIcon>,
           'video': <VideoContainer controls loop muted autoplay><source src={blobUrl} type={rawContentType}/></VideoContainer>,
           'audio': props.useBlockIconDefault ? <BlockIcon size={'1rem'} color={'#E34234'} /> : <ImageIcon size={'1rem'} color={'#E34234'}></ImageIcon>,
