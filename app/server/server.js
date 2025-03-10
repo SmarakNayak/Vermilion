@@ -18,7 +18,7 @@ const db = new SQL({
 });
 
 // Browser Pool Configuration
-const POOL_SIZE = isProd ? 100 : 5;// Number of browser instances in the pool
+const POOL_SIZE = isProd ? 20 : 5;// Number of browser instances in the pool
 const browserPool = {
   browsers: [],
   inUse: new Set(),
