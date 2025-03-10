@@ -1,6 +1,7 @@
 import { SQL, sql } from 'bun';
 import { parse } from 'yaml';
 import puppeteer from 'puppeteer';
+import {Jimp, diff} from 'jimp';
 
 // Configuration - use local address in production or fall back to external URL
 const isProd = process.env.NODE_ENV === 'production';
@@ -17,7 +18,7 @@ const db = new SQL({
 });
 
 // Browser Pool Configuration
-const POOL_SIZE = 100; // Number of browser instances in the pool
+const POOL_SIZE = isProd ? 100 : 5;// Number of browser instances in the pool
 const browserPool = {
   browsers: [],
   inUse: new Set(),
@@ -130,14 +131,7 @@ async function renderContentPuppeteer(url) {
   
   const page = await browser.newPage();
   try {
-    await page.setViewport({ width: 600, height: 600 });
-    const response = await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 25000 });
-    if (response.status() !== 200) {
-      throw new Error(`Page load failed with status: ${response.status()} ${response.statusText()}`);
-    }
-    await page.waitForNetworkIdle({ timeout: 25000 });
-    const screenshotBuffer = await page.screenshot({ fullPage: true });
-    console.log('Screenshot captured in memory.');
+    const screenshotBuffer = await captureStableScreenshot(page, url);
     let endTime = performance.now();
     console.log('Browser acquisition time:', launchTime - startTime);
     console.log('Render time:', endTime - launchTime);
@@ -150,6 +144,63 @@ async function renderContentPuppeteer(url) {
     // Release the browser back to the pool
     browserPool.releaseBrowser(browser);
   }
+}
+
+async function captureStableScreenshot(page, url, maxWait = 10000) {
+  const threshold = 0.1; // Similarity threshold
+  const interval = 100; // Check every 100 ms
+  let activeRequests = 0;
+  let elapsed = 0;
+  page.on('request', () => activeRequests++);
+  page.on('response', () => activeRequests--);
+
+  let activeRequestArr = [];
+  let diffArr = [];
+  let imageArr = [];
+
+  // Capture initial (empty) screenshot
+  let count = 0;
+  await page.setViewport({ width: 600, height: 600 });
+  let buffer = Buffer.from(await page.screenshot({ fullPage: true }));
+  imageArr.push(await Jimp.read(buffer));
+  //Bun.file(`ss_${count}.png`).write(buffer);
+
+  // capture screenshot after load
+  count++;
+  const response = await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 10000 });
+  if (response.status() !== 200) {
+    throw new Error(`Page load failed with status: ${response.status()} ${response.statusText()}`);
+  }
+  activeRequestArr.push(activeRequests);
+  buffer = Buffer.from(await page.screenshot({ fullPage: true }));
+  imageArr.push(await Jimp.read(buffer));
+  //Bun.file(`ss_${count}.png`).write(buffer);
+
+  while (elapsed < maxWait) {
+    count++;
+    await Bun.sleep(interval);
+    activeRequestArr.push(activeRequests);
+    buffer = Buffer.from(await page.screenshot({ fullPage: true }));
+    //Bun.file(`ss_${count}.png`).write(buffer);
+    imageArr.push(await Jimp.read(buffer));
+    const orginalDiff = diff(imageArr[imageArr.length-1], imageArr[0], 0.1).percent;
+    const recentDiff = diff(imageArr[imageArr.length-1], imageArr[imageArr.length - 2], 0.1).percent;
+    diffArr.push({original: orginalDiff, recent: recentDiff});
+
+    // check that screenshot is not similar to orginal, but similar to previous
+    // also check that there were no active requests for current and previous screenshot
+    if (orginalDiff > threshold && recentDiff < threshold && activeRequestArr[activeRequestArr.length-1] <= 0 && activeRequestArr[activeRequestArr.length-2] <= 0) {
+      //console.log(diffArr);
+      return buffer; // Stable enough
+    }
+    elapsed += interval;
+    if (count > 50) {
+      console.error('Failed to stabilize screenshot after 50 attempts for:', url);
+      console.log(diffArr);
+      break;
+    }
+  }
+  return buffer; // Fallback to last screenshot
 }
 
 async function getRenderedContentResponse(id, content_type, is_recursive) {
