@@ -37,7 +37,7 @@ const pagePool = {
     try {
       this.browser = await puppeteer.launch({
         headless: true,
-        args: ['--no-sandbox', '--disable-dev-shm-usage'],
+        args: ['--no-sandbox'],
       });
       console.log("Browser ready");
     } catch (err) {
