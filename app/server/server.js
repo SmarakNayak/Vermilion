@@ -28,7 +28,11 @@ const browserPool = {
     if (this.initialized) return;    
     this.initialized = true;
     
-    console.log(`Initializing browser pool with ${POOL_SIZE} instances...`);
+    console.log(`Initializing browser pool with ${POOL_SIZE} instances... cleaning up any existing Chrome processes`);
+    const cleanup = Bun.spawn(['pkill', '-f', 'chrome'], {
+      stdout: 'inherit', // Log output to console
+      stderr: 'inherit', // Log errors to console
+    });
     try {
       for (let i = 0; i < POOL_SIZE; i++) {
         const browser = await puppeteer.launch({ 
