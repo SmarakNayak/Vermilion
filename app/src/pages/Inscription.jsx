@@ -1,6 +1,7 @@
 import { useParams, Link } from 'react-router-dom';
 import styled from 'styled-components';
 import React, { useEffect, useRef, useState } from 'react';
+import InnerInscriptionContent from '../components/common/InnerInscriptionContent';
 import Stack from '../components/Stack';
 import Tag from '../components/Tag';
 import LinkTag from '../components/LinkTag';
@@ -396,38 +397,18 @@ const Inscription = () => {
       <MainContainer>
         <ContentContainer>
           <MediaContainer>
-            {
-              {
-                'image': <ImageContainer src={blobUrl} />,
-                'svg-recursive': <SvgContainer src={"/api/inscription_number/"+ number} scrolling='no' sandbox='allow-scripts allow-same-origin' loading="lazy"/>,
-                'svg': <ImageContainer src={"/api/inscription_number/"+ number}/>,
-                'html': <HtmlContainer><StyledIframe src={`/content/${metadata?.id}`} scrolling='no' sandbox='allow-scripts allow-same-origin' loading="lazy"></StyledIframe></HtmlContainer>,
-                'text': <TextContainer><MediaText>{textContent}</MediaText></TextContainer>,
-                'video': <VideoContainer controls loop muted autoplay><source src={blobUrl} type={metadata?.content_type}/></VideoContainer>,
-                'audio': <AudioContainer controls><source src={blobUrl} type={metadata?.content_type}/></AudioContainer>,
-                'pdf': <TextContainer>PDF not yet supported</TextContainer>,
-                'model': modelUrl ? (
-                  <ModelViewerContainer>
-                    <model-viewer
-                    ref={modelViewerRef}
-                    camera-controls
-                    auto-rotate
-                    ar
-                    ar-status="not-presenting"
-                    interaction-prompt="none"
-                    loading="lazy"
-                    touch-action="pan-y"
-                    src={modelUrl}
-                    style={{height: '100%', width: '100%'}}
-                    >
-                      <div slot="progress-bar" />
-                    </model-viewer>
-                  </ModelViewerContainer>
-                ) : <TextContainer loading isCentered>Loading 3D model...</TextContainer>,
-                'unsupported': <TextContainer unsupported isCentered>{metadata?.content_type} content type not yet supported</TextContainer>,
-                'loading': <TextContainer loading isCentered>Loading...</TextContainer>
-              }[contentType]
-            }
+            <InnerInscriptionContent 
+              contentType={contentType}
+              blobUrl={blobUrl}
+              number={number}
+              metadata={{
+                id: metadata?.id,
+                content_type: metadata?.content_type,
+              }}
+              textContent={textContent}
+              modelUrl={modelUrl}
+              serverHTML={false}
+            />
           </MediaContainer>
         </ContentContainer>
         <InfoContainer>

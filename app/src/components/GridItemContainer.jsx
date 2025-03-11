@@ -1,8 +1,9 @@
 import React, { useEffect, useRef, useState } from 'react';
 import styled from 'styled-components';
 import { Link, useNavigate } from 'react-router-dom';
+import InnerInscriptionContent from './common/InnerInscriptionContent';
 import { GalleryIcon, RuneIcon } from './common/Icon';
-import { addCommas } from '../utils/format'
+import { addCommas } from '../utils/format';
 
 const GridItemContainer = (props) => {
   const [binaryContent, setBinaryContent] = useState(null);
@@ -148,49 +149,18 @@ const GridItemContainer = (props) => {
     >
       <ItemContainer>
         <MediaContainer>
-          {
-            {
-              'image': <ImageContainer src={blobUrl} />,
-              'svg': <ImageContainer src={"/api/inscription_number/"+ props.number} />,
-              'svg-recursive': <SvgContainer src={"/api/inscription_number/"+ props.number} scrolling='no' sandbox='allow-scripts allow-same-origin' loading="lazy"/>,
-              'html': <ImageContainer src={"/bun/rendered_content/" + props.id}></ImageContainer>,
-              'text': <TextContainer><MediaText>{textContent}</MediaText></TextContainer>,
-              'video': <div style={{position: 'relative', width: '100%', height: 'auto'}}>
-                        <ContentOverlay />
-                        <video controls loop muted autoplay style={{width: '100%', height: 'auto', aspectRatio: '1/1'}}>
-                          <source src={blobUrl} type={rawContentType}/>
-                        </video>
-                      </div>,
-              'audio': <div style={{position: 'relative'}}>
-                        <ContentOverlay />
-                        <audio controls>
-                          <source src={blobUrl} type={rawContentType}/>
-                        </audio>
-                      </div>,
-              'pdf': <TextContainer>PDF not yet supported</TextContainer>,
-              'model': modelUrl ? (
-                        <ModelViewerContainer>
-                          <model-viewer
-                          ref={modelViewerRef}
-                          // camera-controls
-                          disable-zoom
-                          auto-rotate
-                          ar
-                          ar-status="not-presenting"
-                          interaction-prompt="none"
-                          loading="lazy"
-                          touch-action="none"
-                          src={modelUrl}
-                          style={{height: '100%', width: '100%'}}
-                          >
-                            <div slot="progress-bar" />
-                          </model-viewer>
-                        </ModelViewerContainer>
-                      ) : <TextContainer loading isCentered>Loading 3D model...</TextContainer>,                
-              'unsupported': <TextContainer isCentered>{rawContentType} content type not yet supported</TextContainer>,
-              'loading': <TextContainer loading isCentered>Loading...</TextContainer>
-            }[contentType]
-          }
+          <InnerInscriptionContent
+            contentType={contentType}
+            blobUrl={blobUrl}
+            number={props.number}
+            metadata={{
+              id: props.id,
+              content_type: rawContentType
+            }}
+            textContent={textContent}
+            modelUrl={modelUrl}
+            serverHTML={true}
+          />
         </MediaContainer>
         {props.numberVisibility && (
           <InfoContainer>
