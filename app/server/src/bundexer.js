@@ -156,6 +156,7 @@ async function runBundexer() {
   let offset = await getStartingOffset();
   while (true) {
     try {
+      let t0 = performance.now();
       console.log('Fetching inscriptions starting from:', offset);
       const inscriptions = await getInscriptionsToRender(5, offset);
       if (inscriptions.length === 0) {
@@ -163,9 +164,16 @@ async function runBundexer() {
         await Bun.sleep(1000);
         continue;
       }
+      
+      let t1 = performance.now();
       console.log('Rendering inscriptions:', inscriptions.map(i => i.sequence_number));
       const renderedContent = await renderInscriptions(inscriptions);
+      
+      let t2 = performance.now();
+      console.log('Inserting rendered content:', renderedContent.length);
       await bulkInsertWithBinaryCopy(renderedContent);
+      let t3 = performance.now();
+      console.log('Fetched in: ', t1 - t0, 'Rendered in: ', t2-t1, 'inserted in: ', t3-t2, 'Total time:', t3 - t0, 'ms');
       offset = Number(inscriptions[inscriptions.length - 1].sequence_number) + 1;
     } catch (err) {
       console.error('Error in main loop:', err);

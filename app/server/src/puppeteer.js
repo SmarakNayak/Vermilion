@@ -3,7 +3,7 @@ import { Jimp, diff } from 'jimp';
 
 // Browser Pool Configuration
 const isProd = process.env.NODE_ENV === 'production';
-const POOL_SIZE = isProd ? 20 : 5;// Number of browser instances in the pool
+const POOL_SIZE = isProd ? 20 : 1;// Number of browser instances in the pool
 const browserPool = {
   browsers: [],
   inUse: new Set(),
@@ -21,8 +21,8 @@ const browserPool = {
     try {
       for (let i = 0; i < POOL_SIZE; i++) {
         const browser = await puppeteer.launch({ 
-          headless: true, 
-          args: ['--no-sandbox', '--disable-dev-shm-usage'] 
+          headless: false, 
+          //args: ['--no-sandbox', '--disable-dev-shm-usage'] 
         });
         this.browsers.push(browser);
       }
@@ -92,7 +92,7 @@ async function renderContentPuppeteer(url) {
     return screenshotBuffer;
   } catch (error) {
     console.error('Error rendering content for: ', url, error);
-    return null;
+    throw error;
   } finally {
     await page.close();
     // Release the browser back to the pool
@@ -105,8 +105,18 @@ async function captureStableScreenshot(page, url, maxWait = 10000) {
   const interval = 100; // Check every 100 ms
   let activeRequests = 0;
   let elapsed = 0;
-  page.on('request', () => activeRequests++);
-  page.on('response', () => activeRequests--);
+  page.on('request', () => {
+    activeRequests++
+  });
+  page.on('response', () => {
+    //activeRequests--
+  });
+  page.on('requestfailed', () => {
+    activeRequests--
+  });
+  page.on('requestfinished', () => {
+    activeRequests--
+  });
 
   let activeRequestArr = [];
   let diffArr = [];
@@ -117,7 +127,7 @@ async function captureStableScreenshot(page, url, maxWait = 10000) {
   await page.setViewport({ width: 600, height: 600 });
   let buffer = Buffer.from(await page.screenshot({ fullPage: true }));
   imageArr.push(await Jimp.read(buffer));
-  //Bun.file(`ss_${count}.png`).write(buffer);
+  Bun.file(`ss_${count}.png`).write(buffer);
 
   // capture screenshot after load
   count++;
@@ -148,9 +158,13 @@ async function captureStableScreenshot(page, url, maxWait = 10000) {
       return buffer; // Stable enough
     }
     elapsed += interval;
-    if (count > 20) {
-      console.log('Failed to stabilize screenshot after 20 attempts for:', url);
+    if (count > 10) {
+      console.log('Failed to stabilize screenshot after 10 attempts for:', url);
+      //console.log(activeRequestArr);
       //console.log(diffArr);
+      //for (let i = 0; i <imageArr.length; i++) {
+        //imageArr[i].write(`${url}_${i}.png`);
+      //}
       break;
     }
   }
