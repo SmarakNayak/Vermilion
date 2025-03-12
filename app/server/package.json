@@ -10,6 +10,7 @@
   "dependencies": {
     "jimp": "^1.6.0",
     "pg": "^8.13.3",
+    "pg-copy-streams": "^6.0.6",
     "playwright": "^1.50.1",
     "puppeteer": "^24.3.1",
     "yaml": "^2.7.0"

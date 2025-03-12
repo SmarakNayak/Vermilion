@@ -1,3 +1,6 @@
+import puppeteer from 'puppeteer';
+import { Jimp, diff } from 'jimp';
+
 // Browser Pool Configuration
 const isProd = process.env.NODE_ENV === 'production';
 const POOL_SIZE = isProd ? 20 : 5;// Number of browser instances in the pool
@@ -145,9 +148,9 @@ async function captureStableScreenshot(page, url, maxWait = 10000) {
       return buffer; // Stable enough
     }
     elapsed += interval;
-    if (count > 50) {
-      console.error('Failed to stabilize screenshot after 50 attempts for:', url);
-      console.log(diffArr);
+    if (count > 20) {
+      console.log('Failed to stabilize screenshot after 20 attempts for:', url);
+      //console.log(diffArr);
       break;
     }
   }
