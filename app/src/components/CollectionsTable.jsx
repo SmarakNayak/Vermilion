@@ -98,19 +98,6 @@ const CollectionsTable = () => {
     return null;
   };
 
-  const BlockIconDefault = encodeURIComponent(
-    renderToStaticMarkup(<ImageIcon size={'2rem'} color={'#E34234'} />)
-  );
-
-  const handleImageError = (event) => {
-    // console.log("error image triggered")
-    event.target.onError = null;
-    event.target.src = `data:image/svg+xml,${BlockIconDefault}`;
-    //have to override default size of CollectionIcon
-    event.target.style.width = "2rem"
-    event.target.style.height = "2rem"
-  };
-
   return (
     <TableContainer>
       <HeaderRow>
@@ -181,11 +168,7 @@ const CollectionsTable = () => {
                 <DataWrapper first={true}>
                   <CollectionLink to={`/collection/${encodeURIComponent(row?.collection_symbol)}`}>
                     <IconWrapper>
-                      {row?.range_start ? 
-                        <InscriptionIcon endpoint={"/bun/rendered_content_number/" + row.range_start} useBlockIconDefault={false} />
-                        : 
-                        <ImageIcon size={'1rem'} color={'#E34234'} />
-                      }
+                      {row?.range_start && <InscriptionIcon endpoint={"/bun/rendered_content_number/" + row.range_start} useBlockIconDefault={false} size={'2.25rem'} />                      }
                     </IconWrapper>
                     <CollectionName>{row?.name}</CollectionName>
                   </CollectionLink>
@@ -496,6 +479,7 @@ const CollectionLink = styled(Link)`
 `;
 
 const IconWrapper = styled.div`
+  background-color: #F6F6F6;
   position: relative;
   width: 2.25rem;
   height: 2.25rem;

@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import styled, { keyframes } from 'styled-components';
+import { BlockIcon, ImageIcon } from './Icon';
 import theme from '../../styles/theme';
 
 const InnerInscriptionContent = ({
@@ -10,6 +11,9 @@ const InnerInscriptionContent = ({
   textContent,
   modelUrl,
   serverHTML,
+  isIcon,
+  endpoint,
+  useBlockIconDefault,
   // isLoading,
   // isCentered = false,
 }) => {
@@ -37,8 +41,18 @@ const InnerInscriptionContent = ({
     return <SkeletonContainer />;
   }
 
+  // Special case for icon mode with certain content types
+  if (isIcon && (contentType === 'text' || contentType === 'audio' || 
+    contentType === 'pdf' || contentType === 'unsupported')) {
+  return useBlockIconDefault ? 
+    <BlockIcon size={'1rem'} color={theme.colors.background.verm} /> : 
+    <ImageIcon size={'1rem'} color={theme.colors.background.verm} />;
+}
+
   // Render content based on contentType
   switch(contentType) {
+
+    // Render image content - use blobUrl for both page/grid and icon
     case 'image':
       return (
         <ImageContainer 
@@ -47,24 +61,30 @@ const InnerInscriptionContent = ({
         />
       );
       
+    // Render SVG content - use number for page/grid and endpoint + isIcon for icon
+    case 'svg':
+      return (
+        <ImageContainer 
+          src={isIcon ? endpoint : `/api/inscription_number/${number}`}
+          alt={`SVG Inscription ${number}`}
+          scrolling={isIcon ? "no" : undefined}
+          sandbox={isIcon ? "allow-scripts allow-same-origin" : undefined}
+          loading="lazy"
+        />
+      );
+      
+    // Render SVG content - use number for page/grid and endpoint + isIcon for icon  
     case 'svg-recursive':
       return (
         <SvgContainer 
-          src={`/api/inscription_number/${number}`} 
+          src={isIcon ? endpoint : `/api/inscription_number/${number}`}
           scrolling="no" 
           sandbox="allow-scripts allow-same-origin" 
           loading="lazy"
         />
       );
-      
-    case 'svg':
-      return (
-        <ImageContainer 
-          src={`/api/inscription_number/${number}`} 
-          alt={`SVG Inscription ${number}`}
-        />
-      );
-      
+
+    // Render HTML content - use id for page, id + serverHTML for grid, and endpoint + isIcon for icon  
     case 'html':
       return serverHTML ? (
         <ImageContainer 
@@ -74,14 +94,15 @@ const InnerInscriptionContent = ({
       ) : (
         <HtmlContainer>
           <StyledIframe 
-            src={`/content/${metadata?.id}`} 
+            src={isIcon ? endpoint : `/content/${metadata?.id}`} 
             scrolling="no" 
             sandbox="allow-scripts allow-same-origin" 
             loading="lazy"
           />
         </HtmlContainer>
       );
-      
+    
+    // Render text content - use textContent for page/grid (fallback for icon)  
     case 'text':
       return (
         <TextContainer>
@@ -89,6 +110,7 @@ const InnerInscriptionContent = ({
         </TextContainer>
       );
       
+    // Render video content - use blobUrl for both page/grid and icon
     case 'video':
       return (
         <VideoContainer controls loop muted autoPlay>
@@ -96,6 +118,7 @@ const InnerInscriptionContent = ({
         </VideoContainer>
       );
       
+    // Render audio content - use blobUrl for page/grid (fallback for icon)
     case 'audio':
       return (
         <AudioContainer controls>
@@ -103,21 +126,24 @@ const InnerInscriptionContent = ({
         </AudioContainer>
       );
       
+    // Render PDF content - not supported message for page/grid (fallback for icon)
     case 'pdf':
       return <TextContainer>PDF not yet supported</TextContainer>;
       
+    // Render 3D model content - use modelUrl for both page/grid and icon
     case 'model':
       return modelUrl ? (
         <ModelViewerContainer>
           <model-viewer
             ref={modelViewerRef}
-            camera-controls
+            camera-controls={isIcon ? false : true}
+            disable-zoom={isIcon ? true : false}
             auto-rotate
             ar
             ar-status="not-presenting"
             interaction-prompt="none"
             loading="lazy"
-            touch-action="pan-y"
+            touch-action={isIcon ? "none" : "pan-y"}
             src={modelUrl}
             style={{ height: '100%', width: '100%' }}
           >

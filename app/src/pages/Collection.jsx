@@ -8,7 +8,7 @@ import { addCommas, shortenDate, formatSatsString, shortenBytesString } from '..
 import SortbyDropdown from '../components/Dropdown';
 import FilterMenu from '../components/FilterMenu';
 import GalleryInfiniteScroll from '../components/GalleryInfiniteScroll';
-import CollectionIcon from '../components/CollectionIcon';
+import InscriptionIcon from '../components/InscriptionIcon';
 import Tag from '../components/Tag';
 import { BlockIcon, EyeIcon, FilterIcon, GridIcon, TwitterIcon, DiscordIcon, WebIcon } from '../components/common/Icon';
 
@@ -94,7 +94,7 @@ const Collection = () => {
     console.log("error image triggered")
     event.target.onError = null;
     event.target.src = `data:image/svg+xml,${BlockIconDefault}`;
-    //have to override default size of CollectionIcon
+    //have to override default size of InscriptionIcon
     event.target.style.width = "2.25rem"
     event.target.style.height = "2.25rem"
   };
@@ -108,10 +108,7 @@ const Collection = () => {
           <InfoText>Collection</InfoText>
           <CollectionStack>
             <CollectionImageContainer>
-              {collectionSummary?.range_start ? 
-                <CollectionIcon endpoint={"/api/inscription_number/" + collectionSummary?.range_start} useBlockIconDefault={false} /> :
-                <BlockIcon size={'2.5rem'} color={'#E34234'} />
-              }
+              {collectionSummary?.range_start && <InscriptionIcon endpoint={"/api/inscription_number/" + collectionSummary?.range_start} useBlockIconDefault={false} size={'8rem'} /> }
             </CollectionImageContainer>
             <Stack gap={'.5rem'}>
               <MainText>{collectionSummary?.name}</MainText>
@@ -276,7 +273,7 @@ const GalleryContainer = styled.div`
 const CollectionImageContainer = styled.div`
   width: 8rem;
   height: 8rem;
-  background-color: #F5F5F5;
+  background-color: #F6F6F6;
   border-radius: .25rem;
   display: flex;
   align-items: center;

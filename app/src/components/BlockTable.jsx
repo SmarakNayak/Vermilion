@@ -106,19 +106,6 @@ const BlockTable = () => {
     return null;
   };
 
-  const BlockIconDefault = encodeURIComponent(
-    renderToStaticMarkup(<BlockIcon size={'2rem'} color={'#E34234'} />)
-  );
-
-  const handleImageError = (event) => {
-    console.log("error image triggered")
-    event.target.onError = null;
-    event.target.src = `data:image/svg+xml,${BlockIconDefault}`;
-    //have to override default size of CollectionIcon
-    event.target.style.width = "2rem"
-    event.target.style.height = "2rem"
-  };
-
   return (
     <TableContainer>
       <HeaderRow>
@@ -178,11 +165,7 @@ const BlockTable = () => {
                 <DataWrapper first={true}>
                   <CollectionLink to={"/block/" + row?.block_number}>
                     <IconWrapper>
-                      {row?.block_inscription_count > 0 ?
-                        <InscriptionIcon endpoint={"/bun/block_icon/"+row.block_number} useBlockIconDefault={true} />
-                        : 
-                        <BlockIcon size={'1rem'} color={'#E34234'} />
-                      }
+                      {row?.block_inscription_count > 0 && <InscriptionIcon endpoint={"/bun/block_icon/"+row.block_number} useBlockIconDefault={true} size={'2.25rem'} /> }
                     </IconWrapper>
                     <CollectionName>{addCommas(row.block_number)}</CollectionName>
                   </CollectionLink>
@@ -489,6 +472,7 @@ const CollectionLink = styled(Link)`
 `;
 
 const IconWrapper = styled.div`
+  background-color: #F6F6F6;
   position: relative;
   width: 2.25rem;
   height: 2.25rem;

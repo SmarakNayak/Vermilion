@@ -193,11 +193,7 @@ const OnChainCollectionsTable = () => {
                 <DataWrapper first={true}>
                   <CollectionLink to={"/children/" + formatParents(row?.parents)}>
                     <IconWrapper>
-                      {row?.range_start ? 
-                        <InscriptionIcon endpoint={"/bun/rendered_content_number/" + row.parent_numbers[0]} useBlockIconDefault={false} />
-                        : 
-                        <ImageIcon size={'1rem'} color={'#E34234'} />
-                      }
+                      {row?.range_start && <InscriptionIcon endpoint={"/bun/rendered_content_number/" + row.parent_numbers[0]} useBlockIconDefault={false} size={'2.25rem'} /> }
                     </IconWrapper>
                     <CollectionName>
                       {row?.parent_numbers ? (
@@ -526,6 +522,7 @@ const CollectionLink = styled(Link)`
 `;
 
 const IconWrapper = styled.div`
+  background-color: #F6F6F6;
   position: relative;
   width: 2.25rem;
   height: 2.25rem;

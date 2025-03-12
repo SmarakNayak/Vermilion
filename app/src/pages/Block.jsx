@@ -8,7 +8,7 @@ import SortbyDropdown from '../components/Dropdown';
 import FilterMenu from '../components/FilterMenu';
 import GalleryInfiniteScroll from '../components/GalleryInfiniteScroll';
 import Tag from '../components/Tag';
-import CollectionIcon from '../components/CollectionIcon';
+import InscriptionIcon from '../components/InscriptionIcon';
 import { BlockIcon, EyeIcon, FilterIcon, GridIcon } from '../components/common/Icon';
 
 const Block = () => {
@@ -81,7 +81,7 @@ const Block = () => {
     console.log("error image triggered")
     event.target.onError = null;
     event.target.src = `data:image/svg+xml,${BlockIconDefault}`;
-    //have to override default size of CollectionIcon
+    //have to override default size of InscriptionIcon
     event.target.style.width = "2.25rem"
     event.target.style.height = "2.25rem"
   };
@@ -93,7 +93,7 @@ const Block = () => {
           <InfoText>Block</InfoText>
           <InfoStack>
             <BlockImageContainer>
-              <CollectionIcon endpoint = {"/api/block_icon/"+number} useBlockIconDefault = {true}></CollectionIcon>
+              <InscriptionIcon endpoint={"/api/block_icon/"+number} useBlockIconDefault={true} size={'8rem'} />
             </BlockImageContainer>
             <Stack gap={'.5rem'}>
               <MainText>{addCommas(number)}</MainText>
@@ -234,7 +234,7 @@ const GalleryContainer = styled.div`
 const BlockImageContainer = styled.div`
   width: 8rem;
   height: 8rem;
-  background-color: #F5F5F5;
+  background-color: #F6F6F6;
   border-radius: .25rem;
   display: flex;
   align-items: center;
