@@ -125,9 +125,9 @@ async function captureStableScreenshot(page, url, maxWait = 10000) {
   // Capture initial (empty) screenshot
   let count = 0;
   await page.setViewport({ width: 600, height: 600 });
-  let buffer = Buffer.from(await page.screenshot({ fullPage: true }));
+  let file = Bun.file("default_screenshot.png");
+  let buffer = Buffer.from(await file.arrayBuffer());
   imageArr.push(await Jimp.read(buffer));
-  Bun.file(`ss_${count}.png`).write(buffer);
 
   // capture screenshot after load
   count++;

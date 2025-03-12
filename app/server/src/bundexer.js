@@ -63,6 +63,7 @@ async function renderInscriptions(inscriptions) {
     }));
     return rendered;
   } catch (err) {
+    console.error(err);
     throw new Error('Error rendering inscriptions: ' + err.message);
   }
 }
