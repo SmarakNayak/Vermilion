@@ -4,6 +4,7 @@ import styled from 'styled-components';
 import Spinner from '../components/Spinner';
 import SkeletonImage from '../components/SkeletonImage';
 import RecentBoosts from '../components/RecentBoosts';
+import InnerInscriptionContent from '../components/common/InnerInscriptionContent';
 import { addCommas, formatAddress } from '../utils/format';
 import { copyText } from '../utils/clipboard';
 import { BoostIcon, CommentIcon, GalleryIcon, LinkIcon, Person2Icon, RefreshIcon, RuneIcon } from '../components/common/Icon';
@@ -48,7 +49,7 @@ const Trending = () => {
         setHasMore(false);
         return;
       }
-      
+
       setInscriptions(prev => [...prev, ...newInscriptions]);
     } catch (error) {
       console.error('Error fetching inscriptions:', error);
@@ -167,20 +168,20 @@ const Trending = () => {
                 </InfoContainer>
                 <UnstyledLink to={'/inscription/' + inscription.inscriptions[0].number}>
                   <InscriptionContainer>
-                    {
-                      {
-                        'image/png': <LoadingImage src={`/api/inscription_number/${inscription.inscriptions[0].number}`} />,
-                        'image/jpeg': <LoadingImage src={`/api/inscription_number/${inscription.inscriptions[0].number}`} />,
-                        'image/jpg': <LoadingImage src={`/api/inscription_number/${inscription.inscriptions[0].number}`} />,
-                        'image/webp': <LoadingImage src={`/api/inscription_number/${inscription.inscriptions[0].number}`} />,
-                        'image/gif': <LoadingImage src={`/api/inscription_number/${inscription.inscriptions[0].number}`} />,
-                        'image/avif': <LoadingImage src={`/api/inscription_number/${inscription.inscriptions[0].number}`} />,
-                        'image/svg+xml': <LoadingImage src={`/api/inscription_number/${inscription.inscriptions[0].number}`} scrolling='no' sandbox='allow-scripts allow-same-origin'/>,
-                        'text/html;charset=utf-8': <LoadingHtml><StyledIframe src={"/content/"+ inscription.inscriptions[0].id}></StyledIframe></LoadingHtml>,
-                        'text/html': <LoadingHtml><StyledIframe src={"/content/"+ inscription.inscriptions[0].id}></StyledIframe></LoadingHtml>,      
-                        'loading': <TextContainer>loading...</TextContainer>
-                      }[inscription.inscriptions[0].content_type]
-                    }
+                    <InnerInscriptionContent
+                      contentType={
+                        inscription.inscriptions[0].content_type === 'loading' ? 'loading' : 
+                        inscription.inscriptions[0].content_type.startsWith('image/') ? 'image' : 'html'
+                      }
+                      blobUrl={`/api/inscription_number/${inscription.inscriptions[0].number}`}
+                      number={inscription.inscriptions[0].number}
+                      metadata={{
+                        id: inscription.inscriptions[0].id,
+                        content_type: inscription.inscriptions[0].content_type,
+                        is_recursive: inscription.inscriptions[0].is_recursive
+                      }}
+                      useFeedStyles={true}
+                    />
                   </InscriptionContainer>
                 </UnstyledLink>
                 <ActionContainer>
@@ -215,7 +216,7 @@ const Trending = () => {
         <SidebarPlaceholder />
 
         {/* Right column */}
-        <SidebarContainer className="right-fixed">
+        {/* <SidebarContainer className="right-fixed">
           <SectionContainer gapSize={'1rem'}>
             <SectionTitleWrapper>
               <SectionTitleText>Introducing Boosts</SectionTitleText>
@@ -274,7 +275,7 @@ const Trending = () => {
               </LinkText>
             </UnstyledLink>
           </SectionContainer>
-        </SidebarContainer>
+        </SidebarContainer> */}
       </ContentWrapper>
     </MainContainer>
   );
@@ -481,13 +482,22 @@ const ContentContainer = styled.div`
 `;
 
 const InscriptionContainer = styled.div`
-  display: flex;
-  align-items: center;
-  justify-content: center;  
+  // display: flex;
+  // align-items: center;
+  // justify-content: center;  
   width: 32rem;
   max-width: 32rem;
+  height: auto;
+  padding: 0;
+  margin: 0;
+  line-height: 0;
+  font-size: 0;
+  border-radius: .5rem;
+  box-sizing: border-box;
+  border: .0625rem solid #E9E9E9;
+  overflow: hidden;
 
-  @media (max-width: 560px) {
+  @media (max-width: 544px) {
     width: 100%;
     max-width: 100%;
   }

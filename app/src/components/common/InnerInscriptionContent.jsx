@@ -4,7 +4,7 @@ import { BlockIcon, ImageIcon } from './Icon';
 import theme from '../../styles/theme';
 
 const InnerInscriptionContent = ({
-  contentType,
+  contentType: initialContentType,
   blobUrl,
   number,
   metadata,
@@ -14,9 +14,23 @@ const InnerInscriptionContent = ({
   isIcon,
   endpoint,
   useBlockIconDefault,
+  useFeedStyles
   // isLoading,
   // isCentered = false,
 }) => {
+
+  // Add state to track the actual content type
+  const [contentType, setContentType] = useState(initialContentType);
+
+  // Add effect to handle recursive SVGs
+  useEffect(() => {
+    // Check if this is a recursive SVG that needs special handling
+    if(metadata?.is_recursive && contentType=="svg") {
+      setContentType("svg-recursive")
+    } else {
+      setContentType(initialContentType);
+    }
+  }, [initialContentType, metadata]);  
 
   // Reference for 3D model viewer
   const modelViewerRef = useRef(null);
@@ -58,6 +72,7 @@ const InnerInscriptionContent = ({
         <ImageContainer 
           src={blobUrl} 
           alt={`Inscription ${number}`}
+          useFeedStyles={useFeedStyles}
         />
       );
       
@@ -168,15 +183,20 @@ const InnerInscriptionContent = ({
 };
 
 const ImageContainer = styled.img`
-  max-width: 100%;
-  max-height: 100%;
-  min-width: 100%;
-  min-height: 100%;
-  width: auto;
+  max-width: ${props => props.useFeedStyles ? '32rem' : '100%'};
+  max-height: ${props => props.useFeedStyles ? 'none' : '100%'};
+  min-width: ${props => props.useFeedStyles ? 'none' : '100%'};
+  min-height: ${props => props.useFeedStyles ? 'none' : '100%'};
+  width: ${props => props.useFeedStyles ? '32rem' : 'auto'};
   height: auto;
   object-fit: contain;
-  aspect-ratio: 1/1;
+  aspect-ratio: ${props => props.useFeedStyles ? '' : '1/1'};
   image-rendering: pixelated;
+
+  @media (max-width: 544px) {
+    width: ${props => props.useFeedStyles ? '100%' : ''};
+    max-width: ${props => props.useFeedStyles ? '100%' : ''};
+  }
 `;
 
 const SvgContainer = styled.iframe`

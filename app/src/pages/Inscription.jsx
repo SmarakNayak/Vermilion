@@ -404,6 +404,7 @@ const Inscription = () => {
               metadata={{
                 id: metadata?.id,
                 content_type: metadata?.content_type,
+                is_recursive: metadata?.is_recursive
               }}
               textContent={textContent}
               modelUrl={modelUrl}

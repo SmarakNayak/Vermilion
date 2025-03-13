@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import styled from 'styled-components';
 import Spinner from '../components/Spinner';
 import SkeletonImage from '../components/SkeletonImage';
+import InnerInscriptionContent from '../components/common/InnerInscriptionContent';
 import { addCommas } from '../utils/format';
 import { copyText } from '../utils/clipboard';
 import { GalleryIcon, LinkIcon, RuneIcon } from '../components/common/Icon';
@@ -108,18 +109,17 @@ const Discover = () => {
               </InfoContainer>
               <UnstyledLink to={'/inscription/' + inscription.number}>
                 <InscriptionContainer>
-                  {
-                    {
-                      'image/png': <LoadingImage src={`/api/inscription_number/${inscription.number}`} />,
-                      'image/jpeg': <LoadingImage src={`/api/inscription_number/${inscription.number}`} />,
-                      'image/jpg': <LoadingImage src={`/api/inscription_number/${inscription.number}`} />,
-                      'image/webp': <LoadingImage src={`/api/inscription_number/${inscription.number}`} />,
-                      'image/gif': <LoadingImage src={`/api/inscription_number/${inscription.number}`} />,
-                      'image/avif': <LoadingImage src={`/api/inscription_number/${inscription.number}`} />,
-                      'image/svg+xml': <LoadingImage src={`/api/inscription_number/${inscription.number}`} scrolling='no' sandbox='allow-scripts allow-same-origin'/>,
-                      'loading': <TextContainer>loading...</TextContainer>
-                    }[inscription.content_type]
-                  }
+                  <InnerInscriptionContent
+                    contentType={inscription.content_type === 'loading' ? 'loading' : 'image'}
+                    blobUrl={`/api/inscription_number/${inscription.number}`}
+                    number={inscription.number}
+                    metadata={{
+                      id: inscription.id,
+                      content_type: inscription.content_type,
+                      is_recursive: inscription.is_recursive
+                    }}
+                    useFeedStyles={true}
+                  />
                 </InscriptionContainer>
               </UnstyledLink>
             </ContentContainer>
@@ -152,7 +152,6 @@ const LoadingImage = ({ src, ...props }) => {
   );
 };
 
-// Keep all your existing styled components
 const MainContainer = styled.div`
   width: 100%;
   padding: 0;
@@ -175,7 +174,6 @@ const FeedContainer = styled.div`
   }
 `;
 
-// Add new styled components for loading state
 const LoadingContainer = styled.div`
   width: 100%;
   height: 4rem;
@@ -191,7 +189,6 @@ const LoadingText = styled.p`
   margin: 0;
 `;
 
-// Keep all your other existing styled components...
 const ContentContainer = styled.div`
   width: 100%;
   display: flex;
@@ -204,11 +201,20 @@ const ContentContainer = styled.div`
 `;
 
 const InscriptionContainer = styled.div`
-  display: flex;
-  align-items: center;
-  justify-content: center;  
+  // display: flex;
+  // align-items: center;
+  // justify-content: center;  
   width: 32rem;
   max-width: 32rem;
+  height: auto;
+  padding: 0;
+  margin: 0;
+  line-height: 0;
+  font-size: 0;
+  border-radius: .5rem;
+  box-sizing: border-box;
+  border: .0625rem solid #E9E9E9;
+  overflow: hidden;
 
   @media (max-width: 544px) {
     width: 100%;
