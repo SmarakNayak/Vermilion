@@ -37,7 +37,7 @@ bundexer.runBundexer();
 
 async function getRenderedContentResponse(id, content_type, is_recursive) {
   if (content_type?.startsWith('text/html') || (content_type?.startsWith('image/svg') && is_recursive)) {
-    let row = db.getRenderedContent(id);
+    let row = await db.getRenderedContent(id);
     let ss = row?.content;
     if (!ss) {
       ss = await renderContent(`${apiBaseUrl}/content/${id}`);

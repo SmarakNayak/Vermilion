@@ -2,12 +2,13 @@ import { parse } from 'yaml';
 import pg from 'pg';
 const { Pool } = pg;
 import { from as copyFrom } from 'pg-copy-streams';
+import { SQL } from 'bun';
 
 const configFile = Bun.file(`${process.env.HOME}/ord_vermilion.yaml`);
 const config = parse(await configFile.text());
 
 const db = {
-  pool: new Pool({
+  sql: new SQL({
     user: config.db_user,
     host: config.db_host,
     database: config.db_name,
@@ -17,14 +18,14 @@ const db = {
 
   async setupDatabase() {
     try {
-      await this.pool.query(`
+      await this.sql`
         CREATE TABLE IF NOT EXISTS rendered_content (
           id varchar(80) PRIMARY KEY,
           sequence_number BIGINT,
           content BYTEA,
           content_type TEXT
         );
-      `);
+      `;
     } catch (err) {
       console.error(err);
       throw new Error('Error setting up database: ' + err.message);
@@ -33,8 +34,8 @@ const db = {
 
   async getStartingOffset() {
     try {
-      const result = await this.pool.query('SELECT MAX(sequence_number) FROM rendered_content');
-      return Number(result.rows[0].max) + 1 || 0;
+      const [row] = await this.sql`SELECT MAX(sequence_number) FROM rendered_content`;
+      return Number(row.max) + 1 || 0;
     } catch (err) {
       throw new Error('Error fetching starting offset: ' + err.message);
     }
@@ -43,7 +44,7 @@ const db = {
   async getInscriptionsToRender(limit, offset = 0) {
     try {
       // Get inscriptions that are HTML or SVG (recursive)
-      const inscriptions = await this.pool.query(`
+      const inscriptions = await this.sql`
         SELECT o.id, o.sequence_number, o.sha256, o.content_type, o.is_recursive 
         FROM ordinals o
         WHERE 
@@ -52,15 +53,15 @@ const db = {
           o.sequence_number >= ${offset})
         ORDER BY o.sequence_number
         LIMIT ${limit};
-      `);
-      return inscriptions.rows;
+      `;
+      return inscriptions;
     } catch (err) {
       throw new Error('Error fetching inscriptions: ' + err.message);
     }
   },
 
   async bulkInsertWithBinaryCopy(renderedContent) {
-    const client = await this.pool.connect();
+    const client = await this.pgpool.connect();
     try {
       // Prepare the binary COPY command for the new table
       const copyQuery = 'COPY rendered_content(id, sequence_number, content, content_type) FROM STDIN BINARY';
@@ -132,33 +133,41 @@ const db = {
     }
   },
 
+  async bulkInsertBun(renderedContent) {    
+    try {      
+      await this.sql`INSERT INTO rendered_content ${this.sql(renderedContent)}`;
+    } catch (err) {
+      throw new Error('Error during insert: ', { cause: err });
+    }
+  },
+
   // Endpoints
   async getBlockIcon(block) {
-    const [row] = await this.pool.query(`SELECT id, content_type, is_recursive FROM ordinals 
+    const [row] = await this.sql`SELECT id, content_type, is_recursive FROM ordinals 
         WHERE genesis_height = ${block} 
         AND (content_type LIKE 'image%' OR content_type LIKE 'text/html%')
         ORDER BY content_length DESC NULLS LAST
-        LIMIT 1`);
+        LIMIT 1`;
     return row;
   },
 
   async getSatBlockIcon(block) {
-    const [row] = await this.pool.query(`SELECT id, content_type, is_recursive FROM ordinals 
+    const [row] = await this.sql`SELECT id, content_type, is_recursive FROM ordinals 
         WHERE sat IN (SELECT sat FROM sat WHERE block = ${block})
         AND (content_type LIKE 'image%' OR content_type LIKE 'text/html%')
         ORDER BY content_length DESC NULLS LAST
-        LIMIT 1`);
+        LIMIT 1`;
     return row;
   },
 
-  async getRenderedContenet(id) {
-    const [row] = await this.pool.query(`SELECT content FROM rendered_content WHERE id = ${id}`);
+  async getRenderedContent(id) {
+    const [row] = await this.sql`SELECT content FROM rendered_content WHERE id = ${id}`;
     return row;
   },
 
   // Shutdown
   async close() {
-    await this.pool.end();
+    await this.sql.end();
   }
 }
 

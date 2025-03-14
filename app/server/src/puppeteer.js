@@ -25,7 +25,8 @@ const browserPool = {
           handleSIGINT: false,
           handleSIGTERM: false,
           handleSIGHUP: false,
-          //args: ['--no-sandbox', '--disable-dev-shm-usage'] 
+          args: ['--disable-dev-shm-usage']
+          // args: ['--no-sandbox', '--disable-dev-shm-usage'] 
         });
         this.browsers.push(browser);
       }

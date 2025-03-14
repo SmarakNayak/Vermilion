@@ -45,14 +45,14 @@ const bundexer = {
         
         let t2 = performance.now();
         console.log('Inserting rendered content:', renderedContent.length);
-        await db.bulkInsertWithBinaryCopy(renderedContent);
+        await db.bulkInsertBun(renderedContent);
   
         let t3 = performance.now();
         console.log('Fetched in: ', t1 - t0, 'Rendered in: ', t2-t1, 'inserted in: ', t3-t2, 'Total time:', t3 - t0, 'ms');
         offset = Number(inscriptions[inscriptions.length - 1].sequence_number) + 1;
       } catch (err) {
         console.warn('Error in main loop, waiting a minute', err);
-        await Bun.sleep(60000);
+        await Bun.sleep(50000);
       }
     }
     this.stopped = true;
