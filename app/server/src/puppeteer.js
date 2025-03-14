@@ -80,7 +80,7 @@ const browserPool = {
   }
 };
 
-async function renderContent(url) {
+async function renderContentWrapper(url) {
   let startTime = performance.now();
   
   // Get a browser from the pool
@@ -103,13 +103,18 @@ async function renderContent(url) {
   }
 }
 
-async function captureStableScreenshot(page, url, maxWait = 10000) {
+async function renderContent(url, retryCount = 0, fullPage = true) {
+  let startTime = performance.now();
   let buffer;
+  // Get a browser from the pool
+  const browser = await browserPool.getBrowser();
+  let launchTime = performance.now();
+  let page = await browser.newPage();
   try {
     const threshold = 0.1; // Similarity threshold
     const interval = 100; // Check every 100 ms
     let activeRequests = 0;
-    let elapsed = 0;
+
     page.on('request', () => {
       activeRequests++
     });
@@ -140,20 +145,19 @@ async function captureStableScreenshot(page, url, maxWait = 10000) {
 
     // capture screenshot after load
     count++;
-    const response = await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 10000 });
-    if (response.status() !== 200) {
+    let response = await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 10000 });
+    if (response && response.status() !== 200) {
       throw new Error(`Page load failed with status: ${response.status()} ${response.statusText()}`);
     }
     activeRequestArr.push(activeRequests);
-    buffer = Buffer.from(await page.screenshot({ fullPage: true }));
+    buffer = Buffer.from(await page.screenshot({ fullPage: fullPage }));
     imageArr.push(await Jimp.read(buffer));
-    //Bun.file(`ss_${count}.png`).write(buffer);
 
-    while (elapsed < maxWait) {
+    while (count <= 10) {
       count++;
       await Bun.sleep(interval);
       activeRequestArr.push(activeRequests);
-      buffer = Buffer.from(await page.screenshot({ fullPage: true }));
+      buffer = Buffer.from(await page.screenshot({ fullPage: fullPage }));
       //Bun.file(`ss_${count}.png`).write(buffer);
       imageArr.push(await Jimp.read(buffer));
       const orginalDiff = diff(imageArr[imageArr.length-1], imageArr[0], 0.1).percent;
@@ -164,28 +168,42 @@ async function captureStableScreenshot(page, url, maxWait = 10000) {
       // also check that there were no active requests for current and previous screenshot
       if (orginalDiff > threshold && recentDiff < threshold && activeRequestArr[activeRequestArr.length-1] <= 0 && activeRequestArr[activeRequestArr.length-2] <= 0) {
         //console.log(diffArr);
-        return buffer; // Stable enough
-      }
-      elapsed += interval;
-      if (count > 10) {
-        console.log('Failed to stabilize screenshot after 10 attempts for:', url);
-        //console.log(activeRequestArr);
-        //console.log(diffArr);
-        //for (let i = 0; i <imageArr.length; i++) {
-          //imageArr[i].write(`${url}_${i}.png`);
-        //}
-        break;
+        break; // Stable enough
       }
     }
-    return buffer; // Fallback to last screenshot
+    console.log('Failed to stabilize screenshot after 10 attempts for:', url);
+
   } catch (error) {
     if (error.message.includes('Cannot take screenshot with 0 width')) {
-      console.log('Width error:', error);
-      return buffer;
+      if (retryCount > 1) throw new Error(`Width timeout after 2 retries`, { cause: error });
+      console.log('Width error, trying again: ', url);
+      await page.close();
+      page = await browser.newPage();
+      return renderContent(url, retryCount + 1, false);
+    } else if (error.message.includes('age is too large')) {
+      if (retryCount > 1) throw new Error(`Size timeout after 2 retries`, { cause: error });
+      console.log('Size error, trying again: ', url);
+      await page.close();
+      page = await browser.newPage();
+      return renderContent(url, retryCount + 1, false);
+    } else if (error.message.includes('Navigation timeout')) {
+      if (retryCount > 2) throw new Error(`Navigation timeout after 3 retries`, { cause: error });
+      console.log('Network error, trying again: ', url);
+      await page.close();
+      page = await browser.newPage();
+      return renderContent(url, retryCount + 1);
     } else {
-      throw new Error(`Unhandled puppeteer error`, { cause: error });
+      throw new Error(`Unhandled puppeteer error: ${url}`, { cause: error });
     }
+  } finally {
+    await page.close();
+    // Release the browser back to the pool
+    browserPool.releaseBrowser(browser);
   }
+  let endTime = performance.now();
+  console.log('Browser acquisition time:', launchTime - startTime);
+  console.log('Render time:', endTime - launchTime);
+  return buffer;
 }
 
 // Create a standalone closeAll function that uses the browserPool
