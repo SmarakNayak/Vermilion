@@ -57,29 +57,32 @@ async function getRenderedContentResponse(id, content_type, is_recursive) {
 
 // Shutdown function to clean up everything
 async function shutdown() {
-  console.log("Shutting down...");
+  // Stop Bun server
+  await server.stop();
+  console.log("Bun server stopped");
+
   // Stop the bundexer
   await bundexer.stopBundexer();
   console.log("Bundexer stopped");
-
-  // Stop Bun server
-  server.stop();
-  console.log("Bun server stopped");
   
   // Close all browsers in the pool
   await browserPool.closeAll();
   console.log("Browser pool closed");
-  
-  process.exit(0);
 }
 
 // Close the browsers when the server is stopped
 // Handle SIGINT (Ctrl+C)
 process.on("SIGINT", async () => {
+  console.log("SIGINT received, starting shutdown");
   await shutdown();
+  console.log("Shutdown complete");
+  process.exit(0);
 });
 
 // Handle SIGTERM (termination signal)
 process.on("SIGTERM", async () => {
+  console.log("SIGTERM received, starting shutdown");
   await shutdown();
+  console.log("Shutdown complete");
+  process.exit(0);
 });

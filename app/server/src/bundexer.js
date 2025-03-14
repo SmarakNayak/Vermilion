@@ -7,7 +7,7 @@ const apiBaseUrl = isProd ? 'http://127.0.0.1:80' : 'https://blue.vermilion.plac
 
 const bundexer = {
   shouldStop: false,
-  stopped: false,
+  stopped: true,
 
   async renderInscriptions(inscriptions) {
     try {
@@ -25,6 +25,7 @@ const bundexer = {
   
   // Main loop
   async runBundexer() {
+    this.stopped = false;
     await db.setupDatabase();
     let offset = await db.getStartingOffset();
     while (!this.shouldStop) {

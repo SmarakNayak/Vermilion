@@ -21,7 +21,10 @@ const browserPool = {
     try {
       for (let i = 0; i < POOL_SIZE; i++) {
         const browser = await puppeteer.launch({ 
-          headless: false, 
+          headless: true,
+          handleSIGINT: false,
+          handleSIGTERM: false,
+          handleSIGHUP: false,
           //args: ['--no-sandbox', '--disable-dev-shm-usage'] 
         });
         this.browsers.push(browser);
