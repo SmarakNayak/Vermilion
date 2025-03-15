@@ -161,20 +161,28 @@ async function renderContent(url, retryCount = 0, fullPage = true) {
       buffer = Buffer.from(await page.screenshot({ fullPage: fullPage }));
       //Bun.file(`ss_${count}.png`).write(buffer);
       imageArr.push(await Jimp.read(buffer));
-      const orginalDiff = diff(imageArr[imageArr.length-1], imageArr[0], 0.1).percent;
+      const originalDiff = diff(imageArr[imageArr.length-1], imageArr[0], 0.1).percent;
       const recentDiff = diff(imageArr[imageArr.length-1], imageArr[imageArr.length - 2], 0.1).percent;
-      diffArr.push({original: orginalDiff, recent: recentDiff});
+      diffArr.push({original: originalDiff, recent: recentDiff});
 
       // check that screenshot is not similar to orginal, but similar to previous
       // also check that there were no active requests for current and previous screenshot
-      if (orginalDiff > threshold && recentDiff < threshold && activeRequestArr[activeRequestArr.length-1] <= 0 && activeRequestArr[activeRequestArr.length-2] <= 0) {
+      if (originalDiff > threshold && recentDiff < threshold && activeRequestArr[activeRequestArr.length-1] <= 0 && activeRequestArr[activeRequestArr.length-2] <= 0) {
         //console.log(diffArr);
         renderStatus = "OK_STABLE";
         break; // Stable enough
       }
       if (count === 10) {
         console.log('Failed to stabilize screenshot after 10 attempts for:', url);
-        renderStatus = "OK_UNSTABLE";
+        if (activeRequestArr[activeRequestArr.length-1] > 0 || activeRequestArr[activeRequestArr.length-2] > 0) {
+          renderStatus = "OK_UNSTABLE_NETWORK";
+        } else if (originalDiff < threshold) {
+          renderStatus = "OK_UNSTABLE_SIMILAR_ORIGINAL";
+        } else if (recentDiff > threshold) {
+          renderStatus = "OK_UNSTABLE_DIFFERENT_RECENT";
+        } else {
+          renderStatus = "OK_UNSTABLE_UNKNOWN";
+        }
       }
     }
 
