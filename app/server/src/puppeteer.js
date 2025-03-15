@@ -198,8 +198,8 @@ async function renderContent(url, retryCount = 0, fullPage = true) {
     browserPool.releaseBrowser(browser);
 
     if (error.message.includes('Navigation timeout')) {
-      if (retryCount > 2) {
-        console.log(`Navigation timeout after 3 retries`);
+      if (retryCount > 1) {
+        console.log(`Navigation timeout after 2 retries`);
         return {buffer, renderStatus: "NAVIGATION_TIMEOUT"};
       };
       console.log('Network error, trying again: ', url);
@@ -240,7 +240,5 @@ async function renderContent(url, retryCount = 0, fullPage = true) {
   console.log(`Render time:`, endTime - launchTime);
   return {buffer, renderStatus};
 }
-
-// Create a standalone closeAll function that uses the browserPool
 
 export { renderContent, browserPool };
