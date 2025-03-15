@@ -128,7 +128,7 @@ const InnerInscriptionContent = ({
     // Render video content - use blobUrl for both page/grid and icon
     case 'video':
       return (
-        <VideoContainer controls loop muted autoPlay>
+        <VideoContainer controls loop muted>
           <source src={blobUrl} type={metadata?.content_type} />
         </VideoContainer>
       );
@@ -335,7 +335,7 @@ const SkeletonContainer = styled.div`
   // background-size: 1000px 100%;
   animation: ${shimmer} 4s infinite linear;
   // border-radius: .5rem;
-  border: .0625rem solid ${theme.colors.border};
+  // border: .0625rem solid ${theme.colors.border};
 
   @media (max-width: 544px) {
     width: 100%;
