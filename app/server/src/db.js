@@ -4,7 +4,7 @@ const { Pool } = pg;
 import { from as copyFrom } from 'pg-copy-streams';
 import { SQL } from 'bun';
 
-const configFile = Bun.file(`${process.env.HOME}/ord_vermilion.yaml`);
+const configFile = Bun.file(`${process.env.HOME}/ord.yaml`);
 const config = parse(await configFile.text());
 
 const db = {
