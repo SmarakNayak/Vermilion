@@ -15,12 +15,13 @@ const browserPool = {
     this.initialized = true;
     
     console.log(`Initializing browser pool with ${POOL_SIZE} instances... cleaning up any existing Chrome processes`);
-    const {stdout} = Bun.spawn(['pkill', '-f', 'chrome'], {
+    const cleanup = Bun.spawn(['pkill', '-f', 'chrome'], {
       stdout: 'inherit', // Log output to console
       stderr: 'inherit', // Log errors to console
     });
-    console.log(await readableStreamToText(stdout));
-    Bun.sleep(1000); // Wait for processes to close
+    let exitCode = await cleanup.exited;
+    if (exitCode === 1) console.log("No Chrome processes found");
+    if (exitCode === 0) console.log("Chrome processes killed");
     try {
       for (let i = 0; i < POOL_SIZE; i++) {
         const browser = await puppeteer.launch({ 
