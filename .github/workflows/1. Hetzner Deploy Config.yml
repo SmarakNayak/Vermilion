@@ -77,6 +77,11 @@ jobs:
       - name: Setup mysql config
         run: ssh staging 'sudo cp Vermilion/Config/mysql_settings.cnf /etc/mysql/conf.d/mysql_settings.cnf;'
 
+      - name: Setup chromium config
+        run: |
+          ssh staging 'sudo cp Vermilion/Config/chromium-dev-builds /etc/apparmor.d/chromium-dev-builds;'
+          ssh staging 'sudo service apparmor reload;'
+
       # Note: '"'"' = escaped single ' - bash implicitly concatenates differently quoted string expressions
       # Can add GRANT SESSION_VARIABLES_ADMIN ON *.* TO ${{secrets.MYSQL_USER}}@localhost; if needed as well
       - name: Initialize mysql server
