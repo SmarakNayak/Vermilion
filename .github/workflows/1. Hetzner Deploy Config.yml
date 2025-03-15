@@ -63,7 +63,14 @@ jobs:
           ssh staging 'set +o noclobber; ssh-keyscan -t ed25519 github.com > ~/.ssh/known_hosts || echo "Known_hosts already exists. Not adding."; set -o noclobber; '        
       
       - name: Check out the new code from Github
-        run: ssh staging 'git -C Vermilion fetch && git -C Vermilion reset --hard origin/main || git clone git@github.com:SmarakNayak/Vermilion.git' # This pulls if directory exists, otherwise clones
+        run: |
+          ssh staging 'if [ -d "Vermilion" ]; then 
+            git -C Vermilion fetch && 
+            git -C Vermilion checkout ${{ github.ref_name }} && 
+            git -C Vermilion reset --hard origin/${{ github.ref_name }}; 
+          else 
+            git clone -b ${{ github.ref_name }} git@github.com:SmarakNayak/Vermilion.git; 
+          fi'
       
       - name: Setup ssh config
         run: ssh staging 'sudo cp Vermilion/Config/ssh.conf ~/.ssh/config;'
