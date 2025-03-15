@@ -214,6 +214,15 @@ async function renderContent(url, retryCount = 0, fullPage = true) {
       await page.close();
       page = await browser.newPage();
       return renderContent(url, retryCount + 1);
+    } else if (error.message.includes('Page.captureScreenshot timed out')) {
+      if (retryCount > 4) {
+        console.log(`Screenshot timeout after 5 retries`);
+        return {buffer, renderStatus: "SCREENSHOT_TIMEOUT"};
+      };
+      console.log('Screenshot error, trying again: ', url);
+      await page.close();
+      page = await browser.newPage();
+      return renderContent(url, retryCount + 1, false);
     } else {
       throw new Error(`Unhandled puppeteer error: ${url}`, { cause: error });
     }
