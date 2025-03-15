@@ -23,7 +23,8 @@ const db = {
           id varchar(80) PRIMARY KEY,
           sequence_number BIGINT,
           content BYTEA,
-          content_type TEXT
+          content_type TEXT,
+          render_status TEXT
         );
       `;
     } catch (err) {

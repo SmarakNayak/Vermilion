@@ -15,7 +15,7 @@ const bundexer = {
       const rendered = await Promise.all(inscriptions.map(async row => {
         let url = `${apiBaseUrl}/content/${row.id}`;
         let renderedContent = await renderContent(url);
-        return { id: row.id, sequence_number: row.sequence_number, content: renderedContent, content_type: 'image/png' };
+        return { id: row.id, sequence_number: row.sequence_number, content: renderedContent.buffer, content_type: 'image/png', render_status: renderedContent.renderStatus };
       }));
       return rendered;
     } catch (err) {

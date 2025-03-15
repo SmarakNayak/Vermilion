@@ -106,6 +106,7 @@ async function renderContentWrapper(url) {
 async function renderContent(url, retryCount = 0, fullPage = true) {
   let startTime = performance.now();
   let buffer;
+  let renderStatus;
   // Get a browser from the pool
   const browser = await browserPool.getBrowser();
   let launchTime = performance.now();
@@ -168,26 +169,39 @@ async function renderContent(url, retryCount = 0, fullPage = true) {
       // also check that there were no active requests for current and previous screenshot
       if (orginalDiff > threshold && recentDiff < threshold && activeRequestArr[activeRequestArr.length-1] <= 0 && activeRequestArr[activeRequestArr.length-2] <= 0) {
         //console.log(diffArr);
+        renderStatus = "OK_STABLE";
         break; // Stable enough
       }
+      if (count === 10) {
+        console.log('Failed to stabilize screenshot after 10 attempts for:', url);
+        renderStatus = "OK_UNSTABLE";
+      }
     }
-    console.log('Failed to stabilize screenshot after 10 attempts for:', url);
 
   } catch (error) {
     if (error.message.includes('Cannot take screenshot with 0 width')) {
-      if (retryCount > 1) throw new Error(`Width timeout after 2 retries`, { cause: error });
+      if (retryCount > 1) {
+        console.log(`Width timeout after 2 retries`);
+        return {buffer, renderStatus: "WIDTH_TIMEOUT"};
+      };
       console.log('Width error, trying again: ', url);
       await page.close();
       page = await browser.newPage();
       return renderContent(url, retryCount + 1, false);
     } else if (error.message.includes('age is too large')) {
-      if (retryCount > 1) throw new Error(`Size timeout after 2 retries`, { cause: error });
+      if (retryCount > 1) {
+        console.log(`Size timeout after 2 retries`);
+        return {buffer, renderStatus: "SIZE_TIMEOUT"};
+      };
       console.log('Size error, trying again: ', url);
       await page.close();
       page = await browser.newPage();
       return renderContent(url, retryCount + 1, false);
     } else if (error.message.includes('Navigation timeout')) {
-      if (retryCount > 2) throw new Error(`Navigation timeout after 3 retries`, { cause: error });
+      if (retryCount > 2) {
+        console.log(`Navigation timeout after 3 retries`);
+        return {buffer, renderStatus: "NAVIGATION_TIMEOUT"};
+      };
       console.log('Network error, trying again: ', url);
       await page.close();
       page = await browser.newPage();
@@ -203,7 +217,7 @@ async function renderContent(url, retryCount = 0, fullPage = true) {
   let endTime = performance.now();
   console.log('Browser acquisition time:', launchTime - startTime);
   console.log('Render time:', endTime - launchTime);
-  return buffer;
+  return {buffer, renderStatus};
 }
 
 // Create a standalone closeAll function that uses the browserPool
