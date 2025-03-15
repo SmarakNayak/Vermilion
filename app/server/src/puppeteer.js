@@ -1,5 +1,6 @@
 import puppeteer from 'puppeteer';
 import { Jimp, diff } from 'jimp';
+import { readableStreamToText } from 'bun';
 
 // Browser Pool Configuration
 const isProd = process.env.NODE_ENV === 'production';
@@ -14,10 +15,12 @@ const browserPool = {
     this.initialized = true;
     
     console.log(`Initializing browser pool with ${POOL_SIZE} instances... cleaning up any existing Chrome processes`);
-    const cleanup = Bun.spawn(['pkill', '-f', 'chrome'], {
+    const {stdout} = Bun.spawn(['pkill', '-f', 'chrome'], {
       stdout: 'inherit', // Log output to console
       stderr: 'inherit', // Log errors to console
     });
+    console.log(await readableStreamToText(stdout));
+    Bun.sleep(1000); // Wait for processes to close
     try {
       for (let i = 0; i < POOL_SIZE; i++) {
         const browser = await puppeteer.launch({ 
