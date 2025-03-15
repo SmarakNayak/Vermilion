@@ -32,9 +32,8 @@ const browserPool = {
       }
       console.log("Browser pool ready");
     } catch (err) {
-      this.initialized = false;
-      console.error("Browser pool failed to start:", err);
-      return;
+      await this.closeAll();
+      throw new Error("Error initializing browser pool", { cause: err });
     }
   },
   
