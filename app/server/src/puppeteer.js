@@ -26,6 +26,7 @@ const browserPool = {
       for (let i = 0; i < POOL_SIZE; i++) {
         const browser = await puppeteer.launch({ 
           headless: true,
+          protocolTimeout: 5000,
           handleSIGINT: false,
           handleSIGTERM: false,
           handleSIGHUP: false,
@@ -154,7 +155,7 @@ async function renderContent(url, retryCount = 0, fullPage = true) {
       throw new Error(`Page load failed with status: ${response.status()} ${response.statusText()}`);
     }
     activeRequestArr.push(activeRequests);
-    buffer = Buffer.from(await page.screenshot({ fullPage: fullPage }));
+    buffer = Buffer.from(await page.screenshot({ fullPage: fullPage, }));
     imageArr.push(await Jimp.read(buffer));
 
     while (count <= 10) {
@@ -188,55 +189,54 @@ async function renderContent(url, retryCount = 0, fullPage = true) {
         }
       }
     }
+    
+    await page.close();
+    browserPool.releaseBrowser(browser);
 
   } catch (error) {
-    if (error.message.includes('Cannot take screenshot with 0 width')) {
-      if (retryCount > 1) {
-        console.log(`Width timeout after 2 retries`);
-        return {buffer, renderStatus: "WIDTH_TIMEOUT"};
+    await page.close();
+    browserPool.releaseBrowser(browser);
+
+    if (error.message.includes('Navigation timeout')) {
+      if (retryCount > 2) {
+        console.log(`Navigation timeout after 3 retries`);
+        return {buffer, renderStatus: "NAVIGATION_TIMEOUT"};
       };
-      console.log('Width error, trying again: ', url);
-      await page.close();
-      page = await browser.newPage();
-      return renderContent(url, retryCount + 1, false);
+      console.log('Network error, trying again: ', url);
+      return renderContent(url, retryCount + 1);
+
     } else if (error.message.includes('age is too large')) {
       if (retryCount > 1) {
         console.log(`Size timeout after 2 retries`);
         return {buffer, renderStatus: "SIZE_TIMEOUT"};
       };
       console.log('Size error, trying again: ', url);
-      await page.close();
-      page = await browser.newPage();
       return renderContent(url, retryCount + 1, false);
-    } else if (error.message.includes('Navigation timeout')) {
-      if (retryCount > 2) {
-        console.log(`Navigation timeout after 3 retries`);
-        return {buffer, renderStatus: "NAVIGATION_TIMEOUT"};
+
+    } else if (error.message.includes('Cannot take screenshot with 0 width')) {
+      if (retryCount > 1) {
+        console.log(`Width timeout after 2 retries`);
+        return {buffer, renderStatus: "WIDTH_TIMEOUT"};
       };
-      console.log('Network error, trying again: ', url);
-      await page.close();
-      page = await browser.newPage();
-      return renderContent(url, retryCount + 1);
+      console.log('Width error, trying again: ', url);
+      return renderContent(url, retryCount + 1, false);
+
     } else if (error.message.includes('Page.captureScreenshot timed out')) {
-      if (retryCount > 4) {
-        console.log(`Screenshot timeout after 5 retries`);
+      if (retryCount > 1) {
+        console.log(`Screenshot timeout after 2 retries`);
         return {buffer, renderStatus: "SCREENSHOT_TIMEOUT"};
       };
       console.log('Screenshot error, trying again: ', url);
-      await page.close();
-      page = await browser.newPage();
       return renderContent(url, retryCount + 1, false);
+
     } else {
       throw new Error(`Unhandled puppeteer error: ${url}`, { cause: error });
     }
-  } finally {
-    await page.close();
-    // Release the browser back to the pool
-    browserPool.releaseBrowser(browser);
   }
+
   let endTime = performance.now();
   console.log('Browser acquisition time:', launchTime - startTime);
-  console.log('Render time:', endTime - launchTime);
+  console.log(`${url} Render time:`, endTime - launchTime);
   return {buffer, renderStatus};
 }
 
