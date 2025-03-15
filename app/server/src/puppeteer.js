@@ -189,7 +189,7 @@ async function renderContent(url, retryCount = 0, fullPage = true) {
         }
       }
     }
-    
+
     await page.close();
     browserPool.releaseBrowser(browser);
 
@@ -235,8 +235,9 @@ async function renderContent(url, retryCount = 0, fullPage = true) {
   }
 
   let endTime = performance.now();
+  console.log(url);
   console.log('Browser acquisition time:', launchTime - startTime);
-  console.log(`${url} Render time:`, endTime - launchTime);
+  console.log(`Render time:`, endTime - launchTime);
   return {buffer, renderStatus};
 }
 
