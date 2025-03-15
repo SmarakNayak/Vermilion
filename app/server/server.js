@@ -43,7 +43,7 @@ async function getRenderedContentResponse(id, content_type, is_recursive) {
       ss = await renderContent(`${apiBaseUrl}/content/${id}`);
     }
     if (!ss) return new Response('Error rendering content', { status: 404 });
-    return new Response(ss, {
+    return new Response(ss.buffer, {
       headers: { 'Content-Type': 'image/png' },
     });
   } else {
