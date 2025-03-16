@@ -252,6 +252,14 @@ async function renderContent(url, retryCount = 0, fullPage = true) {
       console.log('Screenshot error, trying again: ', url);
       return renderContent(url, retryCount + 1, false);
 
+    } else if (error.message.includes('Unable to capture screenshot')) {
+      if (retryCount > 1) {
+        console.log(`Screenshot timeout after 2 retries`);
+        return {buffer, renderStatus: "SCREENSHOT_UNABLE"};
+      };
+      console.log('Screenshot error, trying again: ', url);
+      return renderContent(url, retryCount + 1, false);
+
     } else {
       throw new Error(`Unhandled puppeteer error: ${url}`, { cause: error });
     }
