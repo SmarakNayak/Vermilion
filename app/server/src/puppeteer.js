@@ -1,6 +1,5 @@
 import puppeteer from 'puppeteer';
 import { Jimp, diff } from 'jimp';
-import { readableStreamToText } from 'bun';
 
 // Browser Pool Configuration
 const isProd = process.env.NODE_ENV === 'production';
@@ -151,8 +150,25 @@ async function renderContent(url, retryCount = 0, fullPage = true) {
     // capture screenshot after load
     count++;
     let response = await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 10000 });
-    if (response && response.status() !== 200) {
-      throw new Error(`Page load failed with status: ${response.status()} ${response.statusText()}`);
+    if (response && response.status() !== 200) {      
+      await page.close();
+      browserPool.releaseBrowser(browser);
+      console.log(`Page load failed with status: ${response.status()} ${response.statusText()} for: ${url}`);
+      
+      if (retryCount > 1) {
+        console.log(`2 retries failed, returning early`);
+        return {buffer, renderStatus: "PAGE_LOAD_FAILED_" + response.status()};
+      }
+      if (response.status() in [400, 401, 403, 404, 405, 410, 418, 451]) {
+        console.log("bad status code, returning early");
+        return {buffer, renderStatus: "PAGE_LOAD_FAILED_" + response.status()};
+      } else if (response.status() in [408, 422, 429, 500, 502, 503, 504]) {
+        console.log("handleable status code, retrying");
+        return renderContent(url, retryCount + 1, fullPage);
+      } else {
+        console.log("unknown status code, retrying");
+        return renderContent(url, retryCount + 1, fullPage);
+      }
     }
     activeRequestArr.push(activeRequests);
     buffer = Buffer.from(await page.screenshot({ fullPage: fullPage, }));
