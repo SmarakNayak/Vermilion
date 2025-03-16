@@ -172,7 +172,7 @@ const Collection = () => {
       <RowContainer>
         <FilterMenu isOpen={filterVisibility} onSelectionChange={handleFilterOptionsChange} onClose={toggleFilterVisibility} initialSelection={selectedFilterOptions} />
         <GalleryContainer>
-          <GalleryInfiniteScroll baseApi={baseApi} numberVisibility={numberVisibility} zoomGrid={zoomGrid} />
+          <GalleryInfiniteScroll baseApi={baseApi} isCollectionPage={true} numberVisibility={numberVisibility} zoomGrid={zoomGrid} />
         </GalleryContainer>
       </RowContainer>
     </MainContainer>

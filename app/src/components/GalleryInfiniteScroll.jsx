@@ -1,12 +1,14 @@
 import React, { useState, useEffect, ChangeEvent } from 'react';
-import styled from 'styled-components';
+import styled, { keyframes } from 'styled-components';
 import GridItemContainer from './GridItemContainer';
 import InfiniteScroll from 'react-infinite-scroll-component';
+import Spinner from './Spinner';
+import theme from '../styles/theme';
 
-const GalleryInfiniteScroll = ({ baseApi, numberVisibility, zoomGrid }) => {
+const GalleryInfiniteScroll = ({ baseApi, isCollectionPage, numberVisibility, zoomGrid }) => {
   const [inscriptions, setInscriptions] = useState([]);
   const [hasMore, setHasMore] = useState(true);
-  const [pageSize, setPageSize] = useState(20);
+  const [pageSize, setPageSize] = useState(24);
   const [nextPageNo, setNextPageNo] = useState(0);
 
   //Update inscriptionList
@@ -46,15 +48,30 @@ const GalleryInfiniteScroll = ({ baseApi, numberVisibility, zoomGrid }) => {
       next={fetchData}
       hasMore={hasMore}
       loader={
-        <LoaderContainer>
-          <p style={{color: '#959595'}}>Loading...</p>
+        <LoaderContainer numberVisibility={numberVisibility}>
+          <Spinner />
         </LoaderContainer>
       }
+      scrollThreshold="0.8"
+      style={{ overflow: 'visible' }}
     >
       <GridContainer zoomGrid={zoomGrid}>
         {inscriptions.map(
             entry => 
-            <GridItemContainer collection={entry.collection_name} key={entry.number} number={entry.number} id={entry.id} numberVisibility={numberVisibility} rune={entry.spaced_rune}></GridItemContainer>
+              <GridItemContainer 
+                collection={entry.collection_name} 
+                collection_symbol={entry.collection_symbol}
+                content_length={entry.content_length}
+                id={entry.id} 
+                is_child={entry.parents.length > 0}
+                is_recursive={entry.is_recursive}
+                isCollectionPage={isCollectionPage}
+                item_name={entry.off_chain_metadata?.name}
+                key={entry.number} 
+                number={entry.number} 
+                numberVisibility={numberVisibility} 
+                rune={entry.spaced_rune}
+              />
         )}
       </GridContainer>
     </InfiniteScroll>
@@ -66,29 +83,17 @@ const LoaderContainer = styled.div`
   justify-content: center;
   align-items: center;
   width: 100%;
-  padding-top: 1.5rem;
+  padding-top: ${props => props.numberVisibility ? '.5rem' : '2.125rem'};
 `;
 
 const GridContainer = styled.div`
   display: grid;
   grid-template-columns: repeat(6, 1fr);
-  gap: 1.5rem;
+  gap: .25rem;
   width: 100%;
   min-width: 100%;
 
-  @media (min-width: 1984px) {
-    grid-template-columns: ${props => props.zoomGrid ? 'repeat(5, minmax(0, 1fr))' : 'repeat(12, minmax(0, 1fr))'};
-  }
-
-  @media (max-width: 1984px) {
-    grid-template-columns: ${props => props.zoomGrid ? 'repeat(4, minmax(0, 1fr))' : 'repeat(10, minmax(0, 1fr))'};
-  }
-
-  @media (max-width: 1750px) {
-    grid-template-columns: ${props => props.zoomGrid ? 'repeat(4, minmax(0, 1fr))' : 'repeat(9, minmax(0, 1fr))'};
-  }
-
-  @media (max-width: 1550px) {
+  @media (min-width: 1346px) {
     grid-template-columns: ${props => props.zoomGrid ? 'repeat(4, minmax(0, 1fr))' : 'repeat(8, minmax(0, 1fr))'};
   }
 
