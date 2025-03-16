@@ -94,7 +94,7 @@ const InnerInscriptionContent = ({
         <SvgContainer 
           src={isIcon ? endpoint : `/api/inscription_number/${number}`}
           scrolling="no" 
-          sandbox="allow-scripts allow-same-origin" 
+          sandbox="allow-scripts" 
           loading="lazy"
         />
       );
@@ -111,7 +111,7 @@ const InnerInscriptionContent = ({
           <StyledIframe 
             src={isIcon ? endpoint : `/content/${metadata?.id}`} 
             scrolling="no" 
-            sandbox="allow-scripts allow-same-origin" 
+            sandbox="allow-scripts" 
             loading="lazy"
           />
         </HtmlContainer>
