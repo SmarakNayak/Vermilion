@@ -132,8 +132,12 @@ async function renderContent(url, retryCount = 0, fullPage = true) {
       activeRequests--
     });
     page.on('dialog', async dialog => { // handle dialogs that block navigation (.goto)
-      await dialog.accept(); // Auto-accept (OK) for alert/confirm/prompt
-      // OR await dialog.dismiss(); // Cancel for confirm/prompt
+      try {
+        await dialog.accept();
+      } catch (error) {
+        console.log('Dialog accept error:', error);
+        await dialog.dismiss().catch(err => console.log('Dialog dismiss error:', err));
+      }
     });
 
     let activeRequestArr = [];
