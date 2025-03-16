@@ -159,10 +159,10 @@ async function renderContent(url, retryCount = 0, fullPage = true) {
         console.log(`2 retries failed, returning early`);
         return {buffer, renderStatus: "PAGE_LOAD_FAILED_" + response.status()};
       }
-      if (response.status() in [400, 401, 403, 404, 405, 410, 418, 451]) {
+      if ([400, 401, 403, 404, 405, 410, 418, 451].includes(response.status())) {
         console.log("bad status code, returning early");
         return {buffer, renderStatus: "PAGE_LOAD_FAILED_" + response.status()};
-      } else if (response.status() in [408, 422, 429, 500, 502, 503, 504]) {
+      } else if ([408, 422, 429, 500, 502, 503, 504].includes(response.status())) {
         console.log("handleable status code, retrying");
         return renderContent(url, retryCount + 1, fullPage);
       } else {
