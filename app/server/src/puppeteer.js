@@ -131,12 +131,15 @@ async function renderContent(url, retryCount = 0, fullPage = true) {
     page.on('requestfinished', () => {
       activeRequests--
     });
-    page.on('dialog', async dialog => { // handle dialogs that block navigation (.goto)
+    page.on('dialog', async dialog => {
+      if (page.isClosed()) return;
       try {
         await dialog.accept();
       } catch (error) {
-        console.log('Dialog accept error:', error);
-        await dialog.dismiss().catch(err => console.log('Dialog dismiss error:', err));
+        if (error.name !== 'TargetCloseError') {
+          console.log('Dialog accept error:', error);
+          await dialog.dismiss().catch(err => console.log('Dialog dismiss error:', err));
+        }
       }
     });
 
