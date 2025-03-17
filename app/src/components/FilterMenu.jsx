@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import styled, { keyframes } from 'styled-components';
+import theme from '../styles/theme';
 import { ChevronDownIcon, ChevronUpIcon, CrossIcon } from './common/Icon';
 
 const MenuContainer = styled.div`
@@ -13,7 +14,7 @@ const MenuContainer = styled.div`
   gap: 1rem;
 
   @media (max-width: 630px) {
-    background-color: #FFFFFF;
+    background-color: ${theme.colors.background.white};
     max-width: calc(100% - 2rem);  
     max-height: calc(100% - 2rem);
     margin-right: 0;  
@@ -58,13 +59,12 @@ const CategoryHeader = styled.div`
   justify-content: space-between;
   align-items: center;
   cursor: pointer;
-  font-family: Relative Trial Bold;
+  font-family: ${theme.typography.fontFamilies.bold};
   font-size: 1rem;
   height: 3rem;
   padding: 0 1rem;
   border-radius: 1.5rem;
-  transition: 
-    background-color 350ms ease;
+  transition: all 200ms ease;
   transform-origin: center center;
 
   &:hover {
@@ -75,7 +75,7 @@ const CategoryHeader = styled.div`
 const CategoryOptions = styled.div`
   display: ${props => (props.isOpen ? 'flex' : 'none')};
   flex-wrap: wrap;
-  gap: .5rem;
+  gap: .375rem;
   padding: 0 1rem;
 `;
 
@@ -83,17 +83,16 @@ const Option = styled.button`
   display: flex;
   justify-content: flex-start;
   align-items: center;
-  padding: .375rem .75rem;
+  padding: .25rem .5rem;
   color: ${props => (props.isSelected ? 'white' : 'black')};
-  background-color: ${props => (props.isSelected ? '#000' : '#f5f5f5')};
+  background-color: ${props => (props.isSelected ? theme.colors.background.dark : theme.colors.background.primary)};
   text-align: left;
   border: none;
   cursor: pointer;
-  border-radius: .5rem;
-  font-family: Relative Trial Medium;
+  border-radius: .25rem;
+  font-family: ${theme.typography.fontFamilies.medium};
   font-size: .875rem;
-  transition: 
-    transform 150ms ease;
+  transition: all 200ms ease;
   transform-origin: center center;
 
   &:active {
@@ -101,7 +100,7 @@ const Option = styled.button`
   }
 
   &:hover {
-    background-color: ${props => (props.isSelected ? '#000' : '#e0e0e0')};
+    background-color: ${props => (props.isSelected ? theme.colors.background.dark : theme.colors.border)};
   }
 `;
 
@@ -115,13 +114,11 @@ const CloseButton = styled.button`
   justify-content: center;
   cursor: pointer;
   gap: .375rem;
-  font-family: Relative Trial Medium;
+  font-family: ${theme.typography.fontFamilies.medium};
   font-size: 1rem;
   color: #959595;
   background-color: #F5F5F5;
-  transition: 
-    background-color 350ms ease,
-    transform 150ms ease;
+  transition: all 200ms ease;
   transform-origin: center center;
 
   &:hover {
@@ -143,7 +140,7 @@ const FilterMenu = ({ isOpen, onClose, onSelectionChange, initialSelection }) =>
     { name: 'Satributes', options: [
       "vintage", "nakamoto", "firsttransaction", "palindrome", "pizza", "block9", "block9_450", "block78", 
       "alpha", "omega", "uniform_palinception", "perfect_palinception", "block286", "jpeg", 
-      "uncommon", "rare", "epic", "legendary", "mythic", 
+      "uncommon", "rare", "epic", "legendary", "mythic", "hitman",
       "black_uncommon", "black_rare", "black_epic", "black_legendary" 
     ] },
   ];
