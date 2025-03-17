@@ -2,6 +2,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import styled from 'styled-components';
 import { ChevronDownIcon } from './common/Icon';
+import theme from '../styles/theme';
 
 const DropdownWrapper = styled.div`
   position: relative;
@@ -9,28 +10,26 @@ const DropdownWrapper = styled.div`
   //z-index: 1;
 `;
 
-const FilterButton = styled.button`
-  height: 3rem;
+const DropdownButton = styled.button`
+  height: 2.75rem;
   border-radius: 1.5rem;
   border: none;
-  padding: .5rem 1rem .5rem 1.375rem;
+  padding: 0 .875rem 0 1.25rem;
   margin: 0;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   gap: .5rem;
-  font-family: Relative Trial Medium;
+  font-family: ${theme.typography.fontFamilies.medium};
   font-size: 1rem;
-  color: #000000;
-  background-color: ${props => props.isActive ? '#E9E9E9' : '#F5F5F5'}; 
-  transition: 
-    background-color 350ms ease,
-    transform 150ms ease;
+  color: ${theme.colors.text.primary};
+  background-color: ${props => props.isActive ? theme.colors.border : theme.colors.background.primary}; 
+  transition: all 200ms ease;
   transform-origin: center center;
 
   &:hover {
-    background-color: #E9E9E9;
+    background-color: ${theme.colors.border};
   }
 
   &:active {
@@ -43,31 +42,29 @@ const DropdownMenu = styled.ul`
   top: 100%;
   right: 0;
   background-color: white;
-  border: 1px solid #F5F5F5;
-  box-shadow: 0px 1px 6px 0px rgba(0, 0, 0, 0.09);
-  padding: .5rem;
+  // border: 1px solid ${theme.colors.border};
+  box-shadow: ${theme.shadows.soft};
+  padding: .25rem;
   list-style-type: none;
   margin-top: .5rem;
-  // min-width: 200px;
-  border-radius: .5rem;
+  border-radius: ${theme.borderRadius.large};
   z-index: 1;
 `;
 
 const DropdownItem = styled.li`
-  padding: .5rem 1rem;
+  padding: .5rem 1.5rem .5rem .75rem;
   cursor: pointer;
-  font-family: Relative Trial Medium;
+  font-family: ${theme.typography.fontFamilies.medium};
   font-size: 1rem;
-  color: #000000;
-  border-radius: .5rem;
-  transition: 
-    background-color 350ms ease,
-    transform 150ms ease;
+  color: ${theme.colors.text.secondary};
+  border-radius: ${theme.borderRadius.medium};
+  transition: all 200ms ease;
   transform-origin: center center;
   text-wrap: nowrap;
 
   &:hover {
-    background-color: #F5F5F5;
+    color: ${theme.colors.text.primary};
+    background-color: ${theme.colors.background.primary};
   }
 `;
 
@@ -134,10 +131,10 @@ const SortbyDropdown = ({ onOptionSelect }) => {
 
   return (
     <DropdownWrapper ref={wrapperRef}>
-      <FilterButton isActive={isOpen} onClick={handleToggle}>
+      <DropdownButton isActive={isOpen} onClick={handleToggle}>
         {labels[selectedOption]}
-        <ChevronDownIcon size={'1rem'} color={'#000000'}></ChevronDownIcon>
-      </FilterButton>
+        <ChevronDownIcon size={'1rem'} color={theme.colors.text.primary}></ChevronDownIcon>
+      </DropdownButton>
       {/* <DropdownButton onClick={handleToggle}>
         {selectedOption}
       </DropdownButton> */}
