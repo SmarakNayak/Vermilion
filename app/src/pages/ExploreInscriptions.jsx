@@ -5,7 +5,8 @@ import SortbyDropdown from '../components/Dropdown';
 import FilterMenu from '../components/FilterMenu';
 import GalleryInfiniteScroll from '../components/GalleryInfiniteScroll';
 import Stack from '../components/Stack';
-import { EyeIcon, FilterIcon, GridIcon } from '../components/common/Icon';
+import { EyeIcon, FilterIcon, GridIcon, DotGridIcon } from '../components/common/Icon';
+import theme from '../styles/theme';
 
 const ExploreInscriptions = () => {
   const [baseApi, setBaseApi] = useState(null); 
@@ -69,15 +70,19 @@ const ExploreInscriptions = () => {
       <Divider />
       <Stack horizontal={false} center={false} style={{gap: '1.5rem', width: '100%'}}>
         <RowContainer>
-          <Stack horizontal={true} center={false} style={{gap: '1rem'}}>
+          <Stack horizontal={true} center={false} style={{gap: '.75rem'}}>
             <FilterButton onClick={toggleFilterVisibility}>
-              <FilterIcon size={'1.25rem'} color={'#000000'}></FilterIcon>
+              <FilterIcon size={'1.25rem'} color={theme.colors.text.primary}></FilterIcon>
             </FilterButton>
             <VisibilityButton onClick={toggleNumberVisibility}>
-              <EyeIcon size={'1.25rem'} color={numberVisibility ? '#000000' : '#959595'}></EyeIcon>
+              <EyeIcon size={'1.25rem'} color={numberVisibility ? theme.colors.text.primary : theme.colors.text.tertiary}></EyeIcon>
             </VisibilityButton>
             <GridTypeButton onClick={toggleGridType}>
-              <GridIcon size={'1.25rem'} color={zoomGrid ? '#959595' : '#000000'}></GridIcon>
+              {zoomGrid ? (
+                <GridIcon size={'1.25rem'} color={theme.colors.text.primary} />
+              ) : (
+                <DotGridIcon size={'1.25rem'} color={theme.colors.text.primary} />
+              )}
             </GridTypeButton>
           </Stack>
           <SortbyDropdown onOptionSelect={handleSortOptionChange} />
@@ -123,7 +128,7 @@ const GalleryContainer = styled.div`
 `;
 
 const PageText = styled.p`
-  font-family: Relative Trial Bold;
+  font-family: ${theme.typography.fontFamilies.bold};
   font-size: 1.5rem;
   margin: 0;
 `;
@@ -135,34 +140,31 @@ const SectionContainer = styled.div`
   gap: 1rem;
   width: 100%;
   padding-bottom: 1.5rem;
-  border-bottom: 1px #E9E9E9 solid;
+  border-bottom: 1px ${theme.colors.border}; solid;
   // overflow: scroll;
 `;
 
 const Divider = styled.div`
   width: 100%;
-  border-bottom: 1px solid #E9E9E9;
+  border-bottom: 1px solid ${theme.colors.border};};
 `;
 
 const VisibilityButton = styled.button`
-  height: 3rem;
-  width: 3rem;
+  height: 2.75rem;
+  width: 2.75rem;
   border-radius: 1.5rem;
   border: none;
-  padding: .5rem;
   margin: 0;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  background-color: #F5F5F5;
-  transition: 
-    background-color 350ms ease,
-    transform 150ms ease;
+  background-color: ${theme.colors.background.primary};
+  transition: all 200ms ease;
   transform-origin: center center;
 
   &:hover {
-    background-color: #E9E9E9;
+    background-color: ${theme.colors.border};
   }
 
   &:active {
@@ -171,24 +173,23 @@ const VisibilityButton = styled.button`
 `;
 
 const GridTypeButton = styled.button`
-  height: 3rem;
-  width: 3rem;
+  height: 2.75rem;
+  width: 2.75rem;
   border-radius: 1.5rem;
   border: none;
-  padding: .5rem;
   margin: 0;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  background-color: #F5F5F5;
+  background-color: ${theme.colors.background.primary};
   transition: 
     background-color 350ms ease,
     transform 150ms ease;
   transform-origin: center center;
 
   &:hover {
-    background-color: #E9E9E9;
+    background-color: ${theme.colors.border};
   }
 
   &:active {
@@ -197,8 +198,8 @@ const GridTypeButton = styled.button`
 `;
 
 const FilterButton = styled.button`
-  height: 3rem;
-  width: 3rem;
+  height: 2.75rem;
+  width: 2.75rem;
   border-radius: 1.5rem;
   border: none;
   margin: 0;
@@ -207,14 +208,14 @@ const FilterButton = styled.button`
   justify-content: center;
   cursor: pointer;
   gap: .5rem;
-  background-color: #F5F5F5;
+  background-color: ${theme.colors.background.primary};
   transition: 
     background-color 350ms ease,
     transform 150ms ease;
   transform-origin: center center;
 
   &:hover {
-    background-color: #E9E9E9;
+    background-color: ${theme.colors.border};
   }
 
   &:active {
