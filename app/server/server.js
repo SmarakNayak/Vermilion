@@ -38,7 +38,7 @@ const server = Bun.serve({
       let metadataJson = await metadata.json();
       let hydratedHtml = await addInscriptionPreviewsToHtml({ 
         inscriptionMetadata: metadataJson,
-        host: new URL(req.url).hostname,
+        host: req.headers.get('host')
       });
       return new Response(hydratedHtml, {
         headers: { 'Content-Type': 'text/html' },
