@@ -1,6 +1,7 @@
 import db from './src/db';
 import bundexer from './src/bundexer';
 import { renderContent, browserPool } from './src/puppeteer';
+import { addInscriptionPreviewsToHtml } from './src/ssr';
 
 // Configuration - use local address in production or fall back to external URL
 const isProd = process.env.NODE_ENV === 'production';
@@ -10,6 +11,7 @@ const server = Bun.serve({
   port: 1082,
   routes: {
     '/': new Response('If Bitcoin is to change the culture of money, it needs to be cool. Ordinals was the missing piece. The path to $1m is preordained'),
+    // api routes
     '/rendered_content/:id': async req => {
       let metadata =  await fetch(apiBaseUrl + "/api/inscription_metadata/" + req.params.id);
       let metadataJson = await metadata.json();
@@ -29,6 +31,18 @@ const server = Bun.serve({
       const row = db.getSatBlockIcon(req.params.block);
       if (!row) return new Response('No inscriptions found in block', { status: 404 });
       return getRenderedContentResponse(row.id, row.content_type, row.is_recursive);      
+    },
+    // ssr routes
+    '/ssr/inscription/:number': async req => {
+      let metadata =  await fetch(apiBaseUrl + "/api/inscription_metadata_number/" + req.params.number);
+      let metadataJson = await metadata.json();
+      let hydratedHtml = await addInscriptionPreviewsToHtml({ 
+        inscriptionMetadata: metadataJson,
+        host: new URL(req.url).hostname,
+      });
+      return new Response(hydratedHtml, {
+        headers: { 'Content-Type': 'text/html' },
+      });
     },
   }
 });
