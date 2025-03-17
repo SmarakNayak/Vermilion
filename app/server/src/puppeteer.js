@@ -260,6 +260,14 @@ async function renderContent(url, retryCount = 0, fullPage = true) {
       console.log('Screenshot error, trying again: ', url);
       return renderContent(url, retryCount + 1, false);
 
+    } else if (error.message.includes('net::ERR_ABORTED')) {
+      if (retryCount > 1) {
+        console.log(`Network error after 2 retries`);
+        return {buffer, renderStatus: "NETWORK_ABORTED"};
+      };
+      console.log('Network aborted, trying again: ', url);
+      return renderContent(url, retryCount + 1, false);
+
     } else {
       throw new Error(`Unhandled puppeteer error: ${url}`, { cause: error });
     }
