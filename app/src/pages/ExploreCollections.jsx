@@ -8,8 +8,6 @@ import theme from '../styles/theme';
 
 const ExploreCollections = () => {
   const [baseApi, setBaseApi] = useState(null); 
-  const [numberVisibility, setNumberVisibility] = useState(true);
-  const [filterVisibility, setFilterVisibility] = useState(false);
   const [selectedSortOption, setSelectedSortOption] = useState('newest');
   const [selectedFilterOptions, setSelectedFilterOptions] = useState({"Content Type": ["image"], "Satributes": [], "Charms":[]});
   const [activeTab, setActiveTab] = useState('Offchain');
@@ -34,30 +32,6 @@ const ExploreCollections = () => {
     }
     setBaseApi(query_string);
   },[selectedSortOption, selectedFilterOptions]);
-
-  //Get collections endpoint
-
-
-  // function to toggle visibility of inscription numbers
-  const toggleNumberVisibility = () => {
-    setNumberVisibility(!numberVisibility);
-  };
-
-  const toggleFilterVisibility = () => {
-    setFilterVisibility(!filterVisibility);
-  };
-  
-  //inscription handlers
-  const handleSortOptionChange = (option) => {
-    setSelectedSortOption(option);
-    // Perform any necessary actions with the selected option
-    // console.log('Selected inscription sort option:', option);
-  };
-
-  const handleFilterOptionsChange = (filterOptions) => {
-    setSelectedFilterOptions(filterOptions);
-    // console.log('Selected filter option:', filterOptions);
-  };
 
     // function to update active tab
     const handleTabClick = (tabName) => {
@@ -88,7 +62,7 @@ const ExploreCollections = () => {
         <ExploreContainer>
           <NoteContainer>
             <IconWrapper>
-              <InfoCircleIcon size={'1rem'} color={theme.colors.text.secondary} />
+              <InfoCircleIcon size={'1.25rem'} color={theme.colors.text.secondary} />
             </IconWrapper>
             <NoteText>
               Collections that use JSON-based provenance, which is centrally controlled and offchain. This table includes both offchain collections and onchain collections as listed on marketplaces.
@@ -101,7 +75,7 @@ const ExploreCollections = () => {
         <ExploreContainer>
           <NoteContainer>
             <IconWrapper>
-              <InfoCircleIcon size={'1rem'} color={theme.colors.text.secondary} />
+              <InfoCircleIcon size={'1.25rem'} color={theme.colors.text.secondary} />
             </IconWrapper>            
             <NoteText>
               Collections that use parent-child provenance, the standard way to immutably record a collection on Bitcoin. Collections are considered separate if not all parents are the same.
@@ -110,9 +84,6 @@ const ExploreCollections = () => {
           <OnChainCollectionsTable />
         </ExploreContainer>
       )}
-      {/* <ExploreContainer>
-        <CollectionsTable/>
-      </ExploreContainer> */}
     </MainContainer>    
   )
 }
@@ -125,10 +96,11 @@ const MainContainer = styled.div`
   flex-direction: column;
   align-items: center;
   gap: 1.5rem;
+  transition: all 200ms ease;
 
   @media (max-width: 864px) {
-    width: calc(100% - 3rem);
-    padding: 1.5rem 1.5rem 2.5rem 1.5rem;
+    width: calc(100% - 2rem);
+    padding: 1.5rem 1rem 2.5rem 1rem;
   }
 `;
 
@@ -140,32 +112,16 @@ const RowContainer = styled.div`
   width: 100%;
 `;
 
-const GalleryContainer = styled.div`
-  display: flex;
-  flex-direction: column;
-  width: 100%;
-`;
-
 const PageText = styled.p`
-  font-family: relative-bold-pro;
+  font-family: ${theme.typography.fontFamilies.bold};
   font-size: 1.5rem;
+  line-height: 2rem;
   margin: 0;
-`;
-
-const SectionContainer = styled.div`
-  display: flex;
-  flex-direction: row;
-  flex: 1;
-  gap: 1rem;
-  width: 100%;
-  padding-bottom: 1.5rem;
-  border-bottom: 1px #E9E9E9 solid;
-  // overflow: scroll;
 `;
 
 const Divider = styled.div`
   width: 100%;
-  border-bottom: 1px solid #E9E9E9;
+  border-bottom: 1px solid ${theme.colors.border};
 `;
 
 const ButtonContainer = styled.div`
@@ -184,7 +140,7 @@ const TabButton = styled.button`
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  font-family: relative-medium-pro;
+  font-family: ${theme.typography.fontFamilies.medium};
   font-size: 1rem;
   color: ${props => props.isActive ? theme.colors.primary : theme.colors.text.tertiary}; 
   background-color: ${props => props.isActive ? theme.colors.background.vermPale : theme.colors.background.primary}; 
@@ -192,7 +148,7 @@ const TabButton = styled.button`
   transform-origin: center center;
 
   &:hover {
-    color: ${props => props.isActive ? '#E34234' : '#E34234'};
+    color: ${props => props.isActive ? theme.colors.background.verm : theme.colors.background.verm};
   }
 `;
 
@@ -215,14 +171,14 @@ const NoteContainer = styled.div`
 
 const IconWrapper = styled.div`
   flex-shrink: 0; 
-  width: 16px; 
-  height: 16px;
-  margin-top: 1px;
+  width: 1.25rem; 
+  height: 1.25rem;
 `;
 
 const NoteText = styled.p`
-  font-family: relative-medium-pro;
+  font-family: ${theme.typography.fontFamilies.medium};
   font-size: .875rem;
+  line-height: 1.25rem;
   color: ${theme.colors.text.secondary};
   margin: 0;
   padding: 0;

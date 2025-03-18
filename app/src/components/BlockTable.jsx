@@ -6,6 +6,7 @@ import { Link } from 'react-router-dom';
 import { ArrowDownIcon, ArrowUpIcon, BlockIcon, ChevronVerticalIcon } from './common/Icon';
 import { addCommas, formatSats, formatTimestampMs, shortenBytes } from '../utils/format'
 import InscriptionIcon from './InscriptionIcon';
+import Spinner from './Spinner';
 import theme from '../styles/theme';
 
 const BlockTable = () => {
@@ -101,7 +102,7 @@ const BlockTable = () => {
 
   const renderSortIcon = (column) => {
     if (blockSortColumn === column) {
-      return blockSortDescending ? <ArrowDownIcon size={'.875rem'} color={'#E34234'}></ArrowDownIcon> : <ArrowUpIcon size={'.875rem'} color={'#E34234'}></ArrowUpIcon>;
+      return blockSortDescending ? <ArrowDownIcon size={'.875rem'} color={theme.colors.background.verm}></ArrowDownIcon> : <ArrowUpIcon size={'.875rem'} color={theme.colors.background.verm}></ArrowUpIcon>;
     }
     return null;
   };
@@ -112,7 +113,7 @@ const BlockTable = () => {
         <DivRow header>
           <SortableDivCell header first={true} isActive={blockSortColumn === 'block_number'}>
             <HeaderWrapper isSortable isActive={blockSortColumn === 'block_number'} onClick={() => handleBlockSort("block_number")}>
-              Block {renderSortIcon("block_number")} {blockSortColumn != 'block_number' && (<ChevronVerticalIcon size={'.875rem'} color={'#959595'} />)}
+              Block {renderSortIcon("block_number")} {blockSortColumn != 'block_number' && (<ChevronVerticalIcon size={'.875rem'} color={theme.colors.text.secondary} />)}
             </HeaderWrapper>
           </SortableDivCell>
           <DivCell header>
@@ -122,119 +123,122 @@ const BlockTable = () => {
           </DivCell>
           <SortableDivCell header isActive={blockSortColumn === 'inscriptions'}>
             <HeaderWrapper isSortable isActive={blockSortColumn === 'inscriptions'} onClick={() => handleBlockSort("inscriptions")}>
-              Inscriptions {renderSortIcon("inscriptions")} {blockSortColumn != 'inscriptions' && (<ChevronVerticalIcon size={'.875rem'} color={'#959595'} />)}
+              Inscriptions {renderSortIcon("inscriptions")} {blockSortColumn != 'inscriptions' && (<ChevronVerticalIcon size={'.875rem'} color={theme.colors.text.secondary} />)}
             </HeaderWrapper>
           </SortableDivCell>
           <SortableDivCell header isActive={blockSortColumn === 'txs'}>
             <HeaderWrapper isSortable isActive={blockSortColumn === 'txs'} onClick={() => handleBlockSort("txs")}>
-              Transactions {renderSortIcon("txs")} {blockSortColumn != 'txs' && (<ChevronVerticalIcon size={'.875rem'} color={'#959595'} />)}
+              Transactions {renderSortIcon("txs")} {blockSortColumn != 'txs' && (<ChevronVerticalIcon size={'.875rem'} color={theme.colors.text.secondary} />)}
             </HeaderWrapper>
           </SortableDivCell>
           <SortableDivCell header isActive={blockSortColumn === 'size'}>
             <HeaderWrapper isSortable isActive={blockSortColumn === 'size'} onClick={() => handleBlockSort("size")}>
-              Size {renderSortIcon("size")} {blockSortColumn != 'size' && (<ChevronVerticalIcon size={'.875rem'} color={'#959595'} />)}
-            </HeaderWrapper>
-          </SortableDivCell>
-          <SortableDivCell header isActive={blockSortColumn === 'volume'}>
-            <HeaderWrapper isSortable isActive={blockSortColumn === 'volume'} onClick={() => handleBlockSort("volume")}>
-              Traded Volume {renderSortIcon("volume")} {blockSortColumn != 'volume' && (<ChevronVerticalIcon size={'.875rem'} color={'#959595'} />)}
+              Size {renderSortIcon("size")} {blockSortColumn != 'size' && (<ChevronVerticalIcon size={'.875rem'} color={theme.colors.text.secondary} />)}
             </HeaderWrapper>
           </SortableDivCell>
           <SortableDivCell header isActive={blockSortColumn === 'fees'}>
             <HeaderWrapper isSortable isActive={blockSortColumn === 'fees'} onClick={() => handleBlockSort("fees")}>
-              Total Fees {renderSortIcon("fees")} {blockSortColumn != 'fees' && (<ChevronVerticalIcon size={'.875rem'} color={'#959595'} />)}
+              Total Fees {renderSortIcon("fees")} {blockSortColumn != 'fees' && (<ChevronVerticalIcon size={'.875rem'} color={theme.colors.text.secondary} />)}
+            </HeaderWrapper>
+          </SortableDivCell>
+          <SortableDivCell header isActive={blockSortColumn === 'volume'}>
+            <HeaderWrapper isSortable isActive={blockSortColumn === 'volume'} onClick={() => handleBlockSort("volume")}>
+              Traded Volume {renderSortIcon("volume")} {blockSortColumn != 'volume' && (<ChevronVerticalIcon size={'.875rem'} color={theme.colors.text.secondary} />)}
             </HeaderWrapper>
           </SortableDivCell>
         </DivRow>
       </HeaderRow>
 
-      <ScrollContainer>
-        <InfiniteScroll
-          dataLength={blockData?.length}
-          next={fetchData}
-          hasMore={hasMore}
-          loader={
-            <LoaderContainer>
-              <p style={{color: '#959595'}}>Loading...</p>
-            </LoaderContainer>
-          }
-        >
-          {blockData.map((row, index) => (
-            <DivRow key={index}>
-              <DivCell first={true}>
-                <DataWrapper first={true}>
-                  <CollectionLink to={"/block/" + row?.block_number}>
-                    <IconWrapper>
-                      {row?.block_inscription_count > 0 && <InscriptionIcon endpoint={"/bun/block_icon/"+row.block_number} useBlockIconDefault={true} size={'2.25rem'} /> }
-                    </IconWrapper>
-                    <CollectionName>{addCommas(row.block_number)}</CollectionName>
-                  </CollectionLink>
-                </DataWrapper>
-              </DivCell>
-              <DivCell>
-                <DataWrapper>
-                  {row?.block_timestamp ? formatTimestampMs(row.block_timestamp) : ""}
-                </DataWrapper>
-              </DivCell>
-              <DivCell>
-                <DataWrapper>
-                  {row?.block_inscription_count ? addCommas(row.block_inscription_count) : 0}
-                </DataWrapper>
-              </DivCell>
-              <DivCell>
-                <DataWrapper>
-                  {addCommas(row?.block_tx_count)}
-                </DataWrapper>
-              </DivCell>
-              <DivCell>
-                <DataWrapper>
-                  {row?.block_size ? (
-                    <ValueWrapper>
-                      <span>{shortenBytes(row?.block_size).value}</span>
-                      <UnitText>{shortenBytes(row?.block_size).unit}</UnitText>
-                    </ValueWrapper>
-                  ) : (
-                    <ValueWrapper>
-                      <span>0</span>
-                      <UnitText>B</UnitText>
-                    </ValueWrapper>
-                  )}
-                </DataWrapper>
-              </DivCell>
-              <DivCell>
-                <DataWrapper>
-                  {row?.block_volume ? (
-                    <ValueWrapper>
-                      <span>{formatSats(row?.block_volume).value}</span>
-                      <UnitText>BTC</UnitText>
-                    </ValueWrapper>
-                  ) : (
-                    <ValueWrapper>
-                      <span>0</span>
-                      <UnitText>BTC</UnitText>
-                    </ValueWrapper>
-                  )}
-                </DataWrapper>
-              </DivCell>
-              <DivCell>
-                <DataWrapper>
-                  {row?.block_fees ? (
-                    <ValueWrapper>
-                      <span>{formatSats(row?.block_fees).value}</span>
-                      <UnitText>BTC</UnitText>
-                    </ValueWrapper>
-                  ) : (
-                    <ValueWrapper>
-                      <span>0</span>
-                      <UnitText>BTC</UnitText>
-                    </ValueWrapper>
-                  )}
-                </DataWrapper>
-              </DivCell>
-            </DivRow>
-          ))}
-        </InfiniteScroll>
-      </ScrollContainer>
+      {/* <ScrollContainer> */}
+      <InfiniteScroll
+        dataLength={blockData?.length}
+        next={fetchData}
+        hasMore={hasMore}
+        loader={
+          <LoaderContainer>
+            <Spinner />
+          </LoaderContainer>
+        }
+        scrollThreshold="0.8"
+        style={{ overflow: 'visible' }}
+      >
+        {blockData.map((row, index) => (
+          <DivRow key={index}>
+            <DivCell first={true}>
+              <DataWrapper first={true}>
+                <CollectionLink to={"/block/" + row?.block_number}>
+                  <IconWrapper>
+                    {row?.block_inscription_count > 0 && <InscriptionIcon endpoint={"/bun/block_icon/"+row.block_number} useBlockIconDefault={true} size={'2.25rem'} /> }
+                    <IconOverlay />
+                  </IconWrapper>
+                  <CollectionName>{addCommas(row.block_number)}</CollectionName>
+                </CollectionLink>
+              </DataWrapper>
+            </DivCell>
+            <DivCell>
+              <DataWrapper>
+                {row?.block_timestamp ? formatTimestampMs(row.block_timestamp) : ""}
+              </DataWrapper>
+            </DivCell>
+            <DivCell>
+              <DataWrapper>
+                {row?.block_inscription_count ? addCommas(row.block_inscription_count) : 0}
+              </DataWrapper>
+            </DivCell>
+            <DivCell>
+              <DataWrapper>
+                {addCommas(row?.block_tx_count)}
+              </DataWrapper>
+            </DivCell>
+            <DivCell>
+              <DataWrapper>
+                {row?.block_size ? (
+                  <ValueWrapper>
+                    <span>{shortenBytes(row?.block_size).value}</span>
+                    <UnitText>{shortenBytes(row?.block_size).unit}</UnitText>
+                  </ValueWrapper>
+                ) : (
+                  <ValueWrapper>
+                    <span>0</span>
+                    <UnitText>B</UnitText>
+                  </ValueWrapper>
+                )}
+              </DataWrapper>
+            </DivCell>
+            <DivCell>
+              <DataWrapper>
+                {row?.block_fees ? (
+                  <ValueWrapper>
+                    <span>{formatSats(row?.block_fees).value}</span>
+                    <UnitText>BTC</UnitText>
+                  </ValueWrapper>
+                ) : (
+                  <ValueWrapper>
+                    <span>0</span>
+                    <UnitText>BTC</UnitText>
+                  </ValueWrapper>
+                )}
+              </DataWrapper>
+            </DivCell>
+            <DivCell>
+              <DataWrapper>
+                {row?.block_volume ? (
+                  <ValueWrapper>
+                    <span>{formatSats(row?.block_volume).value}</span>
+                    <UnitText>BTC</UnitText>
+                  </ValueWrapper>
+                ) : (
+                  <ValueWrapper>
+                    <span>0</span>
+                    <UnitText>BTC</UnitText>
+                  </ValueWrapper>
+                )}
+              </DataWrapper>
+            </DivCell>
+          </DivRow>
+        ))}
+      </InfiniteScroll>
+      {/* </ScrollContainer> */}
     </TableContainer>
   )
 }
@@ -249,7 +253,7 @@ const TableContainer = styled.div`
 const HeaderRow = styled.div`
   position: sticky;
   top: 4.5rem; 
-  background-color: white;
+  background-color: ${theme.colors.background.white};
   z-index: 10;
 `;
 
@@ -264,7 +268,7 @@ const LoaderContainer = styled.div`
   justify-content: center;
   align-items: center;
   width: 100%;
-  padding-top: 1.5rem;
+  padding-top: 2rem;
 `;
 
 const BlockImg = styled.img`
@@ -303,7 +307,7 @@ const DivRow = styled.div`
   }
 
   &:not(:last-child) {
-    border-bottom: 1px solid #F5F5F5;
+    border-bottom: 1px solid ${theme.colors.background.primary};  
   }
 `;
 
@@ -315,9 +319,9 @@ const DivCell = styled.div`
   gap: 1rem;
   flex: 1;
   margin: ${props => props.first ? '0 1rem 0 0' : '0'};
-  font-family: relative-medium-pro;
+  font-family: ${theme.typography.fontFamilies.medium};
   font-size: ${props => props.header ? '.875rem' : '.875rem'};;
-  color: ${props => props.header ? theme.colors.text.secondary : '#000000'};
+  color: ${props => props.header ? theme.colors.text.secondary : theme.colors.text.primary};
   min-width: 0;
 
   &:nth-child(1) {
@@ -333,8 +337,8 @@ const DivCell = styled.div`
     // padding-right: ${props => props.header ? 'none' : '.5rem'};
   }
 
-  // Hide "Creation Date" column on screens smaller than 1600px
-  @media (max-width: 1600px) {
+  // Hide "Creation Date" column on screens smaller than 1400px
+  @media (max-width: 1400px) {
     &:nth-child(2) {
       display: none;
     }
@@ -354,15 +358,15 @@ const DivCell = styled.div`
     }
   }
 
-  // Hide "Traded Volume" column on screens smaller than 800px
+  // Hide "Total Fees" column on screens smaller than 800px
   @media (max-width: 800px) {
     &:nth-child(6) {
       display: none;
     }
   }
 
-  // Hide "Total Fees" column on screens smaller than 600px
-  @media (max-width: 600px) {
+  // Hide "Traded Volume" column on screens smaller than 630px
+  @media (max-width: 630px) {
     &:nth-child(7) {
       display: none;
     }
@@ -384,17 +388,18 @@ const SortableDivCell = styled.div`
   gap: 1rem;
   flex: 1;
   margin: ${props => props.first ? '0 1rem 0 0' : '0'};
-  font-family: relative-medium-pro;
+  font-family: ${theme.typography.fontFamilies.medium};
   font-size: .875rem;
-  color: ${props => props.isActive ? '#E34234' : '#959595'};
+  color: ${props => props.isActive ? theme.colors.background.verm : theme.colors.text.secondary};
+  
   &:nth-child(1) {
     justify-content: flex-start;
     padding-left: .5rem;
     flex: 2;
   }
 
-  // Hide "Creation Date" column on screens smaller than 1600px
-  @media (max-width: 1600px) {
+  // Hide "Creation Date" column on screens smaller than 1400px
+  @media (max-width: 1400px) {
     &:nth-child(2) {
       display: none;
     }
@@ -414,15 +419,15 @@ const SortableDivCell = styled.div`
     }
   }
 
-  // Hide "Traded Volume" column on screens smaller than 800px
+  // Hide "Total Fees" column on screens smaller than 800px
   @media (max-width: 800px) {
     &:nth-child(6) {
       display: none;
     }
   }
 
-  // Hide "Total Fees" column on screens smaller than 600px
-  @media (max-width: 600px) {
+  // Hide "Traded Volume" column on screens smaller than 630px
+  @media (max-width: 630px) {
     &:nth-child(7) {
       display: none;
     }
@@ -441,7 +446,7 @@ const HeaderWrapper = styled.span`
   flex-direction: row;
   align-items: center;
   padding: ${props => props.first ? '0.25rem 0' : '0.25rem .5rem'};
-  background-color: ${props => props.isActive ? '#F5F5F5' : 'transparent'};
+  background-color: ${props => props.isActive ? theme.colors.background.primary : 'transparent'};
   border-radius: .5rem;
   cursor: ${props => props.isSortable ? 'pointer' : ''};
 `;
@@ -472,7 +477,7 @@ const CollectionLink = styled(Link)`
 `;
 
 const IconWrapper = styled.div`
-  background-color: #F6F6F6;
+  background-color: ${theme.colors.background.primary};
   position: relative;
   width: 2.25rem;
   height: 2.25rem;
@@ -490,31 +495,20 @@ const CollectionName = styled.span`
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  padding-bottom: 4px;
-
-  &::after {
-    content: '';
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    width: 100%;
-    height: 2px;
-    background-color: ${theme.colors.text.tertiary};
-    border-radius: 2px;
-    opacity: 0;
-    transition: opacity 200ms ease;
-  }
+  text-decoration-line: underline;
+  text-decoration-color: transparent;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 2px;
+  transition: all 200ms ease;
 
   ${CollectionLink}:hover & {
-    &::after {
-      opacity: 1;
-    }
+    text-decoration-color: ${theme.colors.text.primary};
   }
 `;
 
 const UnitText = styled.span`
   color: #C2C2C2;
-  font-family: Relative Trial Medium;
+  font-family: ${theme.typography.fontFamilies.medium};
 `;
 
 const ValueWrapper = styled.div`
@@ -523,9 +517,16 @@ const ValueWrapper = styled.div`
   gap: 0.25rem;
 `;
 
-const UnstyledLink = styled(Link)`
-  color: unset;
-  text-decoration: unset;
+const IconOverlay = styled.div`
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 100%;
+  width: 100%;
+  cursor: pointer;
+  z-index: 2;
 `;
 
 export default BlockTable;
