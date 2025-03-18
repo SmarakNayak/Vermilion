@@ -114,7 +114,7 @@ const GridContainer = styled.div`
   }
 
   @media (max-width: 630px) {
-    grid-template-columns: ${props => props.zoomGrid ? 'repeat(1, minmax(0, 1fr))' : 'repeat(3, minmax(0, 1fr))'};
+    grid-template-columns: ${props => props.zoomGrid ? 'repeat(2, minmax(0, 1fr))' : 'repeat(3, minmax(0, 1fr))'};
   }
 
   @media (max-width: 480px) {

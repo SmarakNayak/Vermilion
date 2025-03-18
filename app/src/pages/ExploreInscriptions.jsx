@@ -106,10 +106,11 @@ const MainContainer = styled.div`
   flex-direction: column;
   align-items: center;
   gap: 1.5rem;
+  transition: all 200ms ease;
 
   @media (max-width: 864px) {
-    width: calc(100% - 3rem);
-    padding: 1.5rem 1.5rem 2.5rem 1.5rem;
+    width: calc(100% - 2rem);
+    padding: 1.5rem 1rem 2.5rem 1rem;
   }
 `;
 
