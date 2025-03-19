@@ -268,6 +268,14 @@ async function renderContent(url, retryCount = 0, fullPage = true) {
       console.log('Network aborted, trying again: ', url);
       return renderContent(url, retryCount + 1, false);
 
+    } else if (error.message.includes('Target.closeTarget timed out')) {
+      if (retryCount > 1) {
+        console.log(`Close target error after 2 retries`);
+        return {buffer, renderStatus: "CLOSETARGET_ABORTED"};
+      };
+      console.log('Close target timed out, trying again: ', url);
+      return renderContent(url, retryCount + 1, false);
+
     } else {
       throw new Error(`Unhandled puppeteer error: ${url}`, { cause: error });
     }
