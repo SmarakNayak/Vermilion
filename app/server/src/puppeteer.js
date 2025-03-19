@@ -8,10 +8,19 @@ const browserPool = {
   browsers: [],
   inUse: new Set(),
   initialized: false,
+  initializing: false,
   
   async initialize() {
-    if (this.initialized) return;    
-    this.initialized = true;
+    if (this.initialized) return;
+    if (this.initializing) return new Promise(resolve => {
+      const checkInterval = setInterval(() => {
+        if (this.initialized) {
+          clearInterval(checkInterval);
+          resolve();
+        }
+      }, 100);
+    });
+    this.initializing = true;
     
     console.log(`Initializing browser pool with ${POOL_SIZE} instances... cleaning up any existing Chrome processes`);
     const cleanup = Bun.spawn(['pkill', '-f', 'chrome'], {
@@ -35,6 +44,8 @@ const browserPool = {
         this.browsers.push(browser);
       }
       console.log("Browser pool ready");
+      this.initialized = true;
+      this.initializing = false;
     } catch (err) {
       await this.closeAll();
       throw new Error("Error initializing browser pool", { cause: err });
