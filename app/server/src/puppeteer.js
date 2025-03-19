@@ -9,6 +9,17 @@ const browserPool = {
   inUse: new Set(),
   initialized: false,
   initializing: false,
+
+  async launchBrowser() {
+    return await puppeteer.launch({
+      headless: true,
+      protocolTimeout: 5000,
+      handleSIGINT: false,
+      handleSIGTERM: false,
+      handleSIGHUP: false,
+      args: ['--disable-dev-shm-usage']
+    });
+  },
   
   async initialize() {
     if (this.initialized) return;
@@ -32,15 +43,7 @@ const browserPool = {
     if (exitCode === 0) console.log("Chrome processes killed");
     try {
       for (let i = 0; i < POOL_SIZE; i++) {
-        const browser = await puppeteer.launch({ 
-          headless: true,
-          protocolTimeout: 5000,
-          handleSIGINT: false,
-          handleSIGTERM: false,
-          handleSIGHUP: false,
-          args: ['--disable-dev-shm-usage']
-          // args: ['--no-sandbox', '--disable-dev-shm-usage'] 
-        });
+        const browser = await this.launchBrowser();
         this.browsers.push(browser);
       }
       console.log("Browser pool ready");
@@ -80,6 +83,52 @@ const browserPool = {
   
   releaseBrowser(browser) {
     this.inUse.delete(browser);
+  },
+
+  async killAndReplaceBrowser(browser) {
+    try {
+      console.log("Attempting to kill and replace browser...");
+
+      // Check if the browser is in the pool
+      const browserIndex = this.browsers.indexOf(browser);
+      if (browserIndex === -1) {
+        console.log("Browser not found in pool, skipping...");
+        return;
+      }
+      this.inUse.delete(browser);
+      await Promise.race([
+        browser.close(),
+        new Promise((_, reject) =>
+          setTimeout(() => reject(new Error("Browser close timeout")), 5000)
+        ),
+      ]);
+      console.log("Browser closed gracefully");
+    } catch (err) {
+      if (browser.process()) {
+        console.log("Failed to close browser gracefully - force killing browser process...");
+        let killed = await browser.process().kill("SIGKILL");
+        if (killed) {
+          console.log("Browser process killed");
+        } else {
+          throw new Error("Failed to kill browser process", { cause: err });
+        }
+      } else {
+        throw new Error("Failed to close browser gracefully, cannot force kill as no browser process found", { cause: err });
+      }
+    } finally {
+      // Remove the browser from the pool
+      this.browsers = this.browsers.filter(b => b !== browser);
+
+      // Launch a new browser to replace it
+      try {
+        const newBrowser = await this.launchBrowser();
+        this.browsers.push(newBrowser);
+        console.log("New browser added to pool");
+      } catch (err) {
+        throw new Error("Failed to launch replacement browser", { cause: err });
+        // If replacement fails, you might want to retry or handle differently
+      }
+    }
   },
   
   async closeAll() {
@@ -228,8 +277,17 @@ async function renderContent(url, retryCount = 0, fullPage = true) {
     browserPool.releaseBrowser(browser);
 
   } catch (error) {
-    await page.close();
-    browserPool.releaseBrowser(browser);
+    try {        
+      await page.close();
+      browserPool.releaseBrowser(browser);
+    } catch (err) {
+      if (err.message.includes('Target.closeTarget timed out')) {
+        process.stdout.write('Page close timed out - ');
+        await browserPool.killAndReplaceBrowser(browser);
+      } else {
+        throw new Error(`Error closing page for: ${url}`, { cause: err });
+      }
+    }
 
     if (error.message.includes('Navigation timeout')) {
       if (retryCount > 1) {
@@ -277,14 +335,6 @@ async function renderContent(url, retryCount = 0, fullPage = true) {
         return {buffer, renderStatus: "NETWORK_ABORTED"};
       };
       console.log('Network aborted, trying again: ', url);
-      return renderContent(url, retryCount + 1, false);
-
-    } else if (error.message.includes('Target.closeTarget timed out')) {
-      if (retryCount > 1) {
-        console.log(`Close target error after 2 retries`);
-        return {buffer, renderStatus: "CLOSETARGET_ABORTED"};
-      };
-      console.log('Close target timed out, trying again: ', url);
       return renderContent(url, retryCount + 1, false);
 
     } else {
