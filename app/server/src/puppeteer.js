@@ -143,29 +143,6 @@ const browserPool = {
   }
 };
 
-async function renderContentWrapper(url) {
-  let startTime = performance.now();
-  
-  // Get a browser from the pool
-  const browser = await browserPool.getBrowser();
-  let launchTime = performance.now();
-  
-  const page = await browser.newPage();
-  try {
-    const screenshotBuffer = await captureStableScreenshot(page, url);
-    let endTime = performance.now();
-    console.log('Browser acquisition time:', launchTime - startTime);
-    console.log('Render time:', endTime - launchTime);
-    return screenshotBuffer;
-  } catch (error) {
-    throw new Error(`Error rendering content for: ${url} `, { cause: error });
-  } finally {
-    await page.close();
-    // Release the browser back to the pool
-    browserPool.releaseBrowser(browser);
-  }
-}
-
 async function renderContent(url, retryCount = 0, fullPage = true) {
   let startTime = performance.now();
   let buffer;

@@ -1,7 +1,7 @@
 import db from './src/db';
 import bundexer from './src/bundexer';
 import { renderContent, browserPool } from './src/puppeteer';
-import { addInscriptionPreviewsToHtml } from './src/ssr';
+import { addInscriptionPreviewsToHtml, renderInscriptionCard } from './src/ssr';
 
 // Configuration - use local address in production or fall back to external URL
 const isProd = process.env.NODE_ENV === 'production';
@@ -32,6 +32,17 @@ const server = Bun.serve({
       if (!row) return new Response('No inscriptions found in block', { status: 404 });
       return getRenderedContentResponse(row.id, row.content_type, row.is_recursive);      
     },
+    '/inscription_card/:id': async req => {
+      let metadata =  await fetch(apiBaseUrl + "/api/inscription_metadata/" + req.params.id);
+      let metadataJson = await metadata.json();
+      let card = await renderInscriptionCard({
+        inscriptionMetadata: metadataJson,
+        host: 'blue.vermilion.place'
+      });
+      return new Response(card, {
+        headers: { 'Content-Type': 'image/png' },
+      });
+    },
     // ssr routes
     '/ssr/inscription/:number': async req => {
       let metadata =  await fetch(apiBaseUrl + "/api/inscription_metadata_number/" + req.params.number);
@@ -47,7 +58,7 @@ const server = Bun.serve({
   }
 });
 
-bundexer.runBundexer();
+//bundexer.runBundexer();
 
 async function getRenderedContentResponse(id, content_type, is_recursive) {
   if (content_type?.startsWith('text/html') || (content_type?.startsWith('image/svg') && is_recursive)) {
