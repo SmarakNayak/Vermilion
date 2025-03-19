@@ -5,8 +5,8 @@ export const theme = {
     
     // Text colors
     text: {
-      primary: '#121212',    // Main text color
-      secondary: '#848281',  // Secondary text, captions, etc.
+      primary: '#0A0A0A',    // Main text color
+      secondary: '#999999',  // Secondary text, captions, etc.
       tertiary: '#C2C2C2',   // Tertiary text, inactive, etc.
       white: '#FFFFFF',      // White text
     },
@@ -15,7 +15,7 @@ export const theme = {
     background: {
       aqua: '#5EDED1',       // Aqua background (used in logo)
       aquaLight: '#BFF2ED',   // Dark aqua background (used in logo)
-      dark: '#121212',       // Dark background (used in important buttons)
+      dark: '#0A0A0A',       // Dark background (used in important buttons)
       light: '#FBFAF9',
       primary: '#F6F6F6',    // Primary background (used in buttons, cards)
       purp: '#D23B75',       // Runes color
