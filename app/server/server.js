@@ -58,7 +58,7 @@ const server = Bun.serve({
   }
 });
 
-//bundexer.runBundexer();
+bundexer.runBundexer();
 
 async function getRenderedContentResponse(id, content_type, is_recursive) {
   if (content_type?.startsWith('text/html') || (content_type?.startsWith('image/svg') && is_recursive)) {
