@@ -67,10 +67,6 @@ async function rewriteMetaTagsFromFile({
       .replace(
         /<title>.*<\/title>/i,
         `<title>${title}</title>`
-      )
-      .replace(
-        '<!-- Social sharing - Twitter -->',
-        '<!-- Social sharing - Twitter -->\n<meta name="twitter:card" content="summary" />\n<meta name="twitter:image" content="https://blue.vermilion.place/verm-black-512.png"'
       );
 
     return updatedHtml;
