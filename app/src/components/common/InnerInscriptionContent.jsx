@@ -229,7 +229,7 @@ const TextContainer = styled.div`
   justify-content: ${props => props.isCentered ? 'center' : ''};
   margin: 0;
   font-size: .875rem;
-  font-family: Relative Trial Medium;
+  font-family: ${theme.typography.fontFamilies.medium};
   color: ${props => props.loading ? '#959595' : '#000000'};
   object-fit: contain;
   aspect-ratio: 1/1;
@@ -283,7 +283,7 @@ const ModelViewerContainer = styled.div`
 `;
 
 const MediaText = styled.p`
-  font-family: Relative Trial Medium;
+  font-family: ${theme.typography.fontFamilies.medium};
   font-size: .875rem;
   color: #000000;
   margin: 0;
