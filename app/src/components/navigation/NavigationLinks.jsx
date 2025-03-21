@@ -1,8 +1,9 @@
 import PropTypes from 'prop-types'
 import styled from 'styled-components'
-import { ChevronDownSmallIcon } from '../common/Icon'
+import { BlockIcon, ChevronDownSmallIcon, DiscoverIcon, ExploreIcon, GalleryIcon, GridIcon, SparklesIcon } from '../common/Icon'
 import { useState } from 'react'
 import theme from '../../styles/theme';
+import { Link } from 'react-router-dom';
 
 const NavContainer = styled.nav`
   display: flex;
@@ -25,23 +26,35 @@ const NavLinkWrapper = styled.div`
   }
 `;
 
-const NavLink = styled.span`
+const NavLink = styled(Link)`
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: .25rem;
-  font-family: relative-medium-pro;
+  gap: .375rem;
+  font-family: ${theme.typography.fontFamilies.medium};
+  line-height: 1.25rem;
   height: 2.5rem;
   padding: 0 1rem;
   border-radius: 1.25rem;
-  color: ${({theme}) => theme.colors.text.secondary};
-  background-color: ${props => props.active ? '#000000' : 'transparent'};
+  color: ${theme.colors.text.secondary};
+  background-color: ${theme.colors.background.white};
   cursor: pointer;
   transition: all 200ms ease;
+  text-decoration: none;
+  svg {
+    color: ${theme.colors.text.secondary};
+    fill: ${theme.colors.text.secondary};
+    transition: all 200ms ease;
+  }
 
   &:hover {
-    background-color: ${props => props.active ? '#000000' : theme.colors.background.primary};
-    color: ${({theme}) => theme.colors.text.primary};
+    background-color: ${theme.colors.background.primary};
+    color: ${theme.colors.text.primary};
+
+    svg {
+      color: ${theme.colors.text.primary};
+      fill: ${theme.colors.text.primary};
+    }
   }
 `;
 
@@ -49,10 +62,10 @@ const DropdownContainer = styled.div`
   position: absolute;
   top: calc(100% + .5rem);
   left: 0;
-  background-color: ${({theme}) => theme.colors.background.white};
-  // border: 1px solid ${({theme}) => theme.colors.background.primary};
-  border-radius: ${({theme}) => theme.borderRadius.large};
-  box-shadow: ${({theme}) => theme.shadows.soft};
+  background-color: ${theme.colors.background.white};
+  // border: 1px solid ${theme.colors.background.primary};
+  border-radius: ${theme.borderRadius.large};
+  box-shadow: ${theme.shadows.soft};
   min-width: 12rem;
   padding: .25rem;
   display: flex;
@@ -76,17 +89,28 @@ const DropdownContainer = styled.div`
 const DropdownItem = styled.a`
   display: flex;
   align-items: center;
-  font-family: relative-medium-pro;
+  gap: .375rem;
+  font-family: ${theme.typography.fontFamilies.medium};
   padding: 0 .75rem;
   height: 2.5rem;
-  border-radius: ${({theme}) => theme.borderRadius.medium};
-  color: ${({theme}) => theme.colors.text.secondary};
+  border-radius: ${theme.borderRadius.medium};
+  color: ${theme.colors.text.secondary};
   text-decoration: none;
   transition: all 200ms ease;
+  svg {
+    color: ${theme.colors.text.secondary};
+    fill: ${theme.colors.text.secondary};
+    transition: all 200ms ease;
+  }
 
   &:hover {
-    background-color: ${({theme}) => theme.colors.background.primary};
-    color: ${({theme}) => theme.colors.text.primary};
+    background-color: ${theme.colors.background.primary};
+    color: ${theme.colors.text.primary};
+
+    svg {
+      color: ${theme.colors.text.primary};
+      fill: ${theme.colors.text.primary};
+    }
   }
 `;
 
@@ -94,17 +118,30 @@ const NavigationLinks = () => {
   return (
     <NavContainer>
       <NavLinkWrapper>
-        <NavLink>
+        <NavLink to={'/explore/inscriptions'}>
+          <ExploreIcon size={'1.25rem'} />
           Explore
         </NavLink>
         <DropdownContainer className="dropdown">
-          <DropdownItem href="/explore/inscriptions">Inscriptions</DropdownItem>
-          <DropdownItem href="/explore/blocks">Blocks</DropdownItem>
-          <DropdownItem href="/explore/collections">Collections</DropdownItem>
+          <DropdownItem href="/explore/inscriptions">
+            <GridIcon size={'1.25rem'} />
+            Inscriptions
+          </DropdownItem>
+          <DropdownItem href="/explore/blocks">
+            <BlockIcon size={'1.25rem'} />
+            Blocks
+          </DropdownItem>
+          <DropdownItem href="/explore/collections">
+            <GalleryIcon size={'1.25rem'} />  
+            Collections
+          </DropdownItem>
         </DropdownContainer>
       </NavLinkWrapper>
-      <NavLink>Discover</NavLink>
-      <NavLink>Search</NavLink>
+      <NavLink to="/discover">
+        <DiscoverIcon size={'1.25rem'} />
+        Discover
+      </NavLink>
+      {/* <NavLink>Search</NavLink> */}
     </NavContainer>
   );
 }

@@ -22,6 +22,7 @@ export const theme = {
       purpPale: '#FAEBF1',   // Runes color, pale
       secondary: '#EAEAEA',  // Secondary background (used in hover states)
       verm: '#E94E20',       // Brand color
+      vermBorder: '#FAD1C7', // Brand color, border
       vermPale: '#FDEDE9',   // Brand color, pale
       white: '#FFFFFF',      // Default page background
     },
