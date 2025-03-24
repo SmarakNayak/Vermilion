@@ -1,6 +1,7 @@
 import React from 'react';
 import styled from 'styled-components';
 import { Link } from "react-router-dom";
+import theme from '../styles/theme';
 
 const Tag = ({ category, isLarge, value }) => (
   <TagContainer>
@@ -12,7 +13,7 @@ const Tag = ({ category, isLarge, value }) => (
 );
 
 const TagContainer = styled.button`
-  border-radius: .5rem;
+  border-radius: .25rem;
   border: none;
   padding: .25rem .5rem;
   margin: 0;
@@ -21,11 +22,9 @@ const TagContainer = styled.button`
   justify-content: center;
   cursor: pointer;
   gap: .25rem;
-  font-family: Relative Trial Medium;
-  background-color: #F5F5F5;
-  transition: 
-    background-color 350ms ease,
-    transform 150ms ease;
+  font-family: ${theme.typography.fontFamilies.medium};
+  background-color: ${theme.colors.background.primary};
+  transition: all 200ms ease;
   transform-origin: center center;
   white-space: nowrap;
   overflow: hidden;
@@ -33,7 +32,7 @@ const TagContainer = styled.button`
   max-width: 100%;
 
   &:hover {
-    background-color: #E9E9E9;
+    background-color: ${theme.colors.background.secondary};
   }
 
   &:active {
@@ -43,7 +42,7 @@ const TagContainer = styled.button`
 
 const TagSpan = styled.span`
   font-size: ${props => props.isLarge ? '1rem' : '.875rem'};
-  color: ${props => props.isValue ? '#000000' : '#959595'};
+  color: ${props => props.isValue ? theme.colors.text.primary : theme.colors.text.secondary};
   overflow: hidden;
   text-overflow: ellipsis;
 `;

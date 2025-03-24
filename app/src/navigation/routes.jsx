@@ -15,7 +15,6 @@ import Search from '../pages/Search'
 import NotFound from '../pages/NotFound'
 import Edition from '../pages/Edition'
 
-
 import { addCommas, formatAddress } from '../utils/format';
 
 const useDocumentTitle = (titleOrFn) => {
@@ -109,12 +108,7 @@ const Navigation = () => {
           />
           <Route 
             path="/collection/:symbol" 
-            element={
-              <TitledComponent 
-                title={(params) => `${params.symbol}`}
-                Component={Collection} 
-              />
-            } 
+            element={<CollectionWithDynamicTitle />}
           />
           <Route path="/discover" element={<TitledComponent title="Discover" Component={Discover} />} />
           <Route path="/trending" element={<TitledComponent title="Trending" Component={Trending} />} />
