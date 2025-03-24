@@ -25,6 +25,7 @@ const TopBarContainer = styled.header`
 
   @media (max-width: 630px) {
     gap: 0.5rem;
+    padding: 0.75rem 1rem;
   }
 `;
 

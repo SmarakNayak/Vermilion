@@ -125,6 +125,11 @@ const MenuHeader = styled.div`
   align-items: center;
   justify-content: space-between;
   padding: 1rem;
+  transition: all 200ms ease;
+
+  @media (max-width: 630px) {
+    padding: 0.75rem 1rem;
+  }
 `;
 
 const CloseButton = styled.button`

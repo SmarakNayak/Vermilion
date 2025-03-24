@@ -314,7 +314,7 @@ const SearchInputSection = styled.div`
   @media (max-width: 630px) {
     transition: all 200ms ease;
     justify-content: space-between;
-    padding: 1rem;
+    padding: 0.75rem 1rem;
   }
 `;
 
