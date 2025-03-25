@@ -71,6 +71,16 @@ export const ImageContainer = styled.div`
   justify-content: center;
 `;
 
+export const ProfileContainer = styled.div`
+  width: 8rem;
+  height: 8rem;
+  background-color: ${theme.colors.background.primary};
+  border-radius: 4rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+`;
+
 export const HorizontalDivider = styled.div`
   width: 100%;
   border-bottom: 1px solid ${theme.colors.border};

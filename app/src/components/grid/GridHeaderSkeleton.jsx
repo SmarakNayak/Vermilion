@@ -31,18 +31,21 @@ const SkeletonBase = styled.div`
 const SkeletonRect = styled(SkeletonBase)`
   width: ${props => props.width || '100%'};
   height: ${props => props.height || '1rem'};
+  border-radius: ${props => props.isProfile ? '4rem' : '4px'};
 `;
 
-export const GridHeaderSkeleton = ({ pageType, hasDescription, numTags }) => (
+export const GridHeaderSkeleton = ({ pageType, isProfile, removeInfoText, hasDescription, numTags, removeTags }) => (
   <>
     <HeaderContainer>
       <MainContentStack>
         <InfoText>{pageType}</InfoText>
         <DetailsStack>
-          <SkeletonRect width={'8rem'} height={'8rem'} />
+          <SkeletonRect width={'8rem'} height={'8rem'} isProfile={isProfile} />
           <Stack gap={'.5rem'}>
             <SkeletonRect width={'12rem'} height={'2.5rem'} />
-            <SkeletonRect width={'8rem'} height={'1.25rem'} />
+            {!removeInfoText && (
+              <SkeletonRect width={'8rem'} height={'1.25rem'} />
+            )}
           </Stack>
         </DetailsStack>
       </MainContentStack>
@@ -52,11 +55,13 @@ export const GridHeaderSkeleton = ({ pageType, hasDescription, numTags }) => (
         <SkeletonRect width={'90%'} height={'3rem'} />
       </RowContainer>
     )}
-    <RowContainer style={{gap: '.5rem', flexFlow: 'wrap'}}>
-      {[...Array(numTags)].map((_, index) => (
-        <SkeletonRect key={index} width={'10rem'} height={'1.75rem'} />
-      ))}
-    </RowContainer>
+    {!removeTags && (
+      <RowContainer style={{gap: '.5rem', flexFlow: 'wrap'}}>
+        {[...Array(numTags)].map((_, index) => (
+          <SkeletonRect key={index} width={'10rem'} height={'1.75rem'} />
+        ))}
+      </RowContainer>
+    )}
   </>
 );
 

@@ -6,6 +6,7 @@ import TopBar from '../components/navigation/TopBar';
 import ExploreBlocks from '../pages/ExploreBlocks';
 import ExploreCollections from '../pages/ExploreCollections';
 import ExploreInscriptions from '../pages/ExploreInscriptions';
+import Address from '../pages/Address';
 import Block from '../pages/Block';
 import SatBlock from '../pages/SatBlock';
 import Collection from '../pages/Collection';
@@ -79,7 +80,15 @@ const Navigation = () => {
           <Route path="/explore/blocks" element={<TitledComponent title="Blocks" Component={ExploreBlocks} />} />
           <Route path="/explore/collections" element={<TitledComponent title="Collections" Component={ExploreCollections} />} />
 
-          
+          <Route 
+            path="/address/:address" 
+            element={
+              <TitledComponent 
+                title={(params) => `Address ${formatAddress(params.address)}`} 
+                Component={Address} 
+              />
+            } 
+          />
           <Route 
             path="/block/:number" 
             element={
