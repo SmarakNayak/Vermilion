@@ -6,7 +6,7 @@ import Stack from '../Stack';
 import {
   HeaderContainer,
   MainContentStack,
-  CollectionStack,
+  DetailsStack,
   RowContainer,
 } from './Layout';
 
@@ -38,13 +38,13 @@ export const GridHeaderSkeleton = ({ pageType, hasDescription, numTags }) => (
     <HeaderContainer>
       <MainContentStack>
         <InfoText>{pageType}</InfoText>
-        <CollectionStack>
+        <DetailsStack>
           <SkeletonRect width={'8rem'} height={'8rem'} />
           <Stack gap={'.5rem'}>
             <SkeletonRect width={'12rem'} height={'2.5rem'} />
             <SkeletonRect width={'8rem'} height={'1.25rem'} />
           </Stack>
-        </CollectionStack>
+        </DetailsStack>
       </MainContentStack>
     </HeaderContainer>
     {hasDescription && (

@@ -28,7 +28,7 @@ export const MainContentStack = styled.div`
   }
 `;
 
-export const CollectionStack = styled.div`
+export const DetailsStack = styled.div`
   display: flex;
   flex-direction: row;
   align-items: center;
@@ -61,7 +61,7 @@ export const GalleryContainer = styled.div`
   width: 100%;
 `;
 
-export const CollectionImageContainer = styled.div`
+export const ImageContainer = styled.div`
   width: 8rem;
   height: 8rem;
   background-color: ${theme.colors.background.primary};

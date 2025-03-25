@@ -1,35 +1,41 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from "react-router-dom";
-import { renderToStaticMarkup } from 'react-dom/server';
-import styled from 'styled-components';
+import { theme } from '../styles/theme';
 
+// import components
 import PageContainer from '../components/layout/PageContainer';
 import {
   HeaderContainer,
   MainContentStack,
-  CollectionStack,
+  DetailsStack,
   SocialStack,
   RowContainer,
   GalleryContainer,
-  CollectionImageContainer,
+  ImageContainer,
   HorizontalDivider,
 } from '../components/grid/Layout';
+import GridControls from '../components/grid/GridControls';
+import { GridHeaderSkeleton } from '../components/grid/GridHeaderSkeleton';
 import MainText from '../components/common/text/MainText';
 import InfoText from '../components/common/text/InfoText';
 import UnstyledLink from '../components/common/UnstyledLink';
 import IconButton from '../components/common/buttons/IconButton';
 import Stack from '../components/Stack';
-import { addCommas, shortenDate, formatSatsString, shortenBytesString } from '../utils/format';
-import SortbyDropdown from '../components/Dropdown';
 import FilterMenu from '../components/FilterMenu';
 import GalleryInfiniteScroll from '../components/GalleryInfiniteScroll';
 import InscriptionIcon from '../components/InscriptionIcon';
 import Tag from '../components/Tag';
-import { BlockIcon, DotGridIcon, EyeIcon, FilterIcon, GridIcon, TwitterIcon, DiscordIcon, WebIcon } from '../components/common/Icon';
-import { theme } from '../styles/theme';
-import GridPageHeader from '../components/grid/GridPageHeader';
-import GridControls from '../components/grid/GridControls';
-import { GridHeaderSkeleton } from '../components/grid/GridHeaderSkeleton';
+
+// import icons
+import { TwitterIcon, DiscordIcon, WebIcon } from '../components/common/Icon';
+
+// import utils
+import { 
+  addCommas, 
+  shortenDate, 
+  formatSatsString, 
+  shortenBytesString 
+} from '../utils/format';
 
 const Collection = () => {
   const [baseApi, setBaseApi] = useState(null); 
@@ -108,18 +114,7 @@ const Collection = () => {
     console.log('Selected filter option:', filterOptions);
   };
 
-  const BlockIconDefault = encodeURIComponent(
-    renderToStaticMarkup(<BlockIcon size={'2rem'} color={'#E34234'} />)
-  );
-
-  const handleImageError = (event) => {
-    console.log("error image triggered")
-    event.target.onError = null;
-    event.target.src = `data:image/svg+xml,${BlockIconDefault}`;
-    //have to override default size of InscriptionIcon
-    event.target.style.width = "2.25rem"
-    event.target.style.height = "2.25rem"
-  };
+  const hasSocialLinks = collectionSummary?.twitter || collectionSummary?.discord || collectionSummary?.website;
 
   return (
     <PageContainer>
@@ -131,9 +126,47 @@ const Collection = () => {
         />
       ) : (
         <>
-          <GridPageHeader
-            collectionSummary={collectionSummary}
-          />
+          <HeaderContainer>
+            <MainContentStack>
+              <InfoText>Collection</InfoText>
+              <DetailsStack>
+                <ImageContainer>
+                  {collectionSummary?.range_start && (
+                    <InscriptionIcon endpoint={`/api/inscription_number/${collectionSummary?.range_start}`} useBlockIconDefault={false} size={'8rem'} />
+                  )}
+                </ImageContainer>
+                <Stack gap={'.5rem'}>
+                  <MainText>{collectionSummary?.name}</MainText>
+                  <InfoText>Created {collectionSummary?.first_inscribed_date ? shortenDate(collectionSummary.first_inscribed_date) : ""}</InfoText>
+                </Stack>
+              </DetailsStack>
+            </MainContentStack>
+            {hasSocialLinks && (
+              <SocialStack>
+                {collectionSummary?.twitter && (
+                  <UnstyledLink to={collectionSummary.twitter} target='_blank'>
+                    <IconButton>
+                      <TwitterIcon size={'1.25rem'} color={theme.colors.text.primary} />
+                    </IconButton>
+                  </UnstyledLink>
+                )}
+                {collectionSummary?.discord && (
+                  <UnstyledLink to={collectionSummary.discord} target='_blank'>
+                    <IconButton>
+                      <DiscordIcon size={'1.25rem'} color={theme.colors.text.primary} />
+                    </IconButton>
+                  </UnstyledLink>
+                )}
+                {collectionSummary?.website && (
+                  <UnstyledLink to={collectionSummary.website} target='_blank'>
+                    <IconButton>
+                      <WebIcon size={'1.25rem'} color={theme.colors.text.primary} />
+                    </IconButton>
+                  </UnstyledLink>
+                )}
+              </SocialStack>
+            )}
+          </HeaderContainer>
           {collectionSummary?.description && collectionSummary.description.trim() !== "" && (
             <RowContainer>
               <InfoText islarge={true}>{collectionSummary.description}</InfoText>
