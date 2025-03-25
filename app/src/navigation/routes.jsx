@@ -17,6 +17,7 @@ import Search from '../pages/Search';
 import NotFound from '../pages/NotFound';
 import Edition from '../pages/Edition';
 import Children from '../pages/Children';
+import References from '../pages/References';
 
 import { addCommas, formatAddress } from '../utils/format';
 
@@ -144,6 +145,15 @@ const Navigation = () => {
           <Route 
             path="/children/:number" 
             element={<ChildrenWithDynamicTitle />}
+          />
+          <Route 
+            path="/references/:number" 
+            element={
+              <TitledComponent 
+                title={(params) => `References of ${addCommas(params.number)}`} 
+                Component={References} 
+              />
+            }
           />
           <Route 
             path="/collection/:symbol" 
