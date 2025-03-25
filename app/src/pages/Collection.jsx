@@ -29,6 +29,7 @@ import { BlockIcon, DotGridIcon, EyeIcon, FilterIcon, GridIcon, TwitterIcon, Dis
 import { theme } from '../styles/theme';
 import GridPageHeader from '../components/grid/GridPageHeader';
 import GridControls from '../components/grid/GridControls';
+import { GridHeaderSkeleton } from '../components/grid/GridHeaderSkeleton';
 
 const Collection = () => {
   const [baseApi, setBaseApi] = useState(null); 
@@ -38,6 +39,7 @@ const Collection = () => {
   const [numberVisibility, setNumberVisibility] = useState(true);
   const [filterVisibility, setFilterVisibility] = useState(false);
   const [zoomGrid, setZoomGrid] = useState(true);
+  const [loading, setLoading] = useState(true);
 
   const [selectedSortOption, setSelectedSortOption] = useState('oldest');
   const [selectedFilterOptions, setSelectedFilterOptions] = useState({"Content Type": [], "Satributes": [], "Charms":[]});
@@ -56,10 +58,12 @@ const Collection = () => {
 
   useEffect(() => {
     const fetchContent = async () => {
+      setLoading(true);
       const response = await fetch("/api/collection_summary/" + symbol);
       let json = await response.json();
       console.log(json); // json object with collection data for debugging
       setCollectionSummary(json);
+      // setLoading(false);
     }
     fetchContent();
   },[symbol]);
@@ -119,21 +123,31 @@ const Collection = () => {
 
   return (
     <PageContainer>
-      <GridPageHeader
-        collectionSummary={collectionSummary}
-      />
-      {collectionSummary?.description && collectionSummary.description.trim() !== "" && (
-        <RowContainer>
-          <InfoText islarge={true}>{collectionSummary.description}</InfoText>
-        </RowContainer>
+      {loading ? (
+        <GridHeaderSkeleton 
+          pageType={'Collection'} 
+          hasDescription={true} 
+          numTags={5}
+        />
+      ) : (
+        <>
+          <GridPageHeader
+            collectionSummary={collectionSummary}
+          />
+          {collectionSummary?.description && collectionSummary.description.trim() !== "" && (
+            <RowContainer>
+              <InfoText islarge={true}>{collectionSummary.description}</InfoText>
+            </RowContainer>
+          )}
+          <RowContainer style={{gap: '.5rem', flexFlow: 'wrap'}}>
+            <Tag isLarge={true} value={collectionSummary?.supply ? addCommas(collectionSummary?.supply) : 0} category={'Supply'} />
+            <Tag isLarge={true} value={collectionSummary?.total_volume ? formatSatsString(collectionSummary.total_volume) : "0 BTC"} category={'Traded Volume'} />
+            <Tag isLarge={true} value={collectionSummary?.range_start ? addCommas(collectionSummary?.range_start) + " to " + addCommas(collectionSummary?.range_end) : ""} category={'Range'} />
+            <Tag isLarge={true} value={collectionSummary?.total_inscription_size ? shortenBytesString(collectionSummary.total_inscription_size) : 0} category={'Total Size'} />
+            <Tag isLarge={true} value={collectionSummary?.total_inscription_fees ? formatSatsString(collectionSummary.total_inscription_fees) : "0 BTC"} category={'Total Fees'} />
+          </RowContainer>
+        </>
       )}
-      <RowContainer style={{gap: '.5rem', flexFlow: 'wrap'}}>
-        <Tag isLarge={true} value={collectionSummary?.supply ? addCommas(collectionSummary?.supply) : 0} category={'Supply'} />
-        <Tag isLarge={true} value={collectionSummary?.total_volume ? formatSatsString(collectionSummary.total_volume) : "0 BTC"} category={'Traded Volume'} />
-        <Tag isLarge={true} value={collectionSummary?.range_start ? addCommas(collectionSummary?.range_start) + " to " + addCommas(collectionSummary?.range_end) : ""} category={'Range'} />
-        <Tag isLarge={true} value={collectionSummary?.total_inscription_size ? shortenBytesString(collectionSummary.total_inscription_size) : 0} category={'Total Size'} />
-        <Tag isLarge={true} value={collectionSummary?.total_inscription_fees ? formatSatsString(collectionSummary.total_inscription_fees) : "0 BTC"} category={'Total Fees'} />
-      </RowContainer>
       <HorizontalDivider></HorizontalDivider>
       <GridControls 
         filterVisibility={filterVisibility} 
