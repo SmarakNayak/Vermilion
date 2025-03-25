@@ -1,19 +1,20 @@
-import React, { useEffect, useState } from 'react'
-import styled from 'styled-components'
-import { BrowserRouter, Routes, Route, Navigate, useParams } from 'react-router-dom'
-import { Page } from '../components/layout/Page'
-import TopBar from '../components/navigation/TopBar'
-import ExploreBlocks from '../pages/ExploreBlocks'
-import ExploreCollections from '../pages/ExploreCollections'
-import ExploreInscriptions from '../pages/ExploreInscriptions'
-import Block from '../pages/Block'
-import Collection from '../pages/Collection'
-import Inscription from '../pages/Inscription'
-import Discover from '../pages/Discover'
-import Trending from '../pages/Trending'
-import Search from '../pages/Search'
-import NotFound from '../pages/NotFound'
-import Edition from '../pages/Edition'
+import React, { useEffect, useState } from 'react';
+import styled from 'styled-components';
+import { BrowserRouter, Routes, Route, Navigate, useParams } from 'react-router-dom';
+import { Page } from '../components/layout/Page';
+import TopBar from '../components/navigation/TopBar';
+import ExploreBlocks from '../pages/ExploreBlocks';
+import ExploreCollections from '../pages/ExploreCollections';
+import ExploreInscriptions from '../pages/ExploreInscriptions';
+import Block from '../pages/Block';
+import SatBlock from '../pages/SatBlock';
+import Collection from '../pages/Collection';
+import Inscription from '../pages/Inscription';
+import Discover from '../pages/Discover';
+import Trending from '../pages/Trending';
+import Search from '../pages/Search';
+import NotFound from '../pages/NotFound';
+import Edition from '../pages/Edition';
 
 import { addCommas, formatAddress } from '../utils/format';
 
@@ -85,6 +86,15 @@ const Navigation = () => {
               <TitledComponent 
                 title={(params) => `Block ${addCommas(params.number)}`} 
                 Component={Block} 
+              />
+            } 
+          />
+          <Route 
+            path="/sat_block/:number" 
+            element={
+              <TitledComponent 
+                title={(params) => `Sat Creation Block ${addCommas(params.number)}`} 
+                Component={SatBlock} 
               />
             } 
           />
