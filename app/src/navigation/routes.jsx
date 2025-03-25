@@ -16,6 +16,7 @@ import Trending from '../pages/Trending';
 import Search from '../pages/Search';
 import NotFound from '../pages/NotFound';
 import Edition from '../pages/Edition';
+import Children from '../pages/Children';
 
 import { addCommas, formatAddress } from '../utils/format';
 
@@ -60,6 +61,21 @@ const CollectionWithDynamicTitle = () => {
 
   return <Collection />
 }
+
+// New component for Children
+const ChildrenWithDynamicTitle = () => {
+  const [parentNumbers, setParentNumbers] = useState([]);
+  const { number } = useParams();
+
+  useDocumentTitle(() => {
+    if (parentNumbers.length > 0) {
+      return `Children of ${parentNumbers.map(num => addCommas(num)).join(' • ')}`;
+    }
+    return `Children of ${addCommas(number)}`;
+  });
+
+  return <Children setParentNumbers={setParentNumbers} />;
+};
 
 const PageWrapper = styled(Page)`
   display: flex;
@@ -124,6 +140,10 @@ const Navigation = () => {
                 Component={Edition} 
               />
             }
+          />
+          <Route 
+            path="/children/:number" 
+            element={<ChildrenWithDynamicTitle />}
           />
           <Route 
             path="/collection/:symbol" 
