@@ -63,7 +63,7 @@ const Collection = () => {
       let json = await response.json();
       console.log(json); // json object with collection data for debugging
       setCollectionSummary(json);
-      // setLoading(false);
+      setLoading(false);
     }
     fetchContent();
   },[symbol]);
