@@ -8,6 +8,7 @@ import ExploreCollections from '../pages/ExploreCollections';
 import ExploreInscriptions from '../pages/ExploreInscriptions';
 import Address from '../pages/Address';
 import Block from '../pages/Block';
+import Sat from '../pages/Sat';
 import SatBlock from '../pages/SatBlock';
 import Collection from '../pages/Collection';
 import Inscription from '../pages/Inscription';
@@ -112,6 +113,15 @@ const Navigation = () => {
               <TitledComponent 
                 title={(params) => `Block ${addCommas(params.number)}`} 
                 Component={Block} 
+              />
+            } 
+          />
+          <Route 
+            path="/sat/:sat" 
+            element={
+              <TitledComponent 
+                title={(params) => `Sat ${addCommas(params.sat)}`}  
+                Component={Sat} 
               />
             } 
           />
