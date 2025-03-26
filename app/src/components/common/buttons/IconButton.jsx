@@ -3,8 +3,10 @@ import styled from 'styled-components';
 import { theme } from '../../../styles/theme';
 
 const StyledButton = styled.button`
-  height: 2.75rem;
   width: 2.75rem;
+  height: 2.75rem;
+  min-width: 2.75rem;
+  min-height: 2.75rem;
   border-radius: 1.375rem;
   border: none;
   margin: 0;
