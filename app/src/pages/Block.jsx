@@ -144,6 +144,8 @@ const Block = () => {
         handleFilterOptionsChange={handleFilterOptionsChange} 
         selectedFilterOptions={selectedFilterOptions}
         filtersEnabled={true}
+        initialOption={'newest'}
+        includeRelevance={false}
       />
       {/* <RowContainer>
         <Stack horizontal={true} center={false} style={{gap: '.75rem'}}>

@@ -208,7 +208,7 @@ const Search = () => {
           </IconButton>
           <SortbyDropdown 
             onOptionSelect={handleSortOptionChange}
-            initialOption="most_relevant"
+            initialOption={'most_relevant'}
             includeRelevance={true}
           />
         </Stack>

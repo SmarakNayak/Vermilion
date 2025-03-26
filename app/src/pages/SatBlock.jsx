@@ -142,6 +142,8 @@ const SatBlock = () => {
         handleFilterOptionsChange={handleFilterOptionsChange} 
         selectedFilterOptions={selectedFilterOptions}
         filtersEnabled={true}
+        initialOption={'newest'}
+        includeRelevance={false}
       />
       <RowContainer>
         <FilterMenu isOpen={filterVisibility} onSelectionChange ={handleFilterOptionsChange} onClose={toggleFilterVisibility} initialSelection={selectedFilterOptions}></FilterMenu>

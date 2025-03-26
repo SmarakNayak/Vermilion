@@ -45,7 +45,7 @@ const References = () => {
   const [zoomGrid, setZoomGrid] = useState(true);
   const [loading, setLoading] = useState(true);
   
-  const [selectedSortOption, setSelectedSortOption] = useState('newest');
+  const [selectedSortOption, setSelectedSortOption] = useState('oldest');
   const [selectedFilterOptions, setSelectedFilterOptions] = useState({"Content Type": [], "Satributes": [], "Charms":[]});
 
   useEffect(() => {
@@ -139,6 +139,8 @@ const References = () => {
         handleFilterOptionsChange={handleFilterOptionsChange} 
         selectedFilterOptions={selectedFilterOptions}
         filtersEnabled={true}
+        initialOption={selectedSortOption}
+        includeRelevance={false}
       />
       <RowContainer>
         <FilterMenu isOpen={filterVisibility} onSelectionChange ={handleFilterOptionsChange} onClose={toggleFilterVisibility} initialSelection={selectedFilterOptions}></FilterMenu>

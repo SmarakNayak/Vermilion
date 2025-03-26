@@ -137,7 +137,7 @@ const Sat = () => {
         toggleGridType={toggleGridType} 
         handleSortOptionChange={handleSortOptionChange} 
         filtersEnabled={false}
-        initialOption='newest'
+        initialOption={'newest'}
         includeRelevance={false}
       />
       <RowContainer>

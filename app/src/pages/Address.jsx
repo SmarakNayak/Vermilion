@@ -103,24 +103,6 @@ const Address = () => {
 
   return (
     <PageContainer>
-      {/* <HeaderContainer>
-        <MainContentStack>
-          <InfoText>Address</InfoText>
-          <InfoStack>
-            <AddressProfileContainer>
-              <WalletIcon svgSize={'2rem'} svgColor={'#E34234'}></WalletIcon>
-            </AddressProfileContainer>
-            <Stack gap={'.5rem'}>
-              <MainText>{formatAddress(address)}</MainText>
-              <InfoButton isButton={true} onClick={() => copyText(address)}>
-                {formatAddress(address)}
-                <CopyIcon svgSize={'1rem'} svgColor={'#959595'} />
-              </InfoButton>
-            </Stack>
-          </InfoStack>
-        </MainContentStack>
-      </HeaderContainer> */}
-
       {loading ? (
         <GridHeaderSkeleton 
           pageType={'Address'} 
@@ -138,11 +120,9 @@ const Address = () => {
               <DetailsStack>
                 <ProfileContainer>
                   <WalletIcon size={'2rem'} color={theme.colors.background.verm}></WalletIcon>
-                  {/* <InscriptionIcon endpoint={"/api/block_icon/"+number} useBlockIconDefault={true} size={'8rem'} /> */}
                 </ProfileContainer>
                 <Stack gap={'.5rem'}>
                   <MainText>{formatAddress(address)}</MainText>
-                  {/* <InfoText>Created {formatTimestampMs(blockStats?.block_timestamp)}</InfoText> */}
                 </Stack>
               </DetailsStack>
             </MainContentStack>
@@ -161,6 +141,8 @@ const Address = () => {
         handleFilterOptionsChange={handleFilterOptionsChange} 
         selectedFilterOptions={selectedFilterOptions}
         filtersEnabled={true}
+        initialOption={'newest'}
+        includeRelevance={false}
       />
       <RowContainer>
         <FilterMenu isOpen={filterVisibility} onSelectionChange ={handleFilterOptionsChange} onClose={toggleFilterVisibility} initialSelection={selectedFilterOptions}></FilterMenu>

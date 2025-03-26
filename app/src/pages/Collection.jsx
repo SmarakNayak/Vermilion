@@ -193,6 +193,8 @@ const Collection = () => {
         handleFilterOptionsChange={handleFilterOptionsChange} 
         selectedFilterOptions={selectedFilterOptions}
         filtersEnabled={true}
+        initialOption={'oldest'}
+        includeRelevance={false}
       />
       <RowContainer>
         <FilterMenu isOpen={filterVisibility} onSelectionChange={handleFilterOptionsChange} onClose={toggleFilterVisibility} initialSelection={selectedFilterOptions} />

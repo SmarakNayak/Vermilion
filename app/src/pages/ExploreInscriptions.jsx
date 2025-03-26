@@ -4,9 +4,11 @@ import ReactGA from 'react-ga';
 import SortbyDropdown from '../components/Dropdown';
 import FilterMenu from '../components/FilterMenu';
 import GalleryInfiniteScroll from '../components/GalleryInfiniteScroll';
+import GridControls from '../components/grid/GridControls';
 import Stack from '../components/Stack';
 import { EyeIcon, FilterIcon, GridIcon, DotGridIcon } from '../components/common/Icon';
 import theme from '../styles/theme';
+import { HorizontalDivider } from '../components/grid/Layout';
 
 const ExploreInscriptions = () => {
   const [baseApi, setBaseApi] = useState(null); 
@@ -67,26 +69,22 @@ const ExploreInscriptions = () => {
       <RowContainer style={{justifyContent: 'flex-start'}}>
         <PageText>Inscriptions</PageText>
       </RowContainer>
-      <Divider />
+      <HorizontalDivider />    
       <Stack horizontal={false} center={false} style={{gap: '1.5rem', width: '100%'}}>
-        <RowContainer>
-          <Stack horizontal={true} center={false} style={{gap: '.75rem'}}>
-            <FilterButton onClick={toggleFilterVisibility}>
-              <FilterIcon size={'1.25rem'} color={theme.colors.text.primary}></FilterIcon>
-            </FilterButton>
-            <VisibilityButton onClick={toggleNumberVisibility}>
-              <EyeIcon size={'1.25rem'} color={numberVisibility ? theme.colors.text.primary : theme.colors.text.tertiary}></EyeIcon>
-            </VisibilityButton>
-            <GridTypeButton onClick={toggleGridType}>
-              {zoomGrid ? (
-                <GridIcon size={'1.25rem'} color={theme.colors.text.primary} />
-              ) : (
-                <DotGridIcon size={'1.25rem'} color={theme.colors.text.primary} />
-              )}
-            </GridTypeButton>
-          </Stack>
-          <SortbyDropdown onOptionSelect={handleSortOptionChange} />
-        </RowContainer>
+        <GridControls 
+          filterVisibility={filterVisibility} 
+          toggleFilterVisibility={toggleFilterVisibility} 
+          numberVisibility={numberVisibility} 
+          toggleNumberVisibility={toggleNumberVisibility} 
+          zoomGrid={zoomGrid} 
+          toggleGridType={toggleGridType} 
+          handleSortOptionChange={handleSortOptionChange} 
+          handleFilterOptionsChange={handleFilterOptionsChange} 
+          selectedFilterOptions={selectedFilterOptions}
+          filtersEnabled={true}
+          initialOption={'newest'}
+          includeRelevance={false}
+        />  
         <RowContainer>
           <FilterMenu isOpen={filterVisibility} onSelectionChange ={handleFilterOptionsChange} onClose={toggleFilterVisibility} initialSelection={selectedFilterOptions}></FilterMenu>
           <GalleryContainer>
