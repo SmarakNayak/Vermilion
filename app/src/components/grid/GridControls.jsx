@@ -17,7 +17,9 @@ const GridControls = ({
   handleSortOptionChange, 
   handleFilterOptionsChange, 
   selectedFilterOptions,
-  filtersEnabled
+  filtersEnabled,
+  initialOption,
+  includeRelevance
 }) => {
   return (
     <RowContainer>
@@ -38,7 +40,11 @@ const GridControls = ({
           )}
         </IconButton>
       </Stack>
-      <SortbyDropdown onOptionSelect={handleSortOptionChange} />
+      <SortbyDropdown 
+        onOptionSelect={handleSortOptionChange} 
+        initialOption={initialOption}
+        includeRelevance={includeRelevance}
+      />
     </RowContainer>
   );
 };
