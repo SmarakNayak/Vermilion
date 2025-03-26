@@ -38,6 +38,9 @@ export default defineConfig({
         target: 'https://blue.vermilion.place/',
         changeOrigin: true
       },
-    }
+    },
+    historyApiFallback: {
+      disableDotRule: true,
+    },
   }
 })
