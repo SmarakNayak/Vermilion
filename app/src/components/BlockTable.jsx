@@ -255,6 +255,11 @@ const HeaderRow = styled.div`
   top: 4.5rem; 
   background-color: ${theme.colors.background.white};
   z-index: 10;
+  transition: all 200ms ease;
+
+  @media (max-width: 630px) {
+    top: 4rem;
+  }
 `;
 
 const ScrollContainer = styled.div`
