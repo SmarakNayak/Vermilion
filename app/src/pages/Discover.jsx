@@ -7,6 +7,7 @@ import InnerInscriptionContent from '../components/common/InnerInscriptionConten
 import { addCommas } from '../utils/format';
 import { copyText } from '../utils/clipboard';
 import { GalleryIcon, LinkIcon, RuneIcon } from '../components/common/Icon';
+import theme from '../styles/theme';
 
 const Discover = () => {
   const [inscriptions, setInscriptions] = useState([]);
@@ -88,14 +89,14 @@ const Discover = () => {
                   </UnstyledLink>
                   {inscription.spaced_rune && (
                     <RuneTag>
-                      <RuneIcon size={'1rem'} color={'#D23B75'} />
+                      <RuneIcon size={'1rem'} color={theme.colors.background.purp} />
                       {inscription.spaced_rune}
                     </RuneTag>
                   )}
                   {inscription.collection_name && (
                     <UnstyledLink to={'/collection/' + inscription.collection_symbol}>
                       <CollectionTag>
-                        <GalleryIcon size={'1rem'} color={'#E34234'} />
+                        <GalleryIcon size={'1rem'} color={theme.colors.background.verm} />
                         {inscription.collection_name}
                       </CollectionTag>
                     </UnstyledLink>
@@ -103,7 +104,7 @@ const Discover = () => {
                 </TitleContainer>
                 <DetailsContainer>
                   <SocialButton empty onClick={() => copyText('https://vermilion.place/inscription/' + inscription.number)}>
-                    <LinkIcon size={'1.25rem'} color={'#959595'} />
+                    <LinkIcon size={'1.25rem'} color={theme.colors.text.secondary} />
                   </SocialButton>
                 </DetailsContainer>
               </InfoContainer>
@@ -183,9 +184,9 @@ const LoadingContainer = styled.div`
 `;
 
 const LoadingText = styled.p`
-  font-family: Relative Trial Medium;
+  font-family: ${theme.typography.fontFamilies.medium};
   font-size: 1rem;
-  color: #959595;
+  color: ${theme.colors.text.secondary};
   margin: 0;
 `;
 
@@ -196,7 +197,7 @@ const ContentContainer = styled.div`
   gap: .5rem;
   justify-content: center;
   position: relative;
-  background-color: #FFF;
+  background-color: ${theme.colors.background.white};
   padding-bottom: .75rem;
 `;
 
@@ -213,7 +214,7 @@ const InscriptionContainer = styled.div`
   font-size: 0;
   border-radius: .5rem;
   box-sizing: border-box;
-  border: .0625rem solid #E9E9E9;
+  border: .0625rem solid ${theme.colors.border};
   overflow: hidden;
 
   @media (max-width: 544px) {
@@ -229,7 +230,7 @@ const ImageContainer = styled.img`
   image-rendering: pixelated;
   cursor: pointer;
   border-radius: .5rem;
-  border: .0625rem solid #E9E9E9;
+  border: .0625rem solid ${theme.colors.border};
 
   @media (max-width: 544px) {
     width: 100%;
@@ -243,7 +244,7 @@ const TextContainer = styled.div`
   max-width: 32rem;
   padding: .75rem 1rem;
   border-radius: .5rem;
-  border: .0625rem solid #E9E9E9;
+  border: .0625rem solid ${theme.colors.border};
   overflow: overlay;
 
   @media (max-width: 544px) {
@@ -259,15 +260,13 @@ const CollectionTag = styled.div`
   gap: .25rem;
   padding: .125rem .375rem;
   border-radius: .5rem;
-  font-family: Relative Trial Medium;
+  font-family: ${theme.typography.fontFamilies.medium};
   font-size: .875rem;
   margin: 0;
-  color: #E34234;
+  color: ${theme.colors.background.verm};
   background-color: #FCECEB;
   cursor: pointer;
-  transition: 
-    background-color 350ms ease,
-    transform 150ms ease;
+  transition: all 200ms ease;
   transform-origin: center center;
 
   &:hover {
@@ -286,15 +285,13 @@ const RuneTag = styled.div`
   gap: .25rem;
   padding: .125rem .375rem;
   border-radius: .5rem;
-  font-family: Relative Trial Medium;
+  font-family: ${theme.typography.fontFamilies.medium};
   font-size: .875rem;
   margin: 0;
-  color: #D23B75;
+  color: ${theme.colors.background.purp};
   background-color: #FAEBF1;
   cursor: pointer;
-  transition: 
-    background-color 350ms ease,
-    transform 150ms ease;
+  transition: all 200ms ease;
   transform-origin: center center;
 
   &:hover {
@@ -340,7 +337,7 @@ const DetailsContainer = styled.div`
 `;
 
 const NumberText = styled.p`
-  font-family: Relative Trial Bold;
+  font-family: ${theme.typography.fontFamilies.medium};
   font-size: 1rem;
   margin: 0;
 `;
@@ -350,9 +347,9 @@ const SocialButton = styled.button`
   min-height: 2.5rem;
   min-width: 2.5rem;
   border-radius: 1.25rem;
-  font-family: Relative Trial Medium;
+  font-family: ${theme.typography.fontFamilies.medium};
   font-size: 1rem;
-  color: #000000;
+  color: ${theme.colors.background.dark};
   border: none;
   padding: ${props => props.empty ? '.375rem' : '.375rem .75rem'};
   margin: 0;
@@ -361,14 +358,12 @@ const SocialButton = styled.button`
   justify-content: center;
   gap: .375rem;
   cursor: pointer;
-  background-color: #FFFFFF;
-  transition: 
-    background-color 350ms ease,
-    transform 150ms ease;
+  background-color: ${theme.colors.background.white};
+  transition: all 200ms ease;
   transform-origin: center center;
 
   &:hover {
-    background-color: #F5F5F5;
+    background-color: ${theme.colors.background.primary};
   }
 
   &:active {
@@ -378,7 +373,7 @@ const SocialButton = styled.button`
 
 const Divider = styled.div`
   width: 100%;
-  border-bottom: 1px solid #E9E9E9;
+  border-bottom: 1px solid ${theme.colors.border};
 `;
 
 const UnstyledLink = styled(Link)`

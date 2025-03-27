@@ -1,14 +1,17 @@
 import React, { useState, useEffect, ChangeEvent } from 'react';
 import styled from 'styled-components';
+import theme from '../styles/theme';
+import MainText from '../components/common/text/MainText';
+import InfoText from '../components/common/text/InfoText';
 
 const NotFound = (props) => {
 
   return(
     <MainContainer>
       <TextContainer>
-        <ErrorTitle>404</ErrorTitle>
+        <MainText>404</MainText>
         <Divider />
-        <ErrorText>Page Not Found</ErrorText>
+        <InfoText islarge>Page Not Found</InfoText>
       </TextContainer>
     </MainContainer>
   )
@@ -22,9 +25,9 @@ const MainContainer = styled.div`
   flex-direction: row;
   align-items: center;
   justify-content: center;
-  top: 5rem;
+  top: 4.5rem;
   max-height: 100vh;
-  height: calc(100vh - 5rem);
+  height: calc(100vh - 4.5rem);
 `;
 
 const TextContainer = styled.div`
@@ -34,22 +37,10 @@ const TextContainer = styled.div`
   gap: 1.5rem;
 `;
 
-const ErrorTitle = styled.h1`
-  font-family: Relative Trial Bold;
-  font-size: 2rem;
-  margin: 0;
-`;
-
-const ErrorText = styled.p`
-  font-family: Relative Trial Bold;
-  font-size: 1rem;
-  margin: 0;
-`;
-
 const Divider = styled.div`
-  height: 2rem;  // Adjust this value to match your desired height
+  height: 2rem;  
   width: 1px;
-  background-color: #E9E9E9;
+  background-color: ${theme.colors.border};
 `;
 
 export default NotFound;

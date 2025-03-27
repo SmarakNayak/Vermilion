@@ -8,6 +8,7 @@ import InnerInscriptionContent from '../components/common/InnerInscriptionConten
 import { addCommas, formatAddress } from '../utils/format';
 import { copyText } from '../utils/clipboard';
 import { BoostIcon, CommentIcon, GalleryIcon, LinkIcon, Person2Icon, RefreshIcon, RuneIcon } from '../components/common/Icon';
+import theme from '../styles/theme';
 
 
 const Trending = () => {
@@ -139,14 +140,14 @@ const Trending = () => {
                     </UnstyledLink>
                     {inscription.inscriptions[0].spaced_rune && (
                       <RuneTag>
-                        <RuneIcon size={'1rem'} color={'#D23B75'} />
+                        <RuneIcon size={'1rem'} color={theme.colors.background.purp} />
                         {inscription.inscriptions[0].spaced_rune}
                       </RuneTag>
                     )}
                     {inscription.inscriptions[0].collection_name && (
                       <UnstyledLink to={'/collection/' + inscription.inscriptions[0].collection_symbol}>
                         <CollectionTag>
-                          <GalleryIcon size={'1rem'} color={'#E34234'} />
+                          <GalleryIcon size={'1rem'} color={theme.colors.background.verm} />
                           {inscription.inscriptions[0].collection_name}
                         </CollectionTag>
                       </UnstyledLink>
@@ -154,7 +155,7 @@ const Trending = () => {
                     {inscription.activity.children_count > 0 && (
                       <UnstyledLink to={'/children/' + inscription.inscriptions[0].id}>
                         <ParentTag>
-                          <Person2Icon size={'1rem'} color={'#000000'} />
+                          <Person2Icon size={'1rem'} color={theme.colors.text.primary} />
                           Parent
                         </ParentTag>
                       </UnstyledLink>
@@ -162,7 +163,7 @@ const Trending = () => {
                   </TitleContainer>
                   <DetailsContainer>
                     <SocialButton empty onClick={() => copyText('https://vermilion.place/inscription/' + inscription.inscriptions[0].number)}>
-                      <LinkIcon size={'1.25rem'} color={'#959595'} />
+                      <LinkIcon size={'1.25rem'} color={theme.colors.text.secondary} />
                     </SocialButton>
                   </DetailsContainer>
                 </InfoContainer>
@@ -187,17 +188,17 @@ const Trending = () => {
                 <ActionContainer>
                   <SocialContainer>
                     <SocialButton>
-                      <BoostIcon size={'1.25rem'} color={'#000000'}></BoostIcon>
+                      <BoostIcon size={'1.25rem'} color={theme.colors.text.primary}></BoostIcon>
                       <SocialText>{inscription.activity.delegate_count}</SocialText>
                     </SocialButton>
                     <SocialButton>
-                      <CommentIcon size={'1.25rem'} color={'#000000'}></CommentIcon>
+                      <CommentIcon size={'1.25rem'} color={theme.colors.text.primary}></CommentIcon>
                       <SocialText>0</SocialText>
                     </SocialButton>
                   </SocialContainer>
                   <BoostContainer>
                     <BoostButton>
-                      <BoostIcon size={'1.25rem'} color={'#FFFFFF'}></BoostIcon>
+                      <BoostIcon size={'1.25rem'} color={theme.colors.background.white}></BoostIcon>
                       Boost
                     </BoostButton>
                   </BoostContainer>
@@ -236,7 +237,7 @@ const Trending = () => {
             <SectionTitleWrapper>
               <SectionTitleText>Recent Activity</SectionTitleText>
               <RefreshButton>
-                <RefreshIcon size={'1rem'} color={'#959595'}></RefreshIcon>
+                <RefreshIcon size={'1rem'} color={theme.colors.text.secondary}></RefreshIcon>
                 Refresh
               </RefreshButton>
             </SectionTitleWrapper>
@@ -464,9 +465,9 @@ const LoadingContainer = styled.div`
 `;
 
 const LoadingText = styled.p`
-  font-family: Relative Trial Medium;
+  font-family: ${theme.typography.fontFamilies.medium};
   font-size: 1rem;
-  color: #959595;
+  color: ${theme.colors.text.secondary};
   margin: 0;
 `;
 
@@ -477,7 +478,7 @@ const ContentContainer = styled.div`
   gap: .5rem;
   justify-content: center;
   position: relative;
-  background-color: #FFF;
+  background-color: ${theme.colors.background.white};
   // padding-bottom: .75rem;
 `;
 
@@ -494,7 +495,7 @@ const InscriptionContainer = styled.div`
   font-size: 0;
   border-radius: .5rem;
   box-sizing: border-box;
-  border: .0625rem solid #E9E9E9;
+  border: .0625rem solid ${theme.colors.border};
   overflow: hidden;
 
   @media (max-width: 544px) {
@@ -510,7 +511,7 @@ const ImageContainer = styled.img`
   image-rendering: pixelated;
   cursor: pointer;
   border-radius: .5rem;
-  border: .0625rem solid #E9E9E9;
+  border: .0625rem solid ${theme.colors.border};
 
   @media (max-width: 560px) {
     width: 100%;
@@ -524,7 +525,7 @@ const HtmlContainer = styled.div`
   max-width: 32rem;
   cursor: pointer;
   border-radius: .5rem;
-  border: .0625rem solid #E9E9E9;
+  border: .0625rem solid ${theme.colors.border};
   overflow: hidden;
 
   &:after { /* Add overlay as a pseudo-element */
@@ -564,7 +565,7 @@ const TextContainer = styled.div`
   max-width: 32rem;
   padding: .75rem 1rem;
   border-radius: .5rem;
-  border: .0625rem solid #E9E9E9;
+  border: .0625rem solid ${theme.colors.border};
   overflow: overlay;
 
   @media (max-width: 560px) {
@@ -589,15 +590,13 @@ const CollectionTag = styled.div`
   gap: .25rem;
   padding: .125rem .375rem;
   border-radius: .5rem;
-  font-family: Relative Trial Medium;
+  font-family: ${theme.typography.fontFamilies.medium};
   font-size: .875rem;
   margin: 0;
-  color: #E34234;
+  color: ${theme.colors.background.verm};
   background-color: #FCECEB;
   cursor: pointer;
-  transition: 
-    background-color 350ms ease,
-    transform 150ms ease;
+  transition: all 200ms ease;
   transform-origin: center center;
 
   &:hover {
@@ -616,19 +615,17 @@ const ParentTag = styled.div`
   gap: .25rem;
   padding: .125rem .375rem;
   border-radius: .5rem;
-  font-family: Relative Trial Medium;
+  font-family: ${theme.typography.fontFamilies.medium};
   font-size: .875rem;
   margin: 0;
-  color: #000000;
-  background-color: #F5F5F5;
+  color: ${theme.colors.text.primary};
+  background-color: ${theme.colors.background.primary};
   cursor: pointer;
-  transition: 
-    background-color 350ms ease,
-    transform 150ms ease;
+  transition: all 200ms ease;
   transform-origin: center center;
 
   &:hover {
-    background-color: #E9E9E9;
+    background-color: ${theme.colors.background.secondary};
   }
 
   &:active {
@@ -643,15 +640,13 @@ const RuneTag = styled.div`
   gap: .25rem;
   padding: .125rem .375rem;
   border-radius: .5rem;
-  font-family: Relative Trial Medium;
+  font-family: ${theme.typography.fontFamilies.medium};
   font-size: .875rem;
   margin: 0;
-  color: #D23B75;
+  color: ${theme.colors.background.purp};
   background-color: #FAEBF1;
   cursor: pointer;
-  transition: 
-    background-color 350ms ease,
-    transform 150ms ease;
+  transition: all 200ms ease;
   transform-origin: center center;
 
   &:hover {
@@ -697,7 +692,7 @@ const DetailsContainer = styled.div`
 `;
 
 const NumberText = styled.p`
-  font-family: Relative Trial Bold;
+  font-family: ${theme.typography.fontFamilies.bold};
   font-size: 1rem;
   margin: 0;
 `;
@@ -707,9 +702,9 @@ const SocialButton = styled.button`
   min-height: 2.5rem;
   min-width: 2.5rem;
   border-radius: 1.25rem;
-  font-family: Relative Trial Medium;
+  font-family: ${theme.typography.fontFamilies.medium};
   font-size: 1rem;
-  color: #000000;
+  color: ${theme.colors.background.dark};
   border: none;
   padding: ${props => props.empty ? '.375rem' : '.375rem .75rem'};
   margin: 0;
@@ -718,14 +713,12 @@ const SocialButton = styled.button`
   justify-content: center;
   gap: .375rem;
   cursor: pointer;
-  background-color: #FFFFFF;
-  transition: 
-    background-color 350ms ease,
-    transform 150ms ease;
+  background-color: ${theme.colors.background.white};
+  transition: all 200ms ease;
   transform-origin: center center;
 
   &:hover {
-    background-color: #F5F5F5;
+    background-color: ${theme.colors.background.primary};
   }
 
   &:active {
@@ -748,7 +741,7 @@ const SocialContainer = styled.div`
 `;
 
 const SocialText = styled.p`
-  font-family: Relative Trial Bold;
+  font-family: ${theme.typography.fontFamilies.medium};
   font-size: 1rem;
   margin: 0;
 `;
@@ -762,9 +755,9 @@ const BoostContainer = styled.div`
 const BoostButton = styled.button`
   height: 2.5rem;
   border-radius: 1.25rem;
-  font-family: Relative Trial Bold;
+  font-family: ${theme.typography.fontFamilies.medium};
   font-size: 1rem;
-  color: #FFFFFF;
+  color: ${theme.colors.background.white};
   border: none;
   padding: 1rem;
   margin: 0;
@@ -773,14 +766,12 @@ const BoostButton = styled.button`
   justify-content: center;
   gap: .5rem;
   cursor: pointer;
-  background-color: #000000;
-  transition: 
-    background-color 350ms ease,
-    transform 150ms ease;
+  background-color: ${theme.colors.background.dark};
+  transition: all 200ms ease;
   transform-origin: center center;
 
   &:hover {
-    background-color: #000000;
+    background-color: ${theme.colors.background.dark};};
   }
 
   &:active {
@@ -790,7 +781,7 @@ const BoostButton = styled.button`
 
 const Divider = styled.div`
   width: 100%;
-  border-bottom: 1px solid #E9E9E9;
+  border-bottom: 1px solid ${theme.colors.border};
 `;
 
 const SectionContainer = styled.div`
@@ -808,31 +799,31 @@ const SectionTitleWrapper = styled.div`
 `;
 
 const SectionTitleText = styled.p`
-  font-family: Relative Trial Bold;
+  font-family: ${theme.typography.fontFamilies.medium};
   font-size: 1rem;
   margin: 0;
 `;
 
 const SectionDetailText = styled.p`
-  font-family: Relative Trial Medium;
+  font-family: ${theme.typography.fontFamilies.medium};
   font-size: .875rem;
-  color: #959595;
+  color: ${theme.colors.text.secondary};
   margin: 0;
 `;
 
 const SectionText = styled.p`
-  font-family: Relative Trial Medium;
+  font-family: ${theme.typography.fontFamilies.medium};
   font-size: .875rem;
-  color: #959595;
+  color: ${theme.colors.text.secondary};
   margin: 0;
 `;
 
 const RefreshButton = styled.button`
   height: 1.375rem;
   border-radius: .5rem;
-  font-family: Relative Trial Medium;
+  font-family: ${theme.typography.fontFamilies.medium};
   font-size: .875rem;
-  color: #959595;
+  color: ${theme.colors.text.secondary};
   border: none;
   padding: .125rem .375rem;
   margin: 0;
@@ -841,14 +832,12 @@ const RefreshButton = styled.button`
   justify-content: center;
   gap: .25rem;
   cursor: pointer;
-  background-color: #FFFFFF;
-  transition: 
-    background-color 350ms ease,
-    transform 150ms ease;
+  background-color: ${theme.colors.background.white};
+  transition: all 200ms ease;
   transform-origin: center center;
 
   &:hover {
-    background-color: #F5F5F5;
+    background-color: ${theme.colors.background.primary};
   }
 
   &:active {
@@ -872,7 +861,7 @@ const ElementWrapper = styled.div`
 
 const RankWrapper = styled.div`
   border-radius: 1rem;
-  font-family: Relative Trial Bold;
+  font-family: ${theme.typography.fontFamilies.medium};
   font-size: .875rem;
   padding: .125rem 0;
   width: 2rem;
@@ -890,19 +879,18 @@ const PlaceholderImage = styled.div`
 `;
 
 const AddressText = styled.p`
-  font-family: Relative Trial Bold;
+  font-family: ${theme.typography.fontFamilies.medium};
   font-size: .875rem;
   margin: 0;
 `;
 
 const LinkText = styled.p`
-  font-family: Relative Trial Medium;
+  font-family: ${theme.typography.fontFamilies.medium};
   font-size: .875rem;
-  color: #959595;
+  color: ${theme.colors.text.secondary};
   margin: 0;
 
-  transition: 
-    color 350ms ease;
+  transition: all 200ms ease;
   transform-origin: center center;
 
   &:hover {

@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import { CopyIcon } from '../components/common/Icon';
 import { addCommas } from '../utils/format'
 import { copyText } from '../utils/clipboard'
+import theme from '../styles/theme';
 
 const CopyTag = ({ category, copy, isLarge, value }) => (
   <TagContainer onClick={() => copyText(copy)}>
@@ -11,12 +12,12 @@ const CopyTag = ({ category, copy, isLarge, value }) => (
     {category && (
       <TagSpan isLarge={isLarge}>{' • ' + category}</TagSpan>
     )}
-    <CopyIcon size='1rem' color='#959595' />
+    <CopyIcon size='1rem' color={theme.colors.text.secondary} />
   </TagContainer>
 );
 
 const TagContainer = styled.button`
-  border-radius: .5rem;
+  border-radius: .25rem;
   border: none;
   padding: .25rem .5rem;
   margin: 0;
@@ -25,8 +26,8 @@ const TagContainer = styled.button`
   justify-content: center;
   cursor: pointer;
   gap: .25rem;
-  font-family: Relative Trial Medium;
-  background-color: #F5F5F5;
+  font-family: ${theme.typography.fontFamilies.medium};
+  background-color: ${theme.colors.background.primary};
   transition: 
     background-color 350ms ease,
     transform 150ms ease;
@@ -37,7 +38,7 @@ const TagContainer = styled.button`
   max-width: 100%;
 
   &:hover {
-    background-color: #E9E9E9;
+    background-color: ${theme.colors.background.secondary};
   }
 
   &:active {
@@ -47,7 +48,7 @@ const TagContainer = styled.button`
 
 const TagSpan = styled.span`
   font-size: ${props => props.isLarge ? '1rem' : '.875rem'};
-  color: ${props => props.isValue ? '#000000' : '#959595'};
+  color: ${props => props.isValue ? theme.colors.text.primary : theme.colors.text.secondary};
   overflow: hidden;
   text-overflow: ellipsis;
 `;
