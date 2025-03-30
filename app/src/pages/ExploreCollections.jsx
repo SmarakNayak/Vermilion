@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
-import ReactGA from 'react-ga';
+const ReactGA = require('react-ga4').default;
 import CollectionsTable from '../components/CollectionsTable';
 import OnChainCollectionsTable from '../components/OnChainCollectionsTable';
 import { InfoCircleIcon } from '../components/common/Icon';
@@ -14,7 +14,10 @@ const ExploreCollections = () => {
 
   // record event in GA
   useEffect(() => {
-    ReactGA.pageview(window.location.pathname)
+    ReactGA.send({
+      hitType: "pageview",
+      page: location.pathname + location.search
+    });
   }, [])
 
   //Get inscriptions endpoint
