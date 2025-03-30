@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
-import ReactGA from 'react-ga';
+const ReactGA = require('react-ga4').default;
 import SortbyDropdown from '../components/Dropdown';
 import FilterMenu from '../components/FilterMenu';
 import GalleryInfiniteScroll from '../components/GalleryInfiniteScroll';
@@ -20,7 +20,10 @@ const ExploreInscriptions = () => {
 
   // record event in GA
   useEffect(() => {
-    ReactGA.pageview(window.location.pathname)
+    ReactGA.send({
+      hitType: "pageview",
+      page: location.pathname + location.search
+    });
   }, [])
 
   //Get inscriptions endpoint
