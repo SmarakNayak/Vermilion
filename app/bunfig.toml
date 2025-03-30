@@ -1,0 +1,5 @@
+[serve.static]
+env = "BUN_PUBLIC_*"
+
+## Not sure this file is necessary
+## but it is here for reference
