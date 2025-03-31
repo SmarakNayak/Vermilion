@@ -3,9 +3,11 @@ import styled from 'styled-components';
 import { BurgerMenuIcon } from '../common/Icon';
 import theme from '../../styles/theme';
 import MobileMenu from './MobileMenu';
+import WalletConnectMenu from './WalletConnectMenu';
 
 const UserActions = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isWalletMenuOpen, setIsWalletMenuOpen] = useState(false);
   
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
@@ -14,11 +16,19 @@ const UserActions = () => {
   const closeMenu = () => {
     setIsMenuOpen(false);
   };
+
+  const openWalletMenu = () => {
+    setIsWalletMenuOpen(true);
+  };
+  
+  const closeWalletMenu = () => {
+    setIsWalletMenuOpen(false);
+  };
   
   return (
     <>
       <ActionsContainer>
-        <ConnectButton>Connect</ConnectButton>
+        <ConnectButton onClick={openWalletMenu}>Connect</ConnectButton>
 
         <MobileMenuButton onClick={toggleMenu}>
           <BurgerMenuIcon size={"1.25rem"} color={theme.colors.text.secondary} />
@@ -26,6 +36,10 @@ const UserActions = () => {
       </ActionsContainer>
       
       <MobileMenu isOpen={isMenuOpen} onClose={closeMenu} />
+
+      <Overlay isOpen={isWalletMenuOpen} onClick={closeWalletMenu}>
+        <WalletConnectMenu isOpen={isWalletMenuOpen} onClose={closeWalletMenu} />
+      </Overlay>
     </>
   );
 };
@@ -76,6 +90,19 @@ const MobileMenuButton = styled.button`
   @media (max-width: 864px) {
     display: flex;
   }
+`;
+
+const Overlay = styled.div`
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  backdrop-filter: blur(.125rem);
+  z-index: 100;
+  opacity: ${props => (props.isOpen ? 1 : 0)};
+  visibility: ${props => (props.isOpen ? 'visible' : 'hidden')};
+  transition: opacity 200ms ease, visibility 200ms ease, backdrop-filter 200ms ease;
 `;
 
 export default UserActions;
