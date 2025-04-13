@@ -26,3 +26,18 @@ PermitRootLogin without-password
 PasswordAuthentication no
 
 sudo systemctl restart ssh
+
+
+// In case of adding hardrive:
+// SSH might break if network adapter id changes
+// 1. Boot into rescue system
+// 2. mount root filesystem
+// 3. Compare root network config to rescue system network config 
+// 4. Will likely be differences in enp7s0
+mount /dev/md2 /mnt
+ip a
+cat /mnt/etc/network/interfaces
+ls /mnt/etc/netplan/
+cat /mnt/etc/netplan/*.yaml
+nano /mnt/etc/netplan/01-netcfg.yaml
+umount /mnt
