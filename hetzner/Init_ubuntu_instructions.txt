@@ -43,8 +43,9 @@ nano /mnt/etc/netplan/01-netcfg.yaml
 umount /mnt
 
 // To extend raid:
-sudo mdadm --grow /dev/md2 --level 0 --raid-devices 3 --add /dev/nvme1n1p1 --verbose //or
-sudo mdadm -Gv /dev/md2 -l 0 -n 3 -a /dev/nvme1n1p1
+sudo gdisk /dev/nvme1n1 // to create partition. fd00 for Linux RAID
+sudo mdadm --grow /dev/md2 --level 0 --raid-devices 3 --add /dev/nvme1n1p1 --verbose // or
+sudo mdadm -Gv /dev/md2 -l 0 -n 3 -a /dev/nvme1n1p1 // adds partition to raid
 watch cat /proc/mdstat //to monitor
 e2fsck -fy /dev/md2 //filesystem check
 sudo resize2fs /dev/md2  //resize filesystem
