@@ -43,7 +43,7 @@ jobs:
         run: ssh staging '[ -d "bitcoin_install" ] && [ "$(cat bitcoin_install/version)" == "28.1" ] && echo "Bitcoin core already installed" 
                                                    || (wget https://bitcoincore.org/bin/bitcoin-core-28.1/bitcoin-28.1-x86_64-linux-gnu.tar.gz
                                                        && mkdir -p ~/bitcoin_install 
-                                                       && rm -f ~/bitcoin_install/* 
+                                                       && rm -rf ~/bitcoin_install/* 
                                                        && tar -xzf bitcoin-*.tar.gz -C ~/bitcoin_install --strip-components 1 
                                                        && rm bitcoin-*.tar.gz
                                                        && echo "28.1" > ~/bitcoin_install/version);'
