@@ -1,7 +1,14 @@
 1. Combine harddrives
 set SWRAID_LEVEL to 0 when using installimage
 add colour to hostname
+// If using Raw raid:
 set PART swap swap to 256G
+// If using LVM on top (recommended), comment out default use this:
+PART /boot/efi esp 256M
+PART /boot     ext3 1024M
+PART lvm       vg0  all
+LV vg0 swap swap swap 256G
+LV vg0 root /    xfs  all
 
 2. Create ubuntu user
 adduser --disabled-password ubuntu
