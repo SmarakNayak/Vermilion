@@ -74,6 +74,7 @@ jobs:
           ssh staging 'sudo cp Vermilion/nginx/nginx.conf /etc/nginx/nginx.conf;'
           ssh staging 'sudo rm -f /etc/nginx/sites-enabled/default;'
 
+      # Note: '"'"' = escaped single ' - bash implicitly concatenates differently quoted string expressions
       - name: Init postgres server
         run: |
           ssh staging 'sudo --login -u postgres createuser ${{secrets.MYSQL_USER}} || echo "user already exists"'
