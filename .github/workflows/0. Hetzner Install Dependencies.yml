@@ -40,14 +40,8 @@ jobs:
       - name: Install nginx
         run: ssh staging 'sudo apt-get -y install nginx'
 
-      - name: Install mysql
-        run: ssh staging 'sudo apt-get -y install mysql-server'
-
       - name: Install postgres
         run: ssh staging 'sudo apt-get -y install postgresql'
-
-      - name: Install git-lfs
-        run: ssh staging 'sudo apt-get -y install git-lfs'
 
       - name: Install aws
         run: ssh staging 'sudo apt-get -y install unzip; curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"; unzip awscliv2.zip; sudo ./aws/install;'
