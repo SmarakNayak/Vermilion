@@ -1,7 +1,7 @@
 import React from 'react';
 import styled from 'styled-components';
 import { Link } from 'react-router-dom';
-import { RibbonIcon, RuneIcon, LayersIcon, RepeatIcon, Person2Icon, SproutIcon } from '../common/Icon';
+import { RibbonIcon, RuneIcon, LayersIcon, RepeatIcon, Person2Icon, SproutIcon, ChevronUpDuoIcon } from '../common/Icon';
 import Stack from '../Stack';
 import { addCommas } from '../../utils/format';
 import theme from '../../styles/theme';
@@ -49,25 +49,25 @@ const CollectionInfo = ({ metadata, editionNumber, editionCount, childrenInscrip
         <TagsRow horizontal gap=".5rem" style={{flexWrap: 'wrap'}}>
           {metadata?.delegate && (
             <TagContainer>
-              <LayersIcon size={'1.125rem'} color={theme.colors.text.primary} />
-              Delegate
+              <ChevronUpDuoIcon size={'1.125rem'} color={theme.colors.text.secondary} />
+              Boost
             </TagContainer>
           )}
           {metadata?.is_recursive && (
             <TagContainer>
-              <RepeatIcon size={'1.125rem'} color={theme.colors.text.primary} />
+              <RepeatIcon size={'1.125rem'} color={theme.colors.text.secondary} />
               Recursive
             </TagContainer>
           )}
           {childrenInscriptions?.length > 0 && (
             <TagContainer>
-              <Person2Icon size={'1.125rem'} color={theme.colors.text.primary} />
+              <Person2Icon size={'1.125rem'} color={theme.colors.text.secondary} />
               Parent
             </TagContainer>
           )}
           {metadata?.parents?.length > 0 && (
             <TagContainer>
-              <SproutIcon size={'1.125rem'} color={theme.colors.text.primary} />
+              <SproutIcon size={'1.125rem'} color={theme.colors.text.secondary} />
               Child
             </TagContainer>
           )}
@@ -166,8 +166,18 @@ const TagContainer = styled.div`
   border-radius: 0.25rem;
   background-color: ${theme.colors.background.primary};
   font-family: ${theme.typography.fontFamilies.medium};
-  color: ${theme.colors.text.primary};
+  color: ${theme.colors.text.secondary};
   font-size: .875rem;
+  transition: all 200ms ease;
+  transform-origin: center center;
+  cursor: pointer;
+
+  &:hover {
+    background-color: ${theme.colors.background.secondary};
+  }
+  &:active {
+    transform: scale(0.96);
+  }
 `;
 
 const TagIcon = styled.span`

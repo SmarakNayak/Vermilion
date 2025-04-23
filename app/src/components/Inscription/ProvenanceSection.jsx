@@ -8,6 +8,7 @@ import { addCommas } from '../../utils/format';
 import theme from '../../styles/theme';
 import { BorderedTagSection } from './Layout';
 import InscriptionIcon from '../InscriptionIcon';
+import InscriptionPreviewItem from './InscriptionPreviewItem';
 
 const ProvenanceSection = ({
   metadata,
@@ -21,7 +22,11 @@ const ProvenanceSection = ({
   editionCount
 }) => {
   if (!metadata) return null;
-  
+  console.log('parents', parentsData);
+  console.log('children', childrenInscriptions);
+  console.log('referenced by', referencedByData);
+  console.log('delegate', delegateData);
+  console.log('recursive submodules', recursiveSubmodulesData);
   return (
     <Container>
       {/* Parent Inscriptions */}
@@ -33,25 +38,17 @@ const ProvenanceSection = ({
             </Stack>
           </SubSectionHeader>
           <BorderedTagSection>
-            <ElementsRow>
+            <PreviewRow>
               {parentsData.map((parent, index) => (
-                <ParentInscriptionContainer key={`parent-${index}`}>
-                  <PreviewContainer>
-                    <InscriptionIcon
-                      endpoint={`/bun/rendered_content_number/${parent.metadata.number}`}
-                      useBlockIconDefault={false}
-                      size={'3rem'}
-                    />
-                  </PreviewContainer>
-                  <LinkTag 
-                    hideIcon={true} 
-                    link={`/inscription/${parent.metadata.number}`} 
-                    value={addCommas(parent.metadata.number)} 
-                    category={parent.metadata.content_category} 
-                  />
-                </ParentInscriptionContainer>
+                <InscriptionPreviewItem 
+                  key={`parent-${index}`}
+                  inscriptionNumber={parent.metadata.number}
+                  contentCategory={parent.metadata.content_category}
+                  size="half"
+                  linkTo="inscription"
+                />
               ))}
-            </ElementsRow>
+            </PreviewRow>
           </BorderedTagSection>
         </SubSection>
       )}
@@ -64,17 +61,19 @@ const ProvenanceSection = ({
               <HeaderText>Recursive Submodules</HeaderText>
             </Stack>
           </SubSectionHeader>
-          <ElementsRow>
-            {recursiveSubmodulesData.map((submodule, index) => (
-              <LinkTag 
-                key={`submodule-${index}`} 
-                hideIcon={true} 
-                link={`/inscription/${submodule.metadata.number}`} 
-                value={addCommas(submodule.metadata.number)} 
-                category={submodule.metadata.content_category} 
-              />
-            ))}
-          </ElementsRow>
+          <BorderedTagSection>
+            <PreviewRow>
+              {recursiveSubmodulesData.map((submodule, index) => (
+                <InscriptionPreviewItem 
+                  key={`submodule-${index}`}
+                  inscriptionNumber={submodule.metadata.number}
+                  contentCategory={submodule.metadata.content_category}
+                  size="half"
+                  linkTo="inscription"
+                />
+              ))}
+            </PreviewRow>
+          </BorderedTagSection>
         </SubSection>
       )}
       
@@ -85,15 +84,26 @@ const ProvenanceSection = ({
             <Stack horizontal center gap={'.5rem'}>
               <HeaderText>Child Inscriptions</HeaderText>
             </Stack>
-            {childrenInscriptions.length > 0 && (
-              <UnstyledLink to={`/children/${metadata.id}`}>
-                <ViewAllButton>View all</ViewAllButton>
-              </UnstyledLink>
-            )}
+            <UnstyledLink to={`/children/${metadata.id}`}>
+              <LinkText>View all</LinkText>
+            </UnstyledLink>
           </SubSectionHeader>
-          <ElementsRow>
+          <BorderedTagSection>
+            <PreviewRow>
+              {childrenInscriptions.slice(0, 6).map((child, index) => (
+                <InscriptionPreviewItem 
+                  key={`child-${index}`}
+                  inscriptionNumber={child.number}
+                  contentCategory={child.content_category}
+                  size="half"
+                  linkTo="inscription"
+                />
+              ))}
+            </PreviewRow>
+          </BorderedTagSection>
+          {/* <ElementsRow>
             <InscriptionTags data={childrenInscriptions} />
-          </ElementsRow>
+          </ElementsRow> */}
         </SubSection>
       )}
       
@@ -104,15 +114,23 @@ const ProvenanceSection = ({
             <Stack horizontal center gap={'.5rem'}>
               <HeaderText>Referenced By</HeaderText>
             </Stack>
-            {referencedByData.length > 0 && (
-              <UnstyledLink to={`/references/${number}`}>
-                <ViewAllButton>View all</ViewAllButton>
-              </UnstyledLink>
-            )}
+            <UnstyledLink to={`/references/${number}`}>
+              <LinkText>View all</LinkText>
+            </UnstyledLink>
           </SubSectionHeader>
-          <ElementsRow>
-            <InscriptionTags data={referencedByData} />
-          </ElementsRow>
+          <BorderedTagSection>
+            <PreviewRow>
+              {referencedByData.slice(0, 6).map((reference, index) => (
+                <InscriptionPreviewItem 
+                  key={`reference-${index}`}
+                  inscriptionNumber={reference.number}
+                  contentCategory={reference.content_category}
+                  size="half"
+                  linkTo="inscription"
+                />
+              ))}
+            </PreviewRow>
+          </BorderedTagSection>
         </SubSection>
       )}
       
@@ -124,16 +142,16 @@ const ProvenanceSection = ({
               <HeaderText>Delegate</HeaderText>
             </Stack>
           </SubSectionHeader>
-          <ElementsRow>
-            {delegateData?.metadata.number && (
-              <LinkTag 
-                hideIcon={true} 
-                link={`/inscription/${delegateData.metadata.number}`} 
-                value={addCommas(delegateData.metadata.number)} 
-                category={delegateData.metadata.content_category} 
+          <BorderedTagSection>
+            <PreviewRow>
+              <InscriptionPreviewItem 
+                inscriptionNumber={delegateData?.metadata.number}
+                contentCategory={delegateData?.metadata.content_category}
+                size="half"
+                linkTo="inscription"
               />
-            )}
-          </ElementsRow>
+            </PreviewRow>
+          </BorderedTagSection>
         </SubSection>
       )}
       
@@ -148,7 +166,7 @@ const ProvenanceSection = ({
               </CountBadge>
             </Stack>
             <UnstyledLink to={`/edition/${metadata?.sha256}`}>
-              <ViewAllButton>View all</ViewAllButton>
+              <LinkText>View all</LinkText>
             </UnstyledLink>
           </SubSectionHeader>
         </SubSection>
@@ -178,7 +196,7 @@ const SubSectionHeader = styled.div`
 
 const HeaderText = styled.p`
   font-family: ${theme.typography.fontFamilies.medium};
-  color: ${theme.colors.text.primary};
+  color: ${theme.colors.text.secondary};
   font-size: .875rem;
   line-height: 1.25rem;
   margin: 0;
@@ -199,7 +217,7 @@ const UnstyledLink = styled(Link)`
   text-decoration: unset;
 `;
 
-const ViewAllButton = styled.p`
+const LinkText = styled.p`
   font-family: ${theme.typography.fontFamilies.medium};
   font-size: .875rem;
   border: none;
@@ -230,25 +248,15 @@ const CountBadge = styled.div`
   height: 1.375rem;
   font-family: ${theme.typography.fontFamilies.medium};
   font-size: .875rem;
-  color: ${theme.colors.text.secondary};
+  color: ${theme.colors.text.primary};
 `;
 
-const ParentInscriptionContainer = styled.div`
+const PreviewRow = styled.div`
   display: flex;
   flex-direction: row;
-  align-items: center;
-  gap: 0.5rem;
-`;
-
-const PreviewContainer = styled.div`
-  width: 3rem;
-  height: 3rem;
-  overflow: hidden;
-  border-radius: 0.25rem;
-  background-color: ${theme.colors.background.primary};
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  flex-wrap: wrap;
+  gap: .75rem;
+  width: 100%;
 `;
 
 export default ProvenanceSection;

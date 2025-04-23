@@ -1,5 +1,7 @@
 import { useParams } from 'react-router-dom';
 import React, { useEffect, useRef, useState, useCallback } from 'react';
+import styled from 'styled-components';
+import { Link } from 'react-router-dom';
 
 // Components from Inscription folder
 import {
@@ -31,18 +33,24 @@ import {
 import Gallery from '../components/Gallery';
 import InnerInscriptionContent from '../components/common/InnerInscriptionContent';
 import MainText from '../components/common/text/MainText';
+import IconButton from '../components/common/buttons/IconButton';
 
 // Utils
-import { shortenBytes } from '../utils/format';
+import { addCommas, formatAddress, shortenBytes } from '../utils/format';
 import { copyText } from '../utils/clipboard';
 
 // Icons
 import { 
   InfoCircleIcon, 
-  PaintIcon, 
+  FileIcon, 
   RouteIcon, 
-  ScrollIcon, 
+  TagIcon, 
   SparklesIcon,
+  CommentIcon,
+  ChevronUpDuoIcon,
+  LinkIcon,
+  WebIcon,
+  CrossIcon,
 } from '../components/common/Icon';
 import theme from '../styles/theme';
 
@@ -229,7 +237,6 @@ const Inscription = () => {
   const [shortAddress, setShortAddress] = useState(null);
   const [prettySize, setPrettySize] = useState(null);
   const [sha256, setSha256] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
   
   // Relationship data
   const [parentsData, setParentsData] = useState([]);
@@ -239,6 +246,20 @@ const Inscription = () => {
   const [referencedByData, setReferencedByData] = useState([]);
   const [childrenInscriptions, setChildrenInscriptions] = useState([]);
   const [similarInscriptions, setSimilarInscriptions] = useState(null);
+  const [boosts, setBoosts] = useState(0);
+  const [boostsList, setBoostsList] = useState([]);
+  const [boostEdition, setBoostEdition] = useState(null); 
+  const [comments, setComments] = useState(0);
+  const [commentsList, setCommentsList] = useState([]);
+
+  // Loading states for different data fetches
+  const [metadataLoading, setMetadataLoading] = useState(true);
+  const [addressLoading, setAddressLoading] = useState(true);
+  const [editionsLoading, setEditionsLoading] = useState(true);
+  const [relatedInscriptionsLoading, setRelatedInscriptionsLoading] = useState(true);
+  
+  // Compute overall loading state
+  const isLoading = metadataLoading || addressLoading || editionsLoading || relatedInscriptionsLoading;
   
   // 3D model reference
   const modelViewerRef = useRef(null);
@@ -246,6 +267,7 @@ const Inscription = () => {
   // Fetch metadata
   const fetchMetadata = useCallback(async () => {
     try {
+      setMetadataLoading(true);
       const response = await fetch(`/api/inscription_metadata_number/${number}`);
       const json = await response.json();
       
@@ -265,16 +287,17 @@ const Inscription = () => {
         setSha256(json.sha256);
       }
       
-      setIsLoading(false);
+      setMetadataLoading(false);
     } catch (error) {
       console.error("Error fetching metadata:", error);
-      setIsLoading(false);
+      setMetadataLoading(false);
     }
   }, [number]);
   
   // Fetch owner address
   const fetchAddress = useCallback(async () => {
     try {
+      setAddressLoading(true);
       const response = await fetch(`/api/inscription_last_transfer_number/${number}`);
       const json = await response.json();
       setAddress(json);
@@ -286,14 +309,17 @@ const Inscription = () => {
           : address.slice(0, 5) + "..." + address.slice(-5);
         setShortAddress(shortAddress);
       }
+      setAddressLoading(false);
     } catch (error) {
       console.error("Error fetching address:", error);
+      setAddressLoading(false);
     }
   }, [number]);
   
   // Fetch edition info
   const fetchEditions = useCallback(async () => {
     try {
+      setEditionsLoading(true);
       setEditionNumber(null);
       setEditionCount(null);
       
@@ -302,11 +328,89 @@ const Inscription = () => {
       
       setEditionNumber(json.edition);
       setEditionCount(json.total);
+      setEditionsLoading(false);
     } catch (error) {
       console.error("Error fetching editions:", error);
+      setEditionsLoading(false);
     }
   }, [number]);
+
+  // Fetch boosts
+  const fetchBoosts = useCallback(async () => {
+    try {
+      if (!metadata) {
+        return;
+      }
   
+      const targetId = metadata.delegate || metadata.id;
+  
+      if (!targetId) {
+        setBoosts(0);
+        setBoostsList([]);
+        setBoostEdition(null); // Reset boostEdition if no targetId
+        return;
+      }
+  
+      // Fetch boosts list
+      const response = await fetch(`/api/inscription_bootlegs/${targetId}?&page_size=20&page_number=0`);
+      const data = await response.json();
+  
+      if (Array.isArray(data) && data.length > 0) {
+        setBoosts(data[0].total || 0); // Set total boosts
+        setBoostsList(data); // Set the list of boosts
+      } else {
+        setBoosts(0);
+        setBoostsList([]);
+      }
+  
+      // Fetch boost edition if there's a delegate
+      if (metadata.delegate) {
+        const boostEditionResponse = await fetch(`/api/bootleg_edition_number/${number}`);
+        const boostEditionData = await boostEditionResponse.json();
+        setBoostEdition(boostEditionData.bootleg_edition || null); // Set boost edition
+      } else {
+        setBoostEdition(null); // Reset boostEdition if no delegate
+      }
+    } catch (error) {
+      console.error("Error fetching boosts:", error);
+      setBoosts(0);
+      setBoostsList([]);
+      setBoostEdition(null); // Reset boostEdition on error
+    }
+  }, [metadata, number]);
+
+  // Fetch comments
+  const fetchComments = useCallback(async () => {
+    try {
+      // We only need metadata to be available
+      if (!metadata) {
+        return;
+      }
+      
+      // Determine which ID to use:
+      // 1. If there's a delegate, use metadata.delegate
+      // 2. Otherwise, use the inscription's own ID
+      const targetId = metadata.delegate || metadata.id;
+      
+      if (!targetId) {
+        setComments(0);
+        return;
+      }
+      
+      const response = await fetch(`/api/inscription_comments/${targetId}`);
+      const data = await response.json();
+      
+      if (Array.isArray(data) && data.length > 0 && data[0].total !== undefined) {
+        setComments(data[0].total);
+      } else {
+        setComments(0);
+      }
+    } catch (error) {
+      console.error("Error fetching comments:", error);
+      setComments(0);
+    }
+  }, [metadata]);
+
   // Main data loading effect
   useEffect(() => {
     fetchMetadata();
@@ -316,6 +420,14 @@ const Inscription = () => {
     // Reset scroll position when inscription number changes
     window.scrollTo(0, 0);
   }, [number, fetchMetadata, fetchAddress, fetchEditions]);
+
+  // Fetch boosts and comments when metadata is available
+  useEffect(() => {
+    if (metadata) {
+      fetchBoosts();
+      fetchComments();
+    }
+  }, [metadata, fetchBoosts, fetchComments]);
 
   // Custom hook to detect svg-recursive type
   const actualContentType = React.useMemo(() => {
@@ -367,6 +479,7 @@ const Inscription = () => {
     
     const fetchRelatedInscriptions = async () => {
       try {
+        setRelatedInscriptionsLoading(true);
         // Fetch parents data
         if (metadata.parents?.length > 0) {
           const parentsPromises = metadata.parents.map(fetchInscriptionData);
@@ -386,13 +499,28 @@ const Inscription = () => {
           const submodulesResults = await Promise.all(submodulesPromises);
           setRecursiveSubmodulesData(submodulesResults.filter(Boolean));
         }
+        
+        // Fetch children inscriptions
+        if (metadata.number) {
+          const childrenResponse = await fetch(`/api/inscription_children_number/${metadata.number}`);
+          const childrenData = await childrenResponse.json();
+          setChildrenInscriptions(childrenData);
+        }
+        
+        // Fetch referenced by data
+        const referencedByResponse = await fetch(`/api/inscription_referenced_by_number/${number}`);
+        const referencedByData = await referencedByResponse.json();
+        setReferencedByData(referencedByData);
+        
+        setRelatedInscriptionsLoading(false);
       } catch (error) {
         console.error("Error fetching related inscriptions:", error);
+        setRelatedInscriptionsLoading(false);
       }
     };
 
     fetchRelatedInscriptions();
-  }, [metadata, fetchInscriptionData]);
+  }, [metadata, fetchInscriptionData, number]);
 
   // Fetch satribute editions
   useEffect(() => {
@@ -461,6 +589,12 @@ const Inscription = () => {
     }
   }, [contentType, modelUrl]);
 
+  const [isBoostsModalOpen, setBoostsModalOpen] = useState(false);
+
+  const toggleBoostsModal = () => {
+    setBoostsModalOpen(!isBoostsModalOpen);
+  };
+
   console.log(metadata)
 
   return (
@@ -500,6 +634,40 @@ const Inscription = () => {
                   />
                 </SectionPadding>
               </DataContainer>
+
+              {/* Boosts Section */}
+              <DataContainer gapsize={'.75rem'}>
+                <SectionPadding gap={'.75rem'}>
+                  <ButtonsRow gap={'.5rem'}>
+                    <CountButton onClick={toggleBoostsModal}>
+                      <ChevronUpDuoIcon size={'1.25rem'} color={theme.colors.text.primary} />
+                        {boostEdition ? `${boostEdition} / ${boosts} boosts` : `${boosts} boosts`}
+                      </CountButton>
+                    <CountButton>
+                      <CommentIcon size={'1.25rem'} color={theme.colors.text.primary} />
+                      {comments} comments
+                    </CountButton>
+                  </ButtonsRow>
+                  <ButtonsRow gap={'.75rem'}>
+                    <BoostButton>
+                      <ChevronUpDuoIcon size={'1.25rem'} color={theme.colors.background.white} />
+                      Boost
+                    </BoostButton>
+                    <IconButton onClick={() => copyText(`https://vermilion.place/inscription/${number}`)}>
+                      <LinkIcon size={'1.25rem'} color={theme.colors.text.primary} />
+                    </IconButton>
+                    <IconButton onClick={() => window.open(`https://ordinals.com/inscription/${number}`, '_blank')}>
+                      <WebIcon size={'1.25rem'} color={theme.colors.text.primary} />
+                    </IconButton>
+                  </ButtonsRow>
+                  <Separator />
+                </SectionPadding>
+              </DataContainer>
+
+              {/* Boosts Modal */}
+              {isBoostsModalOpen && (
+                <BoostsModal boostsList={boostsList} onClose={toggleBoostsModal} />
+              )}
               
               {/* Details Section */}
               <DataContainer gapsize={'.75rem'}>
@@ -524,30 +692,7 @@ const Inscription = () => {
                   </SectionPadding>
                 )}
               </DataContainer>
-              
-              {/* Collection Metadata Section */}
-              {(metadata?.off_chain_metadata?.attributes?.length > 0 || 
-                (metadata?.on_chain_metadata && Object.keys(metadata.on_chain_metadata).length > 0)) && (
-                <DataContainer gapsize={'.75rem'}>
-                  <SectionHeader
-                    section="collectionMetadata"
-                    icon={<PaintIcon size={'1.25rem'} color={theme.colors.text.primary} />}
-                    title="Metadata"
-                    isVisible={sectionVisibility.collectionMetadata}
-                    onToggle={toggleSectionVisibility}
-                  />
-                  
-                  {sectionVisibility.collectionMetadata && (
-                    <SectionPadding gap={'1.5rem'}>
-                      <CollectionMetadata 
-                        offchainAttributes={metadata.off_chain_metadata?.attributes} 
-                        onchainAttributes={metadata.on_chain_metadata}
-                      />
-                    </SectionPadding>
-                  )}
-                </DataContainer>
-              )}
-              
+
               {/* Provenance Section */}
               <DataContainer gapsize={'.75rem'}>
                 <SectionHeader
@@ -575,12 +720,35 @@ const Inscription = () => {
                 )}
               </DataContainer>
               
+              {/* Collection Metadata Section */}
+              {(metadata?.off_chain_metadata?.attributes?.length > 0 || 
+                (metadata?.on_chain_metadata && Object.keys(metadata.on_chain_metadata).length > 0)) && (
+                <DataContainer gapsize={'.75rem'}>
+                  <SectionHeader
+                    section="collectionMetadata"
+                    icon={<FileIcon size={'1.25rem'} color={theme.colors.text.primary} />}
+                    title="Metadata"
+                    isVisible={sectionVisibility.collectionMetadata}
+                    onToggle={toggleSectionVisibility}
+                  />
+                  
+                  {sectionVisibility.collectionMetadata && (
+                    <SectionPadding gap={'1.5rem'}>
+                      <CollectionMetadata 
+                        offchainAttributes={metadata.off_chain_metadata?.attributes} 
+                        onchainAttributes={metadata.on_chain_metadata}
+                      />
+                    </SectionPadding>
+                  )}
+                </DataContainer>
+              )}
+              
               {/* Satributes Section */}
               {metadata?.satributes?.length > 0 && (
                 <DataContainer gapsize={'.75rem'}>
                   <SectionHeader
                     section="satributes"
-                    icon={<ScrollIcon size={'1.25rem'} color={theme.colors.text.primary} />}
+                    icon={<TagIcon size={'1.25rem'} color={theme.colors.text.primary} />}
                     title="Satributes"
                     isVisible={sectionVisibility.satributes}
                     onToggle={toggleSectionVisibility}
@@ -606,7 +774,7 @@ const Inscription = () => {
         <SimilarContentContainer>
           <SectionContainer>
             <SectionHeaderContainer>
-              <SparklesIcon size={'1.5rem'} color={theme.colors.text.primary} />
+              <SparklesIcon size={'1.25rem'} color={theme.colors.text.primary} />
               <SimilarText>Similar Inscriptions</SimilarText>
             </SectionHeaderContainer>
           </SectionContainer>
@@ -616,5 +784,285 @@ const Inscription = () => {
     </>
   );
 };
+
+const BoostsModal = ({ boostsList, onClose }) => {
+  const boostsData = [
+    { id: 1, address: 'bc1p3...98he3', duration: '3d' },
+    { id: 2, address: 'bc1p3...98he3', duration: '3d' },
+    { id: 3, address: 'bc1p3...98he3', duration: '3d' },
+    { id: 4, address: 'bc1p3...98he3', duration: '3d' },
+    { id: 5, address: 'bc1p3...98he3', duration: '3d' },
+  ];
+
+  return (
+    <ModalOverlay onClick={onClose}>
+      <ModalContainer onClick={(e) => e.stopPropagation()}>
+        <ModalHeader>
+          <HeaderText>Boosts</HeaderText>
+          <CloseButton onClick={onClose}>
+            <CrossIcon size={'1.25rem'} color={theme.colors.text.secondary} />
+          </CloseButton>
+        </ModalHeader>
+        <ModalContent>
+          {boostsList.map((boost, index) => (
+            <BoostEntry key={index}>
+              <BoostDetails>
+                <BoostNumber>{boost.bootleg_edition}</BoostNumber>
+                <TextLink to={`/inscription/${boost.bootleg_number}`}>
+                  <BoostText>
+                    #{addCommas(boost.bootleg_number)}
+                  </BoostText>
+                </TextLink>
+              </BoostDetails>
+              <OwnerDetails>
+                <SupportText>owned by</SupportText>
+                <TextLink to={`/address/${boost.address}`}>
+                  <BoostText>
+                    {formatAddress(boost.address)}
+                  </BoostText>
+                </TextLink>
+              </OwnerDetails>
+            </BoostEntry>
+          ))}
+        </ModalContent>
+      </ModalContainer>
+    </ModalOverlay>
+  );
+};
+
+const ButtonsRow = styled.div`
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: ${props => props.gap || '.5rem'};
+  width: 100%;
+`;
+
+const CountButton = styled.button`
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: .375rem;
+  background-color: ${theme.colors.background.white};
+  font-family: ${theme.typography.fontFamilies.medium};
+  font-size: 1rem;
+  line-height: 1.25rem;
+  color: ${theme.colors.text.primary};
+  border-radius: 1rem;
+  padding: .375rem .75rem;
+  border: none;
+  cursor: pointer;
+  transition: all 200ms ease;
+  transform-origin: center center;
+
+  &:hover {
+    background-color: ${theme.colors.background.primary};
+  }
+  &:active {
+    transform: scale(0.96);
+  }
+`;
+
+const BoostButton = styled.button`
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: .5rem;
+  background-color: ${theme.colors.background.dark};
+  font-family: ${theme.typography.fontFamilies.bold};
+  font-size: 1rem;
+  line-height: 1.25rem;
+  color: ${theme.colors.background.white};
+  border-radius: 1.375rem;
+  padding: .75rem 1rem;
+  border: none;
+  cursor: pointer;
+  transition: all 200ms ease;
+  transform-origin: center center;
+  flex-grow: 1;
+  width: 100%;
+
+  &:hover {
+    opacity: 75%;
+  }
+  &:active {
+    transform: scale(0.98);
+  }
+`;
+
+const Separator = styled.div`
+  height: 2rem;
+  width: 100%;
+  background: transparent;
+  border-bottom: 1px solid ${theme.colors.border};
+`;
+
+const ModalOverlay = styled.div`
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+`;
+
+const ModalContainer = styled.div`
+  background: ${theme.colors.background.white};
+  border-radius: 1rem;
+  max-width: 400px;
+  max-height: 630px;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+`;
+
+const ModalHeader = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.25rem 1.5rem;
+  background: ${theme.colors.background.white};
+`;
+
+const HeaderText = styled.p`
+  font-family: ${theme.typography.fontFamilies.bold};
+  font-size: 1.25rem;
+  line-height: 2rem;
+  color: ${theme.colors.text.primary};
+  margin: 0;
+`;
+
+const CloseButton = styled.button`
+  background-color: ${theme.colors.background.white};
+  border: none;
+  border-radius: 1rem;
+  height: 2rem;
+  width: 2rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 0;
+  font-size: 1.5rem;
+  cursor: pointer;
+  transition: all 200ms ease;
+
+  &:hover {
+    background-color: ${theme.colors.background.primary};
+  }
+
+  &:active {
+    transform: scale(0.96);
+  }
+`;
+
+const ModalContent = styled.div`
+  padding: 0.5rem 1.25rem 1.5rem;
+`;
+
+const BoostEntry = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.375rem;
+  background: ${theme.colors.background.white};
+  border-radius: 0.75rem;
+  padding: 0.75rem 0.5rem;
+  transition: background 200ms ease;
+
+  &:hover {
+    background: ${theme.colors.background.primary};
+  }
+`;
+
+const BoostNumber = styled.div`
+  width: 1.75rem;
+  text-align: left;
+  font-family: ${theme.typography.fontFamilies.medium};
+  font-size: 1rem;
+  line-height: 1.5rem;
+  color: ${theme.colors.text.primary};
+`;
+
+const BoostDetails = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  width: 100%;
+`;
+
+const OwnerDetails = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  width: 100%;
+`;
+
+const ProfileImage = styled.div`
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 50%;
+  // border: 0.125rem solid ${theme.colors.border};
+  background: linear-gradient(135deg, ${theme.colors.background.verm}, ${theme.colors.background.aqua});
+`;
+
+const WalletAddress = styled.span`
+  font-family: ${theme.typography.fontFamilies.medium};
+  font-size: 1rem;
+  line-height: 1.5rem;
+  color: ${theme.colors.text.primary};
+`;
+
+const BoostDuration = styled.div`
+  width: 3.75rem;
+  text-align: right;
+  font-family: ${theme.typography.fontFamilies.medium};
+  font-size: 1rem;
+  line-height: 1.5rem;
+  color: ${theme.colors.text.tertiary};
+`;
+
+const TextLink = styled(Link)`
+  color: unset;
+  text-decoration: unset;
+  display: block; 
+`;
+
+const BoostText = styled.p`
+  font-size: 1rem;
+  color: #121212;
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.375rem;
+  // width: 100%;
+  text-decoration-line: underline;
+  text-decoration-color: transparent;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 2px;
+
+  transition: all 200ms ease;
+  transform-origin: center center;
+
+  &:hover {
+    text-decoration-color: #121212;
+  }
+`;
+
+const SupportText = styled.p`
+  font-family: ${theme.typography.fontFamilies.medium};
+  font-size: 1rem;
+  line-height: 1.5rem;
+  color: ${theme.colors.text.tertiary};
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+`;
 
 export default Inscription;

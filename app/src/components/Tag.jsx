@@ -5,10 +5,17 @@ import theme from '../styles/theme';
 
 const Tag = ({ category, isLarge, value }) => (
   <TagContainer>
-    <TagSpan isLarge={isLarge} isValue={true}>{value}</TagSpan>
-    {category && (
-      <TagSpan isLarge={isLarge}>{' • ' + category}</TagSpan>
-    )}
+    <InnerContainer>
+      <ValueSpan isLarge={isLarge}>{value}</ValueSpan>
+      {category && (
+        <>
+          <CategorySpan isLarge={isLarge}>
+            •
+          </CategorySpan>
+          <CategorySpan isLarge={isLarge}>{category}</CategorySpan>
+        </>
+      )}
+    </InnerContainer>
   </TagContainer>
 );
 
@@ -17,19 +24,15 @@ const TagContainer = styled.button`
   border: none;
   padding: .25rem .5rem;
   margin: 0;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
+  display: block;
   cursor: pointer;
-  gap: .25rem;
   font-family: ${theme.typography.fontFamilies.medium};
   background-color: ${theme.colors.background.primary};
   transition: all 200ms ease;
   transform-origin: center center;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
   max-width: 100%;
+  width: fit-content;
+  overflow: hidden;
 
   &:hover {
     background-color: ${theme.colors.background.secondary};
@@ -40,11 +43,30 @@ const TagContainer = styled.button`
   }
 `;
 
-const TagSpan = styled.span`
+const InnerContainer = styled.div`
+  display: flex;
+  align-items: center;
+  width: 100%;
+  overflow: hidden;
+  gap: 0.25rem;
+`;
+
+const ValueSpan = styled.span`
   font-size: ${props => props.isLarge ? '1rem' : '.875rem'};
-  color: ${props => props.isValue ? theme.colors.text.primary : theme.colors.text.secondary};
+  color: ${theme.colors.text.primary};
   overflow: hidden;
   text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+  flex: 1 1 auto;
+  max-width: 100%;
+`;
+
+const CategorySpan = styled.span`
+  font-size: ${props => props.isLarge ? '1rem' : '.875rem'};
+  color: ${theme.colors.text.secondary};
+  white-space: nowrap;
+  flex: 0 0 auto;
 `;
 
 export default Tag;

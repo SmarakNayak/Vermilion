@@ -119,8 +119,8 @@ export const SectionHeaderContainer = styled.div`
 
 export const SimilarText = styled.p`
   font-family: ${theme.typography.fontFamilies.bold};
-  font-size: 1.5rem;
-  line-height: 2rem;
+  font-size: 1.25rem;
+  line-height: 1.75rem;
   margin: 0;
   padding: 0;
 `;

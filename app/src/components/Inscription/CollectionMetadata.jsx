@@ -17,13 +17,20 @@ const CollectionMetadata = ({ offchainAttributes, onchainAttributes }) => {
           <HeaderText>Onchain Metadata</HeaderText>
           <BorderedTagSection>
             <TagSection>
-              {Object.entries(onchainAttributes).map(([key, value], index) => (
-                <Tag 
-                  key={`onchain-${index}`} 
-                  value={String(value)} 
-                  category={key} 
-                />
-              ))}
+              {Object.entries(onchainAttributes).map(([key, value], index) => {
+                // Skip entries that are arrays or objects
+                if (Array.isArray(value) || (typeof value === 'object' && value !== null)) {
+                  return null;
+                }
+                
+                return (
+                  <Tag 
+                    key={`onchain-${index}`} 
+                    value={String(value)} 
+                    category={key} 
+                  />
+                );
+              }).filter(Boolean)}
             </TagSection>
           </BorderedTagSection>
         </SectionContainer>
@@ -66,6 +73,11 @@ const TagSection = styled.div`
   flex-direction: row;
   flex-wrap: wrap;
   gap: 0.5rem;
+  width: 100%;
+  
+  & > button {
+    max-width: 100%;
+  }
 `;
 
 const InfoText = styled.p`
@@ -78,7 +90,7 @@ const InfoText = styled.p`
 
 const HeaderText = styled.p`
   font-family: ${theme.typography.fontFamilies.medium};
-  color: ${theme.colors.text.primary};
+  color: ${theme.colors.text.secondary};
   font-size: .875rem;
   line-height: 1.25rem;
   margin: 0;
