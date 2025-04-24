@@ -5,10 +5,11 @@
   "type": "module",
   "scripts": {
     "dev": "bun --hot devServer.js",
-    "build": "bun build ./index.html --outdir=dist --sourcemap --target=browser --minify --define:process.env.NODE_ENV='\"production\"' --env='BUN_PUBLIC_*'"
+    "build": "bun build.js"
   },
   "dependencies": {
     "bitcoinjs-lib": "^6.1.7",
+    "esbuild-plugin-polyfill-node": "^0.3.0",
     "jsontokens": "^4.0.1",
     "prop-types": "^15.8.1",
     "react": "^18.3.1",

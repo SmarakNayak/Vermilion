@@ -46,3 +46,5 @@ async function proxyRequest(req, targetHost) {
     return new Response(`Proxy error: ${error.message}`, { status: 502 });
   }
 }
+
+console.log(`🚀 Server running at ${server.url}`);
