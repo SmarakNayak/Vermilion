@@ -34,6 +34,7 @@ import Gallery from '../components/Gallery';
 import InnerInscriptionContent from '../components/common/InnerInscriptionContent';
 import MainText from '../components/common/text/MainText';
 import IconButton from '../components/common/buttons/IconButton';
+import Spinner from '../components/Spinner';
 
 // Utils
 import { addCommas, formatAddress, shortenBytes } from '../utils/format';
@@ -249,6 +250,9 @@ const Inscription = () => {
   const [boosts, setBoosts] = useState(0);
   const [boostsList, setBoostsList] = useState([]);
   const [boostEdition, setBoostEdition] = useState(null); 
+  const [boostsPage, setBoostsPage] = useState(0); 
+  const [isBoostsLoading, setIsBoostsLoading] = useState(false);
+  const [hasMoreBoosts, setHasMoreBoosts] = useState(true); 
   const [comments, setComments] = useState(0);
   const [commentsList, setCommentsList] = useState([]);
 
@@ -338,31 +342,34 @@ const Inscription = () => {
   // Fetch boosts
   const fetchBoosts = useCallback(async () => {
     try {
-      if (!metadata) {
+      if (!metadata || !hasMoreBoosts || isBoostsLoading) {
         return;
       }
+  
+      setIsBoostsLoading(true);
   
       const targetId = metadata.delegate || metadata.id;
   
       if (!targetId) {
         setBoosts(0);
         setBoostsList([]);
-        setBoostEdition(null); // Reset boostEdition if no targetId
+        setBoostEdition(null);
+        setIsBoostsLoading(false);
         return;
       }
   
-      // Fetch boosts list
-      const response = await fetch(`/api/inscription_bootlegs/${targetId}?&page_size=20&page_number=0`);
+      // Fetch boosts with pagination
+      const response = await fetch(`/api/inscription_bootlegs/${targetId}?page_size=20&page_number=${boostsPage}`);
       const data = await response.json();
   
       if (Array.isArray(data) && data.length > 0) {
-        setBoosts(data[0].total || 0); // Set total boosts
-        setBoostsList(data); // Set the list of boosts
+        setBoosts(data[0].total); // Set total boosts
+        setBoostsList((prev) => [...prev, ...data]); // Append new boosts to the list
+        setBoostsPage((prev) => prev + 1); // Increment the page
       } else {
-        setBoosts(0);
-        setBoostsList([]);
+        setHasMoreBoosts(false); // No more boosts to fetch
       }
-  
+
       // Fetch boost edition if there's a delegate
       if (metadata.delegate) {
         const boostEditionResponse = await fetch(`/api/bootleg_edition_number/${number}`);
@@ -371,13 +378,13 @@ const Inscription = () => {
       } else {
         setBoostEdition(null); // Reset boostEdition if no delegate
       }
+  
+      setIsBoostsLoading(false);
     } catch (error) {
       console.error("Error fetching boosts:", error);
-      setBoosts(0);
-      setBoostsList([]);
-      setBoostEdition(null); // Reset boostEdition on error
+      setIsBoostsLoading(false);
     }
-  }, [metadata, number]);
+  }, [metadata, boostsPage, hasMoreBoosts, isBoostsLoading]);
 
   // Fetch comments
   const fetchComments = useCallback(async () => {
@@ -592,10 +599,26 @@ const Inscription = () => {
   const [isBoostsModalOpen, setBoostsModalOpen] = useState(false);
 
   const toggleBoostsModal = () => {
-    setBoostsModalOpen(!isBoostsModalOpen);
+    setBoostsModalOpen((prev) => {
+      const isOpening = !prev;
+      document.body.style.overflow = isOpening ? 'hidden' : 'auto'; 
+      return isOpening;
+    });
+  };
+
+  const [isCommentsModalOpen, setCommentsModalOpen] = useState(false);
+
+  const toggleCommentsModal = () => {
+    setCommentsModalOpen((prev) => {
+      const isOpening = !prev;
+      document.body.style.overflow = isOpening ? 'hidden' : 'auto';
+      return isOpening;
+    });
   };
 
   console.log(metadata)
+
+  console.log("modal status", isBoostsModalOpen)
 
   return (
     <>
@@ -643,7 +666,7 @@ const Inscription = () => {
                       <ChevronUpDuoIcon size={'1.25rem'} color={theme.colors.text.primary} />
                         {boostEdition ? `${boostEdition} / ${boosts} boosts` : `${boosts} boosts`}
                       </CountButton>
-                    <CountButton>
+                    <CountButton onClick={toggleCommentsModal}>
                       <CommentIcon size={'1.25rem'} color={theme.colors.text.primary} />
                       {comments} comments
                     </CountButton>
@@ -665,9 +688,21 @@ const Inscription = () => {
               </DataContainer>
 
               {/* Boosts Modal */}
-              {isBoostsModalOpen && (
-                <BoostsModal boostsList={boostsList} onClose={toggleBoostsModal} />
-              )}
+              <BoostsModal
+                boostsList={boostsList}
+                onClose={toggleBoostsModal}
+                fetchMoreBoosts={fetchBoosts}
+                hasMoreBoosts={hasMoreBoosts}
+                isBoostsLoading={isBoostsLoading}
+                isBoostsModalOpen={isBoostsModalOpen}
+              />
+
+              {/* Comments Modal */}
+              <CommentsModal
+                commentsList={commentsList}
+                onClose={toggleCommentsModal}
+                isCommentsModalOpen={isCommentsModalOpen}
+              />
               
               {/* Details Section */}
               <DataContainer gapsize={'.75rem'}>
@@ -785,27 +820,58 @@ const Inscription = () => {
   );
 };
 
-const BoostsModal = ({ boostsList, onClose }) => {
-  const boostsData = [
-    { id: 1, address: 'bc1p3...98he3', duration: '3d' },
-    { id: 2, address: 'bc1p3...98he3', duration: '3d' },
-    { id: 3, address: 'bc1p3...98he3', duration: '3d' },
-    { id: 4, address: 'bc1p3...98he3', duration: '3d' },
-    { id: 5, address: 'bc1p3...98he3', duration: '3d' },
-  ];
+const BoostsModal = ({ boostsList, onClose, fetchMoreBoosts, hasMoreBoosts, isBoostsLoading, isBoostsModalOpen }) => {
+  const observer = useRef();
+  const modalContentRef = useRef(); // Ref for the modal content
+
+  useEffect(() => {
+    if (isBoostsModalOpen) {
+      document.body.style.overflow = 'hidden'; // Disable page scrolling
+    } else {
+      document.body.style.overflow = 'auto'; // Enable page scrolling
+
+      // Reset scroll position when modal is closed
+      if (modalContentRef.current) {
+        modalContentRef.current.scrollTop = 0;
+      }
+    }
+
+    return () => {
+      document.body.style.overflow = 'auto'; // Cleanup on unmount
+    };
+  }, [isBoostsModalOpen]);
+
+  const lastBoostRef = useCallback(
+    (node) => {
+      if (isBoostsLoading) return;
+      if (observer.current) observer.current.disconnect();
+
+      observer.current = new IntersectionObserver((entries) => {
+        if (entries[0].isIntersecting && hasMoreBoosts) {
+          fetchMoreBoosts();
+        }
+      });
+
+      if (node) observer.current.observe(node);
+    },
+    [isBoostsLoading, hasMoreBoosts, fetchMoreBoosts]
+  );
 
   return (
-    <ModalOverlay onClick={onClose}>
-      <ModalContainer onClick={(e) => e.stopPropagation()}>
+    <ModalOverlay isOpen={isBoostsModalOpen} onClick={onClose}>
+      <ModalContainer isOpen={isBoostsModalOpen} onClick={(e) => e.stopPropagation()}>
         <ModalHeader>
           <HeaderText>Boosts</HeaderText>
           <CloseButton onClick={onClose}>
             <CrossIcon size={'1.25rem'} color={theme.colors.text.secondary} />
           </CloseButton>
         </ModalHeader>
-        <ModalContent>
+        <ModalContent ref={modalContentRef}>
           {boostsList.map((boost, index) => (
-            <BoostEntry key={index}>
+            <BoostEntry
+              key={index}
+              ref={index === boostsList.length - 1 ? lastBoostRef : null}
+            >
               <BoostDetails>
                 <BoostNumber>{boost.bootleg_edition}</BoostNumber>
                 <TextLink to={`/inscription/${boost.bootleg_number}`}>
@@ -823,6 +889,72 @@ const BoostsModal = ({ boostsList, onClose }) => {
                 </TextLink>
               </OwnerDetails>
             </BoostEntry>
+          ))}
+          <SpinnerContainer>
+            {isBoostsLoading && <Spinner />}
+          </SpinnerContainer>
+        </ModalContent>
+      </ModalContainer>
+    </ModalOverlay>
+  );
+};
+
+const CommentsModal = ({ commentsList, onClose, isCommentsModalOpen }) => {
+  const placeholderComments = [
+    { id: 1, address: "bc1p3...hfr7e", text: "🔥🔥🔥", time: "3d" },
+    { id: 2, address: "bc1p3...hfr7e", text: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.", time: "23h" },
+    { id: 3, address: "bc1qy...e83u2", text: "Yet another comment.", time: "56m" },
+  ];
+
+  const observer = useRef();
+  const modalContentRef = useRef(); // Ref for the modal content
+
+  useEffect(() => {
+    if (isCommentsModalOpen) {
+      document.body.style.overflow = 'hidden'; // Disable page scrolling
+    } else {
+      document.body.style.overflow = 'auto'; // Enable page scrolling
+
+      // Reset scroll position when modal is closed
+      if (modalContentRef.current) {
+        modalContentRef.current.scrollTop = 0;
+      }
+    }
+
+    return () => {
+      document.body.style.overflow = 'auto'; // Cleanup on unmount
+    };
+  }, [isCommentsModalOpen]);
+
+  return (
+    <ModalOverlay isOpen={isCommentsModalOpen} onClick={onClose}>
+      <ModalContainer isOpen={isCommentsModalOpen} onClick={(e) => e.stopPropagation()}>
+        <ModalHeader>
+          <HeaderText>Comments</HeaderText>
+          <CloseButton onClick={onClose}>
+            <CrossIcon size={'1.25rem'} color={theme.colors.text.secondary} />
+          </CloseButton>
+        </ModalHeader>
+        <ModalContent gap="1.5rem" ref={modalContentRef}>
+          {placeholderComments.map((comment) => (
+            <CommentEntry key={comment.id}>
+              {/* <CommentDetails> */}
+                <DetailsRow>
+                  <ProfileImage />
+                  <DetailsInfo>
+                    <TextLink
+                      to={`/address/${comment.address}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      <BoostText>{comment.address}</BoostText>
+                    </TextLink>
+                    <TimeText>{comment.time}</TimeText>
+                  </DetailsInfo>
+                </DetailsRow>
+                <CommentText>{comment.text}</CommentText>
+              {/* </CommentDetails> */}
+            </CommentEntry>
           ))}
         </ModalContent>
       </ModalContainer>
@@ -905,10 +1037,14 @@ const ModalOverlay = styled.div`
   width: 100vw;
   height: 100vh;
   background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(0.125rem);
   display: flex;
   justify-content: center;
   align-items: center;
   z-index: 1000;
+  opacity: ${props => (props.isOpen ? 1 : 0)};
+  visibility: ${props => (props.isOpen ? 'visible' : 'hidden')};
+  transition: opacity 200ms ease, visibility 200ms ease, backdrop-filter 200ms ease;
 `;
 
 const ModalContainer = styled.div`
@@ -916,9 +1052,31 @@ const ModalContainer = styled.div`
   border-radius: 1rem;
   max-width: 400px;
   max-height: 630px;
-  width: 100%;
-  height: 100%;
+  width: 90vw;
+  height: 90vh;
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  opacity: ${props => (props.isOpen ? 1 : 0)};
+  visibility: ${props => (props.isOpen ? 'visible' : 'hidden')};
+  transform: ${props => (props.isOpen ? 'scale(1)' : 'scale(0.92)')};
+  transition: opacity 200ms ease, visibility 200ms ease, transform 200ms ease;
+
+  @media (max-width: 400px) {
+    max-width: 90vw;
+  }
+  @media (max-height: 630px) {
+    max-height: 90vh;
+  }
+`;
+
+const ModalContent = styled.div`
+  display: flex;
+  flex-direction: column;
+  flex: 1; 
+  gap: ${props => props.gap || '0'};
+  overflow-y: auto;
+  padding: 0.5rem 1.25rem 1.5rem;
 `;
 
 const ModalHeader = styled.div`
@@ -960,8 +1118,13 @@ const CloseButton = styled.button`
   }
 `;
 
-const ModalContent = styled.div`
-  padding: 0.5rem 1.25rem 1.5rem;
+const SpinnerContainer = styled.div`
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+  width: 100%;
+  padding-top: 1rem;
 `;
 
 const BoostEntry = styled.div`
@@ -998,16 +1161,17 @@ const BoostDetails = styled.div`
 const OwnerDetails = styled.div`
   display: flex;
   align-items: center;
+  justify-content: flex-end;
   gap: 0.25rem;
   width: 100%;
 `;
 
 const ProfileImage = styled.div`
-  width: 2.25rem;
-  height: 2.25rem;
+  width: 1.75rem;
+  height: 1.75rem;
   border-radius: 50%;
   // border: 0.125rem solid ${theme.colors.border};
-  background: linear-gradient(135deg, ${theme.colors.background.verm}, ${theme.colors.background.aqua});
+  background: linear-gradient(180deg, ${theme.colors.background.white}, ${theme.colors.background.verm});
 `;
 
 const WalletAddress = styled.span`
@@ -1034,12 +1198,12 @@ const TextLink = styled(Link)`
 
 const BoostText = styled.p`
   font-size: 1rem;
-  color: #121212;
+  color: ${theme.colors.text.primary};
   margin: 0;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  line-height: 1.375rem;
+  line-height: 1.5rem;
   // width: 100%;
   text-decoration-line: underline;
   text-decoration-color: transparent;
@@ -1050,7 +1214,7 @@ const BoostText = styled.p`
   transform-origin: center center;
 
   &:hover {
-    text-decoration-color: #121212;
+    text-decoration-color: ${theme.colors.text.primary};};
   }
 `;
 
@@ -1063,6 +1227,54 @@ const SupportText = styled.p`
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+
+  @media (max-width: 400px) {
+    display: none;
+  }
+`;
+
+const CommentEntry = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+`;
+
+// const CommentDetails = styled.div`
+//   display: flex;
+//   flex-direction: column;
+//   gap: 0.75rem;
+// `;
+
+const DetailsRow = styled.div`
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+`;
+
+const DetailsInfo = styled.div`
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 0.5rem;
+`;
+
+const CommentText = styled.p`
+  padding-left: 2.25rem;
+  font-family: ${theme.typography.fontFamilies.medium};
+  font-size: 1rem;
+  line-height: 1.375rem;
+  color: ${theme.colors.text.secondary};
+  margin: 0;
+`;
+
+const TimeText = styled.p`
+  font-family: ${theme.typography.fontFamilies.medium};
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  color: ${theme.colors.text.tertiary};
+  margin: 0;
 `;
 
 export default Inscription;
