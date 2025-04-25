@@ -491,6 +491,7 @@ async function createInscriptionsExample() {
 }
 
 export {
+  Inscription,
   createInscriptions,
   createInscriptionsExample,
   getRevealSweepTransaction

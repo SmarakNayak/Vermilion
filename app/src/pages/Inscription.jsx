@@ -2,7 +2,7 @@ import { useParams } from 'react-router-dom';
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import styled from 'styled-components';
 import { Link } from 'react-router-dom';
-import { createInscriptions } from '../wallet/inscriptionBuilder';
+import { createInscriptions, Inscription as InscriptionObject } from '../wallet/inscriptionBuilder';
 
 // Components from Inscription folder
 import {
@@ -1013,6 +1013,44 @@ const CheckoutModal = ({ onClose, isCheckoutModalOpen, delegateData, metadata, n
     };
   }, [isCheckoutModalOpen]);
 
+  const handleBoostClick = async (inscriptionId) => {
+    if (!inscriptionId) {
+      console.error("No delegate or inscription ID available for boosting");
+      return;
+    }
+
+    try {
+      // Create a boost inscription with delegate
+      const boostInscription = new InscriptionObject({
+        delegate: inscriptionId,
+        postage: 546 // Minimum sat value
+      });
+      console.log("Boost inscription created:", boostInscription);
+
+      // Get the wallet instance - This would typically be provided through context or props
+      // This is a placeholder - you'll need to get the actual wallet from your app's state management
+      const wallet = window.wallet; 
+      
+      if (!wallet) {
+        console.error("Wallet not connected");
+        alert("Please connect your wallet to boost");
+        return;
+      }
+
+      // Create the inscription
+      await createInscriptions([boostInscription], wallet, "mainnet");
+      
+      // Close modal after successful boost
+      onClose();
+      
+      // Optional: Show success message
+      alert("Boost successfully created! Transaction is processing.");
+    } catch (error) {
+      console.error("Error creating boost inscription:", error);
+      alert(`Error creating boost: ${error.message}`);
+    }
+  };
+
   return (
     <ModalOverlay isOpen={isCheckoutModalOpen} onClick={onClose}>
       <ModalContainer isOpen={isCheckoutModalOpen} onClick={(e) => e.stopPropagation()}>
@@ -1120,7 +1158,7 @@ const CheckoutModal = ({ onClose, isCheckoutModalOpen, delegateData, metadata, n
 
           {/* Boost Button Section */}
           <BoostButtonContainer>
-            <ModalBoostButton>
+            <ModalBoostButton onClick={() => handleBoostClick(delegateData?.metadata.id || metadata?.id)}>
               <ChevronUpDuoIcon size="1.25rem" color={theme.colors.background.white} />
               Boost
             </ModalBoostButton>
