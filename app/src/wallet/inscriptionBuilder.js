@@ -2,7 +2,10 @@ import * as bitcoin from 'bitcoinjs-lib'
 import { toXOnly } from 'bitcoinjs-lib/src/psbt/bip371'
 import { ECPairFactory } from 'ecpair'
 import * as ecc from '@bitcoinerlab/secp256k1' // 'tiny-secp256k1' needs a wasm plugin in bun
+
 import { NETWORKS } from './networks'
+import { getAddressType, selectUtxos, appendUtxoEffectiveValues } from './transactionUtils'
+import { broadcastTx, submitPackage, getRecommendedFees, getConfirmedCardinalUtxos, getTxData } from './mempoolApi'
 
 bitcoin.initEccLib(ecc);
 const ECPair = ECPairFactory(ecc);
@@ -86,6 +89,7 @@ function getRevealScript(inscriptions, revealPublicKey) {
 }
 
 function getRevealTaproot(inscriptions, scriptPathPublicKey, network, keyPathInternalKey=scriptPathPublicKey) {
+  console.log(network);
   const script = getRevealScript(inscriptions, scriptPathPublicKey);
   const tapLeaf = {
     leafVersion: 192, // Tapscript leaf version (0xc0)
@@ -180,12 +184,12 @@ async function getCommitTransaction (inscriptions, paymentAddress, paymentPublic
   const paymentAddressType = getAddressType(paymentAddressScript, paymentPublicKey);
   console.log(paymentAddressType);
 
-  let feeRate = await getRecommendedFees();
+  let feeRate = await getRecommendedFees(network);
   let estimatedCommitFeeForHeaderAndOutputs = (10.5 + 2 * 43) * feeRate; //tx header 10.5 vBytes, 2 taproot outputs 43 vBytes each - input vB handled in selection
   let total_postage = inscriptions.reduce((acc, inscription) => acc + inscription.postage, 0);
   let estimatedRevealFee = Math.ceil(revealVSize * feeRate + total_postage);
 
-  let utxos = await getConfirmedCardinalUtxos(paymentAddress);
+  let utxos = await getConfirmedCardinalUtxos(paymentAddress, network);
   let adjustedUtxos = appendUtxoEffectiveValues(utxos, paymentAddressType, feeRate); //adjust utxos values to account for fee for size of input
   let selectedUtxos = selectUtxos(adjustedUtxos, estimatedRevealFee + estimatedCommitFeeForHeaderAndOutputs);
   console.log(selectedUtxos);
@@ -241,7 +245,7 @@ async function getCommitTransaction (inscriptions, paymentAddress, paymentPublic
         });
         break;
       case 'P2PKH':
-        const prevTx = await getTxData(utxo.txid);
+        const prevTx = await getTxData(utxo.txid, network);
         psbt.addInput({
           hash: utxo.txid,
           index: utxo.vout,
@@ -322,7 +326,7 @@ async function createInscriptionsWithTweakedKey(inscriptions, wallet, network) {
   let estRevealVSize = getRevealVSize(inscriptions, wallet.ordinalsAddress, network);
 
   // 3. get commit transaction
-  let [ commitPsbt, estimatedRevealFee ]= await getCommitTransaction(inscriptions, wallet.paymentAddress, wallet.paymentPublicKey, revealTaproot.address, estRevealVSize);
+  let [ commitPsbt, estimatedRevealFee ]= await getCommitTransaction(inscriptions, wallet.paymentAddress, wallet.paymentPublicKey, revealTaproot.address, estRevealVSize, network);
   let tempCommitTx = commitPsbt.__CACHE.__TX;
   let toSignCommitInputs = commitPsbt.data.inputs.map((input, index) => {
     return {
@@ -346,8 +350,8 @@ async function createInscriptionsWithTweakedKey(inscriptions, wallet, network) {
   // 6. broadcast transactions
   let commitTx = signedCommitPsbt.extractTransaction();
   let revealTx = signedRevealPsbt.extractTransaction();
-  let pushedCommitTx = await broadcastTx(commitTx.toHex());
-  let pushedRevealTx = await broadcastTx(revealTx.toHex());
+  let pushedCommitTx = await broadcastTx(commitTx.toHex(), network);
+  let pushedRevealTx = await broadcastTx(revealTx.toHex(), network);
   console.log(pushedCommitTx, pushedRevealTx);
 }
 
@@ -363,7 +367,7 @@ async function createInscriptionsWithTweakedKeyTwoSign(inscriptions, wallet, net
   let estRevealVSize = getRevealVSize(inscriptions, wallet.ordinalsAddress, network);
   
   // 3. get & sign commit transaction
-  let [commitPsbt, estimatedRevealFee ]= await getCommitTransaction(inscriptions, wallet.paymentAddress, wallet.paymentPublicKey, revealTaproot.address, estRevealVSize);
+  let [commitPsbt, estimatedRevealFee ]= await getCommitTransaction(inscriptions, wallet.paymentAddress, wallet.paymentPublicKey, revealTaproot.address, estRevealVSize, network);
   let toSignCommitInputs = commitPsbt.data.inputs.map((input, index) => {
     return {
       index,
@@ -379,8 +383,8 @@ async function createInscriptionsWithTweakedKeyTwoSign(inscriptions, wallet, net
   let revealTx = signedRevealPsbt.extractTransaction();
 
   //5. broadcast transactions
-  let pushedCommitTx = await broadcastTx(commitTx.toHex());
-  let pushedRevealTx = await broadcastTx(revealTx.toHex());
+  let pushedCommitTx = await broadcastTx(commitTx.toHex(), network);
+  let pushedRevealTx = await broadcastTx(revealTx.toHex(), network);
   console.log(pushedCommitTx, pushedRevealTx);
 }
 
@@ -399,7 +403,7 @@ async function createInscriptionsWithEphemeralKey(inscriptions, wallet, network,
   let estRevealVSize = getRevealVSize(inscriptions, wallet.ordinalsAddress, network);
 
   // 3. get & sign commit transaction
-  let [commitPsbt, estimatedRevealFee ]= await getCommitTransaction(inscriptions, wallet.paymentAddress, wallet.paymentPublicKey, revealTaproot.address, estRevealVSize);
+  let [commitPsbt, estimatedRevealFee ]= await getCommitTransaction(inscriptions, wallet.paymentAddress, wallet.paymentPublicKey, revealTaproot.address, estRevealVSize, network);
   let signedCommitPsbt = await wallet.signPsbt(commitPsbt); 
   let commitTx = signedCommitPsbt.extractTransaction();
   let commitTxId = commitTx.getId();
@@ -409,12 +413,13 @@ async function createInscriptionsWithEphemeralKey(inscriptions, wallet, network,
   let revealTx = signedRevealPsbt.extractTransaction();
 
   //5. broadcast transactions
-  let pushedCommitTx = await broadcastTx(commitTx.toHex());
-  let pushedRevealTx = await broadcastTx(revealTx.toHex());
+  let pushedCommitTx = await broadcastTx(commitTx.toHex(), network);
+  let pushedRevealTx = await broadcastTx(revealTx.toHex(), network);
   console.log(pushedCommitTx, pushedRevealTx);
 }
 
-async function createInscriptions(inscriptions, wallet, network) {  
+async function createInscriptions(inscriptions, wallet) {
+  let network = wallet.network;;
   let creationMethod = wallet.getInscriptionCreationMethod();
   if (creationMethod === 'ephemeral') {
     //using ephemeral key

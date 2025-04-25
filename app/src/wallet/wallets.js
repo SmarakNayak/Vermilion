@@ -777,6 +777,7 @@ export const connectWallet = async (walletType, network) => {
       throw new Error('Unsupported wallet type');
   }
   await walletInstance.connect(network);
+  return walletInstance;
 }
 
 export const disconnectWallet = async (wallet) => {

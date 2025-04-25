@@ -3,6 +3,7 @@ import React, { useEffect, useRef, useState, useCallback } from 'react';
 import styled from 'styled-components';
 import { Link } from 'react-router-dom';
 import { createInscriptions, Inscription as InscriptionObject } from '../wallet/inscriptionBuilder';
+import useStore from '../store/zustand';
 
 // Components from Inscription folder
 import {
@@ -995,6 +996,8 @@ const CheckoutModal = ({ onClose, isCheckoutModalOpen, delegateData, metadata, n
 
   const observer = useRef();
   const modalContentRef = useRef(); // Ref for the modal content
+  // Use zustand store to get the wallet (has to be top-level)
+  const wallet = useStore(state => state.wallet);
 
   useEffect(() => {
     if (isCheckoutModalOpen) {
@@ -1026,10 +1029,6 @@ const CheckoutModal = ({ onClose, isCheckoutModalOpen, delegateData, metadata, n
         postage: 546 // Minimum sat value
       });
       console.log("Boost inscription created:", boostInscription);
-
-      // Get the wallet instance - This would typically be provided through context or props
-      // This is a placeholder - you'll need to get the actual wallet from your app's state management
-      const wallet = window.wallet; 
       
       if (!wallet) {
         console.error("Wallet not connected");
@@ -1038,13 +1037,10 @@ const CheckoutModal = ({ onClose, isCheckoutModalOpen, delegateData, metadata, n
       }
 
       // Create the inscription
-      await createInscriptions([boostInscription], wallet, "mainnet");
+      await createInscriptions([boostInscription], wallet);
       
       // Close modal after successful boost
       onClose();
-      
-      // Optional: Show success message
-      alert("Boost successfully created! Transaction is processing.");
     } catch (error) {
       console.error("Error creating boost inscription:", error);
       alert(`Error creating boost: ${error.message}`);

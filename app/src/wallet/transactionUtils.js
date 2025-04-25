@@ -135,3 +135,9 @@ const branchAndBound = (utxos, targetAmount) => {
   explore(utxos, [], 0, 0);
   return bestSolution;
 }
+
+export {
+  getAddressType,
+  appendUtxoEffectiveValues,
+  selectUtxos
+}

@@ -82,3 +82,11 @@ const getTxData = async(txId, network) => {
   let txDataJson = await txData.json();
   return txDataJson;
 }
+
+export {
+  broadcastTx,
+  submitPackage,
+  getRecommendedFees,
+  getConfirmedCardinalUtxos,
+  getTxData
+}

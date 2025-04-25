@@ -3,6 +3,7 @@ import styled from 'styled-components';
 import { ArrowLeftIcon, ChevronRightIcon, CrossIcon, WalletIcon } from '../common/Icon';
 import { theme } from '../../styles/theme';
 import { connectWallet, detectWallets } from '../../wallet/wallets';
+import useStore from '../../store/zustand';
 
 // Import wallet logos
 import unisatLogo from '../../assets/wallets/unisat.png';
@@ -48,6 +49,8 @@ const WalletConnectMenu = ({ isOpen, onClose }) => {
   const [detectedWallets, setDetectedWallets] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const menuRef = useRef(null);
+  // Use Zustand store to manage wallet state - has to be top-level
+  const setWallet = useStore(state => state.setWallet);
 
   useEffect(() => {
     if (isOpen) {
@@ -112,6 +115,13 @@ const WalletConnectMenu = ({ isOpen, onClose }) => {
     // Reset state when menu closes
     setShowOtherWallets(false);
   };
+
+  const handleWalletConnect = async (walletType) => {
+    console.log("Connecting to wallet:", walletType);
+    let wallet = await connectWallet(walletType, "signet");
+    console.log("Connected wallet:", wallet);
+    setWallet(wallet);
+  }
   
   const primaryWallets = ['unisat', 'xverse', 'oyl'];
   const allWallets = [...primaryWallets, 'magiceden', 'okx', 'leather', 'phantom'];
@@ -138,7 +148,7 @@ const WalletConnectMenu = ({ isOpen, onClose }) => {
           {walletsToShow.map(wallet => {
             const isDetected = detectedWallets.includes(wallet);
             return (
-              <WalletOption key={wallet} onClick={() => connectWallet(wallet, 'mainnet')}>
+              <WalletOption key={wallet} onClick={() => handleWalletConnect(wallet)}>
                 <WalletLogoWrapper>
                   <WalletLogo src={WALLET_LOGOS[wallet]} alt={`${WALLET_DISPLAY_NAMES[wallet]} logo`} />
                 </WalletLogoWrapper>
