@@ -6,7 +6,7 @@ export const NETWORKS = {
     tapscript: 'testnet',
     mempool: 'testnet4/',
     unisat: 'BITCOIN_TESTNET4',
-    xverse: 'testnet',
+    xverse: 'Testnet4',
     leather: 'testnet'
   },
   'mainnet': {
@@ -16,19 +16,27 @@ export const NETWORKS = {
     unisat: 'BITCOIN_MAINNET',
     xverse: 'Mainnet',
     leather: 'mainnet'
-  }
+  },
+  'signet': {
+    bitcoinjs: bitcoin.networks.testnet,
+    tapscript: 'signet',
+    mempool: 'signet/',
+    unisat: 'BITCOIN_SIGNET',
+    xverse: 'Signet',
+    leather: 'signet'
+  },
 }
 
-export function getNetworkFromAddress(address) {
+export function getNetworksFromAddress(address) {
   try {
-    // Try to decode as testnet
+    // Try to decode as testnet/signet
     bitcoin.address.toOutputScript(address, bitcoin.networks.testnet);
-    return 'testnet';
+    return ['testnet', 'signet'];
   } catch (testnetError) {
     try {
       // Try to decode as mainnet
       bitcoin.address.toOutputScript(address, bitcoin.networks.bitcoin);
-      return 'mainnet';
+      return ['mainnet'];
     } catch (mainnetError) {
       throw new Error('Invalid Bitcoin address');
     }

@@ -6,6 +6,7 @@ await build({
   entrypoints: ["./index.html"],
   outdir: "dist",
   //sourcemap: true,
+  publicPath: "/", 
   target: "browser",
   minify: true,
   define: {

@@ -2,138 +2,286 @@
 //and do the rest ourselves. If we expect too much from the wallets, we will have compatibility
 //issues with wallets that don't support the features we want. We also want to avoid
 //having to write a lot of code for each wallet, so we want to keep the code as simple as possible.
+import * as bitcoin from 'bitcoinjs-lib';
+import { isP2PKH, isP2SHScript, isP2WPKH, isP2TR } from 'bitcoinjs-lib/src/psbt/psbtutils';
+import { toXOnly } from 'bitcoinjs-lib/src/psbt/bip371';
+import * as jsontokens from 'jsontokens';
+import { NETWORKS, getNetworksFromAddress } from './networks';
 
-import * as bitcoin from 'bitcoinjs-lib'
-import * as jsontokens from 'jsontokens'
-import { NETWORKS, getNetworkFromAddress } from './networks'
+class Wallet {
+  constructor(walletType, supportsCustomAddressSigning = false, supportsKeyPathSigning = false) {
+    this.walletType = walletType;
+    // allows for signing of any custom p2tr address even if not the standard p2tr
+    this.supportsCustomAddressSigning = supportsCustomAddressSigning;
+    // allows for signing of custom p2tr addresses with internal key tweaked by merkle root of p2tr script
+    this.supportsKeyPathSigning = supportsKeyPathSigning;
+    this.network = null;
+    this.paymentAddress = null;
+    this.ordinalsAddress = null;
+    this.paymentPublicKey = null;
+    this.ordinalsPublicKey = null;
+    this._accountChangedListener = null;
+  }
 
-export const unisat = {
-  walletType: 'unisat',
-  network: null,
-  paymentAddress: null,
-  ordinalsAddress: null,
-  paymentPublicKey: null,
-  ordinalsPublicKey: null,
-  _accountChangedListener: null,
+  windowCheck() {
+    throw new Error('windowCheck must be implemented by subclass');
+  }
+
+  async connect(network) {
+    throw new Error('connect must be implemented by subclass');
+  }
+
+  async getNetwork() {
+    throw new Error('getNetwork must be implemented by subclass');
+  }
+
+  async switchNetwork(network) {
+    throw new Error('switchNetwork must be implemented by subclass');
+  }
+
+  async signPsbt(psbt, signingIndexes = null) {
+    throw new Error('signPsbt must be implemented by subclass');
+  }
+
+  async signPsbts(psbtArray, signingIndexesArray) {
+    // Default implementation signs each PSBT one at a time
+    this.windowCheck();
+    let signedPsbts = []
+    for (let i = 0; i < psbtArray.length; i++) {
+      let signedPsbt = await this.signPsbt(psbtArray[i], signingIndexesArray[i]);
+      signedPsbts.push(signedPsbt);
+    }
+    return signedPsbts;
+  }
+
+  async setupAccountChangeListener(callback) {
+    console.log(`${this.walletType} does not support account change listener by default`);
+  }
+
+  async removeAccountChangeListener() {
+    // Default implementation does nothing
+  }
+
+  getAccountInfo() {
+    return {
+      paymentAddress: this.paymentAddress,
+      ordinalsAddress: this.ordinalsAddress,
+      paymentPublicKey: this.paymentPublicKey,
+      ordinalsPublicKey: this.ordinalsPublicKey
+    };
+  }
+
+  handleDisconnect(callback) {
+    console.log("Wallet disconnected or empty address received");
+    this.paymentAddress = null;
+    this.ordinalsAddress = null;
+    this.paymentPublicKey = null;
+    this.ordinalsPublicKey = null;
+    callback({ ...this.getAccountInfo(), disconnected: true });
+    this.removeAccountChangeListener();
+  }
+
+  getInputAddress(input) {
+    if (!this.network) throw new Error('Network not set');
+    if (input.nonWitnessUtxo) {
+      const tx = bitcoin.Transaction.fromBuffer(input.nonWitnessUtxo);
+      return bitcoin.address.fromOutputScript(
+        tx.outs[input.index].script,
+        NETWORKS[this.network].bitcoinjs
+      );
+    } else if (input.witnessUtxo) {
+      return bitcoin.address.fromOutputScript(
+        input.witnessUtxo.script,
+        NETWORKS[this.network].bitcoinjs
+      );
+    }
+    throw new Error('Malformed PSBT: input is missing nonWitnessUtxo or witnessUtxo');
+  }
+
+  getInputsToSignGroupedNameless(psbt, signingIndexes = null) {
+    const inputsToSign = { [this.ordinalsAddress]: [], [this.paymentAddress]: [] };
+    if (signingIndexes) {
+      signingIndexes.forEach(idx => {
+        if (idx.address === this.paymentAddress) inputsToSign[this.paymentAddress].push(idx.index);
+        if (idx.address === this.ordinalsAddress) inputsToSign[this.ordinalsAddress].push(idx.index);
+      });
+    } else {
+      psbt.data.inputs.forEach((input, i) => {
+        const address = this.getInputAddress(input);
+        if (address === this.paymentAddress || address === this.ordinalsAddress) {
+          inputsToSign[address].push(i);
+        }
+      });
+    }
+    return inputsToSign;
+  }
+
+  getInputsToSignGrouped(psbt, signingIndexes = null) {
+    const inputsToSign = this.getInputsToSignGroupedNameless(psbt, signingIndexes);
+    return Object.entries(inputsToSign).map(([address, signingIndexes]) => ({
+      address,
+      signingIndexes
+    }));
+  }
+
+  hasSignableTweakedTaproot() {
+    if (!this.supportsCustomAddressSigning) return false;
+    const paymentAddressScript = bitcoin.address.toOutputScript(this.paymentAddress, NETWORKS[this.network].bitcoinjs);
+    const ordinalsAddressScript = bitcoin.address.toOutputScript(this.ordinalsAddress, NETWORKS[this.network].bitcoinjs);
+    return isP2TR(paymentAddressScript) || isP2TR(ordinalsAddressScript);
+  }
+
+  getInscriptionCreationMethod() {
+    const paymentAddressScript = bitcoin.address.toOutputScript(this.paymentAddress, NETWORKS[this.network].bitcoinjs);
+    const ordinalsAddressScript = bitcoin.address.toOutputScript(this.ordinalsAddress, NETWORKS[this.network].bitcoinjs);
+    // no taproot so we have to use an ephemeral key (non-custodial)
+    if (!(isP2TR(paymentAddressScript) || isP2TR(ordinalsAddressScript))) return 'ephemeral';
+    // has taproot but can't sign reveal, so sign using ephemeral script path, whilst maintaining custody via wallet key path
+    if (!this.supportsCustomAddressSigning) return 'ephemeral_with_wallet_key_path';
+    // has taproot and can sign reveal, payment address is p2wpkh/p2tr, so we can extract commit tx_id and sign both txs at once
+    if (isP2TR(paymentAddressScript) || isP2WPKH(paymentAddressScript)) return 'wallet_one_sign';
+    // has taproot and can sign reveal, but legacy/nested payment address, so we can't extract commit tx_id before signing
+    return 'wallet_two_sign';
+  }
+
+  getTaproot() {
+    let paymentAddressScript = bitcoin.address.toOutputScript(this.paymentAddress, NETWORKS[this.network].bitcoinjs);
+    let ordinalsAddressScript = bitcoin.address.toOutputScript(this.ordinalsAddress, NETWORKS[this.network].bitcoinjs);
+    if (isP2TR(ordinalsAddressScript)) {
+      // remove first byte of public key if 33 bytes to get x-only
+      let xonlyInternalKey = this.ordinalsPublicKey;
+      if (xonlyInternalKey.length === 66) {
+        xonlyInternalKey = xonlyInternalKey.slice(2);
+      }
+      let tweakedTaproot = bitcoin.payments.p2tr({
+        internalPubkey: toXOnly(Buffer.from(xonlyInternalKey, 'hex')),
+        network: NETWORKS[this.network].bitcoinjs
+      }); 
+
+      return tweakedTaproot;
+    }
+
+    if (isP2TR(paymentAddressScript)) {
+      let xonlyInternalKey = this.paymentPublicKey;
+      if (xonlyInternalKey.length === 66) {
+        xonlyInternalKey = xonlyInternalKey.slice(2);
+      }
+      let tweakedTaproot = bitcoin.payments.p2tr({
+        internalPubkey: toXOnly(Buffer.from(xonlyInternalKey, 'hex')),
+        network: NETWORKS[this.network].bitcoinjs
+      });
+      return tweakedTaproot;
+    }
+  }
+}
+
+class UnisatWallet extends Wallet {
+  constructor() {
+    super('unisat', true, false); //supports custom addresses, but not custom key path signing
+  }
 
   windowCheck() {
     if (!window.unisat) throw new Error('Unisat not installed');
-  },
+  }
+
   async connect(network) {
     this.windowCheck();
     const chain = await window.unisat.getChain();
-    if (chain.enum === NETWORKS[network].unisat) {
-      this.network = network;
-    } else {
+    if (chain.enum !== NETWORKS[network].unisat) {
       try {
         await window.unisat.switchChain(NETWORKS[network].unisat);
-        this.network = network;
       } catch (error) {
         throw new Error('Could not switch to the specified network');
       }
     }
-
+    
     const accounts = await window.unisat.requestAccounts();
     const publicKey = await window.unisat.getPublicKey();
+    this.network = network;
     this.paymentAddress = accounts[0];
     this.ordinalsAddress = accounts[0];
     this.paymentPublicKey = publicKey;
-    this.ordinalsPublicKey = publicKey
+    this.ordinalsPublicKey = publicKey;
 
-    return {
-      paymentAddress: accounts[0],
-      ordinalsAddress: accounts[0],
-      paymentPublicKey: publicKey,
-      ordinalsPublicKey: publicKey,
-    };
-  },
+    return this.getAccountInfo();
+  }
+
   async getNetwork() {
     this.windowCheck();
-    let chain = await window.unisat.getChain();
+    const chain = await window.unisat.getChain();
     return chain.enum;
-  },
+  }
+
   async switchNetwork(network) {
     this.windowCheck();
     await window.unisat.switchChain(network);
-  },
-  async signPsbt(psbt) {
+    this.network = network;
+  }
+
+  async signPsbt(psbt, signingIndexes = null) {
     this.windowCheck();
-    let psbtHex = psbt.toHex();
-    let signedPsbtHex = await window.unisat.signPsbt(psbtHex);
-    let signedPsbt = bitcoin.Psbt.fromHex(signedPsbtHex);
-    return signedPsbt;
-  },
+    const psbtHex = psbt.toHex();
+    let signedPsbtHex;
+    if (signingIndexes === null) {
+      signedPsbtHex = await window.unisat.signPsbt(psbtHex);
+    } else {
+      let unisatOptions = {
+        autoFinalized: true,
+        toSignInputs: signingIndexes
+      }
+      signedPsbtHex = await window.unisat.signPsbt(psbtHex, unisatOptions);
+    }
+    return bitcoin.Psbt.fromHex(signedPsbtHex);
+  }
+
   async signPsbts(psbtArray, signingIndexesArray) {
     this.windowCheck();
-    let psbtHexs = psbtArray.map(psbt => psbt.toHex());
-    let unisatOptions = signingIndexesArray.map(signingIndexes => {
-      return {
-        toSignInputs: signingIndexes,
-        autoFinalized: true
-      }
-    });
-    let signedPsbtHexs = await window.unisat.signPsbts(psbtHexs, unisatOptions);
-    let signedPsbts = signedPsbtHexs.map(hex => bitcoin.Psbt.fromHex(hex));
-    return signedPsbts;
-  },
+    const psbtHexs = psbtArray.map(psbt => psbt.toHex());
+    const unisatOptions = signingIndexesArray.map(signingIndexes => ({
+      toSignInputs: signingIndexes,
+      autoFinalized: false
+    }));
+    const signedPsbtHexs = await window.unisat.signPsbts(psbtHexs, unisatOptions);
+    const psbts = signedPsbtHexs.map(hex => bitcoin.Psbt.fromHex(hex));
+    const finalizedPsbts = psbts.map(psbt => psbt.finalizeAllInputs());
+    return finalizedPsbts;
+  }
+
   async setupAccountChangeListener(callback) {
     this.windowCheck();
     this._accountChangedListener = async (accounts) => {
-      console.log('Accounts changed:', accounts);
-      // handle dc
       if (accounts.length === 0) {
-        console.log("Wallet disconnected or empty address received");
-    
-        // Clear the wallet addresses
-        this.paymentAddress = null;
-        this.ordinalsAddress = null;
-        this.paymentPublicKey = null;
-        this.ordinalsPublicKey = null;
-        
-        // Notify the app about disconnection
-        callback({
-          paymentAddress: null,
-          ordinalsAddress: null,
-          paymentPublicKey: null,
-          ordinalsPublicKey: null,
-          disconnected: true
-        });
-        this.removeAccountChangeListener();
+        this.handleDisconnect(callback);
         return;
-      };
-
-      // handle switch
+      }
       const publicKey = await window.unisat.getPublicKey();
       this.paymentAddress = accounts[0];
       this.ordinalsAddress = accounts[0];
       this.paymentPublicKey = publicKey;
       this.ordinalsPublicKey = publicKey;
-      callback({
-        paymentAddress: accounts[0],
-        ordinalsAddress: accounts[0],
-        paymentPublicKey: publicKey,
-        ordinalsPublicKey: publicKey,
-      });
+      callback(this.getAccountInfo());
     };
     window.unisat.on('accountsChanged', this._accountChangedListener);
-  },
-  removeAccountChangeListener() {
+  }
+
+  async removeAccountChangeListener() {
     this.windowCheck();
-    window.unisat.removeListener('accountsChanged', this._accountChangedListener);
+    if (this._accountChangedListener) {
+      window.unisat.removeListener('accountsChanged', this._accountChangedListener);
+      this._accountChangedListener = null;
+    }
   }
 }
 
-export const xverse = {
-  walletType: 'xverse',
-  network: null,
-  paymentAddress: null,
-  ordinalsAddress: null,
-  paymentPublicKey: null,
-  ordinalsPublicKey: null,
+class XverseWallet extends Wallet {
+  constructor() {
+    super('xverse', true, true); //supports custom addresses and custom key path signing
+  }
 
   windowCheck() {
     if (!window.XverseProviders?.BitcoinProvider) throw new Error('Xverse not installed');
-  },
+  }
+
   async connect(network) {
     this.windowCheck();
     const response = await window.XverseProviders.BitcoinProvider.request("wallet_connect", {
@@ -141,626 +289,494 @@ export const xverse = {
       message: 'Connect to Vermilion dot place plz'
     });
     const accounts = response.result.addresses;
-    const paymentAddress = accounts.find(address => address.purpose === 'payment');
-    const ordinalsAddress = accounts.find(address => address.purpose === 'ordinals');
-    await this.getNetwork();
-    if (getNetworkFromAddress(paymentAddress.address) === network) {
-      this.network = network;
-    } else {
-      throw new Error('Connected to wrong network');
-    }
-    this.paymentAddress = paymentAddress.address;
-    this.ordinalsAddress = ordinalsAddress.address;
-    this.paymentPublicKey = paymentAddress.publicKey;
-    this.ordinalsPublicKey = ordinalsAddress.publicKey;
+    const payment = accounts.find(a => a.purpose === 'payment');
+    const ordinals = accounts.find(a => a.purpose === 'ordinals');
 
-    return {
-      paymentAddress: paymentAddress.address,
-      ordinalsAddress: ordinalsAddress.address,
-      paymentPublicKey: paymentAddress.publicKey,
-      ordinalsPublicKey: ordinalsAddress.publicKey,
-    };
-  },
+    if (await this.getNetwork() !== NETWORKS[network].xverse) {
+      throw new Error('Connected to wrong network, please switch to ' + network);
+    }
+    
+    this.network = network;
+    this.paymentAddress = payment.address;
+    this.ordinalsAddress = ordinals.address;
+    this.paymentPublicKey = payment.publicKey;
+    this.ordinalsPublicKey = ordinals.publicKey;
+
+    return this.getAccountInfo();
+  }
+
   async getNetwork() {
     this.windowCheck();
     const res = await window.XverseProviders.BitcoinProvider.request('wallet_getNetwork', null);
-    if (res.status === 'error') {
-      console.error(res.error);
-      return;
-    }
-    let network = res.result.bitcoin.name;
-  },
+    if (res.status === 'error') throw new Error(res.error);
+    return res.result.bitcoin.name;
+  }
+
   async switchNetwork(network) {
     throw new Error('Xverse does not support network switching');
-  },
-  async signPsbt(psbt) {
+  }
+
+  async signPsbt(psbt, signingIndexes = null) {
     this.windowCheck();
-    let inputsToSign = { [this.ordinalsAddress]: [], [this.paymentAddress]: [] };
-
-    psbt.data.inputs.forEach((input, inputIndex) => {
-      let inputAddress;
-      if (input.nonWitnessUtxo) {
-        const transaction = bitcoin.Transaction.fromBuffer(input.nonWitnessUtxo);
-        const output = transaction.outs[input.index];
-        inputAddress = bitcoin.address.fromOutputScript(
-          output.script,
-          NETWORKS[this.network].bitcoinjs
-        );
-      } else if (input.witnessUtxo) {
-        inputAddress = bitcoin.address.fromOutputScript(
-          input.witnessUtxo.script,
-          NETWORKS[this.network].bitcoinjs
-        );
-      } else {
-        throw new Error('Malformed PSBT: input is missing nonWitnessUtxo or witnessUtxo');
-      }
-      
-      if (inputAddress === this.paymentAddress || inputAddress === this.ordinalsAddress) {
-        inputsToSign[inputAddress].push(inputIndex);
-      }
-    });
-
-    let psbtBase64= psbt.toBase64();
-    let response = await window.XverseProviders.BitcoinProvider.request("signPsbt", {
+    const inputsToSign = this.getInputsToSignGroupedNameless(psbt, signingIndexes);
+    const psbtBase64 = psbt.toBase64();
+    console.log('Signing PSBT with Xverse:', psbtBase64, inputsToSign);
+    const response = await window.XverseProviders.BitcoinProvider.request("signPsbt", {
       psbt: psbtBase64,
       signInputs: inputsToSign,
       broadcast: false
     });
     if (response.error) throw new Error(response.error.message);
-    let signedPsbt = bitcoin.Psbt.fromBase64(response.result.psbt);
+    const signedPsbt = bitcoin.Psbt.fromBase64(response.result.psbt);
+    if (signedPsbt.data.inputs[0].tapKeySig && signedPsbt.data.inputs[0].tapScriptSig) { // hacky af
+      delete signedPsbt.data.inputs[0].tapKeySig;
+    }
     let finalizedPsbt = signedPsbt.finalizeAllInputs();
     return finalizedPsbt;
-  },
+  }
+
   async signPsbts(psbtArray, signingIndexesArray) {
     this.windowCheck();
-    let base64Psbts = psbtArray.map(psbt => psbt.toBase64());
-    let xverseobject = [];
-    for (let i = 0; i < psbtArray.length; i++) {
-      let inputsToSign = { [this.ordinalsAddress]: [], [this.paymentAddress]: [] };
-      signingIndexesArray[i].forEach(signingIndex => {
-        if (signingIndex.address === this.paymentAddress) {
-          inputsToSign[this.paymentAddress].push(signingIndex.index);
-        }
-        if (signingIndex.address === this.ordinalsAddress) {
-          inputsToSign[this.ordinalsAddress].push(signingIndex.index);
-        }
-      });
-      let entry = {
-        psbtBase64: base64Psbts[i],
-        inputsToSign,
-        broadcast: false
-      }
-      xverseobject.push(entry);
-    }
-    let response = await window.XverseProviders.BitcoinProvider.request("signMultipleTransactions", {
+    const psbts = psbtArray.map((psbt, i) => ({
+      psbtBase64: psbt.toBase64(),
+      inputsToSign: this.getInputsToSignGroupedNameless(psbt, signingIndexesArray[i]),
+      broadcast: false
+    }));
+    // let payload = {
+    //   network: { type: NETWORKS[this.network].xverse },
+    //   message: 'Sign these transactions plz',
+    //   psbts
+    // };
+    // let request = jsontokens.createUnsecuredToken(payload);
+    const response = await window.XverseProviders.BitcoinProvider.request("signMultipleTransactions", {
       payload: {
-        network: {
-          type: NETWORKS[this.network].xverse
-        },
+        network: { type: NETWORKS[this.network].xverse },
         message: "Sign these transactions plz",
-        psbts: xverseobject
+        psbts
       }
     });
-    console.log(response);
-    if (response.error) {
+
+    if (response.error){
       if (response.error.message.includes('is not supported')) {
-        console.log('Xverse does not support signMultipleTransactions, trying one at a time');
-        let signedPsbts = [];
-        for (const [index, psbt] of psbtArray.entries()) {
-          let signedPsbt = await this.signPsbt(psbt);
-          signedPsbts[index] = signedPsbt;
+        console.log('Xverse does not support signing multiple PSBTs at once, falling back to single signPsbt calls');
+        let signedPsbts = []
+        for (let i = 0; i < psbtArray.length; i++) {
+          let signedPsbt = await this.signPsbt(psbtArray[i], signingIndexesArray[i]);
+          signedPsbts.push(signedPsbt);
         }
         return signedPsbts;
-      } else {
-        throw new Error(response.error);
       }
+      throw error;
     }
-  },
+
+    return response.result.map(r => bitcoin.Psbt.fromBase64(r.psbt).finalizeAllInputs());
+  }
+
   async setupAccountChangeListener(callback) {
-    console.log('Account change listener not supported for Xverse');     
-  },
+    this._accountChangedListener = window.XverseProviders.BitcoinProvider.addListener('accountChange', async () => {
+      this.handleDisconnect(callback);
+    });
+  }
+
   async removeAccountChangeListener() {
-    //No listener to remove
+    if (this._accountChangedListener) {
+      this._accountChangedListener();
+      this._accountChangedListener = null;
+    }
   }
 }
 
-export const leather = {
-  walletType: 'leather',
-  network: null,
-  paymentAddress: null,
-  ordinalsAddress: null,
-  paymentPublicKey: null,
-  ordinalsPublicKey: null,
+class LeatherWallet extends Wallet {
+  constructor() {
+    super('leather', false, false); // Error: Can not finalize taproot input #0. No tapleaf script signature provided.
+  }
 
   windowCheck() {
     if (!window.LeatherProvider) throw new Error('Leather not installed');
-  },
+  }
+
   async connect(network) {
     this.windowCheck();
     const response = await window.LeatherProvider.request('getAddresses');
-    const paymentAddress = response.result.addresses.find(address => address.type === 'p2wpkh');
-    const ordinalsAddress = response.result.addresses.find(address => address.type === 'p2tr');
-    if (getNetworkFromAddress(paymentAddress.address) === network) {
-      this.network = network;
-    } else {
-      throw new Error('Connected to wrong network');
+    const payment = response.result.addresses.find(a => a.type === 'p2wpkh');
+    const ordinals = response.result.addresses.find(a => a.type === 'p2tr');
+    
+    if (!getNetworksFromAddress(payment.address).includes(network)) {
+      throw new Error('Connected to wrong network, please switch to ' + network);
     }
-    this.paymentAddress = paymentAddress.address;
-    this.ordinalsAddress = ordinalsAddress.address;
-    this.paymentPublicKey = paymentAddress.publicKey;
-    this.ordinalsPublicKey = ordinalsAddress.publicKey;
+    
+    this.network = network;
+    this.paymentAddress = payment.address;
+    this.ordinalsAddress = ordinals.address;
+    this.paymentPublicKey = payment.publicKey;
+    this.ordinalsPublicKey = ordinals.publicKey;
 
-    return {
-      paymentAddress: paymentAddress.address,
-      ordinalsAddress: ordinalsAddress.address,
-      paymentPublicKey: paymentAddress.publicKey,
-      ordinalsPublicKey: ordinalsAddress.publicKey,
-    };
-  },
+    return this.getAccountInfo();
+  }
+
   async getNetwork() {
     throw new Error('Leather does not support getNetwork');
-  },
+  }
+
   async switchNetwork(network) {
     throw new Error('Leather does not support network switching');
-  },
-  async signPsbt(psbt) {
-    this.windowCheck();
-    let response = await window.LeatherProvider.request('signPsbt', { hex: psbt.toHex() });
-    if (response.error) throw new Error(response.error.message);
-    console.log(response);
-    let signedPsbt = bitcoin.Psbt.fromHex(response.result.hex);
-    let finalizedPsbt = signedPsbt.finalizeAllInputs();
-    return finalizedPsbt;
-  },
-  async setupAccountChangeListener(callback) {
-    console.log('Account change listener not supported for Leather');     
-  },
-  async removeAccountChangeListener() {
-    //No listener to remove
   }
+
+  async signPsbt(psbt, signingIndexes = null) {
+    this.windowCheck();
+    const requestParams = { 
+      hex: psbt.toHex(),
+      ...(signingIndexes && { signAtIndex: signingIndexes.map(idx => idx.index) })
+    };
+    const response = await window.LeatherProvider.request('signPsbt', requestParams);
+    if (response.error) throw new Error(response.error.message);
+    const signedPsbt = bitcoin.Psbt.fromHex(response.result.hex);
+    return signedPsbt.finalizeAllInputs();
+  }
+
 }
 
-export const okx = {
-  walletType: 'okx',
-  network: null,
-  paymentAddress: null,
-  ordinalsAddress: null,
-  paymentPublicKey: null,
-  ordinalsPublicKey: null,
-  // Store the listener functions as properties
-  _accountChangedListener: null,
+class OkxWallet extends Wallet {
+  constructor() {
+    super('okx', true, true); //supports custom addresses and custom key path signing
+    this._provider = null;
+  }
 
   windowCheck() {
     if (!window.okxwallet) throw new Error('OKX not installed');
-  },
+  }
+
   async connect(network) {
     this.windowCheck();
     let response;
     if (network === 'mainnet') {
-      response = await window.okxwallet.bitcoin.connect();
+      this._provider = window.okxwallet.bitcoin;
     } else if (network === 'testnet') {
-      response = await window.okxwallet.bitcoinTestnet.connect();
+      this._provider = window.okxwallet.bitcoinTestnet;
+    } else if (network === 'signet') {
+      this._provider = window.okxwallet.bitcoinSignet;
+    }  else {
+      throw new Error('OKX only supports mainnet, testnet and signet');
     }
+
+    response = await this._provider.connect();
+    
     this.network = network;
     this.paymentAddress = response.address;
     this.ordinalsAddress = response.address;
     this.paymentPublicKey = response.publicKey;
     this.ordinalsPublicKey = response.publicKey;
 
-    return {
-      paymentAddress: response.address,
-      ordinalsAddress: response.address,
-      paymentPublicKey: response.publicKey,
-      ordinalsPublicKey: response.publicKey,
-    };
-  },
+    return this.getAccountInfo();
+  }
+
   async getNetwork() {
     this.windowCheck();
     return this.network;
-  },
+  }
+
   async switchNetwork(network) {
     this.windowCheck();
     await this.connect(network);
-  },
-  async signPsbt(psbt) {
+  }
+
+  async signPsbt(psbt, signingIndexes = null) {
     this.windowCheck();
-    if (this.network === 'mainnet') {
-      let signedPsbtHex = await window.okxwallet.bitcoin.signPsbt(psbt.toHex());
-      let signedPsbt = bitcoin.Psbt.fromHex(signedPsbtHex);
-      return signedPsbt;
-    } else if (this.network === 'testnet') {
-      let signedPsbtHex = await window.okxwallet.bitcoinTestnet.signPsbt(psbt.toHex());
-      let signedPsbt = bitcoin.Psbt.fromHex(signedPsbtHex);
-      return signedPsbt;
+    const provider = this._provider;
+    let signedPsbtHex;
+    if (signingIndexes === null) {
+      signedPsbtHex = await provider.signPsbt(psbt.toHex());
+    } else {
+      let okxOptions = {
+        autoFinalized: true,
+        toSignInputs: signingIndexes
+      }
+      signedPsbtHex = await provider.signPsbt(psbt.toHex(), okxOptions);
     }
-  },
+    return bitcoin.Psbt.fromHex(signedPsbtHex);
+  }
+
+  async signPsbts(psbtArray, signingIndexesArray) {
+    this.windowCheck();
+    const provider = this._provider;
+    const psbtHexs = psbtArray.map(psbt => psbt.toHex());
+    const options = signingIndexesArray.map(signingIndexes => ({
+      toSignInputs: signingIndexes,
+      autoFinalized: true
+    }));
+    const signedPsbtHexs = await provider.signPsbts(psbtHexs, options);
+    return signedPsbtHexs.map(hex => bitcoin.Psbt.fromHex(hex));
+  }
+
   async setupAccountChangeListener(callback) {
     this.windowCheck();
-
     this._accountChangedListener = async (addressInfo) => {
       if (addressInfo === null) {
-        console.log("Wallet disconnected or empty address received");
-    
-        // Clear the wallet addresses
-        this.paymentAddress = null;
-        this.ordinalsAddress = null;
-        this.paymentPublicKey = null;
-        this.ordinalsPublicKey = null;
-        
-        // Notify the app about disconnection
-        callback({
-          paymentAddress: null,
-          ordinalsAddress: null,
-          paymentPublicKey: null,
-          ordinalsPublicKey: null,
-          disconnected: true
-        });
-        this.removeAccountChangeListener();
+        this.handleDisconnect(callback);
         return;
-      };
-      // update addresses if exist
+      }
       this.paymentAddress = addressInfo.address;
       this.ordinalsAddress = addressInfo.address;
       this.paymentPublicKey = addressInfo.publicKey;
       this.ordinalsPublicKey = addressInfo.publicKey;
-      callback({
-        paymentAddress: addressInfo.address,
-        ordinalsAddress: addressInfo.address,
-        paymentPublicKey: addressInfo.publicKey,
-        ordinalsPublicKey: addressInfo.publicKey,
-      });
+      callback(this.getAccountInfo());
     };
-
-    // Use the stored function when adding listeners
-    const provider = this.network === 'mainnet' ? 
-    window.okxwallet.bitcoin : 
-    window.okxwallet.bitcoinTestnet;      
+    const provider = this._provider;
     provider.on('accountChanged', this._accountChangedListener);
-  },
-  removeAccountChangeListener() {
+  }
+
+  async removeAccountChangeListener() {
     this.windowCheck();
-    
-    if (!this._accountChangedListener) {
-      return; // No listeners have been set up
+    if (this._accountChangedListener) {
+      const provider = this._provider;
+      provider.removeListener('accountChanged', this._accountChangedListener);
+      this._accountChangedListener = null;
     }
-    
-    const provider = this.network === 'mainnet' ? 
-      window.okxwallet.bitcoin : 
-      window.okxwallet.bitcoinTestnet;
-    
-    // Use the same function references when removing listeners
-    provider.removeListener('accountChanged', this._accountChangedListener);
-    
-    // Clean up the references
-    this._accountChangedListener = null;
   }
 }
 
-export const magiceden = {
-  walletType: 'magiceden',
-  network: null,
-  paymentAddress: null,
-  ordinalsAddress: null,
-  paymentPublicKey: null,
-  ordinalsPublicKey: null,
-  _accountChangedListener: null,
+class MagicEdenWallet extends Wallet {
+  constructor() {
+    super('magiceden', true, true); //assumed, need to check on mainnet
+  }
 
   windowCheck() {
-    if (!window.magicEden.bitcoin) throw new Error('MagicEden not installed');
-  },
+    if (!window.magicEden?.bitcoin) throw new Error('MagicEden not installed');
+  }
+
   async connect(network) {
     this.windowCheck();
-    //if (network !== 'mainnet') throw new Error('MagicEden only supports mainnet');
+    if (network !== 'mainnet') throw new Error('Magiceden only supports mainnet');
     this.network = network;
-    let payload = {
-      purposes: ['payment', 'ordinals']
-    };
-    let request = jsontokens.createUnsecuredToken(payload);
-    let response = await window.magicEden.bitcoin.connect(request);
+    const payload = { purposes: ['payment', 'ordinals'] };
+    const request = jsontokens.createUnsecuredToken(payload);
+    const response = await window.magicEden.bitcoin.connect(request);
     const accounts = response.addresses;
-    const paymentAddress = accounts.find(address => address.purpose === 'payment');
-    const ordinalsAddress = accounts.find(address => address.purpose === 'ordinals');
-    this.paymentAddress = paymentAddress.address;
-    this.ordinalsAddress = ordinalsAddress.address;
-    this.paymentPublicKey = paymentAddress.publicKey;
-    this.ordinalsPublicKey = ordinalsAddress.publicKey;
+    const payment = accounts.find(a => a.purpose === 'payment');
+    const ordinals = accounts.find(a => a.purpose === 'ordinals');
+    
+    this.paymentAddress = payment.address;
+    this.ordinalsAddress = ordinals.address;
+    this.paymentPublicKey = payment.publicKey;
+    this.ordinalsPublicKey = ordinals.publicKey;
 
-    return {
-      paymentAddress: paymentAddress.address,
-      ordinalsAddress: ordinalsAddress.address,
-      paymentPublicKey: paymentAddress.publicKey,
-      ordinalsPublicKey: ordinalsAddress.publicKey,
-    };
-  },
+    return this.getAccountInfo();
+  }
+
   async getNetwork() {
     throw new Error('MagicEden does not support getNetwork');
-  },
+  }
+
   async switchNetwork(network) {
     throw new Error('MagicEden does not support network switching');
-  },
-  async signPsbt(psbt) {
+  }
+
+  async signPsbt(psbt, signingIndexes = null) {
     this.windowCheck();
-    let inputsToSign = [
-      {
-        address: this.paymentAddress,
-        signingIndexes: []
-      },
-      {
-        address: this.ordinalsAddress,
-        signingIndexes: []
-      }
-    ];
-
-    psbt.data.inputs.forEach((input, inputIndex) => {
-      let inputAddress;
-      if (input.nonWitnessUtxo) {
-        const transaction = bitcoin.Transaction.fromBuffer(input.nonWitnessUtxo);
-        const output = transaction.outs[input.index];
-        inputAddress = bitcoin.address.fromOutputScript(
-          output.script,
-          this.network
-        );
-      } else if (input.witnessUtxo) {
-        inputAddress = bitcoin.address.fromOutputScript(
-          input.witnessUtxo.script,
-          this.network
-        );
-      } else {
-        throw new Error('Malformed PSBT: input is missing nonWitnessUtxo or witnessUtxo');
-      }
-      
-      if (inputAddress === this.paymentAddress || inputAddress === this.ordinalsAddress) {
-        inputsToSign.find(input => input.address === inputAddress).signingIndexes.push(inputIndex);
-      }
-    });
-
-    let psbtBase64= psbt.toBase64();
-    let payload = {
-      network: {
-        type: 'Mainnet',
-      },
-      psbtBase64: psbtBase64,
+    const inputsToSign = this.getInputsToSignGrouped(psbt, signingIndexes);
+    const psbtBase64 = psbt.toBase64();
+    const payload = {
+      network: { type: 'Mainnet' },
+      psbtBase64,
       broadcast: false,
-      inputsToSign: inputsToSign
+      inputsToSign
     };
-    let request = jsontokens.createUnsecuredToken(payload);
-    let response = await window.magicEden.bitcoin.signPsbt(request);
+    const request = jsontokens.createUnsecuredToken(payload);
+    const response = await window.magicEden.bitcoin.signPsbt(request);
     if (response.error) throw new Error(response.error.message);
-    let signedPsbt = bitcoin.Psbt.fromBase64(response.result.psbt);
-    let finalizedPsbt = signedPsbt.finalizeAllInputs();
-    return finalizedPsbt;
-  },
+    const signedPsbt = bitcoin.Psbt.fromBase64(response.result.psbt);
+    return signedPsbt.finalizeAllInputs();
+  }
+
   async setupAccountChangeListener(callback) {
     this.windowCheck();
     this._accountChangedListener = async (accounts) => {
-      // handle switch
-      const paymentAddress = accounts.find(address => address.purpose === 'payment');
-      const ordinalsAddress = accounts.find(address => address.purpose === 'ordinals');
-      if (this.paymentAddress === paymentAddress.address && this.ordinalsAddress === ordinalsAddress.address) {
-        return; //address hasn't changed
-      };
-      this.paymentAddress = paymentAddress.address;
-      this.ordinalsAddress = ordinalsAddress.address;
-      this.paymentPublicKey = null;
-      this.ordinalsPublicKey = null;
+      const payment = accounts.find(a => a.purpose === 'payment');
+      const ordinals = accounts.find(a => a.purpose === 'ordinals');
+      if (this.paymentAddress === payment.address && this.ordinalsAddress === ordinals.address) {
+        return;
+      }
       await this.connect(this.network);
-      callback({
-        paymentAddress: this.paymentAddress,
-        ordinalsAddress: this.ordinalsAddress,
-        paymentPublicKey: this.paymentPublicKey,
-        ordinalsPublicKey: this.ordinalsPublicKey,
-      });
+      callback(this.getAccountInfo());
     };
     window.magicEden.bitcoin.on('accountsChanged', this._accountChangedListener);
-  },
-  removeAccountChangeListener() {
-    this.windowCheck();
-    window.magicEden.bitcoin.removeListener('accountsChanged', this._accountChangedListener);
   }
 
+  async removeAccountChangeListener() {
+    this.windowCheck();
+    if (this._accountChangedListener) {
+      window.magicEden.bitcoin.removeListener('accountsChanged', this._accountChangedListener);
+      this._accountChangedListener = null;
+    }
+  }
 }
 
-export const phantom = {
-  walletType: 'phantom',
-  network: null,
-  paymentAddress: null,
-  ordinalsAddress: null,
-  paymentPublicKey: null,
-  ordinalsPublicKey: null,
-  _accountChangedListener: null,
+class PhantomWallet extends Wallet {
+  constructor() {
+    super('phantom', true, true); //Assumed, need to check on mainnet
+  }
 
   windowCheck() {
     if (!window.phantom?.bitcoin) throw new Error('Phantom not installed');
-  },
+  }
+
   async connect(network) {
     this.windowCheck();
     if (network !== 'mainnet') throw new Error('Phantom only supports mainnet');
     this.network = network;
-    let accounts = await window.phantom.bitcoin.requestAccounts();
-    let paymentAddress = accounts.find(address => address.purpose === 'payment');
-    let ordinalsAddress = accounts.find(address => address.purpose === 'ordinals');
-    this.paymentAddress = paymentAddress.address;
-    this.ordinalsAddress = ordinalsAddress.address;
-    this.paymentPublicKey = paymentAddress.publicKey;
-    this.ordinalsPublicKey = ordinalsAddress.publicKey;
+    const accounts = await window.phantom.bitcoin.requestAccounts();
+    const payment = accounts.find(a => a.purpose === 'payment');
+    const ordinals = accounts.find(a => a.purpose === 'ordinals');
+    
+    this.paymentAddress = payment.address;
+    this.ordinalsAddress = ordinals.address;
+    this.paymentPublicKey = payment.publicKey;
+    this.ordinalsPublicKey = ordinals.publicKey;
 
-    return {
-      paymentAddress: paymentAddress.address,
-      ordinalsAddress: ordinalsAddress.address,
-      paymentPublicKey: paymentAddress.publicKey,
-      ordinalsPublicKey: ordinalsAddress.publicKey,
-    };
-  },
+    return this.getAccountInfo();
+  }
+
   async getNetwork() {
     this.windowCheck();
     return this.network;
-  },
+  }
+
   async switchNetwork(network) {
     throw new Error('Phantom does not support network switching');
-  },
-  async signPsbt(psbt) {
-    this.windowCheck();
-    let inputsToSign = [
-      {
-        address: this.paymentAddress,
-        signingIndexes: []
-      },
-      {
-        address: this.ordinalsAddress,
-        signingIndexes: []
-      }
-    ];
+  }
 
-    psbt.data.inputs.forEach((input, inputIndex) => {
-      let inputAddress;
-      if (input.nonWitnessUtxo) {
-        const transaction = bitcoin.Transaction.fromBuffer(input.nonWitnessUtxo);
-        const output = transaction.outs[input.index];
-        inputAddress = bitcoin.address.fromOutputScript(
-          output.script,
-          this.network
-        );
-      } else if (input.witnessUtxo) {
-        inputAddress = bitcoin.address.fromOutputScript(
-          input.witnessUtxo.script,
-          NETWORKS[this.network].bitcoinjs
-        );
-      } else {
-        throw new Error('Malformed PSBT: input is missing nonWitnessUtxo or witnessUtxo');
-      }
-      
-      if (inputAddress === this.paymentAddress || inputAddress === this.ordinalsAddress) {
-        inputsToSign.find(input => input.address === inputAddress).signingIndexes.push(inputIndex);
-      }
-    });
-    let psbtBytes = new Uint8Array(psbt.toBuffer());
-    let signedPSBTBytes = await window.phantom.bitcoin.signPSBT(psbtBytes, {
-      inputsToSign: inputsToSign,
+  async signPsbt(psbt, signingIndexes = null) {
+    this.windowCheck();
+    const inputsToSign = this.getInputsToSignGrouped(psbt, signingIndexes);
+    const psbtBytes = new Uint8Array(psbt.toBuffer());
+    const signedPSBTBytes = await window.phantom.bitcoin.signPSBT(psbtBytes, {
+      inputsToSign,
       broadcast: false
     });
-    let signedPsbt = bitcoin.Psbt.fromBuffer(Buffer.from(signedPSBTBytes));
-    let finalizedPsbt = signedPsbt.finalizeAllInputs();
-    return finalizedPsbt;
-  },
+    const signedPsbt = bitcoin.Psbt.fromBuffer(Buffer.from(signedPSBTBytes));
+    return signedPsbt.finalizeAllInputs();
+  }
+
   async setupAccountChangeListener(callback) {
     this.windowCheck();
     this._accountChangedListener = async (accounts) => {
-      console.log('Accounts changed:', accounts);
-      // handle dc
       if (accounts.length === 0) {
-        console.log("Wallet disconnected or empty address received");
-    
-        // Clear the wallet addresses
-        this.paymentAddress = null;
-        this.ordinalsAddress = null;
-        this.paymentPublicKey = null;
-        this.ordinalsPublicKey = null;
-        
-        // Notify the app about disconnection
-        callback({
-          paymentAddress: null,
-          ordinalsAddress: null,
-          paymentPublicKey: null,
-          ordinalsPublicKey: null,
-          disconnected: true
-        });
-        this.removeAccountChangeListener();
+        this.handleDisconnect(callback);
         return;
-      };
-
-      // handle switch
-      let paymentAddress = accounts.find(address => address.purpose === 'payment');
-      let ordinalsAddress = accounts.find(address => address.purpose === 'ordinals');
-      this.paymentAddress = paymentAddress.address;
-      this.ordinalsAddress = ordinalsAddress.address;
-      this.paymentPublicKey = paymentAddress.publicKey;
-      this.ordinalsPublicKey = ordinalsAddress.publicKey;
-      callback({
-        paymentAddress: paymentAddress.address,
-        ordinalsAddress: ordinalsAddress.address,
-        paymentPublicKey: paymentAddress.publicKey,
-        ordinalsPublicKey: ordinalsAddress.publicKey,
-      });
+      }
+      const payment = accounts.find(a => a.purpose === 'payment');
+      const ordinals = accounts.find(a => a.purpose === 'ordinals');
+      this.paymentAddress = payment.address;
+      this.ordinalsAddress = ordinals.address;
+      this.paymentPublicKey = payment.publicKey;
+      this.ordinalsPublicKey = ordinals.publicKey;
+      callback(this.getAccountInfo());
     };
     window.phantom.bitcoin.on('accountsChanged', this._accountChangedListener);
-  },
-  removeAccountChangeListener() {
+  }
+
+  async removeAccountChangeListener() {
     this.windowCheck();
-    window.phantom.bitcoin.removeListener('accountsChanged', this._accountChangedListener);
+    if (this._accountChangedListener) {
+      window.phantom.bitcoin.removeListener('accountsChanged', this._accountChangedListener);
+      this._accountChangedListener = null;
+    }
   }
 }
 
-export const oyl = {
-  walletType: 'oyl',
-  network: null,
-  paymentAddress: null,
-  ordinalsAddress: null,
-  paymentPublicKey: null,
-  ordinalsPublicKey: null,
+class OylWallet extends Wallet {
+  constructor() {
+    super('oyl', false, false); //does not support signing custom addresses nor key path signing
+  }
 
   windowCheck() {
     if (!window.oyl) throw new Error('Oyl not installed');
-  },
+  }
+
   async connect(network) {
     this.windowCheck();
-    if (network !== 'mainnet') throw new Error('Oyl only supports mainnet');    
+    if (!getNetworksFromAddress(payment.address).includes(network)) {
+      throw new Error('Connected to wrong network, please switch to ' + network);
+    }
     this.network = network;
-    let accounts = await window.oyl.getAddresses();
+    const accounts = await window.oyl.getAddresses();
     this.paymentAddress = accounts.nativeSegwit.address;
     this.ordinalsAddress = accounts.taproot.address;
     this.paymentPublicKey = accounts.nativeSegwit.publicKey;
     this.ordinalsPublicKey = accounts.taproot.publicKey;
 
-    return {
-      paymentAddress: accounts.nativeSegwit.address,
-      ordinalsAddress: accounts.taproot.address,
-      paymentPublicKey: accounts.nativeSegwit.publicKey,
-      ordinalsPublicKey: accounts.taproot.publicKey,
-    };
-  },
+    return this.getAccountInfo();
+  }
+
   async getNetwork() {
     throw new Error('Oyl does not support getNetwork');
-  },
+  }
+
   async switchNetwork(network) {
     throw new Error('Oyl does not support network switching');
-  },
+  }
+
   async signPsbt(psbt) {
     this.windowCheck();
-    let response = await window.oyl.signPsbt({
+    const response = await window.oyl.signPsbt({
       psbt: psbt.toHex(),
       broadcast: false,
       finalize: true
     });
-    let signedPsbt = bitcoin.Psbt.fromHex(response.psbt);
-    return signedPsbt;
-  },
-  async setupAccountChangeListener(callback) {
-    console.log('Account change listener not supported for Oyl');     
-  },
-  async removeAccountChangeListener() {
-    //No listener to remove
+    return bitcoin.Psbt.fromHex(response.psbt);
+  }
+
+  async signPsbts(psbtArray, signingIndexesArray) {
+    this.windowCheck();
+    const response = await window.oyl.signPsbts(
+      psbtArray.map(psbt => ({
+        psbt: psbt.toHex(),
+        broadcast: false,
+        finalize: true
+      }))
+    );
+    return response.map(signed => bitcoin.Psbt.fromHex(signed.psbt));
   }
 }
 
+export {
+  UnisatWallet,
+  XverseWallet,
+  LeatherWallet,
+  OkxWallet,
+  MagicEdenWallet,
+  PhantomWallet,
+  OylWallet
+};
+
 export const connectWallet = async (walletType, network) => {
+  let walletInstance;
   switch (walletType) {
     case 'unisat':
-      return await unisat.connect(network);
+      walletInstance = new UnisatWallet();
+      break;
     case 'xverse':
-      return await xverse.connect(network);
+      walletInstance = new XverseWallet();
+      break;
     case 'leather':
-      return await leather.connect(network);
+      walletInstance = new LeatherWallet();
+      break;
     case 'okx':
-      return await okx.connect(network);
+      walletInstance = new OkxWallet();
+      break;
     case 'magiceden':
-      return await magiceden.connect(network);
+      walletInstance = new MagicEdenWallet();
+      break;
     case 'phantom':
-      return await phantom.connect(network);
+      walletInstance = new PhantomWallet();
+      break;
     case 'oyl':
-      return await oyl.connect(network);
+      walletInstance = new OylWallet();
+      break;
     default:
       throw new Error('Unsupported wallet type');
   }
+  await walletInstance.connect(network);
 }
 
 export const disconnectWallet = async (wallet) => {
@@ -789,16 +805,24 @@ export const detectWallet = async (walletType) => {
 }
 
 export const detectWallets = async () => {
-  const wallets = [unisat, xverse, leather, okx, magiceden, phantom, oyl];
+  const walletTypes = [
+    'unisat',
+    'xverse',
+    'leather',
+    'okx',
+    'magiceden',
+    'phantom',
+    'oyl'
+  ];
   const detectedWallets = [];
-  for (const wallet of wallets) {
+  for (const walletType of walletTypes) {
     try {
-      const isDetected = await detectWallet(wallet.walletType);
+      const isDetected = await detectWallet(walletType);
       if (isDetected) {
-        detectedWallets.push(wallet.walletType);
+        detectedWallets.push(walletType);
       }
     } catch (error) {
-      console.error(`Error detecting wallet ${wallet.walletType}:`, error);
+      console.error(`Error detecting wallet ${walletType}:`, error);
     }
   }
   return detectedWallets;
