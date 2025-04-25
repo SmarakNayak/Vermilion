@@ -1016,8 +1016,8 @@ const CheckoutModal = ({ onClose, isCheckoutModalOpen, delegateData, metadata, n
     };
   }, [isCheckoutModalOpen]);
 
-  const handleBoostClick = async (inscriptionId) => {
-    if (!inscriptionId) {
+  const handleBoostClick = async (delegateMetadata) => {
+    if (!delegateMetadata) {
       console.error("No delegate or inscription ID available for boosting");
       return;
     }
@@ -1025,7 +1025,8 @@ const CheckoutModal = ({ onClose, isCheckoutModalOpen, delegateData, metadata, n
     try {
       // Create a boost inscription with delegate
       const boostInscription = new InscriptionObject({
-        delegate: inscriptionId,
+        delegate: delegateMetadata.id,
+        contentType: delegateMetadata.content_type,
         postage: 546 // Minimum sat value
       });
       console.log("Boost inscription created:", boostInscription);
@@ -1154,7 +1155,7 @@ const CheckoutModal = ({ onClose, isCheckoutModalOpen, delegateData, metadata, n
 
           {/* Boost Button Section */}
           <BoostButtonContainer>
-            <ModalBoostButton onClick={() => handleBoostClick(delegateData?.metadata.id || metadata?.id)}>
+            <ModalBoostButton onClick={() => handleBoostClick(delegateData?.metadata || metadata)}>
               <ChevronUpDuoIcon size="1.25rem" color={theme.colors.background.white} />
               Boost
             </ModalBoostButton>
