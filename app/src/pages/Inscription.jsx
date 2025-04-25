@@ -35,6 +35,8 @@ import InnerInscriptionContent from '../components/common/InnerInscriptionConten
 import MainText from '../components/common/text/MainText';
 import IconButton from '../components/common/buttons/IconButton';
 import Spinner from '../components/Spinner';
+import InscriptionIcon from '../components/InscriptionIcon';
+
 
 // Utils
 import { addCommas, formatAddress, shortenBytes } from '../utils/format';
@@ -52,6 +54,8 @@ import {
   LinkIcon,
   WebIcon,
   CrossIcon,
+  MinusIcon,
+  PlusIcon,
 } from '../components/common/Icon';
 import theme from '../styles/theme';
 
@@ -616,6 +620,16 @@ const Inscription = () => {
     });
   };
 
+  const [isCheckoutModalOpen, setCheckoutModalOpen] = useState(false);
+
+  const toggleCheckoutModal = () => {
+    setCheckoutModalOpen((prev) => {
+      const isOpening = !prev;
+      document.body.style.overflow = isOpening ? 'hidden' : 'auto';
+      return isOpening;
+    });
+  };
+
   console.log(metadata)
 
   console.log("modal status", isBoostsModalOpen)
@@ -664,15 +678,15 @@ const Inscription = () => {
                   <ButtonsRow gap={'.5rem'}>
                     <CountButton onClick={toggleBoostsModal}>
                       <ChevronUpDuoIcon size={'1.25rem'} color={theme.colors.text.primary} />
-                        {boostEdition ? `${boostEdition} / ${boosts} boosts` : `${boosts} boosts`}
+                        {boostEdition ? `${addCommas(boostEdition)} / ${addCommas(boosts)} boosts` : `${addCommas(boosts)} boosts`}
                       </CountButton>
                     <CountButton onClick={toggleCommentsModal}>
                       <CommentIcon size={'1.25rem'} color={theme.colors.text.primary} />
-                      {comments} comments
+                      {addCommas(comments)} comments
                     </CountButton>
                   </ButtonsRow>
                   <ButtonsRow gap={'.75rem'}>
-                    <BoostButton>
+                    <BoostButton onClick={toggleCheckoutModal}>
                       <ChevronUpDuoIcon size={'1.25rem'} color={theme.colors.background.white} />
                       Boost
                     </BoostButton>
@@ -702,6 +716,15 @@ const Inscription = () => {
                 commentsList={commentsList}
                 onClose={toggleCommentsModal}
                 isCommentsModalOpen={isCommentsModalOpen}
+              />
+
+              {/* Checkout Modal */}
+              <CheckoutModal
+                onClose={toggleCheckoutModal}
+                isCheckoutModalOpen={isCheckoutModalOpen}
+                delegateData={delegateData}
+                metadata={metadata}
+                number={number}
               />
               
               {/* Details Section */}
@@ -956,6 +979,151 @@ const CommentsModal = ({ commentsList, onClose, isCommentsModalOpen }) => {
               {/* </CommentDetails> */}
             </CommentEntry>
           ))}
+        </ModalContent>
+      </ModalContainer>
+    </ModalOverlay>
+  );
+};
+
+const CheckoutModal = ({ onClose, isCheckoutModalOpen, delegateData, metadata, number }) => {
+  const placeholderFees = [
+    { id: 1, btc: "0.00002816 BTC", usd: "$2.55" },
+    { id: 2, btc: "0.00002000 BTC", usd: "$1.90" },
+    { id: 3, btc: "0.00004816 BTC", usd: "$4.45" },
+  ];
+
+  const observer = useRef();
+  const modalContentRef = useRef(); // Ref for the modal content
+
+  useEffect(() => {
+    if (isCheckoutModalOpen) {
+      document.body.style.overflow = 'hidden'; // Disable page scrolling
+    } else {
+      document.body.style.overflow = 'auto'; // Enable page scrolling
+
+      // Reset scroll position when modal is closed
+      if (modalContentRef.current) {
+        modalContentRef.current.scrollTop = 0;
+      }
+    }
+
+    return () => {
+      document.body.style.overflow = 'auto'; // Cleanup on unmount
+    };
+  }, [isCheckoutModalOpen]);
+
+  return (
+    <ModalOverlay isOpen={isCheckoutModalOpen} onClick={onClose}>
+      <ModalContainer isOpen={isCheckoutModalOpen} onClick={(e) => e.stopPropagation()}>
+        <ModalHeader>
+          <HeaderText>Checkout</HeaderText>
+          <CloseButton onClick={onClose}>
+            <CrossIcon size={'1.25rem'} color={theme.colors.text.secondary} />
+          </CloseButton>
+        </ModalHeader>
+        <ModalContent gap="1.5rem" ref={modalContentRef}>
+          <SummaryDiv>
+            <PlainText color={theme.colors.text.secondary}>
+              You are about to boost this inscription:
+            </PlainText>
+            <SummaryRow>
+              <InscriptionIcon
+                size="4rem"
+                useBlockIconDefault={false}
+                endpoint={`/api/inscription_number/${delegateData?.metadata.number || number}`}
+                number={metadata?.delegate || number}
+              />
+              <SummaryDetails>
+                <PlainText>
+                  {addCommas(delegateData?.metadata.number) || addCommas(number)}
+                </PlainText>
+                <ContentTag>
+                  {delegateData?.metadata.content_type || metadata?.content_type}
+                </ContentTag>
+              </SummaryDetails>
+            </SummaryRow>
+          </SummaryDiv>
+
+          {/* Divider */}
+          <Divider />
+
+          {/* Input Fields Section */}
+          <InputFieldsContainer>
+            {/* First Input Field */}
+            <InputFieldDiv>
+              <InputLabel>
+                <PlainText>Comment</PlainText>
+                <PlainText color={theme.colors.text.tertiary}>
+                  (Optional)
+                </PlainText>
+                <InfoCircleIcon size="1.25rem" color={theme.colors.text.tertiary} />
+              </InputLabel>
+              <StyledInput placeholder="Add a comment" />
+            </InputFieldDiv>
+
+            {/* Second Input Field */}
+            <InputFieldDiv>
+              <InputLabel>
+                <PlainText>Quantity</PlainText>
+                <PlainText color={theme.colors.text.tertiary}>
+                  (Limit 100 per transaction)
+                </PlainText>
+              </InputLabel>
+              <QuantityRow>
+                <StyledInput placeholder="1" />
+                <QuantityButton>
+                  <MinusIcon size="1.25rem" color={theme.colors.text.tertiary} />
+                </QuantityButton>
+                <QuantityButton>
+                  <PlusIcon size="1.25rem" color={theme.colors.text.tertiary} />
+                </QuantityButton>
+              </QuantityRow>
+            </InputFieldDiv>
+          </InputFieldsContainer>
+
+          {/* Divider */}
+          <Divider />
+
+          {/* Fee Summary Section */}
+          <FeeSummaryContainer>
+            {/* Row 1: Network Fees */}
+            <FeeRow>
+              <PlainText color={theme.colors.text.secondary}>Network fees</PlainText>
+              <FeeDetails>
+                <PlainText color={theme.colors.text.secondary}>{placeholderFees[0].btc}</PlainText>
+                <PlainText color={theme.colors.text.tertiary}>{placeholderFees[0].usd}</PlainText>
+              </FeeDetails>
+            </FeeRow>
+
+            {/* Row 2: Service Fees */}
+            <FeeRow>
+              <PlainText color={theme.colors.text.secondary}>Service fees</PlainText>
+              <FeeDetails>
+                <PlainText color={theme.colors.text.secondary}>{placeholderFees[1].btc}</PlainText>
+                <PlainText color={theme.colors.text.tertiary}>{placeholderFees[1].usd}</PlainText>
+              </FeeDetails>
+            </FeeRow>
+
+            {/* Dotted Divider */}
+            <DottedDivider />
+
+            {/* Row 3: Total Fees */}
+            <FeeRow>
+              <PlainText color={theme.colors.text.primary}>Total fees</PlainText>
+              <FeeDetails>
+                <PlainText color={theme.colors.text.primary}>{placeholderFees[2].btc}</PlainText>
+                <PlainText color={theme.colors.text.tertiary}>{placeholderFees[2].usd}</PlainText>
+              </FeeDetails>
+            </FeeRow>
+          </FeeSummaryContainer>
+
+          {/* Boost Button Section */}
+          <BoostButtonContainer>
+            <ModalBoostButton>
+              <ChevronUpDuoIcon size="1.25rem" color={theme.colors.background.white} />
+              Boost
+            </ModalBoostButton>
+          </BoostButtonContainer>
         </ModalContent>
       </ModalContainer>
     </ModalOverlay>
@@ -1275,6 +1443,176 @@ const TimeText = styled.p`
   line-height: 1.25rem;
   color: ${theme.colors.text.tertiary};
   margin: 0;
+`;
+
+const PlainText = styled.p`
+  font-family: ${theme.typography.fontFamilies.medium};
+  font-size: 1rem;
+  line-height: 1.5rem;
+  color: ${props => props.color || theme.colors.text.primary};
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+`;
+
+const SummaryDiv = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+`;
+
+const SummaryRow = styled.div`
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 0.75rem;
+`;
+
+const SummaryDetails = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+`;
+
+const ContentTag = styled.div`
+  background: ${theme.colors.background.primary};
+  border-radius: 0.25rem;
+  padding: 0.125rem 0.25rem;
+  font-family: ${theme.typography.fontFamilies.medium};
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  color: ${theme.colors.text.secondary};
+`;
+
+const Divider = styled.div`
+  width: 100%;
+  border-bottom: 1px solid ${theme.colors.border};
+`;
+
+const QuantityRow = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+`;
+
+const QuantityButton = styled.button`
+  width: 2.25rem;
+  height: 2.25rem;
+  min-width: 2.25rem;
+  min-height: 2.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: ${theme.colors.background.primary};
+  border: none;
+  border-radius: 0.75rem;
+  cursor: pointer;
+  transition: all 200ms ease;
+  transform-origin: center center;
+
+  &:hover {
+    background-color: ${theme.colors.background.secondary};
+  }
+
+  &:active {
+    transform: scale(0.96);
+  }
+`;
+
+const InputFieldsContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+`;
+
+const InputFieldDiv = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+`;
+
+const InputLabel = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+`;
+
+const StyledInput = styled.input`
+  height: 2.25rem;
+  width: 100%;
+  max-width: calc(100% - 1.5rem);
+  padding: 0 0.75rem;
+  background-color: ${theme.colors.background.primary};
+  font-family: ${theme.typography.fontFamilies.medium};
+  font-size: 1rem;
+  line-height: 1.5rem;
+  color: ${theme.colors.text.primary};
+  border: none;
+  border-radius: 0.75rem;
+  outline: none;
+
+  &::placeholder {
+    color: ${theme.colors.text.tertiary};
+  }
+`;
+
+const FeeSummaryContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+`;
+
+const FeeRow = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+`;
+
+const FeeDetails = styled.div`
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 0.25rem;
+`;
+
+const DottedDivider = styled.div`
+  width: 100%;
+  border-bottom: 1px dashed ${theme.colors.border};
+`;
+
+const BoostButtonContainer = styled.div`
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+`;
+
+const ModalBoostButton = styled.button`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  background-color: ${theme.colors.background.dark};
+  font-family: ${theme.typography.fontFamilies.bold};
+  font-size: 1rem;
+  line-height: 1.25rem;
+  color: ${theme.colors.background.white};
+  border-radius: 0.75rem; /* Updated border radius */
+  padding: 0.75rem 1rem;
+  border: none;
+  cursor: pointer;
+  transition: all 200ms ease;
+  transform-origin: center center;
+  width: 100%;
+
+  &:hover {
+    opacity: 75%;
+  }
+
+  &:active {
+    transform: scale(0.98);
+  }
 `;
 
 export default Inscription;
