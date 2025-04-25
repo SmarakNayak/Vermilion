@@ -3,7 +3,7 @@
 // Adds commas as thousand separators to a number
 
 export const addCommas = (num) => {
-  if (num === null) return null;
+  if (num == null) return '0';
   return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
 };
 
