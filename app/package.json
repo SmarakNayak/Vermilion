@@ -8,7 +8,9 @@
     "build": "bun build.js"
   },
   "dependencies": {
+    "@bitcoinerlab/secp256k1": "^1.2.0",
     "bitcoinjs-lib": "^6.1.7",
+    "ecpair": "^3.0.0",
     "esbuild-plugin-polyfill-node": "^0.3.0",
     "jsontokens": "^4.0.1",
     "prop-types": "^15.8.1",

@@ -2,6 +2,7 @@ import { useParams } from 'react-router-dom';
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import styled from 'styled-components';
 import { Link } from 'react-router-dom';
+import { createInscriptions } from '../wallet/inscriptionBuilder';
 
 // Components from Inscription folder
 import {

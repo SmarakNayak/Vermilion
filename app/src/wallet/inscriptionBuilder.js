@@ -1,11 +1,11 @@
 import * as bitcoin from 'bitcoinjs-lib'
 import { toXOnly } from 'bitcoinjs-lib/src/psbt/bip371'
 import { ECPairFactory } from 'ecpair'
-import * as tinyecc from 'tiny-secp256k1'
+import * as ecc from '@bitcoinerlab/secp256k1' // 'tiny-secp256k1' needs a wasm plugin in bun
 import { NETWORKS } from './networks'
 
-bitcoin.initEccLib(tinyecc);
-const ECPair = ECPairFactory(tinyecc);
+bitcoin.initEccLib(ecc);
+const ECPair = ECPairFactory(ecc);
 
 class Inscription {
   constructor({
