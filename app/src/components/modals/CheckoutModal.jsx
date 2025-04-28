@@ -14,7 +14,6 @@ import {
 } from '../common/Icon';
 import InscriptionIcon from '../InscriptionIcon';
 
-
 import { createInscriptions, Inscription as InscriptionObject } from '../../wallet/inscriptionBuilder';
 import useStore from '../../store/zustand';
 

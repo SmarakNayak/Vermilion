@@ -4,10 +4,13 @@ import { BurgerMenuIcon } from '../common/Icon';
 import theme from '../../styles/theme';
 import MobileMenu from './MobileMenu';
 import WalletConnectMenu from './WalletConnectMenu';
+import useStore from '../../store/zustand';
+import { formatAddress } from '../../utils';
 
 const UserActions = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isWalletMenuOpen, setIsWalletMenuOpen] = useState(false);
+  const wallet = useStore(state => state.wallet);
   
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
@@ -28,7 +31,11 @@ const UserActions = () => {
   return (
     <>
       <ActionsContainer>
-        <ConnectButton onClick={openWalletMenu}>Connect</ConnectButton>
+        {!wallet ? (
+          <ConnectButton onClick={openWalletMenu}>Connect</ConnectButton>
+        ) : (
+          <ConnectButton onClick={openWalletMenu}>{formatAddress(wallet.ordinalsAddress)}</ConnectButton>
+        )}
 
         <MobileMenuButton onClick={toggleMenu}>
           <BurgerMenuIcon size={"1.25rem"} color={theme.colors.text.secondary} />
