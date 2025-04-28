@@ -131,10 +131,20 @@ const WalletConnectMenu = ({ isOpen, onClose }) => {
   const handleWalletConnect = async (walletType) => {
     setError(null);
     try {
-      console.log("Connecting to wallet:", walletType);
       let wallet = await connectWallet(walletType, "signet");
-      console.log("Connected wallet:", wallet);
       setWallet(wallet);
+      // Set up a listener for account changes
+      wallet.setupAccountChangeListener(async (accounts) => {
+        console.log(accounts);
+        if (accounts?.disconnected === true) {
+          console.log("Wallet disconnected");
+          setWallet(null);
+        } else {
+          let newWallet = await connectWallet(walletType, "signet");
+          setWallet(newWallet);
+        }
+      });
+      handleClose();
     } catch (err) {
       console.warn("Error connecting to wallet:", err);
       setError("Error: " + err.message);

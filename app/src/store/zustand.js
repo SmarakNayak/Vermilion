@@ -5,7 +5,10 @@ const useStore = create(
   persist(
     (set) => ({
       wallet : null,
-      setWallet : (wallet) => set({wallet})
+      setWallet : (wallet) => {
+        console.log("wallet update hit with:", wallet)
+        set({wallet})
+      },
     }),
     {
       name : 'vermilion-storage',

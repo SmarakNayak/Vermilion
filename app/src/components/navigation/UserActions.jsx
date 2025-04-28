@@ -11,6 +11,7 @@ const UserActions = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isWalletMenuOpen, setIsWalletMenuOpen] = useState(false);
   const wallet = useStore(state => state.wallet);
+  const setWallet = useStore(state => state.setWallet);
   
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
@@ -27,6 +28,17 @@ const UserActions = () => {
   const closeWalletMenu = () => {
     setIsWalletMenuOpen(false);
   };
+
+  const disconnectWallet = async () => {
+    console.log("Disconnecting wallet...");
+    console.log(wallet);
+    if (typeof wallet.removeAccountChangeListener === 'function') {
+      await wallet.removeAccountChangeListener();
+    } else {
+      console.log("no account change listener to remove");
+    }
+    setWallet(null);
+  }
   
   return (
     <>
@@ -34,7 +46,20 @@ const UserActions = () => {
         {!wallet ? (
           <ConnectButton onClick={openWalletMenu}>Connect</ConnectButton>
         ) : (
-          <ConnectButton onClick={openWalletMenu}>{formatAddress(wallet.ordinalsAddress)}</ConnectButton>
+          <ConnectButtonWrapper>
+            <ConnectButton onClick={openWalletMenu}>{formatAddress(wallet.ordinalsAddress)}</ConnectButton>
+            <DropdownContainer className="wallet-dropdown">
+              <DropdownItem href={"/address/" + wallet.ordinalsAddress}>
+                View Profile
+              </DropdownItem>
+              <DropdownItem onClick={openWalletMenu}>
+                Switch Wallet
+              </DropdownItem>
+              <DropdownItem onClick={disconnectWallet}>
+                Disconnect
+              </DropdownItem>
+            </DropdownContainer>
+          </ConnectButtonWrapper>
         )}
 
         <MobileMenuButton onClick={toggleMenu}>
@@ -74,6 +99,17 @@ const ConnectButton = styled.button`
   }
 `;
 
+const ConnectButtonWrapper = styled.div`
+  position: relative;
+  
+  &:hover {
+    .wallet-dropdown {
+      opacity: 1;
+      visibility: visible;
+    }
+  }
+`;
+
 const MobileMenuButton = styled.button`
   display: none;
   align-items: center;
@@ -110,6 +146,62 @@ const Overlay = styled.div`
   opacity: ${props => (props.isOpen ? 1 : 0)};
   visibility: ${props => (props.isOpen ? 'visible' : 'hidden')};
   transition: opacity 200ms ease, visibility 200ms ease, backdrop-filter 200ms ease;
+`;
+
+const DropdownContainer = styled.div`
+  position: absolute;
+  top: calc(100% + .5rem);
+  left: 0;
+  background-color: ${theme.colors.background.white};
+  // border: 1px solid ${theme.colors.background.primary};
+  border-radius: ${theme.borderRadius.large};
+  box-shadow: ${theme.shadows.soft};
+  min-width: 12rem;
+  padding: .25rem;
+  display: flex;
+  flex-direction: column;
+  gap: .25rem;
+  z-index: 1000;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 200ms ease-in-out;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: -0.5rem;
+    left: 0;
+    right: 0;
+    height: 0.5rem;
+  }
+`;
+
+const DropdownItem = styled.a`
+  display: flex;
+  align-items: center;
+  gap: .375rem;
+  font-family: ${theme.typography.fontFamilies.medium};
+  padding: 0 .75rem;
+  height: 2.5rem;
+  border-radius: ${theme.borderRadius.medium};
+  color: ${theme.colors.text.secondary};
+  text-decoration: none;
+  transition: all 200ms ease;
+  svg {
+    color: ${theme.colors.text.secondary};
+    fill: ${theme.colors.text.secondary};
+    transition: all 200ms ease;
+  }
+
+  &:hover {
+    background-color: ${theme.colors.background.primary};
+    color: ${theme.colors.text.primary};
+
+    svg {
+      color: ${theme.colors.text.primary};
+      fill: ${theme.colors.text.primary};
+    }
+  }
 `;
 
 export default UserActions;

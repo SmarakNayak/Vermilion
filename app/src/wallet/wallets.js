@@ -442,7 +442,7 @@ class OkxWallet extends Wallet {
   }
 
   // note: zustand cannot store recursive objects, so we use a function to get the provider (which is recursive)
-  async _getProvider(network) {
+  _getProvider(network) {
     this.windowCheck();
     if (network===undefined) {
       network = this.network;
@@ -531,6 +531,7 @@ class OkxWallet extends Wallet {
       callback(this.getAccountInfo());
     };
     const provider = this._getProvider();
+    console.log(provider);
     provider.on('accountChanged', this._accountChangedListener);
   }
 
