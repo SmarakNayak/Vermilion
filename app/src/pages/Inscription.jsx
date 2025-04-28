@@ -38,7 +38,7 @@ import IconButton from '../components/common/buttons/IconButton';
 import Spinner from '../components/Spinner';
 import InscriptionIcon from '../components/InscriptionIcon';
 
-import CheckoutModal from '../components/payment/CheckoutModal';
+import CheckoutModal from '../components/modals/CheckoutModal';
 
 
 // Utils

@@ -18,8 +18,8 @@ import {
   CrossIcon,
   MinusIcon,
   PlusIcon,
-} from '../../components/common/Icon';
-import InscriptionIcon from '../../components/InscriptionIcon';
+} from '../common/Icon';
+import InscriptionIcon from '../InscriptionIcon';
 
 
 import { createInscriptions, Inscription as InscriptionObject } from '../../wallet/inscriptionBuilder';
