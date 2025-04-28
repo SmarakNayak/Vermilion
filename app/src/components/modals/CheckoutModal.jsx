@@ -6,15 +6,8 @@ import { addCommas, formatAddress, shortenBytes } from '../../utils/format';
 
 // icons
 import { 
-  InfoCircleIcon, 
-  FileIcon, 
-  RouteIcon, 
-  TagIcon, 
-  SparklesIcon,
-  CommentIcon,
+  InfoCircleIcon,
   ChevronUpDuoIcon,
-  LinkIcon,
-  WebIcon,
   CrossIcon,
   MinusIcon,
   PlusIcon,
@@ -24,7 +17,6 @@ import InscriptionIcon from '../InscriptionIcon';
 
 import { createInscriptions, Inscription as InscriptionObject } from '../../wallet/inscriptionBuilder';
 import useStore from '../../store/zustand';
-
 
 const CheckoutModal = ({ onClose, isCheckoutModalOpen, delegateData, metadata, number }) => {
   const placeholderFees = [
