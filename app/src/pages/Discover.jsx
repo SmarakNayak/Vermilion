@@ -6,7 +6,7 @@ import SkeletonImage from '../components/SkeletonImage';
 import InnerInscriptionContent from '../components/common/InnerInscriptionContent';
 import { addCommas } from '../utils/format';
 import { copyText } from '../utils/clipboard';
-import { GalleryIcon, LinkIcon, RuneIcon } from '../components/common/Icon';
+import { FireIcon, GalleryIcon, LinkIcon, RuneIcon, SparklesIcon } from '../components/common/Icon';
 import theme from '../styles/theme';
 
 const Discover = () => {
@@ -79,6 +79,20 @@ const Discover = () => {
   return (
     <MainContainer>
       <FeedContainer>
+        <LinkContainer>
+          <PageText>Feed</PageText>
+          <VerticalDivider />
+          <ButtonContainer>
+            <TabButton to="/trending" isActive={false}>
+              <FireIcon size={'1.25rem'} />
+              Trending
+            </TabButton>
+            <TabButton to="/discover" isActive={true}>
+              <SparklesIcon size={'1.25rem'} />
+              Discover
+            </TabButton>
+          </ButtonContainer>
+        </LinkContainer>
         {inscriptions.map((inscription, i, inscriptions) => (
           <React.Fragment key={i}>
             <ContentContainer key={i+1} id={i+1}>
@@ -181,6 +195,72 @@ const LoadingContainer = styled.div`
   display: flex;
   align-items: center;
   justify-content: center;
+`;
+
+const LinkContainer = styled.div`
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: .75rem;
+  padding-bottom: 1rem;
+`;
+
+const PageText = styled.p`
+  font-family: ${theme.typography.fontFamilies.bold};
+  font-size: 1.5rem;
+  line-height: 2rem;
+  color: ${theme.colors.text.primary};
+  margin: 0;
+`;
+
+const VerticalDivider = styled.div`
+  height: 2rem;
+  border-right: 1px solid ${theme.colors.border};
+`;
+
+const ButtonContainer = styled.div`
+  display: flex;
+  flex-direction: row;
+  gap: .25rem;
+`;
+
+const TabButton = styled(Link)`
+  border: none;
+  padding: 0 .75rem;
+  height: 2rem;
+  border-radius: 1rem;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: .25rem;
+  cursor: pointer;
+  font-family: ${theme.typography.fontFamilies.medium};
+  font-size: 1rem;
+  line-height: 1.25rem;
+  color: ${props => props.isActive ? theme.colors.background.verm : theme.colors.text.tertiary}; 
+  background-color: ${props => props.isActive ? theme.colors.background.primary : theme.colors.background.white}; 
+  transition: all 200ms ease;
+  transform-origin: center center;
+  text-decoration: none;
+
+  &:hover {
+    color: ${theme.colors.background.verm};
+    background-color: ${theme.colors.background.primary};
+
+    svg {
+      fill: ${theme.colors.background.verm};
+    }
+  }
+
+  &:active {
+    transform: scale(0.96);
+  }
+
+  svg {
+    fill: ${props => props.isActive ? theme.colors.background.verm : theme.colors.text.tertiary};
+    transition: fill 200ms ease;
+  }
 `;
 
 const LoadingText = styled.p`

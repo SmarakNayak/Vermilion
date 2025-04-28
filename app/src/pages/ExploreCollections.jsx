@@ -3,7 +3,7 @@ import styled from 'styled-components';
 const ReactGA = require('react-ga4').default;
 import CollectionsTable from '../components/CollectionsTable';
 import OnChainCollectionsTable from '../components/OnChainCollectionsTable';
-import { InfoCircleIcon } from '../components/common/Icon';
+import { FileUploadIcon, InfoCircleIcon, LockIcon } from '../components/common/Icon';
 import theme from '../styles/theme';
 
 const ExploreCollections = () => {
@@ -43,23 +43,45 @@ const ExploreCollections = () => {
 
   return (
     <MainContainer>
-      <RowContainer style={{justifyContent: 'space-between'}}>
+      <LinkContainer>
         <PageText>Collections</PageText>
+        <VerticalDivider />
         <ButtonContainer>
           <TabButton 
             onClick={() => handleTabClick('Offchain')}
             isActive={activeTab === 'Offchain'}
-            >
+          >
+            <FileUploadIcon size={'1.25rem'} />
             Offchain
           </TabButton>
           <TabButton 
             onClick={() => handleTabClick('Onchain')}
             isActive={activeTab === 'Onchain'}
-            >
+          >
+            <LockIcon size={'1.25rem'} />
             Onchain
           </TabButton>
         </ButtonContainer>
-      </RowContainer>
+      </LinkContainer>
+      {/* <RowContainer style={{justifyContent: 'space-between'}}>
+        <PageText>Collections</PageText>
+        <ButtonContainer>
+          <TabButton 
+            onClick={() => handleTabClick('Offchain')}
+            isActive={activeTab === 'Offchain'}
+          >
+            <FileUploadIcon size={'1.25rem'} color={activeTab === 'Offchain' ? theme.colors.background.verm : theme.colors.text.tertiary} />
+            Offchain
+          </TabButton>
+          <TabButton 
+            onClick={() => handleTabClick('Onchain')}
+            isActive={activeTab === 'Onchain'}
+          >
+            <LockIcon size={'1.25rem'} color={activeTab === 'Onchain' ? theme.colors.background.verm : theme.colors.text.tertiary} />
+            Onchain
+          </TabButton>
+        </ButtonContainer>
+      </RowContainer> */}
       <Divider />
       {activeTab === 'Offchain' && (
         <ExploreContainer>
@@ -115,6 +137,19 @@ const RowContainer = styled.div`
   width: 100%;
 `;
 
+const LinkContainer = styled.div`
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  width: 100%;
+  gap: .75rem;
+`;
+
+const VerticalDivider = styled.div`
+  height: 2rem;
+  border-right: 1px solid ${theme.colors.border};
+`;
+
 const PageText = styled.p`
   font-family: ${theme.typography.fontFamilies.bold};
   font-size: 1.5rem;
@@ -130,7 +165,7 @@ const Divider = styled.div`
 const ButtonContainer = styled.div`
   display: flex;
   flex-direction: row;
-  gap: .5rem;
+  gap: .25rem;
 `;
 
 const TabButton = styled.button`
@@ -142,16 +177,39 @@ const TabButton = styled.button`
   display: flex;
   align-items: center;
   justify-content: center;
+  gap: .25rem;
   cursor: pointer;
   font-family: ${theme.typography.fontFamilies.medium};
   font-size: 1rem;
-  color: ${props => props.isActive ? theme.colors.primary : theme.colors.text.tertiary}; 
-  background-color: ${props => props.isActive ? theme.colors.background.vermPale : theme.colors.background.primary}; 
+  line-height: 1.25rem;
+  color: ${props => props.isActive ? theme.colors.background.verm : theme.colors.text.tertiary}; 
+  background-color: ${props => props.isActive ? theme.colors.background.primary : theme.colors.background.white}; 
   transition: all 200ms ease;
   transform-origin: center center;
+  text-decoration: none;
 
   &:hover {
-    color: ${props => props.isActive ? theme.colors.background.verm : theme.colors.background.verm};
+    color: ${theme.colors.background.verm};
+    background-color: ${theme.colors.background.primary};
+
+    svg {
+      fill: ${theme.colors.background.verm};
+    }
+  }
+
+  &:active {
+    transform: scale(0.96);
+  }
+
+  svg {
+    fill: ${props => props.isActive ? theme.colors.background.verm : theme.colors.text.tertiary};
+    transition: fill 200ms ease;
+  }
+
+  @media (max-width: 416px) {
+    svg {
+      display: none; /* Hides the icons when the screen width is less than 416px */
+    }
   }
 `;
 
