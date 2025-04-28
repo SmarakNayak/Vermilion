@@ -3,15 +3,17 @@ import styled from 'styled-components';
 import { Link } from 'react-router-dom';
 import { theme } from '../../styles/theme';
 import { Logo2 } from '../common/Logo2'; 
+import { Logo } from '../common/Logo';
 
 const Brand = () => {
   return (
     <Link to="/" style={{ textDecoration: 'none' }}>
       <BrandContainer>
-        <Logo2
+        <Logo
           size={'2.5rem'}
-          colorInside={theme.colors.border}
-          colorOutside={theme.colors.background.primary}
+          colorOuter1={theme.colors.border}
+          colorOuter2={theme.colors.background.primary}
+          colorOuter3={theme.colors.background.tertiary}
         />
         <BrandText>Vermilion</BrandText>
       </BrandContainer>
@@ -26,23 +28,33 @@ const BrandContainer = styled.div`
   gap: .5rem;
   cursor: pointer;
 
-  .variable-color-inside {
+  .variable-color-outer-1 {
     transition: fill 200ms ease-in-out;
   }
   
   &:hover {
-    .variable-color-inside {
+    .variable-color-outer-1 {
       fill: ${theme.colors.background.aqua};
     }
   }
 
-  .variable-color-outside {
+  .variable-color-outer-2 {
     transition: fill 200ms ease-in-out;
   }
   
   &:hover {
-    .variable-color-outside {
+    .variable-color-outer-2 {
       fill: ${theme.colors.background.aquaLight};
+    }
+  }
+   
+  .variable-color-outer-3 {
+    transition: fill 200ms ease-in-out;
+  }
+
+  &:hover {
+    .variable-color-outer-3 {
+      fill: ${theme.colors.background.acquaExtraLight};
     }
   }
 `;
