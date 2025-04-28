@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom'; 
 import styled from 'styled-components';
 import { BurgerMenuIcon } from '../common/Icon';
 import theme from '../../styles/theme';
@@ -6,10 +7,14 @@ import MobileMenu from './MobileMenu';
 import WalletConnectMenu from './WalletConnectMenu';
 import useStore from '../../store/zustand';
 import { formatAddress } from '../../utils';
+import { AvatarCircleIcon } from '../common/Icon/icons/AvatarCircleIcon';
 
 const UserActions = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isWalletMenuOpen, setIsWalletMenuOpen] = useState(false);
+
+  const navigate = useNavigate(); 
+
   const wallet = useStore(state => state.wallet);
   const setWallet = useStore(state => state.setWallet);
   
@@ -39,6 +44,12 @@ const UserActions = () => {
     }
     setWallet(null);
   }
+
+  const handleAddressButtonClick = () => {
+    if (wallet && wallet.ordinalsAddress) {
+      navigate(`/address/${wallet.ordinalsAddress}`); 
+    }
+  };
   
   return (
     <>
@@ -47,11 +58,14 @@ const UserActions = () => {
           <ConnectButton onClick={openWalletMenu}>Connect</ConnectButton>
         ) : (
           <ConnectButtonWrapper>
-            <ConnectButton onClick={openWalletMenu}>{formatAddress(wallet.ordinalsAddress)}</ConnectButton>
+            <AddressButton onClick={handleAddressButtonClick}>
+              <AvatarCircleIcon size={"1.25rem"} />
+              {formatAddress(wallet.ordinalsAddress)}
+            </AddressButton>
             <DropdownContainer className="wallet-dropdown">
-              <DropdownItem href={"/address/" + wallet.ordinalsAddress}>
+              {/* <DropdownItem href={"/address/" + wallet.ordinalsAddress}>
                 View Profile
-              </DropdownItem>
+              </DropdownItem> */}
               <DropdownItem onClick={openWalletMenu}>
                 Switch Wallet
               </DropdownItem>
@@ -93,6 +107,52 @@ const ConnectButton = styled.button`
   font-size: 1rem;
   cursor: pointer;
   transition: all 200ms ease;
+
+  &:hover {
+    opacity: 0.75;
+  }
+
+  &:active {
+    transform: scale(0.96);
+  }
+
+  @media (max-width: 864px) {
+    display: none;
+  }
+`;
+
+const AddressButton = styled.button`
+  display: flex;
+  align-items: center;
+  gap: .375rem;
+  height: 2.5rem;
+  padding: 0 1rem;
+  border: none;
+  border-radius: 1.5rem;
+  background-color: ${theme.colors.background.white};
+  color: ${theme.colors.text.primary};
+  font-family: ${theme.typography.fontFamilies.medium};
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 200ms ease;
+
+  &:hover {
+    background-color: ${theme.colors.background.primary};
+    color: ${theme.colors.text.primary};
+
+    svg {
+      fill: ${theme.colors.text.primary};
+    }
+  }
+
+  &:active {
+    transform: scale(0.96);
+  }
+
+  svg {
+    fill: ${theme.colors.text.primary};
+    transition: fill 200ms ease;
+  }
 
   @media (max-width: 864px) {
     display: none;
@@ -151,12 +211,12 @@ const Overlay = styled.div`
 const DropdownContainer = styled.div`
   position: absolute;
   top: calc(100% + .5rem);
-  left: 0;
+  right: 0;
   background-color: ${theme.colors.background.white};
   // border: 1px solid ${theme.colors.background.primary};
   border-radius: ${theme.borderRadius.large};
   box-shadow: ${theme.shadows.soft};
-  min-width: 12rem;
+  min-width: 8rem;
   padding: .25rem;
   display: flex;
   flex-direction: column;
@@ -186,6 +246,7 @@ const DropdownItem = styled.a`
   border-radius: ${theme.borderRadius.medium};
   color: ${theme.colors.text.secondary};
   text-decoration: none;
+  cursor: pointer;
   transition: all 200ms ease;
   svg {
     color: ${theme.colors.text.secondary};
