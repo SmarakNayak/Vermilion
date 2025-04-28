@@ -2,20 +2,25 @@ import React, { useEffect } from 'react';
 import styled from 'styled-components';
 import { Link } from 'react-router-dom';
 import { 
+  AvatarCircleIcon,
   BlockIcon, 
   BoostIcon, 
   CrossIcon, 
   DiscoverIcon, 
+  FireIcon,
   GridIcon, 
   GalleryIcon, 
   LoginIcon,
-  SparklesIcon, 
+  LogoutIcon,
+  SparklesIcon,
+  ScanIcon,
+  SwitchIcon,
 } from '../common/Icon';
 import { theme } from '../../styles/theme';
 import Brand from './Brand';
 import MenuListItem from './MenuListItem';
 
-const MobileMenu = ({ isOpen, onClose }) => {
+const MobileMenu = ({ isOpen, onClose, onConnectWallet, wallet, onViewProfile, onSwitchWallet, onDisconnectWallet }) => {
   // Close menu when window resizes above mobile breakpoint
   useEffect(() => {
     const handleResize = () => {
@@ -45,14 +50,14 @@ const MobileMenu = ({ isOpen, onClose }) => {
           <MenuListItem 
             link="/trending" 
             action={onClose} 
-            icon={BoostIcon} 
+            icon={FireIcon} 
             isStandard={true}
             title="Trending"
           />
           <MenuListItem 
             link="/discover" 
             action={onClose} 
-            icon={DiscoverIcon} 
+            icon={SparklesIcon} 
             isStandard={true}
             title="Discover"
           />
@@ -85,7 +90,7 @@ const MobileMenu = ({ isOpen, onClose }) => {
           <MenuListItem 
             link="/search" 
             action={onClose} 
-            icon={SparklesIcon} 
+            icon={ScanIcon} 
             isStandard={true}
             title="Visual Search"
           />
@@ -94,13 +99,51 @@ const MobileMenu = ({ isOpen, onClose }) => {
         <Divider />
 
         <LinkSection>
-          <MenuListItem 
-            link="/" 
-            action={onClose} 
-            icon={LoginIcon} 
-            isStandard={true}
-            title="Connect Wallet"
-          />
+          {!wallet ? (
+            <MenuListItem 
+              link="#" 
+              action={() => {
+                onClose();
+                onConnectWallet();
+              }} 
+              icon={LoginIcon} 
+              isStandard={true}
+              title="Connect Wallet"
+            />
+          ) : (
+            <>
+              <MenuListItem 
+                link="#" 
+                action={() => {
+                  onClose();
+                  onViewProfile();
+                }} 
+                icon={AvatarCircleIcon} 
+                isStandard={true}
+                title="View Profile"
+              />
+              <MenuListItem 
+                link="#" 
+                action={() => {
+                  onClose();
+                  onSwitchWallet();
+                }} 
+                icon={SwitchIcon} 
+                isStandard={true}
+                title="Switch Wallet"
+              />
+              <MenuListItem 
+                link="#" 
+                action={() => {
+                  onClose();
+                  onDisconnectWallet();
+                }} 
+                icon={LogoutIcon} 
+                isStandard={true}
+                title="Disconnect"
+              />
+            </>
+          )}
         </LinkSection>
       </MenuContent>
     </MenuContainer>

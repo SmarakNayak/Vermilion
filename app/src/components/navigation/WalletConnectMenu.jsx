@@ -210,9 +210,9 @@ const WalletConnectMenu = ({ isOpen, onClose }) => {
         )}
 
         {error && (
-          <StatusLabel style={{ backgroundColor: theme.colors.background.error }}>
+          <ErrorContainer style={{ backgroundColor: theme.colors.background.white }}>
             <StatusText style={{ color: theme.colors.text.error }}>{error}</StatusText>
-          </StatusLabel>
+          </ErrorContainer>
         )}
 
       </MenuContent>
@@ -443,6 +443,11 @@ const OtherWalletsText = styled.span`
   font-size: 1rem;
   line-height: 1.5rem;
   color: ${theme.colors.text.secondary};
+`;
+
+const ErrorContainer = styled.div`
+  background-color: ${theme.colors.background.white};
+  padding: 0.525rem 0.5rem 0.125rem;
 `;
 
 export default WalletConnectMenu;

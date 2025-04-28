@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom'; 
 import styled from 'styled-components';
-import { BurgerMenuIcon } from '../common/Icon';
+import { BurgerMenuIcon, LogoutIcon, SwitchIcon } from '../common/Icon';
 import theme from '../../styles/theme';
 import MobileMenu from './MobileMenu';
 import WalletConnectMenu from './WalletConnectMenu';
@@ -67,9 +67,11 @@ const UserActions = () => {
                 View Profile
               </DropdownItem> */}
               <DropdownItem onClick={openWalletMenu}>
+                <SwitchIcon size={"1.25rem"} />
                 Switch Wallet
               </DropdownItem>
               <DropdownItem onClick={disconnectWallet}>
+                <LogoutIcon size={"1.25rem"} />
                 Disconnect
               </DropdownItem>
             </DropdownContainer>
@@ -81,8 +83,16 @@ const UserActions = () => {
         </MobileMenuButton>
       </ActionsContainer>
       
-      <MobileMenu isOpen={isMenuOpen} onClose={closeMenu} />
-
+      <MobileMenu
+        isOpen={isMenuOpen}
+        onClose={closeMenu}
+        onConnectWallet={openWalletMenu}
+        wallet={wallet} // Pass wallet state
+        onViewProfile={handleAddressButtonClick} // Pass view profile function
+        onSwitchWallet={openWalletMenu} // Pass switch wallet function
+        onDisconnectWallet={disconnectWallet} // Pass disconnect wallet function
+      />
+      
       <Overlay isOpen={isWalletMenuOpen} onClick={closeWalletMenu}>
         <WalletConnectMenu isOpen={isWalletMenuOpen} onClose={closeWalletMenu} />
       </Overlay>
@@ -94,6 +104,10 @@ const ActionsContainer = styled.div`
   display: flex;
   align-items: center;
   gap: 1rem;
+
+  @media (max-width: 864px) {
+    gap: 0;
+  }
 `;
 
 const ConnectButton = styled.button`
@@ -216,7 +230,7 @@ const DropdownContainer = styled.div`
   // border: 1px solid ${theme.colors.background.primary};
   border-radius: ${theme.borderRadius.large};
   box-shadow: ${theme.shadows.soft};
-  min-width: 8rem;
+  min-width: 10rem;
   padding: .25rem;
   display: flex;
   flex-direction: column;
