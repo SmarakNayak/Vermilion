@@ -7,78 +7,37 @@ import RecentBoosts from '../components/RecentBoosts';
 import InnerInscriptionContent from '../components/common/InnerInscriptionContent';
 import { addCommas, formatAddress } from '../utils/format';
 import { copyText } from '../utils/clipboard';
-import { BoostIcon, CommentIcon, GalleryIcon, LinkIcon, Person2Icon, RefreshIcon, RuneIcon } from '../components/common/Icon';
+import { BoostIcon, CommentIcon, FireIcon, GalleryIcon, LinkIcon, Person2Icon, RefreshIcon, RuneIcon, SparklesIcon } from '../components/common/Icon';
 import theme from '../styles/theme';
 
 
 const Trending = () => {
   const [inscriptions, setInscriptions] = useState([]);
-  const [moreInscriptions, setMoreInscriptions] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [hasMore, setHasMore] = useState(true);
-  const [activeWallets, setActiveWallets] = useState([]);
 
-  // placeholder - recent inscriptions and most active wallets 
-  // const mostRecent = [77150702, 74151024, 0];
-  // const activeWallets = [
-  //   {
-  //     "address": "bc1pvkumrkmmr4jgp9u3xg6qjx52wupu5vcp0rh6zfpha2tlhslpf0eqt3c4m0",
-  //     "count": 26
-  //   },
-  //   {
-  //     "address": "bc1p66qckaaw5l8ecars7g7mxcgprk6e2tmhqs2ju95wjz8g0vt6xvlq505twd",
-  //     "count": 17
-  //   },
-  //   {
-  //     "address": "bc1pwc4gv8wdh703jg6c07jqpme6dhvs2zfq6kyarm9nx0dcj2sanzrsp2guex",
-  //     "count": 13
-  //   }
-  // ];
-  
   // Create a single observer ref
   const observerRef = useRef();
   // Create ref for the sentinel element
   const loadMoreRef = useRef();
-
+  
+    
   const fetchInscriptions = async () => {
     try {
       setIsLoading(true);
-      const response = await fetch(`/api/random_inscriptions?n=30`);
+      const response = await fetch(`/api/trending_feed?n=30`);
       const newInscriptions = await response.json();
       
       if (newInscriptions.length === 0) {
         setHasMore(false);
         return;
       }
-
+      
       setInscriptions(prev => [...prev, ...newInscriptions]);
     } catch (error) {
       console.error('Error fetching inscriptions:', error);
     } finally {
       setIsLoading(false);
-    }
-  };
-
-  const fetchActiveWallets = async () => {
-    try {
-      const response = await fetch('/api/boost_leaderboard');
-      const data = await response.json();
-      // Take only the first 3 entries
-      setActiveWallets(data.slice(0, 3));
-    } catch (error) {
-      console.error('Error fetching active wallets:', error);
-    }
-  };  
-
-  const fetchMoreInscriptions = async () => {
-    try {
-      const response = await fetch(`/api/trending_feed?n=20`);
-      const newInscriptions = await response.json();      
-      setMoreInscriptions(newInscriptions);
-    } catch (error) {
-      console.error('Error fetching inscriptions:', error);
-    } finally {
-      console.log('trending', moreInscriptions);
     }
   };
 
@@ -117,264 +76,109 @@ const Trending = () => {
 
   // Initial fetch
   useEffect(() => {
-    // fetchInscriptions();
-    fetchMoreInscriptions();
-    fetchActiveWallets();
+    fetchInscriptions();
   }, []);
 
   return (
     <MainContainer>
-      <ContentWrapper>
-        {/* Left column */}
-        <SidebarContainer></SidebarContainer>
-
-        {/* Middle column */}
-        <FeedContainer>
-          {moreInscriptions.map((inscription, i, inscriptions) => (
-            <React.Fragment key={i}>
-              <ContentContainer key={i+1} id={i+1}>
-                <InfoContainer>
-                  <TitleContainer>
-                    <UnstyledLink to={'/inscription/' + inscription.inscriptions[0].number}>
-                      <NumberText>#{addCommas(inscription.inscriptions[0].number)}</NumberText>
+      <FeedContainer>
+        <LinkContainer>
+          <PageText>Feed</PageText>
+          <VerticalDivider />
+          <ButtonContainer>
+            <TabButton to="/trending" isActive={true}>
+              <FireIcon size={'1.25rem'} />
+              Trending
+            </TabButton>
+            <TabButton to="/discover" isActive={false}>
+              <SparklesIcon size={'1.25rem'} />
+              Discover
+            </TabButton>
+          </ButtonContainer>
+        </LinkContainer>
+        {inscriptions.map((inscription, i, inscriptions) => (
+          <React.Fragment key={i}>
+            <ContentContainer id={i+1}>
+              <InfoContainer>
+                <TitleContainer>
+                  <UnstyledLink to={'/inscription/' + inscription.inscriptions[0].number}>
+                    <NumberText>#{addCommas(inscription.inscriptions[0].number)}</NumberText>
+                  </UnstyledLink>
+                  {inscription.inscriptions[0].spaced_rune && (
+                    <RuneTag>
+                      <RuneIcon size={'1rem'} color={theme.colors.background.purp} />
+                      {inscription.inscriptions[0].spaced_rune}
+                    </RuneTag>
+                  )}
+                  {inscription.inscriptions[0].collection_name && (
+                    <UnstyledLink to={'/collection/' + inscription.inscriptions[0].collection_symbol}>
+                      <CollectionTag>
+                        <GalleryIcon size={'1rem'} color={theme.colors.background.verm} />
+                        {inscription.inscriptions[0].collection_name}
+                      </CollectionTag>
                     </UnstyledLink>
-                    {inscription.inscriptions[0].spaced_rune && (
-                      <RuneTag>
-                        <RuneIcon size={'1rem'} color={theme.colors.background.purp} />
-                        {inscription.inscriptions[0].spaced_rune}
-                      </RuneTag>
-                    )}
-                    {inscription.inscriptions[0].collection_name && (
-                      <UnstyledLink to={'/collection/' + inscription.inscriptions[0].collection_symbol}>
-                        <CollectionTag>
-                          <GalleryIcon size={'1rem'} color={theme.colors.background.verm} />
-                          {inscription.inscriptions[0].collection_name}
-                        </CollectionTag>
-                      </UnstyledLink>
-                    )}
-                    {inscription.activity.children_count > 0 && (
-                      <UnstyledLink to={'/children/' + inscription.inscriptions[0].id}>
-                        <ParentTag>
-                          <Person2Icon size={'1rem'} color={theme.colors.text.primary} />
-                          Parent
-                        </ParentTag>
-                      </UnstyledLink>
-                    )}
-                  </TitleContainer>
-                  <DetailsContainer>
-                    <SocialButton empty onClick={() => copyText('https://vermilion.place/inscription/' + inscription.inscriptions[0].number)}>
-                      <LinkIcon size={'1.25rem'} color={theme.colors.text.secondary} />
-                    </SocialButton>
-                  </DetailsContainer>
-                </InfoContainer>
-                <UnstyledLink to={'/inscription/' + inscription.inscriptions[0].number}>
-                  <InscriptionContainer>
-                    <InnerInscriptionContent
-                      contentType={
-                        inscription.inscriptions[0].content_type === 'loading' ? 'loading' : 
-                        inscription.inscriptions[0].content_type.startsWith('image/') ? 'image' : 'html'
-                      }
-                      blobUrl={`/api/inscription_number/${inscription.inscriptions[0].number}`}
-                      number={inscription.inscriptions[0].number}
-                      metadata={{
-                        id: inscription.inscriptions[0].id,
-                        content_type: inscription.inscriptions[0].content_type,
-                        is_recursive: inscription.inscriptions[0].is_recursive
-                      }}
-                      useFeedStyles={true}
-                    />
-                  </InscriptionContainer>
-                </UnstyledLink>
-                <ActionContainer>
-                  <SocialContainer>
-                    <SocialButton>
-                      <BoostIcon size={'1.25rem'} color={theme.colors.text.primary}></BoostIcon>
-                      <SocialText>{inscription.activity.delegate_count}</SocialText>
-                    </SocialButton>
-                    <SocialButton>
-                      <CommentIcon size={'1.25rem'} color={theme.colors.text.primary}></CommentIcon>
-                      <SocialText>0</SocialText>
-                    </SocialButton>
-                  </SocialContainer>
-                  <BoostContainer>
-                    <BoostButton>
-                      <BoostIcon size={'1.25rem'} color={theme.colors.background.white}></BoostIcon>
-                      Boost
-                    </BoostButton>
-                  </BoostContainer>
-                </ActionContainer>
-              </ContentContainer>
-              {i < moreInscriptions.length - 1 && <Divider />}
-            </React.Fragment>
-          ))}
-          
-          <LoadingContainer ref={loadMoreRef}>
-            {isLoading && <Spinner />}
-          </LoadingContainer>
-        </FeedContainer>
-
-        {/* Right sidebar placeholder to maintain layout */}
-        <SidebarPlaceholder />
-
-        {/* Right column */}
-        {/* <SidebarContainer className="right-fixed">
-          <SectionContainer gapSize={'1rem'}>
-            <SectionTitleWrapper>
-              <SectionTitleText>Introducing Boosts</SectionTitleText>
-            </SectionTitleWrapper>
-            <SectionContainer gapSize={'.75rem'}>
-              <SectionText>
-                Boosts let you collect and amplify inscriptions using delegation.
-              </SectionText>
-              <SectionText>
-                A boost is much more than a like—it’s onchain proof of your taste and timing. Each boost helps surface quality content while building connections between creators and collectors.
-              </SectionText>
-            </SectionContainer>
-
-          </SectionContainer>
-          <Divider />
-          <SectionContainer gapSize={'1rem'}>
-            <SectionTitleWrapper>
-              <SectionTitleText>Recent Activity</SectionTitleText>
-              <RefreshButton>
-                <RefreshIcon size={'1rem'} color={theme.colors.text.secondary}></RefreshIcon>
-                Refresh
-              </RefreshButton>
-            </SectionTitleWrapper>
-            <SectionText>
-              <RecentBoosts />
-            </SectionText>
-          </SectionContainer>
-          <Divider />
-          <SectionContainer gapSize={'1rem'}>
-            <SectionTitleWrapper>
-              <SectionTitleText>Most Active Users</SectionTitleText>
-              <SectionDetailText>Resets in 3d 22h 19m 36s</SectionDetailText>
-            </SectionTitleWrapper>
-            <SectionContainer gapSize={'.75rem'}>
-              {activeWallets.map((inscription, i, inscriptions) => (
-                <ActiveContainer key={i}>
-                  <ElementWrapper gapSize={'.75rem'}>
-                    <RankWrapper>#{i + 1}</RankWrapper>
-                    <ElementWrapper gapSize={'.375rem'}>
-                      <PlaceholderImage />
-                      <UnstyledLink to={'/address/' + inscription.address}>
-                        <AddressText>{formatAddress(inscription.address)}</AddressText>
-                      </UnstyledLink>
-                    </ElementWrapper>
-                  </ElementWrapper>
-                  <SectionDetailText>{inscription.count} boosts</SectionDetailText>
-                </ActiveContainer>
-              ))}
-            </SectionContainer>
-          </SectionContainer>
-          <Divider />
-          <SectionContainer>
-            <UnstyledLink to={'https://x.com/vrmlndotplace'} target='_blank'>
-              <LinkText>
-                X (Twitter)
-              </LinkText>
-            </UnstyledLink>
-          </SectionContainer>
-        </SidebarContainer> */}
-      </ContentWrapper>
-    </MainContainer>
-  );
-};
-
-// Image component that handles loading state
-const LoadingImage = ({ src, ...props }) => {
-  const [isLoading, setIsLoading] = useState(true);
-
-  return (
-    <>
-      {isLoading && <SkeletonImage />}
-      <ImageContainer 
-        src={src} 
-        onLoad={() => setIsLoading(false)}
-        style={{ display: isLoading ? 'none' : 'block' }}
-        {...props}
-      />
-    </>
-  );
-};
-
-const LoadingHtml = ({ children, ...props }) => {
-  const [isLoading, setIsLoading] = useState(true);
-  const iframeRef = useRef(null);
-
-  useEffect(() => {
-    const iframe = iframeRef.current;
-    if (!iframe || isLoading) return;
-
-    const handleIframeLoad = () => {
-      try {
-        const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+                  )}
+                  {inscription.activity.children_count > 0 && (
+                    <UnstyledLink to={'/children/' + inscription.inscriptions[0].id}>
+                      <ParentTag>
+                        <Person2Icon size={'1rem'} color={theme.colors.text.primary} />
+                        Parent
+                      </ParentTag>
+                    </UnstyledLink>
+                  )}
+                </TitleContainer>
+                <DetailsContainer>
+                  <SocialButton empty onClick={() => copyText('https://vermilion.place/inscription/' + inscription.inscriptions[0].number)}>
+                    <LinkIcon size={'1.25rem'} color={theme.colors.text.secondary} />
+                  </SocialButton>
+                </DetailsContainer>
+              </InfoContainer>
+              <UnstyledLink to={'/inscription/' + inscription.inscriptions[0].number}>
+                <InscriptionContainer>
+                  <InnerInscriptionContent
+                    contentType={
+                      inscription.inscriptions[0].content_type === 'loading' ? 'loading' : 
+                      inscription.inscriptions[0].content_type.startsWith('image/') ? 'image' : 'html'
+                    }
+                    blobUrl={`/api/inscription_number/${inscription.inscriptions[0].number}`}
+                    number={inscription.inscriptions[0].number}
+                    metadata={{
+                      id: inscription.inscriptions[0].id,
+                      content_type: inscription.inscriptions[0].content_type,
+                      is_recursive: inscription.inscriptions[0].is_recursive
+                    }}
+                    useFeedStyles={true}
+                  />
+                </InscriptionContainer>
+              </UnstyledLink>
+              {/* <ActionContainer>
+                <SocialContainer>
+                  <SocialButton>
+                    <BoostIcon size={'1.25rem'} color={theme.colors.text.primary}></BoostIcon>
+                    <SocialText>{inscription.activity.delegate_count}</SocialText>
+                  </SocialButton>
+                  <SocialButton>
+                    <CommentIcon size={'1.25rem'} color={theme.colors.text.primary}></CommentIcon>
+                    <SocialText>0</SocialText>
+                  </SocialButton>
+                </SocialContainer>
+                <BoostContainer>
+                  <BoostButton>
+                    <BoostIcon size={'1.25rem'} color={theme.colors.background.white}></BoostIcon>
+                    Boost
+                  </BoostButton>
+                </BoostContainer>
+              </ActionContainer> */}
+            </ContentContainer>
+            {i < inscriptions.length - 1 && <Divider />}
+          </React.Fragment>
+        ))}
         
-        const style = iframeDoc.createElement('style');
-        style.textContent = `
-          html, body {
-            width: 100% !important;
-            height: 100% !important;
-            margin: 0 !important;
-            padding: 0 !important;
-            overflow: hidden !important;
-            pointer-events: none !important;
-          }
-          body * {
-            max-width: 100% !important;
-            transform-origin: top left !important;
-            pointer-events: none !important;
-          }
-        `;
-        iframeDoc.head.appendChild(style);
-
-        const scaleContent = () => {
-          const content = iframeDoc.body;
-          if (!content) return;
-
-          const containerWidth = iframe.clientWidth;
-          const containerHeight = iframe.clientHeight;
-          const contentWidth = content.scrollWidth;
-          const contentHeight = content.scrollHeight;
-
-          const scaleX = containerWidth / contentWidth;
-          const scaleY = containerHeight / contentHeight;
-          const scale = Math.min(scaleX, scaleY, 1);
-
-          content.style.transform = `scale(${scale})`;
-        };
-
-        scaleContent();
-
-        const resizeObserver = new ResizeObserver(scaleContent);
-        resizeObserver.observe(iframe);
-
-        return () => resizeObserver.disconnect();
-      } catch (err) {
-        console.warn('Error scaling iframe content:', err);
-      }
-    };
-
-    iframe.addEventListener('load', handleIframeLoad);
-    return () => iframe.removeEventListener('load', handleIframeLoad);
-  }, [isLoading]);
-
-  return (
-    <>
-      {isLoading && <SkeletonImage />}
-      <HtmlContainer style={{ display: isLoading ? 'none' : 'block' }}>
-        <HtmlWrapper>
-          {React.cloneElement(children, {
-            ref: iframeRef,
-            onLoad: () => setIsLoading(false),
-            scrolling: 'no',
-            sandbox: 'allow-scripts allow-same-origin',
-            style: { pointerEvents: 'none' }
-          })}
-        </HtmlWrapper>
-      </HtmlContainer>
-    </>
+        <LoadingContainer ref={loadMoreRef}>
+          {isLoading && <Spinner />}
+        </LoadingContainer>
+      </FeedContainer>
+    </MainContainer>
   );
 };
 
@@ -383,63 +187,73 @@ const MainContainer = styled.div`
   padding: 0;
   margin: 0;
   display: flex;
+  flex-direction: column;
+  align-items: center;
 `;
 
-const ContentWrapper = styled.div`
-  width: 100%;
-  max-width: calc(100% - 3rem);
-  padding: 1.5rem 1.5rem 3rem 1.5rem;
-  margin: 0 auto;
+const LinkContainer = styled.div`
   display: flex;
   flex-direction: row;
-  justify-content: space-between;
-  gap: 2rem;
-  position: relative;
-
-  @media (max-width: 1024px) {
-    max-width: calc(100% - 3rem);
-    padding: 1.5rem 1.5rem 3rem 1.5rem;
-    justify-content: center;
-  }
+  align-items: center;
+  gap: .75rem;
+  padding-bottom: 1rem;
 `;
 
-// This maintains the space for the fixed sidebar
-const SidebarPlaceholder = styled.div`
-  width: 20rem;
-  flex-shrink: 0;
-  display: none;
-
-  @media (min-width: 1024px) {
-    display: block;
-  }
+const PageText = styled.p`
+  font-family: ${theme.typography.fontFamilies.bold};
+  font-size: 1.5rem;
+  line-height: 2rem;
+  color: ${theme.colors.text.primary};
+  margin: 0;
 `;
 
-const SidebarContainer = styled.div`
-  width: 20rem;
-  flex-shrink: 0;
-  display: none;
+const VerticalDivider = styled.div`
+  height: 2rem;
+  border-right: 1px solid ${theme.colors.border};
+`;
 
-  @media (min-width: 1024px) {
-    display: flex;
-    flex-direction: column;
-    gap: 2rem;
+const ButtonContainer = styled.div`
+  display: flex;
+  flex-direction: row;
+  gap: .25rem;
+`;
 
-    &.right-fixed {
-      position: fixed;
-      top: 6.5rem; /* Adjust based on your header height */
-      right: max(calc((100% - (100% - 3rem)) / 2 + 1.5rem), 1.5rem);
-      height: calc(100vh - 6.5rem); /* Adjust based on your header height */
-      overflow-y: auto;
-      
-      /* Hide scrollbar for Chrome, Safari and Opera */
-      &::-webkit-scrollbar {
-        display: none;
-      }
-      
-      /* Hide scrollbar for IE, Edge and Firefox */
-      -ms-overflow-style: none;
-      scrollbar-width: none;
+const TabButton = styled(Link)`
+  border: none;
+  padding: 0 .75rem;
+  height: 2rem;
+  border-radius: 1rem;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: .25rem;
+  cursor: pointer;
+  font-family: ${theme.typography.fontFamilies.medium};
+  font-size: 1rem;
+  line-height: 1.25rem;
+  color: ${props => props.isActive ? theme.colors.background.verm : theme.colors.text.tertiary}; 
+  background-color: ${props => props.isActive ? theme.colors.background.primary : theme.colors.background.white}; 
+  transition: all 200ms ease;
+  transform-origin: center center;
+  text-decoration: none;
+
+  &:hover {
+    color: ${theme.colors.background.verm};
+    background-color: ${theme.colors.background.primary};
+
+    svg {
+      fill: ${theme.colors.background.verm};
     }
+  }
+
+  &:active {
+    transform: scale(0.96);
+  }
+
+  svg {
+    fill: ${props => props.isActive ? theme.colors.background.verm : theme.colors.text.tertiary};
+    transition: fill 200ms ease;
   }
 `;
 
@@ -448,12 +262,12 @@ const FeedContainer = styled.div`
   flex-direction: column;
   width: 100%;
   max-width: 32rem;
-  // padding: 1.5rem 1rem 3rem 1rem;
+  padding: 1.5rem 1rem 3rem 1rem;
   gap: 1.5rem;
 
-  // @media (max-width: 560px) {
-  //   max-width: calc(100% - 2rem);
-  // }
+  @media (max-width: 544px) {
+    max-width: calc(100% - 2rem);
+  }
 `;
 
 const LoadingContainer = styled.div`
