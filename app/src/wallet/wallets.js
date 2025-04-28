@@ -439,8 +439,25 @@ class LeatherWallet extends Wallet {
 class OkxWallet extends Wallet {
   constructor() {
     super('okx', true, true); //supports custom addresses and custom key path signing
-    this._provider = null;
   }
+
+  // note: zustand cannot store recursive objects, so we use a function to get the provider (which is recursive)
+  async _getProvider(network) {
+    this.windowCheck();
+    if (network===undefined) {
+      network = this.network;
+    }
+    if (network === 'mainnet') {
+      return window.okxwallet.bitcoin;
+    } else if (network === 'testnet') {
+      return window.okxwallet.bitcoinTestnet;
+    } else if (network === 'signet') {
+      return window.okxwallet.bitcoinSignet;
+    } else {
+      throw new Error('OKX only supports mainnet, testnet and signet');
+    }
+  }
+
 
   windowCheck() {
     if (!window.okxwallet) throw new Error('OKX not installed');
@@ -449,17 +466,9 @@ class OkxWallet extends Wallet {
   async connect(network) {
     this.windowCheck();
     let response;
-    if (network === 'mainnet') {
-      this._provider = window.okxwallet.bitcoin;
-    } else if (network === 'testnet') {
-      this._provider = window.okxwallet.bitcoinTestnet;
-    } else if (network === 'signet') {
-      this._provider = window.okxwallet.bitcoinSignet;
-    }  else {
-      throw new Error('OKX only supports mainnet, testnet and signet');
-    }
+    let provider = await this._getProvider(network);
 
-    response = await this._provider.connect();
+    response = await provider.connect();
     
     this.network = network;
     this.paymentAddress = response.address;
@@ -482,7 +491,7 @@ class OkxWallet extends Wallet {
 
   async signPsbt(psbt, signingIndexes = null) {
     this.windowCheck();
-    const provider = this._provider;
+    const provider = this._getProvider();
     let signedPsbtHex;
     if (signingIndexes === null) {
       signedPsbtHex = await provider.signPsbt(psbt.toHex());
@@ -498,7 +507,7 @@ class OkxWallet extends Wallet {
 
   async signPsbts(psbtArray, signingIndexesArray) {
     this.windowCheck();
-    const provider = this._provider;
+    const provider = this._getProvider();
     const psbtHexs = psbtArray.map(psbt => psbt.toHex());
     const options = signingIndexesArray.map(signingIndexes => ({
       toSignInputs: signingIndexes,
@@ -521,14 +530,14 @@ class OkxWallet extends Wallet {
       this.ordinalsPublicKey = addressInfo.publicKey;
       callback(this.getAccountInfo());
     };
-    const provider = this._provider;
+    const provider = this._getProvider();
     provider.on('accountChanged', this._accountChangedListener);
   }
 
   async removeAccountChangeListener() {
     this.windowCheck();
     if (this._accountChangedListener) {
-      const provider = this._provider;
+      const provider = this._getProvider();
       provider.removeListener('accountChanged', this._accountChangedListener);
       this._accountChangedListener = null;
     }

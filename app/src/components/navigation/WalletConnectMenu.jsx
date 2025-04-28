@@ -44,10 +44,21 @@ const WALLET_LOGOS = {
   'phantom': phantomLogo
 };
 
+const WALLET_LINKS = {
+  'unisat': 'https://unisat.io/download',
+  'xverse': 'https://xverse.app',
+  'oyl': 'https://oyl.io',
+  'magiceden': 'https://wallet.magiceden.io',
+  'okx': 'https://web3.okx.com',
+  'leather': 'https://leather.io',
+  'phantom': 'https://phantom.com'
+}
+
 const WalletConnectMenu = ({ isOpen, onClose }) => {
   const [showOtherWallets, setShowOtherWallets] = useState(false);
   const [detectedWallets, setDetectedWallets] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(null);
   const menuRef = useRef(null);
   // Use Zustand store to manage wallet state - has to be top-level
   const setWallet = useStore(state => state.setWallet);
@@ -114,13 +125,20 @@ const WalletConnectMenu = ({ isOpen, onClose }) => {
     onClose();
     // Reset state when menu closes
     setShowOtherWallets(false);
+    setError(null);
   };
 
   const handleWalletConnect = async (walletType) => {
-    console.log("Connecting to wallet:", walletType);
-    let wallet = await connectWallet(walletType, "signet");
-    console.log("Connected wallet:", wallet);
-    setWallet(wallet);
+    setError(null);
+    try {
+      console.log("Connecting to wallet:", walletType);
+      let wallet = await connectWallet(walletType, "signet");
+      console.log("Connected wallet:", wallet);
+      setWallet(wallet);
+    } catch (err) {
+      console.warn("Error connecting to wallet:", err);
+      setError("Error: " + err.message);
+    }
   }
   
   const primaryWallets = ['unisat', 'xverse', 'oyl'];
@@ -148,17 +166,18 @@ const WalletConnectMenu = ({ isOpen, onClose }) => {
           {walletsToShow.map(wallet => {
             const isDetected = detectedWallets.includes(wallet);
             return (
-              <WalletOption key={wallet} onClick={() => handleWalletConnect(wallet)}>
+              <WalletOption key={wallet} onClick={isDetected 
+                ? () => handleWalletConnect(wallet)
+                : () => window.open(WALLET_LINKS[wallet], '_blank')
+              }>
                 <WalletLogoWrapper>
                   <WalletLogo src={WALLET_LOGOS[wallet]} alt={`${WALLET_DISPLAY_NAMES[wallet]} logo`} />
                 </WalletLogoWrapper>
                 <WalletName>{WALLET_DISPLAY_NAMES[wallet]}</WalletName>
-                {isDetected && (
-                  <StatusLabel>
-                    <StatusText>Detected</StatusText>
-                    <ConnectText>Connect</ConnectText>
-                  </StatusLabel>
-                )}
+                <StatusLabel>
+                  <StatusText>{isDetected ? 'Detected' : ''}</StatusText>
+                  <ConnectText>{isDetected ? 'Connect' : 'Install'}</ConnectText>
+                </StatusLabel>
               </WalletOption>
             );
           })}
@@ -179,6 +198,13 @@ const WalletConnectMenu = ({ isOpen, onClose }) => {
             </OtherWalletsOption>
           </>
         )}
+
+        {error && (
+          <StatusLabel style={{ backgroundColor: theme.colors.background.error }}>
+            <StatusText style={{ color: theme.colors.text.error }}>{error}</StatusText>
+          </StatusLabel>
+        )}
+
       </MenuContent>
     </MenuContainer>
   );

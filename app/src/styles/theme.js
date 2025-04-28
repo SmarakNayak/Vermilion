@@ -9,6 +9,7 @@ export const theme = {
       secondary: '#999999',  // Secondary text, captions, etc.
       tertiary: '#C2C2C2',   // Tertiary text, inactive, etc.
       white: '#FFFFFF',      // White text
+      error: '#E94E20',     // Error text color
     },
 
     // Background colors
@@ -25,6 +26,7 @@ export const theme = {
       vermBorder: '#FAD1C7', // Brand color, border
       vermPale: '#FDEDE9',   // Brand color, pale
       white: '#FFFFFF',      // Default page background
+      error: '#FDEDE9',      // Error background color
     },
 
     // UI element colors
