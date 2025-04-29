@@ -2,11 +2,14 @@ import { useEffect, useRef, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import styled from 'styled-components';
 import theme from '../../styles/theme';
+import Spinner from '../Spinner';
+
 // Utils
 import { addCommas, formatAddress, shortenBytes } from '../../utils/format';
 
 // icons
 import { 
+  ChevronUpDuoIcon,
   CrossIcon
 } from '../common/Icon';
 
@@ -57,29 +60,41 @@ const BoostsModal = ({ boostsList, onClose, fetchMoreBoosts, hasMoreBoosts, isBo
           </CloseButton>
         </ModalHeader>
         <ModalContent ref={modalContentRef}>
-          {boostsList.map((boost, index) => (
-            <BoostEntry
-              key={index}
-              ref={index === boostsList.length - 1 ? lastBoostRef : null}
-            >
-              <BoostDetails>
-                <BoostNumber>{boost.bootleg_edition}</BoostNumber>
-                <TextLink to={`/inscription/${boost.bootleg_number}`}>
-                  <BoostText>
-                    #{addCommas(boost.bootleg_number)}
-                  </BoostText>
-                </TextLink>
-              </BoostDetails>
-              <OwnerDetails>
-                <SupportText>owned by</SupportText>
-                <TextLink to={`/address/${boost.address}`}>
-                  <BoostText>
-                    {formatAddress(boost.address)}
-                  </BoostText>
-                </TextLink>
-              </OwnerDetails>
-            </BoostEntry>
-          ))}
+          {boostsList.length === 0 ? (
+            <EmptyStateContainer>
+              <EmptyStateIconContainer>
+                <ChevronUpDuoIcon size="1.25rem" color={theme.colors.text.secondary} />
+              </EmptyStateIconContainer>
+              <EmptyStateTextContainer>
+                <EmptyStateTitle>No boosts yet</EmptyStateTitle>
+                <EmptyStateSubtitle>Be the first to boost this inscription.</EmptyStateSubtitle>
+              </EmptyStateTextContainer>
+            </EmptyStateContainer>
+          ) : (
+            boostsList.map((boost, index) => (
+              <BoostEntry
+                key={index}
+                ref={index === boostsList.length - 1 ? lastBoostRef : null}
+              >
+                <BoostDetails>
+                  <BoostNumber>{boost.bootleg_edition}</BoostNumber>
+                  <TextLink to={`/inscription/${boost.bootleg_number}`}>
+                    <BoostText>
+                      #{addCommas(boost.bootleg_number)}
+                    </BoostText>
+                  </TextLink>
+                </BoostDetails>
+                <OwnerDetails>
+                  <SupportText>owned by</SupportText>
+                  <TextLink to={`/address/${boost.address}`}>
+                    <BoostText>
+                      {formatAddress(boost.address)}
+                    </BoostText>
+                  </TextLink>
+                </OwnerDetails>
+              </BoostEntry>
+            ))
+          )}
           <SpinnerContainer>
             {isBoostsLoading && <Spinner />}
           </SpinnerContainer>
@@ -109,10 +124,10 @@ const ModalOverlay = styled.div`
 const ModalContainer = styled.div`
   background: ${theme.colors.background.white};
   border-radius: 1rem;
-  max-width: 400px;
-  max-height: 630px;
   width: 90vw;
-  height: 90vh;
+  max-width: 400px;
+  height: auto;
+  max-height: 95vh;
   overflow: hidden;
   display: flex;
   flex-direction: column;
@@ -123,9 +138,6 @@ const ModalContainer = styled.div`
 
   @media (max-width: 400px) {
     max-width: 90vw;
-  }
-  @media (max-height: 630px) {
-    max-height: 90vh;
   }
 `;
 
@@ -266,6 +278,50 @@ const SupportText = styled.p`
   @media (max-width: 400px) {
     display: none;
   }
+`;
+
+const EmptyStateContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  padding: 1rem 0 1.5rem 0;
+`;
+
+const EmptyStateIconContainer = styled.div`
+  width: 2.75rem;
+  height: 2.75rem;
+  background-color: ${theme.colors.background.primary};
+  border-radius: 1.375rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+`;
+
+const EmptyStateTextContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.125rem;
+`;
+
+const EmptyStateTitle = styled.p`
+  font-family: ${theme.typography.fontFamilies.medium};
+  font-size: 1rem;
+  line-height: 1.5rem;
+  color: ${theme.colors.text.secondary};
+  font-weight: bold;
+  margin: 0;
+`;
+
+const EmptyStateSubtitle = styled.p`
+  font-family: ${theme.typography.fontFamilies.medium};
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  color: ${theme.colors.text.secondary};
+  margin: 0;
 `;
 
 export default BoostsModal;
