@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import styled from 'styled-components';
 import theme from '../../styles/theme';
 // Utils
@@ -11,11 +11,13 @@ import {
   CrossIcon,
   MinusIcon,
   PlusIcon,
+  LoginIcon,
 } from '../common/Icon';
 import InscriptionIcon from '../InscriptionIcon';
 
 import { createInscriptions, Inscription as InscriptionObject } from '../../wallet/inscriptionBuilder';
 import useStore from '../../store/zustand';
+import WalletConnectMenu from '../navigation/WalletConnectMenu';
 
 const CheckoutModal = ({ onClose, isCheckoutModalOpen, delegateData, metadata, number }) => {
   const placeholderFees = [
@@ -63,7 +65,8 @@ const CheckoutModal = ({ onClose, isCheckoutModalOpen, delegateData, metadata, n
       
       if (!wallet) {
         console.error("Wallet not connected");
-        alert("Please connect your wallet to boost");
+        //alert("Please connect your wallet to boost");
+        setOverlayWalletConnect(true);
         return;
       }
 
@@ -78,123 +81,147 @@ const CheckoutModal = ({ onClose, isCheckoutModalOpen, delegateData, metadata, n
     }
   };
 
+  const [overlayWalletConnect, setOverlayWalletConnect] = useState(false);
+  const handleWalletConnectClose = () => {
+    setOverlayWalletConnect(false);
+  }
+
+
   return (
-    <ModalOverlay isOpen={isCheckoutModalOpen} onClick={onClose}>
-      <ModalContainer isOpen={isCheckoutModalOpen} onClick={(e) => e.stopPropagation()}>
-        <ModalHeader>
-          <HeaderText>Checkout</HeaderText>
-          <CloseButton onClick={onClose}>
-            <CrossIcon size={'1.25rem'} color={theme.colors.text.secondary} />
-          </CloseButton>
-        </ModalHeader>
-        <ModalContent gap="1.5rem" ref={modalContentRef}>
-          <SummaryDiv>
-            <PlainText color={theme.colors.text.secondary}>
-              You are about to boost this inscription:
-            </PlainText>
-            <SummaryRow>
-              <InscriptionIcon
-                size="4rem"
-                useBlockIconDefault={false}
-                endpoint={`/api/inscription_number/${delegateData?.metadata.number || number}`}
-                number={metadata?.delegate || number}
-              />
-              <SummaryDetails>
-                <PlainText>
-                  {addCommas(delegateData?.metadata.number) || addCommas(number)}
-                </PlainText>
-                <ContentTag>
-                  {delegateData?.metadata.content_type || metadata?.content_type}
-                </ContentTag>
-              </SummaryDetails>
-            </SummaryRow>
-          </SummaryDiv>
+    <MultiModalContainer>
+      <ModalOverlay isOpen={isCheckoutModalOpen} onClick={onClose}>
+        <ModalContainer isOpen={isCheckoutModalOpen} onClick={(e) => e.stopPropagation()}>
+          <ModalHeader>
+            <HeaderText>Checkout</HeaderText>
+            <CloseButton onClick={onClose}>
+              <CrossIcon size={'1.25rem'} color={theme.colors.text.secondary} />
+            </CloseButton>
+          </ModalHeader>
+          <ModalContent gap="1.5rem" ref={modalContentRef}>
+            <SummaryDiv>
+              <PlainText color={theme.colors.text.secondary}>
+                You are about to boost this inscription:
+              </PlainText>
+              <SummaryRow>
+                <InscriptionIcon
+                  size="4rem"
+                  useBlockIconDefault={false}
+                  endpoint={`/api/inscription_number/${delegateData?.metadata.number || number}`}
+                  number={metadata?.delegate || number}
+                />
+                <SummaryDetails>
+                  <PlainText>
+                    {addCommas(delegateData?.metadata.number) || addCommas(number)}
+                  </PlainText>
+                  <ContentTag>
+                    {delegateData?.metadata.content_type || metadata?.content_type}
+                  </ContentTag>
+                </SummaryDetails>
+              </SummaryRow>
+            </SummaryDiv>
 
-          {/* Divider */}
-          <Divider />
+            {/* Divider */}
+            <Divider />
 
-          {/* Input Fields Section */}
-          <InputFieldsContainer>
-            {/* First Input Field */}
-            <InputFieldDiv>
-              <InputLabel>
-                <PlainText>Comment</PlainText>
-                <PlainText color={theme.colors.text.tertiary}>
-                  (Optional)
-                </PlainText>
-                <InfoCircleIcon size="1.25rem" color={theme.colors.text.tertiary} />
-              </InputLabel>
-              <StyledInput placeholder="Add a comment" />
-            </InputFieldDiv>
+            {/* Input Fields Section */}
+            <InputFieldsContainer>
+              {/* First Input Field */}
+              <InputFieldDiv>
+                <InputLabel>
+                  <PlainText>Comment</PlainText>
+                  <PlainText color={theme.colors.text.tertiary}>
+                    (Optional)
+                  </PlainText>
+                  <InfoCircleIcon size="1.25rem" color={theme.colors.text.tertiary} />
+                </InputLabel>
+                <StyledInput placeholder="Add a comment" />
+              </InputFieldDiv>
 
-            {/* Second Input Field */}
-            <InputFieldDiv>
-              <InputLabel>
-                <PlainText>Quantity</PlainText>
-                <PlainText color={theme.colors.text.tertiary}>
-                  (Limit 100 per transaction)
-                </PlainText>
-              </InputLabel>
-              <QuantityRow>
-                <StyledInput placeholder="1" />
-                <QuantityButton>
-                  <MinusIcon size="1.25rem" color={theme.colors.text.tertiary} />
-                </QuantityButton>
-                <QuantityButton>
-                  <PlusIcon size="1.25rem" color={theme.colors.text.tertiary} />
-                </QuantityButton>
-              </QuantityRow>
-            </InputFieldDiv>
-          </InputFieldsContainer>
+              {/* Second Input Field */}
+              <InputFieldDiv>
+                <InputLabel>
+                  <PlainText>Quantity</PlainText>
+                  <PlainText color={theme.colors.text.tertiary}>
+                    (Limit 100 per transaction)
+                  </PlainText>
+                </InputLabel>
+                <QuantityRow>
+                  <StyledInput placeholder="1" />
+                  <QuantityButton>
+                    <MinusIcon size="1.25rem" color={theme.colors.text.tertiary} />
+                  </QuantityButton>
+                  <QuantityButton>
+                    <PlusIcon size="1.25rem" color={theme.colors.text.tertiary} />
+                  </QuantityButton>
+                </QuantityRow>
+              </InputFieldDiv>
+            </InputFieldsContainer>
 
-          {/* Divider */}
-          <Divider />
+            {/* Divider */}
+            <Divider />
 
-          {/* Fee Summary Section */}
-          <FeeSummaryContainer>
-            {/* Row 1: Network Fees */}
-            <FeeRow>
-              <PlainText color={theme.colors.text.secondary}>Network fees</PlainText>
-              <FeeDetails>
-                <PlainText color={theme.colors.text.secondary}>{placeholderFees[0].btc}</PlainText>
-                <PlainText color={theme.colors.text.tertiary}>{placeholderFees[0].usd}</PlainText>
-              </FeeDetails>
-            </FeeRow>
+            {/* Fee Summary Section */}
+            <FeeSummaryContainer>
+              {/* Row 1: Network Fees */}
+              <FeeRow>
+                <PlainText color={theme.colors.text.secondary}>Network fees</PlainText>
+                <FeeDetails>
+                  <PlainText color={theme.colors.text.secondary}>{placeholderFees[0].btc}</PlainText>
+                  <PlainText color={theme.colors.text.tertiary}>{placeholderFees[0].usd}</PlainText>
+                </FeeDetails>
+              </FeeRow>
 
-            {/* Row 2: Service Fees */}
-            <FeeRow>
-              <PlainText color={theme.colors.text.secondary}>Service fees</PlainText>
-              <FeeDetails>
-                <PlainText color={theme.colors.text.secondary}>{placeholderFees[1].btc}</PlainText>
-                <PlainText color={theme.colors.text.tertiary}>{placeholderFees[1].usd}</PlainText>
-              </FeeDetails>
-            </FeeRow>
+              {/* Row 2: Service Fees */}
+              <FeeRow>
+                <PlainText color={theme.colors.text.secondary}>Service fees</PlainText>
+                <FeeDetails>
+                  <PlainText color={theme.colors.text.secondary}>{placeholderFees[1].btc}</PlainText>
+                  <PlainText color={theme.colors.text.tertiary}>{placeholderFees[1].usd}</PlainText>
+                </FeeDetails>
+              </FeeRow>
 
-            {/* Dotted Divider */}
-            <DottedDivider />
+              {/* Dotted Divider */}
+              <DottedDivider />
 
-            {/* Row 3: Total Fees */}
-            <FeeRow>
-              <PlainText color={theme.colors.text.primary}>Total fees</PlainText>
-              <FeeDetails>
-                <PlainText color={theme.colors.text.primary}>{placeholderFees[2].btc}</PlainText>
-                <PlainText color={theme.colors.text.tertiary}>{placeholderFees[2].usd}</PlainText>
-              </FeeDetails>
-            </FeeRow>
-          </FeeSummaryContainer>
+              {/* Row 3: Total Fees */}
+              <FeeRow>
+                <PlainText color={theme.colors.text.primary}>Total fees</PlainText>
+                <FeeDetails>
+                  <PlainText color={theme.colors.text.primary}>{placeholderFees[2].btc}</PlainText>
+                  <PlainText color={theme.colors.text.tertiary}>{placeholderFees[2].usd}</PlainText>
+                </FeeDetails>
+              </FeeRow>
+            </FeeSummaryContainer>
 
-          {/* Boost Button Section */}
-          <BoostButtonContainer>
-            <ModalBoostButton onClick={() => handleBoostClick(delegateData?.metadata || metadata)}>
-              <ChevronUpDuoIcon size="1.25rem" color={theme.colors.background.white} />
-              Boost
-            </ModalBoostButton>
-          </BoostButtonContainer>
-        </ModalContent>
-      </ModalContainer>
-    </ModalOverlay>
+            {/* Boost Button Section */}
+            <BoostButtonContainer>
+              <ModalBoostButton onClick={() => handleBoostClick(delegateData?.metadata || metadata)}>
+                {wallet ? (
+                  <>
+                    <ChevronUpDuoIcon size="1.25rem" color={theme.colors.background.white} />
+                    Boost
+                  </>
+                  ) : (
+                  <>
+                    <LoginIcon size="1.25rem" color={theme.colors.background.white} />
+                    Connect Wallet to Boost
+                  </>
+                )}
+              </ModalBoostButton>
+            </BoostButtonContainer>
+          </ModalContent>
+        </ModalContainer>
+      </ModalOverlay>
+      <ModalOverlay isOpen={overlayWalletConnect} onClick={handleWalletConnectClose}>
+        <WalletConnectMenu isOpen={overlayWalletConnect} onClose={handleWalletConnectClose}></WalletConnectMenu>
+      </ModalOverlay>
+    </MultiModalContainer>
   );
 };
+
+const MultiModalContainer = styled.div`
+  //position: fixed;
+`;
 
 const ModalOverlay = styled.div`
   position: fixed;
@@ -207,7 +234,7 @@ const ModalOverlay = styled.div`
   display: flex;
   justify-content: center;
   align-items: center;
-  z-index: 1000;
+  z-index: ${props => (props?.zIndex ? props.zIndex : 1000)};
   opacity: ${props => (props.isOpen ? 1 : 0)};
   visibility: ${props => (props.isOpen ? 'visible' : 'hidden')};
   transition: opacity 200ms ease, visibility 200ms ease, backdrop-filter 200ms ease;
