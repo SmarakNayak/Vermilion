@@ -34,6 +34,8 @@ const CheckoutModal = ({ onClose, isCheckoutModalOpen, delegateData, metadata, n
   const modalContentRef = useRef(); // Ref for the modal content
   // Use zustand store to get the wallet (has to be top-level)
   const wallet = useStore(state => state.wallet);
+  const [overlayWalletConnect, setOverlayWalletConnect] = useState(false);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     if (isCheckoutModalOpen) {
@@ -54,7 +56,7 @@ const CheckoutModal = ({ onClose, isCheckoutModalOpen, delegateData, metadata, n
 
   const handleBoostClick = async (delegateMetadata) => {
     if (!delegateMetadata) {
-      console.error("No delegate or inscription ID available for boosting");
+      console.warn("No delegate or inscription ID available for boosting");
       return;
     }
 
@@ -80,8 +82,8 @@ const CheckoutModal = ({ onClose, isCheckoutModalOpen, delegateData, metadata, n
       // Close modal after successful boost
       onClose();
     } catch (error) {
-      console.error("Error creating boost inscription:", error);
-      alert(`Error creating boost: ${error.message}`);
+      console.warn("Error creating boost inscription:", error);
+      setError("Failed to boost: " + error.message);
     }
   };
 
@@ -128,19 +130,22 @@ const CheckoutModal = ({ onClose, isCheckoutModalOpen, delegateData, metadata, n
     }
   }, [isCheckoutModalOpen]);
 
-  const [overlayWalletConnect, setOverlayWalletConnect] = useState(false);
   const handleWalletConnectClose = () => {
     setOverlayWalletConnect(false);
   }
 
+  const handleCheckoutModalClose = () => {
+    setError(null); // Reset error state when closing the modal
+    onClose();
+  }
 
   return (
     <MultiModalContainer>
-      <ModalOverlay isOpen={isCheckoutModalOpen} onClick={onClose}>
+      <ModalOverlay isOpen={isCheckoutModalOpen} onClick={handleCheckoutModalClose}>
         <ModalContainer isOpen={isCheckoutModalOpen} onClick={(e) => e.stopPropagation()}>
           <ModalHeader>
             <HeaderText>Checkout</HeaderText>
-            <CloseButton onClick={onClose}>
+            <CloseButton onClick={handleCheckoutModalClose}>
               <CrossIcon size={'1.25rem'} color={theme.colors.text.secondary} />
             </CloseButton>
           </ModalHeader>
@@ -267,6 +272,13 @@ const CheckoutModal = ({ onClose, isCheckoutModalOpen, delegateData, metadata, n
                 )}
               </ModalBoostButton>
             </BoostButtonContainer>
+
+            {/* Error message */}
+            {error && (
+              <ErrorContainer style={{ backgroundColor: theme.colors.background.white }}>
+                <StatusText style={{ color: theme.colors.text.error }}>{error}</StatusText>
+              </ErrorContainer>
+            )}
           </ModalContent>
         </ModalContainer>
       </ModalOverlay>
@@ -302,9 +314,9 @@ const ModalContainer = styled.div`
   background: ${theme.colors.background.white};
   border-radius: 1rem;
   max-width: 400px;
-  max-height: 630px;
+  height: auto;
   width: 90vw;
-  height: 90vh;
+  max-height: 95vh;
   overflow: hidden;
   display: flex;
   flex-direction: column;
@@ -559,5 +571,18 @@ const ModalBoostButton = styled.button`
   }
 `;
 
+const ErrorContainer = styled.div`
+  background-color: ${theme.colors.background.white};
+  padding: 0.525rem 0.5rem 0.125rem;
+`;
+
+const StatusText = styled.span`
+  font-family: ${theme.typography.fontFamilies.medium};
+  font-size: 0.75rem;
+  line-height: 1rem;
+  color: ${theme.colors.text.secondary};
+  display: block;
+  transition: all 200ms ease;
+`;
 
 export default CheckoutModal;
