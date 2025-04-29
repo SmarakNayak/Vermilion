@@ -20,6 +20,10 @@ import useStore from '../../store/zustand';
 import WalletConnectMenu from '../navigation/WalletConnectMenu';
 
 const CheckoutModal = ({ onClose, isCheckoutModalOpen, delegateData, metadata, number }) => {
+  const [boostComment, setBoostComment] = useState(''); 
+  const [boostQuantity, setBoostQuantity] = useState(1);
+  const [isQuantityError, setIsQuantityError] = useState(false); 
+
   const placeholderFees = [
     { id: 1, btc: "0.00002816 BTC", usd: "$2.55" },
     { id: 2, btc: "0.00002000 BTC", usd: "$1.90" },
@@ -81,6 +85,49 @@ const CheckoutModal = ({ onClose, isCheckoutModalOpen, delegateData, metadata, n
     }
   };
 
+  // Handle quantity change with validation
+  const handleQuantityChange = (e) => {
+    const value = parseInt(e.target.value, 10);
+  
+    if (isNaN(value) || value < 1 || value > 100) {
+      setIsQuantityError(true); // Show error outline
+    } else {
+      setIsQuantityError(false); // Remove error outline
+    }
+  
+    setBoostQuantity(isNaN(value) ? '' : value); // Update state, allow blank input
+  };  
+
+  // Handle increment and decrement buttons
+  const incrementQuantity = () => {
+    if (boostQuantity < 100) {
+      setBoostQuantity(boostQuantity + 1);
+      setIsQuantityError(false);
+    }
+  };
+
+  const decrementQuantity = () => {
+    if (boostQuantity > 1) {
+      const newQuantity = boostQuantity - 1;
+  
+      // Set error to false only if the new quantity is 100 or less
+      if (newQuantity <= 100) {
+        setIsQuantityError(false);
+      }
+  
+      setBoostQuantity(newQuantity);
+    }
+  };
+
+  useEffect(() => {
+    if (!isCheckoutModalOpen) {
+      // Reset boostComment, boostQuantity, and error state when the modal is closed
+      setBoostComment('');
+      setBoostQuantity(1);
+      setIsQuantityError(false); 
+    }
+  }, [isCheckoutModalOpen]);
+
   const [overlayWalletConnect, setOverlayWalletConnect] = useState(false);
   const handleWalletConnectClose = () => {
     setOverlayWalletConnect(false);
@@ -111,7 +158,9 @@ const CheckoutModal = ({ onClose, isCheckoutModalOpen, delegateData, metadata, n
                 />
                 <SummaryDetails>
                   <PlainText>
-                    {addCommas(delegateData?.metadata.number) || addCommas(number)}
+                    {delegateData?.metadata?.number !== undefined
+                      ? addCommas(delegateData.metadata.number)
+                      : addCommas(number)}
                   </PlainText>
                   <ContentTag>
                     {delegateData?.metadata.content_type || metadata?.content_type}
@@ -120,42 +169,51 @@ const CheckoutModal = ({ onClose, isCheckoutModalOpen, delegateData, metadata, n
               </SummaryRow>
             </SummaryDiv>
 
-            {/* Divider */}
-            <Divider />
+          {/* Divider */}
+          {/* <Divider /> */}
 
-            {/* Input Fields Section */}
-            <InputFieldsContainer>
-              {/* First Input Field */}
-              <InputFieldDiv>
-                <InputLabel>
-                  <PlainText>Comment</PlainText>
-                  <PlainText color={theme.colors.text.tertiary}>
-                    (Optional)
-                  </PlainText>
-                  <InfoCircleIcon size="1.25rem" color={theme.colors.text.tertiary} />
-                </InputLabel>
-                <StyledInput placeholder="Add a comment" />
-              </InputFieldDiv>
+          {/* Input Fields Section */}
+          <InputFieldsContainer>
+            {/* First Input Field */}
+            <InputFieldDiv>
+              <InputLabel>
+                <PlainText>Comment</PlainText>
+                <PlainText color={theme.colors.text.tertiary}>
+                  (Optional)
+                </PlainText>
+                <InfoCircleIcon size="1.25rem" color={theme.colors.text.tertiary} />
+              </InputLabel>
+              <StyledInput
+                placeholder="Add a comment"
+                value={boostComment}
+                onChange={(e) => setBoostComment(e.target.value)} // Update boostComment
+              />
+            </InputFieldDiv>
 
-              {/* Second Input Field */}
-              <InputFieldDiv>
-                <InputLabel>
-                  <PlainText>Quantity</PlainText>
-                  <PlainText color={theme.colors.text.tertiary}>
-                    (Limit 100 per transaction)
-                  </PlainText>
-                </InputLabel>
-                <QuantityRow>
-                  <StyledInput placeholder="1" />
-                  <QuantityButton>
-                    <MinusIcon size="1.25rem" color={theme.colors.text.tertiary} />
-                  </QuantityButton>
-                  <QuantityButton>
-                    <PlusIcon size="1.25rem" color={theme.colors.text.tertiary} />
-                  </QuantityButton>
-                </QuantityRow>
-              </InputFieldDiv>
-            </InputFieldsContainer>
+            {/* Second Input Field */}
+            <InputFieldDiv>
+              <InputLabel>
+                <PlainText>Quantity</PlainText>
+                <PlainText color={theme.colors.text.tertiary}>
+                  (Limit 100 per transaction)
+                </PlainText>
+              </InputLabel>
+              <QuantityRow>
+                <StyledInput
+                  placeholder="1"
+                  value={boostQuantity}
+                  onChange={handleQuantityChange} // Validate and update boostQuantity
+                  isError={isQuantityError} // Pass error state for styling
+                />
+                <QuantityButton onClick={decrementQuantity}>
+                  <MinusIcon size="1.25rem" color={theme.colors.text.tertiary} />
+                </QuantityButton>
+                <QuantityButton onClick={incrementQuantity}>
+                  <PlusIcon size="1.25rem" color={theme.colors.text.tertiary} />
+                </QuantityButton>
+              </QuantityRow>
+            </InputFieldDiv>
+          </InputFieldsContainer>
 
             {/* Divider */}
             <Divider />
@@ -332,7 +390,11 @@ const SummaryRow = styled.div`
   display: flex;
   flex-direction: row;
   align-items: center;
+  border: none;
+  border-radius: 0.75rem;
   gap: 0.75rem;
+  padding: 0.375rem;
+  background: ${theme.colors.background.primary};
 `;
 
 const SummaryDetails = styled.div`
@@ -343,8 +405,6 @@ const SummaryDetails = styled.div`
 
 const ContentTag = styled.div`
   background: ${theme.colors.background.primary};
-  border-radius: 0.25rem;
-  padding: 0.125rem 0.25rem;
   font-family: ${theme.typography.fontFamilies.medium};
   font-size: 0.875rem;
   line-height: 1.25rem;
@@ -407,18 +467,36 @@ const InputLabel = styled.div`
 const StyledInput = styled.input`
   height: 2.25rem;
   width: 100%;
-  max-width: calc(100% - 1.5rem);
+  max-width: 100%;
   padding: 0 0.75rem;
   background-color: ${theme.colors.background.primary};
   font-family: ${theme.typography.fontFamilies.medium};
   font-size: 1rem;
   line-height: 1.5rem;
   color: ${theme.colors.text.primary};
-  border: none;
+  border: 2px solid ${props => (props.isError ? theme.colors.text.error : 'transparent')};
   border-radius: 0.75rem;
+  box-sizing: border-box;
   outline: none;
+  transition: all 200ms ease;
 
-  &::placeholder {
+  &:hover {
+    border: 2px solid ${props => (props.isError ? theme.colors.text.error : theme.colors.border)};
+  }
+
+  &:focus {
+    border: 2px solid ${props => (props.isError ? theme.colors.text.error : theme.colors.border)};
+  }
+
+  &::placeholder { /* Chrome, Firefox, Opera, Safari 10.1+ */
+    color: ${theme.colors.text.tertiary};
+  }
+  
+  &:-ms-input-placeholder { /* Internet Explorer 10-11 */
+    color: ${theme.colors.text.tertiary};
+  }
+  
+  &::-ms-input-placeholder { /* Microsoft Edge */
     color: ${theme.colors.text.tertiary};
   }
 `;
