@@ -61,22 +61,37 @@ const CheckoutModal = ({ onClose, isCheckoutModalOpen, delegateData, metadata, n
     }
 
     try {
-      // Create a boost inscription with delegate
-      const boostInscription = new InscriptionObject({
-        delegate: delegateMetadata.id,
-        contentType: delegateMetadata.content_type,
-        postage: 546 // Minimum sat value
-      });
-      console.log("Boosting inscription: ", boostInscription);
-      
+      console.log(boostComment, boostQuantity);
+      if (boostQuantity < 1 || boostQuantity > 100) {        
+        setError("Boost quantity must be between 1 and 100.");
+        return;
+      }
       if (!wallet) {
         console.log("Wallet not connected");
         setOverlayWalletConnect(true);
         return;
       }
+      let inscriptions = Array(boostQuantity).fill().map(() => 
+        new InscriptionObject({
+          delegate: delegateMetadata.id,
+          contentType: delegateMetadata.content_type,
+          postage: 546 // Minimum sat value
+        })
+      );
+      if (boostComment.length > 0) {
+        //overwrite the first inscription with the comment        
+        const commentInscription = new InscriptionObject({
+          delegate: delegateMetadata.id,
+          contentType: "text/plain",
+          content: Buffer.from(boostComment), // Add comment to the inscription
+          postage: 546, // Minimum sat value
+        });
+        inscriptions[inscriptions.length-1] = commentInscription;
+      }
+      console.log("Inscribing following inscriptions: ", inscriptions);
 
       // Create the inscription
-      await createInscriptions([boostInscription], wallet);
+      await createInscriptions(inscriptions, wallet);
       
       // Close modal after successful boost
       onClose();

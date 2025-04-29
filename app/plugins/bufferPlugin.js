@@ -2,11 +2,12 @@ export default {
   name: "inject-buffer",
   setup(build) {
     // Match files that need Buffer
-    build.onLoad({ filter: /\.(js|ts|jsx|tsx)$/ }, async (args) => {
+    build.onLoad({ filter: /node_modules\\bitcoinjs-lib.*\.(js|ts|jsx|tsx)$/ }, async (args) => {
       const source = await Bun.file(args.path).text();
       
       // Only inject into files that use Buffer
-      if (source.includes("Buffer") || source.includes("buffer")) {
+      if (source.includes("Buffer")) {
+        //console.log(`Injecting Buffer polyfill into ${args.path}`);
         return {
           contents: `
             function getGlobalThis() {
