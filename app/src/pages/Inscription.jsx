@@ -574,11 +574,11 @@ const Inscription = () => {
   
   // Fetch children inscriptions
   useEffect(() => {
-    if (!metadata?.number) return;
+    if (!metadata?.id) return;
     
     const fetchChildrenInscriptions = async () => {
       try {
-        const response = await fetch(`/api/inscription_children_number/${metadata.number}`);
+        const response = await fetch(`/api/inscription_children/${metadata.id}`);
         const data = await response.json();
         setChildrenInscriptions(data);
       } catch (error) {
@@ -587,7 +587,7 @@ const Inscription = () => {
     };
   
     fetchChildrenInscriptions();
-  }, [metadata?.number]);
+  }, [metadata?.id]);
 
   // Setup 3D model viewer when model URL is available
   useEffect(() => {

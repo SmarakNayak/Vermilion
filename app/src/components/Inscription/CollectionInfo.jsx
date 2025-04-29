@@ -40,7 +40,9 @@ const CollectionInfo = ({ metadata, editionNumber, editionCount, childrenInscrip
       <NumberText>
         {metadata?.off_chain_metadata?.name 
           ? metadata.off_chain_metadata.name 
-          : metadata?.number ? addCommas(metadata.number) : ""}
+          : metadata?.number !== undefined && metadata.number !== null 
+            ? addCommas(metadata.number) 
+            : ""}
       </NumberText>
       
       {(metadata?.delegate || metadata?.is_recursive || 
