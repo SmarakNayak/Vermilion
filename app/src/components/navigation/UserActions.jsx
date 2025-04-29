@@ -87,12 +87,10 @@ const UserActions = () => {
         isOpen={isMenuOpen}
         onClose={closeMenu}
         onConnectWallet={openWalletMenu}
-        wallet={wallet} // Pass wallet state
-        onViewProfile={handleAddressButtonClick} // Pass view profile function
-        onSwitchWallet={openWalletMenu} // Pass switch wallet function
-        onDisconnectWallet={disconnectWallet} // Pass disconnect wallet function
+        wallet={wallet} 
+        onSwitchWallet={openWalletMenu} 
+        onDisconnectWallet={disconnectWallet} 
       />
-      
       <Overlay isOpen={isWalletMenuOpen} onClick={closeWalletMenu}>
         <WalletConnectMenu isOpen={isWalletMenuOpen} onClose={closeWalletMenu} />
       </Overlay>

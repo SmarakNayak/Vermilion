@@ -113,10 +113,9 @@ const MobileMenu = ({ isOpen, onClose, onConnectWallet, wallet, onViewProfile, o
           ) : (
             <>
               <MenuListItem 
-                link="#" 
+                link={`/address/${wallet?.ordinalsAddress}`}
                 action={() => {
                   onClose();
-                  onViewProfile();
                 }} 
                 icon={AvatarCircleIcon} 
                 isStandard={true}
