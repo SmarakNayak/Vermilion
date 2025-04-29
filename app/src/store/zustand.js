@@ -1,5 +1,6 @@
 import {create} from 'zustand';
 import {persist} from 'zustand/middleware';
+import { rehydrateWallet } from '../wallet/wallets';
 
 const useStore = create(
   persist(
@@ -12,6 +13,21 @@ const useStore = create(
     }),
     {
       name : 'vermilion-storage',
+      merge : (persistedState, currentState) => {
+        // Do a shallow merge of the persisted state into the current state
+        let returnedState = {
+          ...currentState,
+          ...persistedState,
+        };
+
+        // Rehydrate wallet instance if wallet data exists
+        if (returnedState.wallet) {
+          let rehydratedWallet = rehydrateWallet(returnedState.wallet);
+          returnedState.wallet = rehydratedWallet;
+        }
+
+        return returnedState;
+      }
     }
   )
 );

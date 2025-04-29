@@ -790,6 +790,44 @@ export const connectWallet = async (walletType, network) => {
   return walletInstance;
 }
 
+// Zustand does not store functions, so we need to rehydrate the wallet instance from the persisted state
+// and create a new instance of the wallet class with the same properties
+export const rehydrateWallet = (persistedWallet) => {
+  let walletInstance;
+  switch (persistedWallet.walletType) {
+    case 'unisat':
+      walletInstance = new UnisatWallet();
+      break;
+    case 'xverse':
+      walletInstance = new XverseWallet();
+      break;
+    case 'leather':
+      walletInstance = new LeatherWallet();
+      break;
+    case 'okx':
+      walletInstance = new OkxWallet();
+      break;
+    case 'magiceden':
+      walletInstance = new MagicEdenWallet();
+      break;
+    case 'phantom':
+      walletInstance = new PhantomWallet();
+      break;
+    case 'oyl':
+      walletInstance = new OylWallet();
+      break;
+    default:
+      throw new Error('Unsupported wallet type');
+  }
+
+  for (const key in persistedWallet) {
+    if (persistedWallet[key]!== null) {
+      walletInstance[key] = persistedWallet[key];
+    }
+  }
+  return walletInstance;
+}
+
 export const disconnectWallet = async (wallet) => {
   wallet.removeAccountChangeListener();
 }
