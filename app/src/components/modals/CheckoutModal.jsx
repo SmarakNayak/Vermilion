@@ -67,11 +67,10 @@ const CheckoutModal = ({ onClose, isCheckoutModalOpen, delegateData, metadata, n
         contentType: delegateMetadata.content_type,
         postage: 546 // Minimum sat value
       });
-      console.log("Boost inscription created:", boostInscription);
+      console.log("Boosting inscription: ", boostInscription);
       
       if (!wallet) {
-        console.error("Wallet not connected");
-        //alert("Please connect your wallet to boost");
+        console.log("Wallet not connected");
         setOverlayWalletConnect(true);
         return;
       }
@@ -82,7 +81,7 @@ const CheckoutModal = ({ onClose, isCheckoutModalOpen, delegateData, metadata, n
       // Close modal after successful boost
       onClose();
     } catch (error) {
-      console.warn("Error creating boost inscription:", error);
+      console.warn("Error boosting inscription:", error);
       setError("Failed to boost: " + error.message);
     }
   };

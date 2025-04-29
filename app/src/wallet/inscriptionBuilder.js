@@ -424,22 +424,22 @@ async function createInscriptions(inscriptions, wallet) {
   if (creationMethod === 'ephemeral') {
     //using ephemeral key
     console.log("Using ephemeral key for script and key path");
-    createInscriptionsWithEphemeralKey(inscriptions, wallet, network, false);
+    await createInscriptionsWithEphemeralKey(inscriptions, wallet, network, false);
   }
   if (creationMethod === 'ephemeral_with_wallet_key_path') {
     //using ephemeral key for script path, wallet for key path
     console.log("Using ephemeral key for script path, wallet for key path");
-    createInscriptionsWithEphemeralKey(inscriptions, wallet, network, true);
+    await createInscriptionsWithEphemeralKey(inscriptions, wallet, network, true);
   }
   if (creationMethod === 'wallet_one_sign') {
     //using wallet internal key
     console.log("Using internal key");
-    createInscriptionsWithTweakedKey(inscriptions, wallet, network);
+    await createInscriptionsWithTweakedKey(inscriptions, wallet, network);
   }
   if (creationMethod === 'wallet_two_sign') {
     //using wallet internal key with two txs
     console.log("Using internal key with two txs");
-    createInscriptionsWithTweakedKeyTwoSign(inscriptions, wallet, network);
+    await createInscriptionsWithTweakedKeyTwoSign(inscriptions, wallet, network);
   }
 }
 
