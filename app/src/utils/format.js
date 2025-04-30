@@ -117,3 +117,25 @@ export const shortenDate = (timestamp) => {
     year: 'numeric' 
   });
 };
+
+// Formats timestamp into "time ago" format
+// e.g. "5m", "2h", "1d"
+
+export const calcTimeAgo = (timestamp) => {
+  const now = Math.floor(Date.now() / 1000); // Current time in seconds
+  const diff = now - timestamp; // Difference in seconds
+
+  if (diff < 3600) {
+    // Less than 60 minutes
+    const minutes = Math.floor(diff / 60);
+    return `${minutes}m`;
+  } else if (diff < 86400) {
+    // Between 1 and 23 hours
+    const hours = Math.floor(diff / 3600);
+    return `${hours}h`;
+  } else {
+    // 24 hours or more
+    const days = Math.floor(diff / 86400);
+    return `${days}d`;
+  }
+};

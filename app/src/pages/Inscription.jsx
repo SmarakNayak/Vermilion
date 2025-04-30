@@ -37,11 +37,9 @@ import MainText from '../components/common/text/MainText';
 import IconButton from '../components/common/buttons/IconButton';
 import Spinner from '../components/Spinner';
 import InscriptionIcon from '../components/InscriptionIcon';
-
 import CheckoutModal from '../components/modals/CheckoutModal';
 import BoostsModal from '../components/modals/BoostsModal';
 import CommentsModal from '../components/modals/CommentsModal';
-
 
 // Utils
 import { addCommas, formatAddress, shortenBytes } from '../utils/format';
@@ -262,7 +260,7 @@ const Inscription = () => {
   const [boostsPage, setBoostsPage] = useState(0); 
   const [isBoostsLoading, setIsBoostsLoading] = useState(false);
   const [hasMoreBoosts, setHasMoreBoosts] = useState(true); 
-  const [comments, setComments] = useState(0);
+  const [commentCount, setCommentCount] = useState(0);
   const [commentsList, setCommentsList] = useState([]);
 
   // Loading states for different data fetches
@@ -395,35 +393,69 @@ const Inscription = () => {
     }
   }, [metadata, boostsPage, hasMoreBoosts, isBoostsLoading]);
 
-  // Fetch comments
   const fetchComments = useCallback(async () => {
     try {
       // We only need metadata to be available
       if (!metadata) {
         return;
       }
-      
+  
       // Determine which ID to use:
       // 1. If there's a delegate, use metadata.delegate
       // 2. Otherwise, use the inscription's own ID
       const targetId = metadata.delegate || metadata.id;
-      
+  
       if (!targetId) {
-        setComments(0);
+        setCommentCount(0);
+        setCommentsList([]); // Reset comments list
         return;
       }
-      
+  
       const response = await fetch(`/api/inscription_comments/${targetId}`);
       const data = await response.json();
-      
-      if (Array.isArray(data) && data.length > 0 && data[0].total !== undefined) {
-        setComments(data[0].total);
+  
+      if (Array.isArray(data) && data.length > 0) {
+        setCommentCount(data.length);
+  
+        // Fetch content for each comment
+        const enrichedComments = await Promise.all(
+          data.map(async (comment) => {
+            try {
+              const contentResponse = await fetch(`/api/comment/${comment.comment_id}`);
+              const contentText = await contentResponse.text(); // Read raw text response
+  
+              let content;
+              try {
+                // Attempt to parse JSON
+                const contentData = JSON.parse(contentText);
+                content = contentData.content;
+              } catch (parseError) {
+                console.warn(`Failed to parse JSON for comment ${comment.comment_id}:`, parseError);
+                content = contentText; // Fallback to raw text
+              }
+  
+              // Ensure "0" is stored as a string
+              if (content === "0" || contentText === "0") {
+                return { ...comment, content: "0" };
+              }
+  
+              return { ...comment, content };
+            } catch (error) {
+              console.error(`Error fetching content for comment ${comment.comment_id}:`, error);
+              return { ...comment, content: null }; // Fallback to null if fetch fails
+            }
+          })
+        );
+  
+        setCommentsList(enrichedComments); // Store enriched comments
       } else {
-        setComments(0);
+        setCommentCount(0);
+        setCommentsList([]); // Reset comments list if no data
       }
     } catch (error) {
       console.error("Error fetching comments:", error);
-      setComments(0);
+      setCommentCount(0);
+      setCommentsList([]); // Reset comments list on error
     }
   }, [metadata]);
 
@@ -635,10 +667,6 @@ const Inscription = () => {
     });
   };
 
-  console.log(metadata)
-
-  console.log("modal status", isBoostsModalOpen)
-
   return (
     <>
       <MainContainer>
@@ -687,7 +715,7 @@ const Inscription = () => {
                       </CountButton>
                     <CountButton onClick={toggleCommentsModal}>
                       <CommentIcon size={'1.25rem'} color={theme.colors.text.primary} />
-                      {addCommas(comments)} comments
+                      {addCommas(commentCount)} comments
                     </CountButton>
                   </ButtonsRow>
                   <ButtonsRow gap={'.75rem'}>

@@ -5,8 +5,11 @@ import theme from '../../styles/theme';
 
 // icons
 import { 
+  AvatarCircleIcon,
+  CommentIcon,
   CrossIcon,
 } from '../common/Icon';
+import { addCommas, formatAddress, calcTimeAgo } from '../../utils';
 
 const CommentsModal = ({ commentsList, onClose, isCommentsModalOpen }) => {
   const placeholderComments = [
@@ -45,26 +48,45 @@ const CommentsModal = ({ commentsList, onClose, isCommentsModalOpen }) => {
           </CloseButton>
         </ModalHeader>
         <ModalContent gap="1.5rem" ref={modalContentRef}>
-          {placeholderComments.map((comment) => (
-            <CommentEntry key={comment.id}>
-              {/* <CommentDetails> */}
+          {commentsList.length === 0 ? (
+            <EmptyStateContainer>
+              <EmptyStateIconContainer>
+                <CommentIcon size="1.25rem" color={theme.colors.text.secondary} />
+              </EmptyStateIconContainer>
+              <EmptyStateTextContainer>
+                <EmptyStateTitle>No comments yet</EmptyStateTitle>
+                <EmptyStateSubtitle>Boost this inscription to add an onchain comment.</EmptyStateSubtitle>
+              </EmptyStateTextContainer>
+            </EmptyStateContainer>
+          ) : (
+            commentsList.map((comment) => (
+              <CommentEntry key={comment.comment_edition}>
                 <DetailsRow>
-                  <ProfileImage />
+                  <ProfileImage>
+                    <AvatarCircleIcon size={'1rem'} color={theme.colors.background.verm} />
+                  </ProfileImage>
                   <DetailsInfo>
                     <TextLink
                       to={`/address/${comment.address}`}
                       target="_blank"
                       rel="noopener noreferrer"
                     >
-                      <BoostText>{comment.address}</BoostText>
+                      <BoostText>{formatAddress(comment.address)}</BoostText>
                     </TextLink>
-                    <TimeText>{comment.time}</TimeText>
+                    <TimeText>{calcTimeAgo(comment.block_timestamp)}</TimeText>
                   </DetailsInfo>
                 </DetailsRow>
-                <CommentText>{comment.text}</CommentText>
-              {/* </CommentDetails> */}
-            </CommentEntry>
-          ))}
+                <CommentText>{comment.content}</CommentText>
+                <ViewInscriptionLink
+                  href={`/inscription/${comment.comment_number}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  View inscription
+                </ViewInscriptionLink>
+              </CommentEntry>
+            ))
+          )}
         </ModalContent>
       </ModalContainer>
     </ModalOverlay>
@@ -92,10 +114,10 @@ const ModalOverlay = styled.div`
 const ModalContainer = styled.div`
   background: ${theme.colors.background.white};
   border-radius: 1rem;
-  max-width: 400px;
-  max-height: 630px;
   width: 90vw;
-  height: 90vh;
+  max-width: 400px;
+  height: auto;
+  max-height: 95vh;
   overflow: hidden;
   display: flex;
   flex-direction: column;
@@ -107,9 +129,6 @@ const ModalContainer = styled.div`
   @media (max-width: 400px) {
     max-width: 90vw;
   }
-  @media (max-height: 630px) {
-    max-height: 90vh;
-  }
 `;
 
 const ModalContent = styled.div`
@@ -118,7 +137,7 @@ const ModalContent = styled.div`
   flex: 1; 
   gap: ${props => props.gap || '0'};
   overflow-y: auto;
-  padding: 0.5rem 1.25rem 1.5rem;
+  padding: 0.5rem 1.25rem 2.5rem;
 `;
 
 const ModalHeader = styled.div`
@@ -164,8 +183,10 @@ const ProfileImage = styled.div`
   width: 1.75rem;
   height: 1.75rem;
   border-radius: 50%;
-  // border: 0.125rem solid ${theme.colors.border};
-  background: linear-gradient(180deg, ${theme.colors.background.white}, ${theme.colors.background.verm});
+  background: ${theme.colors.background.primary};
+  display: flex;
+  justify-content: center;
+  align-items: center;
 `;
 
 const TextLink = styled(Link)`
@@ -230,6 +251,11 @@ const CommentText = styled.p`
   line-height: 1.375rem;
   color: ${theme.colors.text.secondary};
   margin: 0;
+  display: -webkit-box; 
+  -webkit-line-clamp: 5; 
+  -webkit-box-orient: vertical;
+  overflow: hidden; 
+  text-overflow: ellipsis;
 `;
 
 const TimeText = styled.p`
@@ -237,6 +263,72 @@ const TimeText = styled.p`
   font-size: 0.875rem;
   line-height: 1.25rem;
   color: ${theme.colors.text.tertiary};
+  margin: 0;
+  padding: 0;
+`;
+
+const ViewInscriptionLink = styled.a`
+  font-family: ${theme.typography.fontFamilies.medium};
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  color: ${theme.colors.text.tertiary};
+  text-decoration: none;
+  margin: 0;
+  padding-left: 2.25rem;
+  display: inline-block;
+  text-decoration-line: underline;
+  text-decoration-color: transparent;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 2px;
+
+  transition: all 200ms ease;
+
+  &:hover {
+    text-decoration-color: ${theme.colors.text.tertiary};
+  }
+`;
+
+const EmptyStateContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  padding: 1rem 0 1.5rem 0;
+`;
+
+const EmptyStateIconContainer = styled.div`
+  width: 2.75rem;
+  height: 2.75rem;
+  background-color: ${theme.colors.background.primary};
+  border-radius: 1.375rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+`;
+
+const EmptyStateTextContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.125rem;
+`;
+
+const EmptyStateTitle = styled.p`
+  font-family: ${theme.typography.fontFamilies.medium};
+  font-size: 1rem;
+  line-height: 1.5rem;
+  color: ${theme.colors.text.secondary};
+  font-weight: bold;
+  margin: 0;
+`;
+
+const EmptyStateSubtitle = styled.p`
+  font-family: ${theme.typography.fontFamilies.medium};
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  color: ${theme.colors.text.secondary};
   margin: 0;
 `;
 
