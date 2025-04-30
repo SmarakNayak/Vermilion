@@ -18,6 +18,7 @@ import InscriptionIcon from '../InscriptionIcon';
 import { createInscriptions, Inscription as InscriptionObject } from '../../wallet/inscriptionBuilder';
 import useStore from '../../store/zustand';
 import WalletConnectMenu from '../navigation/WalletConnectMenu';
+import Spinner from '../Spinner';
 
 const CheckoutModal = ({ onClose, isCheckoutModalOpen, delegateData, metadata, number }) => {
   const [boostComment, setBoostComment] = useState(''); 
@@ -36,6 +37,7 @@ const CheckoutModal = ({ onClose, isCheckoutModalOpen, delegateData, metadata, n
   const wallet = useStore(state => state.wallet);
   const [overlayWalletConnect, setOverlayWalletConnect] = useState(false);
   const [error, setError] = useState(null);
+  const [signStatus, setSignStatus] = useState(null);
 
   useEffect(() => {
     if (isCheckoutModalOpen) {
@@ -55,6 +57,7 @@ const CheckoutModal = ({ onClose, isCheckoutModalOpen, delegateData, metadata, n
   }, [isCheckoutModalOpen]);
 
   const handleBoostClick = async (delegateMetadata) => {
+    setError(null); // Reset error state
     if (!delegateMetadata) {
       console.warn("No delegate or inscription ID available for boosting");
       return;
@@ -91,13 +94,14 @@ const CheckoutModal = ({ onClose, isCheckoutModalOpen, delegateData, metadata, n
       console.log("Inscribing following inscriptions: ", inscriptions);
 
       // Create the inscription
-      await createInscriptions(inscriptions, wallet);
+      await createInscriptions(inscriptions, wallet, setSignStatus);      
       
       // Close modal after successful boost
       onClose();
     } catch (error) {
       console.warn("Error boosting inscription:", error);
       setError("Failed to boost: " + error.message);
+      setSignStatus(null);
     }
   };
 
@@ -135,7 +139,22 @@ const CheckoutModal = ({ onClose, isCheckoutModalOpen, delegateData, metadata, n
     }
   };
 
-  useEffect(() => {
+  const handleWalletConnectClose = () => {
+    setOverlayWalletConnect(false);
+  }
+
+  const handleCheckoutModalClose = () => {
+    if (signStatus) {
+      return; // Prevent closing if signing is in progress
+    }
+    setError(null); // Reset error state when closing the modal
+    setSignStatus(null); // Reset sign status when closing the modal
+    onClose();
+  }
+
+  //Note that it looks better to use this effect instead of handleCheckoutModalClose
+  //it clears the text after modal close, rather than before close
+  useEffect(() => { 
     if (!isCheckoutModalOpen) {
       // Reset boostComment, boostQuantity, and error state when the modal is closed
       setBoostComment('');
@@ -143,15 +162,6 @@ const CheckoutModal = ({ onClose, isCheckoutModalOpen, delegateData, metadata, n
       setIsQuantityError(false); 
     }
   }, [isCheckoutModalOpen]);
-
-  const handleWalletConnectClose = () => {
-    setOverlayWalletConnect(false);
-  }
-
-  const handleCheckoutModalClose = () => {
-    setError(null); // Reset error state when closing the modal
-    onClose();
-  }
 
   return (
     <MultiModalContainer>
@@ -206,6 +216,7 @@ const CheckoutModal = ({ onClose, isCheckoutModalOpen, delegateData, metadata, n
                 placeholder="Add a comment"
                 value={boostComment}
                 onChange={(e) => setBoostComment(e.target.value)} // Update boostComment
+                disabled={signStatus !== null} // Disable input when signing is in progress
               />
             </InputFieldDiv>
 
@@ -223,11 +234,12 @@ const CheckoutModal = ({ onClose, isCheckoutModalOpen, delegateData, metadata, n
                   value={boostQuantity}
                   onChange={handleQuantityChange} // Validate and update boostQuantity
                   isError={isQuantityError} // Pass error state for styling
+                  disabled={signStatus !== null} // Disable input when signing is in progress
                 />
-                <QuantityButton onClick={decrementQuantity}>
+                <QuantityButton onClick={decrementQuantity} disabled={signStatus !== null}>
                   <MinusIcon size="1.25rem" color={theme.colors.text.tertiary} />
                 </QuantityButton>
-                <QuantityButton onClick={incrementQuantity}>
+                <QuantityButton onClick={incrementQuantity} disabled={signStatus !== null}>
                   <PlusIcon size="1.25rem" color={theme.colors.text.tertiary} />
                 </QuantityButton>
               </QuantityRow>
@@ -272,19 +284,25 @@ const CheckoutModal = ({ onClose, isCheckoutModalOpen, delegateData, metadata, n
 
             {/* Boost Button Section */}
             <BoostButtonContainer>
-              <ModalBoostButton onClick={() => handleBoostClick(delegateData?.metadata || metadata)}>
-                {wallet ? (
-                  <>
-                    <ChevronUpDuoIcon size="1.25rem" color={theme.colors.background.white} />
-                    Boost
-                  </>
-                  ) : (
-                  <>
-                    <LoginIcon size="1.25rem" color={theme.colors.background.white} />
-                    Connect Wallet to Boost
-                  </>
-                )}
-              </ModalBoostButton>
+              {!signStatus ? (
+                <ModalBoostButton onClick={() => handleBoostClick(delegateData?.metadata || metadata)}>
+                  {wallet ? (
+                    <>
+                      <ChevronUpDuoIcon size="1.25rem" color={theme.colors.background.white} />
+                      Boost
+                    </>
+                    ) : (
+                    <>
+                      <LoginIcon size="1.25rem" color={theme.colors.background.white} />
+                      Connect Wallet to Boost
+                    </>
+                  )}
+                </ModalBoostButton>
+              ) : (
+                <DisabledModalBoostButton>
+                  <Spinner size="1.25rem" color={theme.colors.background.white} /> {signStatus}
+                </DisabledModalBoostButton>
+              )}
             </BoostButtonContainer>
 
             {/* Error message */}
@@ -583,6 +601,25 @@ const ModalBoostButton = styled.button`
   &:active {
     transform: scale(0.98);
   }
+`;
+
+const DisabledModalBoostButton = styled.button`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  background-color: ${theme.colors.background.dark};
+  font-family: ${theme.typography.fontFamilies.bold};
+  font-size: 1rem;
+  line-height: 1.25rem;
+  color: ${theme.colors.background.white};
+  border-radius: 0.75rem; /* Updated border radius */
+  padding: 0.75rem 1rem;
+  border: none;
+  transition: all 200ms ease;
+  transform-origin: center center;
+  width: 100%;
+  opacity: 50%;
 `;
 
 const ErrorContainer = styled.div`

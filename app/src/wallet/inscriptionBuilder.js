@@ -313,7 +313,8 @@ function intToLeBytes(value) {
 }
 
 // inscription functions
-async function createInscriptionsWithTweakedKey(inscriptions, wallet, network) {
+async function createInscriptionsWithTweakedKey(inscriptions, wallet, network, signStatusCallback = () => {}) {
+  signStatusCallback("Signing 2/2 transactions");
   // 1. get inscription tapscript
   let walletTaproot = wallet.getTaproot(wallet, network);
   let revealKeyPair = {
@@ -354,7 +355,8 @@ async function createInscriptionsWithTweakedKey(inscriptions, wallet, network) {
   console.log(pushedCommitTx, pushedRevealTx);
 }
 
-async function createInscriptionsWithTweakedKeyTwoSign(inscriptions, wallet, network) {
+async function createInscriptionsWithTweakedKeyTwoSign(inscriptions, wallet, network, signStatusCallback = () => {}) {
+  signStatusCallback("Signing 1/2 transactions");
   // 1. get inscription tapscript
   let walletTaproot = wallet.getTaproot(wallet, network);
   let revealKeyPair = {
@@ -378,6 +380,7 @@ async function createInscriptionsWithTweakedKeyTwoSign(inscriptions, wallet, net
 
   // 4. get and sign reveal transaction
   let unsignedRevealPsbt = getRevealTransaction(inscriptions, wallet.ordinalsAddress, revealTaproot, revealKeyPair, commitTx.getId(), estimatedRevealFee, network, false);
+  signStatusCallback("Signing 2/2 transactions");
   let signedRevealPsbt = await wallet.signPsbt(unsignedRevealPsbt, [{ index: 0, address: walletTaproot.address, useTweakSigner: false, useTweakedSigner: false }]);
   let revealTx = signedRevealPsbt.extractTransaction();
 
@@ -387,7 +390,8 @@ async function createInscriptionsWithTweakedKeyTwoSign(inscriptions, wallet, net
   console.log(pushedCommitTx, pushedRevealTx);
 }
 
-async function createInscriptionsWithEphemeralKey(inscriptions, wallet, network, useWalletForKeyPath=false) {
+async function createInscriptionsWithEphemeralKey(inscriptions, wallet, network, useWalletForKeyPath=false, signStatusCallback = () => {}) {
+  signStatusCallback("Signing 1/1 transaction");
   // 1. get inscription tapscript
   let ephemeralKeyPair = generateKeyPair(NETWORKS[network].bitcoinjs);
 
@@ -417,28 +421,28 @@ async function createInscriptionsWithEphemeralKey(inscriptions, wallet, network,
   console.log(pushedCommitTx, pushedRevealTx);
 }
 
-async function createInscriptions(inscriptions, wallet) {
+async function createInscriptions(inscriptions, wallet, signStatusCallback = () => {}) {
   let network = wallet.network;;
   let creationMethod = wallet.getInscriptionCreationMethod();
   if (creationMethod === 'ephemeral') {
     //using ephemeral key
     console.log("Using ephemeral key for script and key path");
-    await createInscriptionsWithEphemeralKey(inscriptions, wallet, network, false);
+    await createInscriptionsWithEphemeralKey(inscriptions, wallet, network, false, signStatusCallback);
   }
   if (creationMethod === 'ephemeral_with_wallet_key_path') {
     //using ephemeral key for script path, wallet for key path
     console.log("Using ephemeral key for script path, wallet for key path");
-    await createInscriptionsWithEphemeralKey(inscriptions, wallet, network, true);
+    await createInscriptionsWithEphemeralKey(inscriptions, wallet, network, true, signStatusCallback);
   }
   if (creationMethod === 'wallet_one_sign') {
     //using wallet internal key
     console.log("Using internal key");
-    await createInscriptionsWithTweakedKey(inscriptions, wallet, network);
+    await createInscriptionsWithTweakedKey(inscriptions, wallet, network, signStatusCallback);
   }
   if (creationMethod === 'wallet_two_sign') {
     //using wallet internal key with two txs
     console.log("Using internal key with two txs");
-    await createInscriptionsWithTweakedKeyTwoSign(inscriptions, wallet, network);
+    await createInscriptionsWithTweakedKeyTwoSign(inscriptions, wallet, network, signStatusCallback);
   }
 }
 
