@@ -54,7 +54,7 @@ const getConfirmedCardinalUtxos = async(address, network) => {
   let utxosJson = await utxos.json();
   let confirmedUtxos = utxosJson.filter(utxo => utxo.status.confirmed == true);
   confirmedUtxos = confirmedUtxos.filter(utxo => utxo.value > 1000);
-  if (network === 'testnet') {// allow unconfirmed utxos on testnet
+  if (network === 'testnet' || network === 'signet') {// allow unconfirmed utxos on testnet
     confirmedUtxos = utxosJson.filter(utxo => utxo.value > 1000);
   }
 

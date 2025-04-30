@@ -353,6 +353,7 @@ async function createInscriptionsWithTweakedKey(inscriptions, wallet, network, s
   let pushedCommitTx = await broadcastTx(commitTx.toHex(), network);
   let pushedRevealTx = await broadcastTx(revealTx.toHex(), network);
   console.log(pushedCommitTx, pushedRevealTx);
+  return [pushedCommitTx, pushedRevealTx];
 }
 
 async function createInscriptionsWithTweakedKeyTwoSign(inscriptions, wallet, network, signStatusCallback = () => {}) {
@@ -388,6 +389,7 @@ async function createInscriptionsWithTweakedKeyTwoSign(inscriptions, wallet, net
   let pushedCommitTx = await broadcastTx(commitTx.toHex(), network);
   let pushedRevealTx = await broadcastTx(revealTx.toHex(), network);
   console.log(pushedCommitTx, pushedRevealTx);
+  return [pushedCommitTx, pushedRevealTx];
 }
 
 async function createInscriptionsWithEphemeralKey(inscriptions, wallet, network, useWalletForKeyPath=false, signStatusCallback = () => {}) {
@@ -419,6 +421,7 @@ async function createInscriptionsWithEphemeralKey(inscriptions, wallet, network,
   let pushedCommitTx = await broadcastTx(commitTx.toHex(), network);
   let pushedRevealTx = await broadcastTx(revealTx.toHex(), network);
   console.log(pushedCommitTx, pushedRevealTx);
+  return [pushedCommitTx, pushedRevealTx];
 }
 
 async function createInscriptions(inscriptions, wallet, signStatusCallback = () => {}) {
@@ -427,22 +430,22 @@ async function createInscriptions(inscriptions, wallet, signStatusCallback = () 
   if (creationMethod === 'ephemeral') {
     //using ephemeral key
     console.log("Using ephemeral key for script and key path");
-    await createInscriptionsWithEphemeralKey(inscriptions, wallet, network, false, signStatusCallback);
+    return await createInscriptionsWithEphemeralKey(inscriptions, wallet, network, false, signStatusCallback);
   }
   if (creationMethod === 'ephemeral_with_wallet_key_path') {
     //using ephemeral key for script path, wallet for key path
     console.log("Using ephemeral key for script path, wallet for key path");
-    await createInscriptionsWithEphemeralKey(inscriptions, wallet, network, true, signStatusCallback);
+    return await createInscriptionsWithEphemeralKey(inscriptions, wallet, network, true, signStatusCallback);
   }
   if (creationMethod === 'wallet_one_sign') {
     //using wallet internal key
     console.log("Using internal key");
-    await createInscriptionsWithTweakedKey(inscriptions, wallet, network, signStatusCallback);
+    return await createInscriptionsWithTweakedKey(inscriptions, wallet, network, signStatusCallback);
   }
   if (creationMethod === 'wallet_two_sign') {
     //using wallet internal key with two txs
     console.log("Using internal key with two txs");
-    await createInscriptionsWithTweakedKeyTwoSign(inscriptions, wallet, network, signStatusCallback);
+    return await createInscriptionsWithTweakedKeyTwoSign(inscriptions, wallet, network, signStatusCallback);
   }
 }
 

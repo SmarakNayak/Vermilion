@@ -19,6 +19,7 @@ import { createInscriptions, Inscription as InscriptionObject } from '../../wall
 import useStore from '../../store/zustand';
 import WalletConnectMenu from '../navigation/WalletConnectMenu';
 import Spinner from '../Spinner';
+import SuccessModal from './SuccessModal';
 
 const CheckoutModal = ({ onClose, isCheckoutModalOpen, delegateData, metadata, number }) => {
   const [boostComment, setBoostComment] = useState(''); 
@@ -38,6 +39,8 @@ const CheckoutModal = ({ onClose, isCheckoutModalOpen, delegateData, metadata, n
   const [overlayWalletConnect, setOverlayWalletConnect] = useState(false);
   const [error, setError] = useState(null);
   const [signStatus, setSignStatus] = useState(null);
+  const [success, setSuccess] = useState(false);
+  const [successDetails, setSuccessDetails] = useState(null);
 
   useEffect(() => {
     if (isCheckoutModalOpen) {
@@ -94,10 +97,18 @@ const CheckoutModal = ({ onClose, isCheckoutModalOpen, delegateData, metadata, n
       console.log("Inscribing following inscriptions: ", inscriptions);
 
       // Create the inscription
-      await createInscriptions(inscriptions, wallet, setSignStatus);      
+      let [commitTxid, revealTxid] = await createInscriptions(inscriptions, wallet, setSignStatus);      
       
-      // Close modal after successful boost
-      onClose();
+      // Open success modal after successful inscription
+      setSuccessDetails({
+        commitTxid,
+        revealTxid,
+        boostComment,
+        boostQuantity,
+        delegateMetadata,
+      });      
+      setSuccess(true);
+      setSignStatus(null); // Reset sign status after success
     } catch (error) {
       console.warn("Error boosting inscription:", error);
       setError("Failed to boost: " + error.message);
@@ -163,10 +174,17 @@ const CheckoutModal = ({ onClose, isCheckoutModalOpen, delegateData, metadata, n
     }
   }, [isCheckoutModalOpen]);
 
+  const handleSuccessModalClose = () => {
+    handleCheckoutModalClose(); // Use standard modal close function
+    setSuccess(false); // Reset success state as well when closing the modal
+    setSuccessDetails(null); // Reset success details
+  }
+
   return (
     <MultiModalContainer>
-      <ModalOverlay isOpen={isCheckoutModalOpen} onClick={handleCheckoutModalClose}>
-        <ModalContainer isOpen={isCheckoutModalOpen} onClick={(e) => e.stopPropagation()}>
+      {/* Checkout cart */}
+      <ModalOverlay isOpen={isCheckoutModalOpen && !success} onClick={handleCheckoutModalClose}>
+        <ModalContainer isOpen={isCheckoutModalOpen && !success} onClick={(e) => e.stopPropagation()}>
           <ModalHeader>
             <HeaderText>Checkout</HeaderText>
             <CloseButton onClick={handleCheckoutModalClose}>
@@ -314,9 +332,18 @@ const CheckoutModal = ({ onClose, isCheckoutModalOpen, delegateData, metadata, n
           </ModalContent>
         </ModalContainer>
       </ModalOverlay>
+      {/* Wallet Overay */}
       <ModalOverlay isOpen={overlayWalletConnect} onClick={handleWalletConnectClose}>
         <WalletConnectMenu isOpen={overlayWalletConnect} onClose={handleWalletConnectClose}></WalletConnectMenu>
       </ModalOverlay>
+      {/* Success Modal */}
+      <SuccessModal
+        isOpen={isCheckoutModalOpen && success}
+        onClose={handleSuccessModalClose}
+        boostDetails={successDetails}
+        network={wallet?.network}
+      />
+
     </MultiModalContainer>
   );
 };

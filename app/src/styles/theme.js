@@ -10,6 +10,7 @@ export const theme = {
       tertiary: '#C2C2C2',   // Tertiary text, inactive, etc.
       white: '#FFFFFF',      // White text
       error: '#FF0000',      // Error text color
+      success: '#28a745',    // Success text color
     },
 
     // Background colors
