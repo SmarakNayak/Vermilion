@@ -2,7 +2,7 @@ export default {
   name: "inject-buffer",
   setup(build) {
     // Match files that need Buffer
-    build.onLoad({ filter: /\.(js|ts|jsx|tsx)$/ }, async (args) => {
+    build.onLoad({ filter: /\.(js|ts)$/ }, async (args) => {
       const source = await Bun.file(args.path).text();
       
       // Only inject into files that use Buffer

@@ -89,7 +89,6 @@ function getRevealScript(inscriptions, revealPublicKey) {
 }
 
 function getRevealTaproot(inscriptions, scriptPathPublicKey, network, keyPathInternalKey=scriptPathPublicKey) {
-  console.log(network);
   const script = getRevealScript(inscriptions, scriptPathPublicKey);
   const tapLeaf = {
     leafVersion: 192, // Tapscript leaf version (0xc0)
@@ -181,7 +180,7 @@ function getRevealSweepTransaction(receiveAddress, revealTaproot, revealKeyPair,
 // Commit tx functions
 async function getCommitTransaction (inscriptions, paymentAddress, paymentPublicKey, revealAddress, revealVSize, network) {
   const paymentAddressScript = bitcoin.address.toOutputScript(paymentAddress, NETWORKS[network].bitcoinjs);
-  const paymentAddressType = getAddressType(paymentAddressScript, paymentPublicKey);
+  const paymentAddressType = getAddressType(paymentAddressScript, paymentPublicKey, network);
   console.log(paymentAddressType);
 
   let feeRate = await getRecommendedFees(network);
