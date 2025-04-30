@@ -83,7 +83,7 @@ const CheckoutModal = ({ onClose, isCheckoutModalOpen, delegateData, metadata, n
         const commentInscription = new InscriptionObject({
           delegate: delegateMetadata.id,
           contentType: "text/plain",
-          content: Buffer.from(boostComment), // Add comment to the inscription
+          //content: Buffer.from(boostComment), // Add comment to the inscription
           postage: 546, // Minimum sat value
         });
         inscriptions[inscriptions.length-1] = commentInscription;
