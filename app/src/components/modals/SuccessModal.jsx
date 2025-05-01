@@ -31,7 +31,7 @@ const SuccessModal = ({ isOpen, onClose, boostDetails }) => {
 
   // Helper: get mempool URL
   const getMempoolTxUrl = (txid) => {
-    let link = `https://mempool.space/${NETWORKS[wallet.network].mempool}tx/${txid}`;
+    let link = `https://memepool.space/${NETWORKS[wallet.network].mempool}tx/${txid}`;
     return link;
   };
 

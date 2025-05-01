@@ -16,6 +16,9 @@ import {
 import InscriptionIcon from '../InscriptionIcon';
 
 import { createInscriptions, Inscription as InscriptionObject } from '../../wallet/inscriptionBuilder';
+import { estimateVSize } from '../../wallet/transactionUtils';
+import { getRecommendedFees } from '../../wallet/mempoolApi';
+
 import useStore from '../../store/zustand';
 import WalletConnectMenu from '../navigation/WalletConnectMenu';
 import Spinner from '../Spinner';
@@ -24,7 +27,7 @@ import SuccessModal from './SuccessModal';
 const CheckoutModal = ({ onClose, isCheckoutModalOpen, delegateData, metadata, number }) => {
   const [boostComment, setBoostComment] = useState(''); 
   const [boostQuantity, setBoostQuantity] = useState(1);
-  const [isQuantityError, setIsQuantityError] = useState(false); 
+  const [isQuantityError, setIsQuantityError] = useState(false);
 
   const placeholderFees = [
     { id: 1, btc: "0.00002816 BTC", usd: "$2.55" },
@@ -92,7 +95,7 @@ const CheckoutModal = ({ onClose, isCheckoutModalOpen, delegateData, metadata, n
           content: Buffer.from(boostComment), // Add comment to the inscription
           postage: 546, // Minimum sat value
         });
-        inscriptions[inscriptions.length-1] = commentInscription;
+        inscriptions[0] = commentInscription;
       }
       console.log("Inscribing following inscriptions: ", inscriptions);
 

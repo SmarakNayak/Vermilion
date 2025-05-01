@@ -136,8 +136,60 @@ const branchAndBound = (utxos, targetAmount) => {
   return bestSolution;
 }
 
+//https://bitcoinops.org/en/tools/calc-size/
+//https://bitcoin.stackexchange.com/questions/84004/how-do-virtual-size-stripped-size-and-raw-size-compare-between-legacy-address-f/84006#84006
+const estimateVSize = (inputTypes, outputTypes) => {
+  let headerSize = 10;
+  // if spending any witness inputs, add 0.5 vbytes for segwit flag
+  if (inputTypes.some(type => type === 'P2WPKH' || type === 'P2SH-P2WPKH' || type === 'P2TR' || type === 'UNKNOWN')) {
+    headerSize += 0.5;
+  }
+
+  // iterate over inputs
+  let inputSize = 0;
+  inputTypes.forEach(inputType => {
+    if (inputType === 'P2TR') {
+      inputSize += 40 + 1 + 66/4;
+    } else if (inputType === 'P2WPKH') {
+      inputSize += 40 + 1 + 108/4;
+    } else if (inputType === 'P2SH-P2WPKH') {
+      inputSize += 40 + 24 + 108/4;
+    } else  if (inputType === 'P2PKH') {
+      inputSize += 40 + 108;
+    } else if (inputType === 'UNKNOWN') {
+      // for unknown inputs, we assume they are P2PKH
+      inputSize += 40 + 108;
+    } else {
+      throw new Error("Unsupported input type");
+    }
+  });
+
+  // iterate over outputs
+  let outputSize = 0;
+  outputTypes.forEach(outputType => {
+    if (outputType === 'P2TR') {
+      outputSize += 43;
+    } else if (outputType === 'P2WPKH') {
+      outputSize += 31;
+    } else if (outputType === 'P2SH-P2WPKH') {
+      outputSize += 32;
+    } else if (outputType === 'P2PKH') {
+      outputSize += 34;
+    } else if (outputType === 'UNKNOWN') {
+      // for unknown outputs, we assume they are P2TR
+      outputSize += 43;
+    } else {
+      throw new Error("Unsupported output type");
+    }
+  });
+
+  const vSize = headerSize + inputSize + outputSize;  
+  return vSize;
+}
+
 export {
   getAddressType,
   appendUtxoEffectiveValues,
-  selectUtxos
+  selectUtxos,
+  estimateVSize
 }
