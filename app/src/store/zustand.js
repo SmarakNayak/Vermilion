@@ -10,19 +10,22 @@ const useStore = create(
         console.log("wallet update hit with:", wallet)
         set({wallet})
       },
+      network: 'signet',
+      platformFee: 2500,
+      ownerFee: 2500
     }),
     {
       name : 'vermilion-storage',
       merge : (persistedState, currentState) => {
-        // Do a shallow merge of the persisted state into the current state
+        // Do a shallow merge of the current state into the persisted state (current overwrites persisted)
         let returnedState = {
-          ...currentState,
           ...persistedState,
+          ...currentState,
         };
 
         // Rehydrate wallet instance if wallet data exists
-        if (returnedState.wallet) {
-          let rehydratedWallet = rehydrateWallet(returnedState.wallet);
+        if (persistedState.wallet) {
+          let rehydratedWallet = rehydrateWallet(persistedState.wallet);
           returnedState.wallet = rehydratedWallet;
         }
 

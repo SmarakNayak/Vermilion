@@ -83,10 +83,20 @@ const getTxData = async(txId, network) => {
   return txDataJson;
 }
 
+async function getCoinBaseBtcPrice() {
+  let response = await fetch(`https://api.exchange.coinbase.com/products/BTC-USD/book`);
+  let json = await response.json();
+  let bid = json.bids[0][0];
+  let ask = json.asks[0][0];
+  let price = (parseFloat(bid) + parseFloat(ask)) / 2;
+  return price;
+}
+
 export {
   broadcastTx,
   submitPackage,
   getRecommendedFees,
   getConfirmedCardinalUtxos,
-  getTxData
+  getTxData,
+  getCoinBaseBtcPrice
 }

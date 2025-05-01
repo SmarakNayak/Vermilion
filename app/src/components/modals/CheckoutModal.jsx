@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import styled from 'styled-components';
 import theme from '../../styles/theme';
 // Utils
-import { addCommas, formatAddress, shortenBytes } from '../../utils/format';
+import { addCommas, formatSatsStringFull, formatSatsToDollars } from '../../utils/format';
 
 // icons
 import { 
@@ -15,9 +15,8 @@ import {
 } from '../common/Icon';
 import InscriptionIcon from '../InscriptionIcon';
 
-import { createInscriptions, Inscription as InscriptionObject } from '../../wallet/inscriptionBuilder';
-import { estimateVSize } from '../../wallet/transactionUtils';
-import { getRecommendedFees } from '../../wallet/mempoolApi';
+import { createInscriptions, Inscription as InscriptionObject, getRevealVSize, estimateInscriptionFee, guessInscriptionFee} from '../../wallet/inscriptionBuilder';
+import { getRecommendedFees, getCoinBaseBtcPrice, getConfirmedCardinalUtxos } from '../../wallet/mempoolApi';
 
 import useStore from '../../store/zustand';
 import WalletConnectMenu from '../navigation/WalletConnectMenu';
@@ -28,26 +27,29 @@ const CheckoutModal = ({ onClose, isCheckoutModalOpen, delegateData }) => {
   const [boostComment, setBoostComment] = useState(''); 
   const [boostQuantity, setBoostQuantity] = useState(1);
   const [isQuantityError, setIsQuantityError] = useState(false);
-
-  const placeholderFees = [
-    { id: 1, btc: "0.00002816 BTC", usd: "$2.55" },
-    { id: 2, btc: "0.00002000 BTC", usd: "$1.90" },
-    { id: 3, btc: "0.00004816 BTC", usd: "$4.45" },
-  ];
-
-  const observer = useRef();
-  const modalContentRef = useRef(); // Ref for the modal content
-  // Use zustand store to get the wallet (has to be top-level)
-  const wallet = useStore(state => state.wallet);
   const [overlayWalletConnect, setOverlayWalletConnect] = useState(false);
   const [error, setError] = useState(null);
   const [signStatus, setSignStatus] = useState(null);
   const [success, setSuccess] = useState(false);
   const [successDetails, setSuccessDetails] = useState(null);
 
+  const modalContentRef = useRef(); // Ref for the modal content
+  const wallet = useStore(state => state.wallet); // Use zustand store to get the wallet (has to be top-level)
+  const network = useStore(state => state.network);
+  const platformFee = useStore(state => state.platformFee);
+  const ownerFee = useStore(state => state.ownerFee);
+
+  const [feeRate, setFeeRate] = useState(0);
+  const [btcusd, setBtcusd] = useState(0);
+  const [utxos, setUtxos] = useState([]);
+  const [inscriptionFee, setInscriptionFee] = useState(0);
+  const [totalPlatformFee, setTotalPlatformFee] = useState(0);
+  const [totalOwnerFee, setTotalOwnerFee] = useState(0);
+
   useEffect(() => {
     if (isCheckoutModalOpen) {
       document.body.style.overflow = 'hidden'; // Disable page scrolling
+      pollFeesAndPrice(); // Poll fees and price every 5 seconds when modal is open
     } else {
       document.body.style.overflow = 'auto'; // Enable page scrolling
 
@@ -61,6 +63,86 @@ const CheckoutModal = ({ onClose, isCheckoutModalOpen, delegateData }) => {
       document.body.style.overflow = 'auto'; // Cleanup on unmount
     };
   }, [isCheckoutModalOpen]);
+
+  const pollFeesAndPrice = async () => {
+    while (isCheckoutModalOpen) {
+      let btcusd = await getCoinBaseBtcPrice();
+      setBtcusd(btcusd);
+      let feerate = await getRecommendedFees(network);
+      setFeeRate(feerate);
+      //wait for 5 seconds before fetching again
+      await new Promise(resolve => setTimeout(resolve, 5000));
+    }
+  }
+
+  const getInscriptions = (delegateMetadata, quantity) => {
+    let inscriptions = Array(quantity).fill().map(() => 
+      new InscriptionObject({
+        delegate: delegateMetadata.id,
+        contentType: delegateMetadata.content_type,
+        postage: 546 // Minimum sat value
+      })
+    );
+    if (boostComment.length > 0) {
+      //overwrite the first inscription with the comment        
+      const commentInscription = new InscriptionObject({
+        delegate: delegateMetadata.id,
+        contentType: "text/plain",
+        content: Buffer.from(boostComment), // Add comment to the inscription
+        postage: 546, // Minimum sat value
+      });
+      inscriptions[0] = commentInscription;
+    }
+    return inscriptions;
+  }
+
+  useEffect(() => {
+    if (wallet && isCheckoutModalOpen) {
+      getUtxos();
+    }
+  }, [wallet, isCheckoutModalOpen]);
+
+  const getUtxos = async () => {
+    let utxos = await getConfirmedCardinalUtxos(wallet.paymentAddress, network);
+    setUtxos(utxos);
+  }
+
+  useEffect(() => {
+    if (isCheckoutModalOpen & feeRate) {      
+      let quantity = boostQuantity;
+      if (quantity < 1) { //early return if 0 (as estiamtion assumes min tx size)
+        setInscriptionFee(0);
+        setTotalPlatformFee(0);
+        setTotalOwnerFee(0);
+        return;
+      }
+      if (quantity > 100) { // no larger than 100 as browser will become unresponsive
+        quantity = 100;
+      }
+      let inscriptions = getInscriptions(delegateData, quantity);
+      let revealVsize = getRevealVSize(inscriptions, wallet.ordinalsAddress, network);
+      let totalPlatformFee = platformFee * quantity;
+      setTotalPlatformFee(totalPlatformFee);
+      let totalOwnerFee = ownerFee * quantity;
+      setTotalOwnerFee(totalOwnerFee);
+      if (wallet && utxos.length > 0) {
+        try{          
+          let inscriptionFee = estimateInscriptionFee(inscriptions, wallet.paymentAddress, wallet.paymentPublicKey, revealVsize, feeRate, utxos, network, totalPlatformFee, totalOwnerFee);
+          setInscriptionFee(inscriptionFee - totalPlatformFee - totalOwnerFee);
+        } catch (error) {
+          //guess without wallet.
+          console.warn("Error estimating inscription fee:", error);
+          let inscriptionFee = guessInscriptionFee(inscriptions, revealVsize, feeRate, totalPlatformFee, totalOwnerFee);
+          setInscriptionFee(inscriptionFee - totalPlatformFee - totalOwnerFee);
+        }
+      } else {
+        //guess without wallet.
+        //Assumes 2 taproot inputs and 4 taproot outputs (reveal, change, owner, platform), 
+        let inscriptionFee = guessInscriptionFee(inscriptions, revealVsize, feeRate, totalPlatformFee, totalOwnerFee);
+        setInscriptionFee(inscriptionFee - totalPlatformFee - totalOwnerFee);
+      }
+    }
+  }, [boostQuantity, boostComment, delegateData, isCheckoutModalOpen, feeRate, utxos, wallet]);
 
   const handleBoostClick = async (delegateMetadata) => {
     setError(null); // Reset error state
@@ -80,23 +162,7 @@ const CheckoutModal = ({ onClose, isCheckoutModalOpen, delegateData }) => {
         setOverlayWalletConnect(true);
         return;
       }
-      let inscriptions = Array(boostQuantity).fill().map(() => 
-        new InscriptionObject({
-          delegate: delegateMetadata.id,
-          contentType: delegateMetadata.content_type,
-          postage: 546 // Minimum sat value
-        })
-      );
-      if (boostComment.length > 0) {
-        //overwrite the first inscription with the comment        
-        const commentInscription = new InscriptionObject({
-          delegate: delegateMetadata.id,
-          contentType: "text/plain",
-          content: Buffer.from(boostComment), // Add comment to the inscription
-          postage: 546, // Minimum sat value
-        });
-        inscriptions[0] = commentInscription;
-      }
+      let inscriptions = getInscriptions(delegateMetadata, boostQuantity);
       console.log("Inscribing following inscriptions: ", inscriptions);
 
       // Create the inscription
@@ -274,17 +340,26 @@ const CheckoutModal = ({ onClose, isCheckoutModalOpen, delegateData }) => {
               <FeeRow>
                 <PlainText color={theme.colors.text.secondary}>Network fees</PlainText>
                 <FeeDetails>
-                  <PlainText color={theme.colors.text.secondary}>{placeholderFees[0].btc}</PlainText>
-                  <PlainText color={theme.colors.text.tertiary}>{placeholderFees[0].usd}</PlainText>
+                  <PlainText color={theme.colors.text.secondary}>{formatSatsStringFull(inscriptionFee)}</PlainText>
+                  <PlainText color={theme.colors.text.tertiary}>{formatSatsToDollars(inscriptionFee, btcusd)}</PlainText>
                 </FeeDetails>
               </FeeRow>
 
               {/* Row 2: Service Fees */}
               <FeeRow>
-                <PlainText color={theme.colors.text.secondary}>Service fees</PlainText>
+                <PlainText color={theme.colors.text.secondary}>Service fee</PlainText>
                 <FeeDetails>
-                  <PlainText color={theme.colors.text.secondary}>{placeholderFees[1].btc}</PlainText>
-                  <PlainText color={theme.colors.text.tertiary}>{placeholderFees[1].usd}</PlainText>
+                  <PlainText color={theme.colors.text.secondary}>{formatSatsStringFull(totalPlatformFee)}</PlainText>
+                  <PlainText color={theme.colors.text.tertiary}>{formatSatsToDollars(totalPlatformFee, btcusd)}</PlainText>
+                </FeeDetails>
+              </FeeRow>
+
+              {/* Row 3: Owner Royalty */}
+              <FeeRow>
+                <PlainText color={theme.colors.text.secondary}>Owner Royalty</PlainText>
+                <FeeDetails>
+                  <PlainText color={theme.colors.text.secondary}>{formatSatsStringFull(totalOwnerFee)}</PlainText>
+                  <PlainText color={theme.colors.text.tertiary}>{formatSatsToDollars(totalOwnerFee, btcusd)}</PlainText>
                 </FeeDetails>
               </FeeRow>
 
@@ -295,8 +370,8 @@ const CheckoutModal = ({ onClose, isCheckoutModalOpen, delegateData }) => {
               <FeeRow>
                 <PlainText color={theme.colors.text.primary}>Total fees</PlainText>
                 <FeeDetails>
-                  <PlainText color={theme.colors.text.primary}>{placeholderFees[2].btc}</PlainText>
-                  <PlainText color={theme.colors.text.tertiary}>{placeholderFees[2].usd}</PlainText>
+                  <PlainText color={theme.colors.text.primary}>{formatSatsStringFull(inscriptionFee + totalPlatformFee + totalOwnerFee)}</PlainText>
+                  <PlainText color={theme.colors.text.tertiary}>{formatSatsToDollars(inscriptionFee + totalPlatformFee + totalOwnerFee, btcusd)}</PlainText>
                 </FeeDetails>
               </FeeRow>
             </FeeSummaryContainer>

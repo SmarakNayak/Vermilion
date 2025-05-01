@@ -4,7 +4,7 @@ import { ECPairFactory } from 'ecpair'
 import * as ecc from '@bitcoinerlab/secp256k1' // 'tiny-secp256k1' needs a wasm plugin in bun
 
 import { NETWORKS } from './networks'
-import { getAddressType, selectUtxos, appendUtxoEffectiveValues } from './transactionUtils'
+import { getAddressType, selectUtxos, appendUtxoEffectiveValues, estimateVSize } from './transactionUtils'
 import { broadcastTx, submitPackage, getRecommendedFees, getConfirmedCardinalUtxos, getTxData } from './mempoolApi'
 
 bitcoin.initEccLib(ecc);
@@ -274,6 +274,53 @@ async function getCommitTransaction (inscriptions, paymentAddress, paymentPublic
 
 }
 
+function estimateInscriptionFee(inscriptions, paymentAddress, paymentPublicKey, revealVSize, feeRate, utxos, network, platformFee = 0, ownerFee = 0) {
+  console.log("Estimating inscription fee");
+  const paymentAddressScript = bitcoin.address.toOutputScript(paymentAddress, NETWORKS[network].bitcoinjs);
+  const paymentAddressType = getAddressType(paymentAddressScript, paymentPublicKey, network);
+  
+  let estimatedRevealFee = Math.ceil(revealVSize * feeRate);
+  let totalPostage = inscriptions.reduce((acc, inscription) => acc + inscription.postage, 0);
+  // this is the total amount the commit tx will need to send
+  let commitSendAmount = estimatedRevealFee + totalPostage + ownerFee + platformFee;
+  // now we can calculate the estimated commit fee
+  // assume 1 output to taproot reveal, 1 change output to payment address, 1 output to platform fee, 1 output to owner fee
+  let outputTypes = ['P2TR', paymentAddressType];
+  if (platformFee > 0) {
+    outputTypes.push("UNKNOWN");
+  }
+  if (ownerFee > 0) {
+    outputTypes.push("UNKNOWN");
+  }
+  // we don't know how many inputs yet, but we know it's type so we can work out the size of the header and outputs
+  let estimatedCommitFeeForHeaderAndOutputs = estimateVSize([], outputTypes, paymentAddressType) * feeRate;
+  let adjustedUtxos = appendUtxoEffectiveValues(utxos, paymentAddressType, feeRate); //adjust utxos values to account for fee for size of input
+  let selectedUtxos = selectUtxos(adjustedUtxos, commitSendAmount + estimatedCommitFeeForHeaderAndOutputs);
+  // Method 1
+  let estimatedCommitFeeForInputs = selectedUtxos.reduce((acc, utxo) => acc + utxo.value - utxo.effectiveValue, 0);
+  let estimatedCommitFee = Math.ceil(estimatedCommitFeeForHeaderAndOutputs + estimatedCommitFeeForInputs);
+  // Method 2
+  let inputTypes = new Array(selectedUtxos.length).fill(paymentAddressType);
+  let estimatedCommitFee2 = estimateVSize(inputTypes, outputTypes, paymentAddressType) * feeRate;  
+  console.log("Estimated commit fee: ", estimatedCommitFee, ". estimated commit fee2:", estimatedCommitFee2);
+  if (estimatedCommitFee !== estimatedCommitFee2) {
+    throw new error("Estimated commit fee method 1 and 2 do not match: ", estimatedCommitFee, estimatedCommitFee2);
+  }
+
+  let estimatedInscriptionFee = estimatedCommitFee + commitSendAmount;
+  return estimatedInscriptionFee;
+}
+
+function guessInscriptionFee(inscriptions, revealVSize, feeRate, platformFee = 0, ownerFee = 0) {
+  console.log("Guessing inscription fee");
+  let commitVsize = estimateVSize(["P2TR", "P2TR"], ["P2TR","P2TR","P2TR","P2TR"]);
+  let commitFee = commitVsize * feeRate;
+  let revealFee = revealVSize * feeRate;
+  let totalPostage = inscriptions.reduce((acc, inscription) => acc + inscription.postage, 0);
+  let totalFee = commitFee + revealFee + totalPostage + platformFee + ownerFee;
+  return totalFee;
+}
+
 // utility functions
 function wrapECPairWithBufferPublicKey(ecpair) {
   return {
@@ -505,5 +552,8 @@ export {
   Inscription,
   createInscriptions,
   createInscriptionsExample,
-  getRevealSweepTransaction
+  getRevealSweepTransaction,
+  getRevealVSize,
+  estimateInscriptionFee,
+  guessInscriptionFee
 }

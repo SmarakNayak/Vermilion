@@ -138,11 +138,30 @@ const branchAndBound = (utxos, targetAmount) => {
 
 //https://bitcoinops.org/en/tools/calc-size/
 //https://bitcoin.stackexchange.com/questions/84004/how-do-virtual-size-stripped-size-and-raw-size-compare-between-legacy-address-f/84006#84006
-const estimateVSize = (inputTypes, outputTypes) => {
-  let headerSize = 10;
-  // if spending any witness inputs, add 0.5 vbytes for segwit flag
-  if (inputTypes.some(type => type === 'P2WPKH' || type === 'P2SH-P2WPKH' || type === 'P2TR' || type === 'UNKNOWN')) {
-    headerSize += 0.5;
+const estimateVSize = (inputTypes, outputTypes, headerType) => {
+  let headerSize = 0;
+  if (headerType === 'P2TR') {
+    headerSize = 10.5;
+  } else if (headerType === 'P2WPKH') {
+    headerSize = 10.5;
+  } else if (headerType === 'P2SH-P2WPKH') {
+    headerSize = 10.5;
+  } else if (headerType === 'P2PKH') {
+    headerSize = 10;
+  } else if (headerType === 'UNKNOWN') {
+    // for unknown header types, we assume they are witness type
+    headerSize = 10.5;
+  } else if (headerType === 'NONE') {
+    // override for no header
+    headerSize = 0;
+  } else if (!headerType) {
+    //implicitly workout header type from input types
+    headerSize = 10;
+    if (inputTypes.some(type => type === 'P2WPKH' || type === 'P2SH-P2WPKH' || type === 'P2TR' || type === 'UNKNOWN')) {
+      headerSize += 0.5;
+    }
+  } else {
+    throw new Error("Unsupported header type");
   }
 
   // iterate over inputs

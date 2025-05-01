@@ -36,6 +36,19 @@ export const formatSatsString = (sats) => {
   return string;
 };
 
+export const formatSatsStringFull = (sats) => {
+  let btc = sats / Math.pow(10, 8);
+  let string = Number(btc.toFixed(8)) + " BTC";
+  return string;
+};
+
+export const formatSatsToDollars = (sats, price) => {
+  let btc = sats / Math.pow(10, 8);
+  let dollars = btc * price;
+  let string = "$" + Number(dollars.toFixed(2));
+  return string;
+}
+
 // Formats byte sizes into human readable format (KB, MB, GB, TB)
 
 export const shortenBytes = (n) => {
