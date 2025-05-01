@@ -55,7 +55,7 @@ const SuccessModal = ({ isOpen, onClose, boostDetails }) => {
             <InscriptionIcon
               size="4rem"
               useBlockIconDefault={false}
-              endpoint={number ? `/api/inscription_number/${number}` : undefined}
+              endpoint={`/api/inscription_number/${number}`}
               number={number}
             />
             <CheckIconHover>

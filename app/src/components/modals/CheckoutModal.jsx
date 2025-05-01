@@ -24,7 +24,7 @@ import WalletConnectMenu from '../navigation/WalletConnectMenu';
 import Spinner from '../Spinner';
 import SuccessModal from './SuccessModal';
 
-const CheckoutModal = ({ onClose, isCheckoutModalOpen, delegateData, metadata, number }) => {
+const CheckoutModal = ({ onClose, isCheckoutModalOpen, delegateData }) => {
   const [boostComment, setBoostComment] = useState(''); 
   const [boostQuantity, setBoostQuantity] = useState(1);
   const [isQuantityError, setIsQuantityError] = useState(false);
@@ -203,17 +203,15 @@ const CheckoutModal = ({ onClose, isCheckoutModalOpen, delegateData, metadata, n
                 <InscriptionIcon
                   size="4rem"
                   useBlockIconDefault={false}
-                  endpoint={`/api/inscription_number/${delegateData?.metadata.number || number}`}
-                  number={metadata?.delegate || number}
+                  endpoint={`/api/inscription_number/${delegateData.number }`}
+                  number={delegateData.number}
                 />
                 <SummaryDetails>
                   <PlainText>
-                    {delegateData?.metadata?.number !== undefined
-                      ? addCommas(delegateData.metadata.number)
-                      : addCommas(number)}
+                    {addCommas(delegateData.number)}
                   </PlainText>
                   <ContentTag>
-                    {delegateData?.metadata.content_type || metadata?.content_type}
+                    {delegateData.content_type}
                   </ContentTag>
                 </SummaryDetails>
               </SummaryRow>
@@ -306,7 +304,7 @@ const CheckoutModal = ({ onClose, isCheckoutModalOpen, delegateData, metadata, n
             {/* Boost Button Section */}
             <BoostButtonContainer>
               {!signStatus ? (
-                <ModalBoostButton onClick={() => handleBoostClick(delegateData?.metadata || metadata)}>
+                <ModalBoostButton onClick={() => handleBoostClick(delegateData)}>
                   {wallet ? (
                     <>
                       <ChevronUpDuoIcon size="1.25rem" color={theme.colors.background.white} />

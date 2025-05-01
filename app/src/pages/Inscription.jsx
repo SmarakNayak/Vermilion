@@ -755,9 +755,7 @@ const Inscription = () => {
               <CheckoutModal
                 onClose={toggleCheckoutModal}
                 isCheckoutModalOpen={isCheckoutModalOpen}
-                delegateData={delegateData}
-                metadata={metadata}
-                number={number}
+                delegateData={delegateData?.metadata || metadata} // if inscription has a delegate, use that metadata, otherwise use it's own
               />
               
               {/* Details Section */}
