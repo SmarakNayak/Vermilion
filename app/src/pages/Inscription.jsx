@@ -262,6 +262,10 @@ const Inscription = () => {
   const [hasMoreBoosts, setHasMoreBoosts] = useState(true); 
   const [commentCount, setCommentCount] = useState(0);
   const [commentsList, setCommentsList] = useState([]);
+  const [hasMatchingComment, setHasMatchingComment] = useState(false);
+  const [commentContent, setCommentContent] = useState(null);
+  const [activeDot, setActiveDot] = useState(0);
+  const [slideDirection, setSlideDirection] = useState(null); // Track slide direction
 
   // Loading states for different data fetches
   const [metadataLoading, setMetadataLoading] = useState(true);
@@ -477,6 +481,27 @@ const Inscription = () => {
     }
   }, [metadata, fetchBoosts, fetchComments]);
 
+  // Check if comments match the current inscription number
+  useEffect(() => {
+    console.log("Checking comments for number:", number);
+    console.log("Comments list:", commentsList);
+    if (commentsList.length > 0) {
+      commentsList.forEach((comment) => {
+        if (comment.comment_number == number) {
+          setHasMatchingComment(true);
+          setCommentContent(comment.content);
+        }
+      });
+    }
+  }, [commentsList]);
+
+  const handleDotClick = (index) => {
+    if (index !== activeDot) {
+      setSlideDirection(index > activeDot ? 'right' : 'left'); // Determine slide direction
+      setActiveDot(index); // Update the active dot
+    }
+  };
+
   // Custom hook to detect svg-recursive type
   const actualContentType = React.useMemo(() => {
     if (metadata?.is_recursive && contentType === "svg") {
@@ -671,21 +696,42 @@ const Inscription = () => {
     <>
       <MainContainer>
         <ContentContainer>
-          <MediaContainer>
-            <InnerInscriptionContent 
-              contentType={contentType}
-              blobUrl={blobUrl}
-              number={number}
-              metadata={{
-                id: metadata?.id,
-                content_type: metadata?.content_type,
-                is_recursive: metadata?.is_recursive
-              }}
-              textContent={textContent}
-              modelUrl={modelUrl}
-              serverHTML={false}
-            />
-          </MediaContainer>
+            {activeDot === 0 ? (
+              <MediaContainer key="media">
+                <InnerInscriptionContent 
+                  contentType={contentType}
+                  blobUrl={blobUrl}
+                  number={number}
+                  metadata={{
+                    id: metadata?.id,
+                    content_type: metadata?.content_type,
+                    is_recursive: metadata?.is_recursive
+                  }}
+                  textContent={textContent}
+                  modelUrl={modelUrl}
+                  serverHTML={false}
+                />
+              </MediaContainer>
+            ) : (
+              <MediaContainer key="comment">
+                <InnerInscriptionContent
+                  contentType={'text'}
+                  textContent={commentContent}
+                />
+              </MediaContainer>
+            )}
+          {/* Render carousel dots if there's a matching comment */}
+          {hasMatchingComment && (
+            <CarouselDots>
+              {[0, 1].map((dotIndex) => (
+                <Dot
+                  key={dotIndex}
+                  isActive={activeDot === dotIndex}
+                  onClick={() => handleDotClick(dotIndex)}
+                />
+              ))}
+            </CarouselDots>
+          )}
         </ContentContainer>
         
         <InfoContainer>
@@ -940,6 +986,74 @@ const Separator = styled.div`
   width: 100%;
   background: transparent;
   border-bottom: 1px solid ${theme.colors.border};
+`;
+
+const MediaSliderContainer = styled.div`
+  display: flex;
+  flex-direction: row;
+  width: 100%;
+  overflow: hidden;
+  position: relative;
+
+  & > div {
+    flex-shrink: 0;
+    width: 100%;
+    transform: ${(props) =>
+      props.slideDirection === 'right'
+        ? 'translateX(-100%)'
+        : props.slideDirection === 'left'
+        ? 'translateX(100%)'
+        : 'translateX(0)'};
+    transition: transform 0.5s ease-in-out;
+  }
+`;
+
+const TextContainer = styled.div`
+  background-color: #FFFFFF;
+  border: 2px solid #F6F6F6;
+  box-sizing: border-box;
+  padding: .5rem;
+  max-width: 100%;
+  max-height: 100%;
+  min-width: 100%;
+  min-height: 100%;
+  width: auto;
+  height: auto;
+  display: flex;
+  align-items: ${props => props.isCentered ? 'center' : ''};
+  justify-content: ${props => props.isCentered ? 'center' : ''};
+  margin: 0;
+  font-size: .875rem;
+  font-family: ${theme.typography.fontFamilies.medium};
+  color: ${props => props.loading ? '#959595' : '#000000'};
+  object-fit: contain;
+  aspect-ratio: 1/1;
+  white-space-collapse: preserve;
+  overflow: hidden;
+  overflow-y: scroll;
+  text-wrap: wrap;
+`;
+
+const CarouselDots = styled.div`
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  gap: 0.375rem;
+  margin-top: 1.5rem;
+`;
+
+const Dot = styled.div`
+  width: 0.75rem;
+  height: 0.75rem;
+  border-radius: 0.375rem;
+  background-color: ${(props) =>
+    props.isActive ? theme.colors.text.secondary : theme.colors.border};
+  cursor: pointer;
+  transition: background-color 200ms ease;
+
+  &:hover {
+    background-color: ${theme.colors.text.secondary};
+  }
 `;
 
 export default Inscription;
