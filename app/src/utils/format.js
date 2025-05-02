@@ -45,7 +45,7 @@ export const formatSatsStringFull = (sats) => {
 export const formatSatsToDollars = (sats, price) => {
   let btc = sats / Math.pow(10, 8);
   let dollars = btc * price;
-  let string = "$" + Number(dollars.toFixed(2));
+  let string = "$" + dollars.toFixed(2); // Note: changed Number to toFixed to ensure dollar value always has two decimal points
   return string;
 }
 
