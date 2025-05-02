@@ -127,7 +127,7 @@ const CheckoutModal = ({ onClose, isCheckoutModalOpen, delegateData }) => {
       setTotalOwnerFee(totalOwnerFee);
       if (wallet && utxos.length > 0) {
         try{          
-          let inscriptionFee = estimateInscriptionFee(inscriptions, wallet.paymentAddress, wallet.paymentPublicKey, revealVsize, feeRate, utxos, network, totalPlatformFee, totalOwnerFee);
+          let inscriptionFee = estimateInscriptionFee(inscriptions, wallet.paymentAddress, wallet.paymentPublicKey, revealVsize, feeRate, utxos, network, totalPlatformFee, null, totalOwnerFee, null);
           setInscriptionFee(inscriptionFee - totalPlatformFee - totalOwnerFee);
         } catch (error) {
           //guess without wallet.

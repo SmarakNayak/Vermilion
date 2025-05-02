@@ -10,6 +10,11 @@ const getAddressType = (addressScript, publicKey, network) => {
     return 'P2WPKH';
   }
   if (isP2SHScript(addressScript)) {
+    if (!publicKey) {
+      // Without public key, we cannot work out if the script is wrapping a p2wpkh
+      // assume vanilla p2sh
+      return 'P2SH';
+    }
     // for nested segwit, we have:
     // pubKey -> pubkeyhash -> pubkeyhashscript (witness program/p2pkh) -> pubkeyhashscripthash (witness program hash/scripthash) -> pubkeyhashscripthashscript (P2SH script)
 
@@ -34,7 +39,8 @@ const getAddressType = (addressScript, publicKey, network) => {
     if (p2sh.hash.equals(bitcoin.crypto.hash160(p2wpkh.output))) {
       return 'P2SH-P2WPKH'
     } else {
-      throw new Error("Unsupported address type");
+      // If not equal, this is a vanilla P2SH script
+      return 'P2SH';
     }
   }
   if (isP2PKH(addressScript)) {
@@ -191,6 +197,8 @@ const estimateVSize = (inputTypes, outputTypes, headerType) => {
     } else if (outputType === 'P2WPKH') {
       outputSize += 31;
     } else if (outputType === 'P2SH-P2WPKH') {
+      outputSize += 32;
+    } else if (outputType === 'P2SH') {
       outputSize += 32;
     } else if (outputType === 'P2PKH') {
       outputSize += 34;

@@ -178,10 +178,9 @@ function getRevealSweepTransaction(receiveAddress, revealTaproot, revealKeyPair,
 }
 
 // Commit tx functions
-async function getCommitTransaction (inscriptions, paymentAddress, paymentPublicKey, revealAddress, revealVSize, network) {
+async function getCommitTransaction (inscriptions, paymentAddress, paymentPublicKey, revealAddress, revealVSize, network, platformFee = 0, platformAddress = null, ownerFee = 0, ownerAddress = null) {
   const paymentAddressScript = bitcoin.address.toOutputScript(paymentAddress, NETWORKS[network].bitcoinjs);
   const paymentAddressType = getAddressType(paymentAddressScript, paymentPublicKey, network);
-  console.log(paymentAddressType);
 
   let feeRate = await getRecommendedFees(network);
   let estimatedCommitFeeForHeaderAndOutputs = (10.5 + 2 * 43) * feeRate; //tx header 10.5 vBytes, 2 taproot outputs 43 vBytes each - input vB handled in selection
@@ -191,13 +190,9 @@ async function getCommitTransaction (inscriptions, paymentAddress, paymentPublic
   let utxos = await getConfirmedCardinalUtxos(paymentAddress, network);
   let adjustedUtxos = appendUtxoEffectiveValues(utxos, paymentAddressType, feeRate); //adjust utxos values to account for fee for size of input
   let selectedUtxos = selectUtxos(adjustedUtxos, estimatedRevealFee + estimatedCommitFeeForHeaderAndOutputs);
-  console.log(selectedUtxos);
 
   let estimatedCommitFeeForInputs = selectedUtxos.reduce((acc, utxo) => acc + utxo.value - utxo.effectiveValue, 0);
   let estimatedCommitFee = Math.ceil(estimatedCommitFeeForHeaderAndOutputs + estimatedCommitFeeForInputs);
-  console.log("Estimated commit fee: ", estimatedCommitFee, ". estimated commit vsize:", estimatedCommitFee / feeRate);
-  console.log("Estimated commit input vsize: ", estimatedCommitFeeForInputs / feeRate, ". estimated commit output + header vsize:", estimatedCommitFeeForHeaderAndOutputs / feeRate);
-  console.log("Estimated reveal fee: ", estimatedRevealFee);
   let estimatedInscriptionFee = estimatedCommitFee + estimatedRevealFee;
 
   const psbt = new bitcoin.Psbt({ network: NETWORKS[network].bitcoinjs });
@@ -274,7 +269,130 @@ async function getCommitTransaction (inscriptions, paymentAddress, paymentPublic
 
 }
 
-function estimateInscriptionFee(inscriptions, paymentAddress, paymentPublicKey, revealVSize, feeRate, utxos, network, platformFee = 0, ownerFee = 0) {
+/// Standard method of constructing bitcoin tx given a fee rate:
+// 1. Work out count and types of outputs
+// 2. Work out type of header (witness or non-witness)
+// 3. Now you know how much the payment, the headers and the outputs will cost, but you don't know how many inputs you need yet
+// 4. So select inputs based on their _effective_ value (value - fee for size of input)
+//    Rather than targetting a shifting value (spend + size_of_tx*fee_rate) with input values -> sum(a(i)) > f(o + h + sum(i)) + p
+//    We are targetting a fixed value (spend + size_of_outputs_and_header*fee_rate) with effective values -> sum(a(i)-fi) > f(o + h) + p
+// 5. Now we can confidently add inputs knowing that we will hit the target value
+async function getCommitTransaction2(paymentAddress, paymentPublicKey, utxos, revealAddress, revealVSize, totalPostage, feeRate, network, platformFee = 0, platformAddress = null, ownerFee = 0, ownerAddress = null) {
+  // 1 output to taproot reveal, 1 change output to payment address, 1 output to platform fee, 1 output to owner fee
+  const paymentAddressScript = bitcoin.address.toOutputScript(paymentAddress, NETWORKS[network].bitcoinjs);
+  const paymentAddressType = getAddressType(paymentAddressScript, paymentPublicKey, network);
+  let outputTypes = ['P2TR', paymentAddressType];
+  if (platformFee > 0) {
+    let platformAddressScript = bitcoin.address.toOutputScript(platformAddress, NETWORKS[network].bitcoinjs);
+    let platformAddressType = getAddressType(platformAddressScript);
+    outputTypes.push(platformAddressType);
+  }
+  if (ownerFee > 0) {
+    let ownerAddressScript = bitcoin.address.toOutputScript(ownerAddress, NETWORKS[network].bitcoinjs);
+    let ownerAddressType = getAddressType(ownerAddressScript);
+    outputTypes.push(ownerAddressType);
+  }
+
+  // we don't know how many inputs yet, but we know it's type so we can work out the size of the header and outputs
+  let estimatedCommitFeeForHeaderAndOutputs = estimateVSize([], outputTypes, paymentAddressType) * feeRate;
+  let estimatedRevealFee = Math.ceil(revealVSize * feeRate);
+
+  let adjustedUtxos = appendUtxoEffectiveValues(utxos, paymentAddressType, feeRate); //adjust utxos values to account for fee for size of input
+  let commitSendAmount = estimatedRevealFee + totalPostage + ownerFee + platformFee;
+  let selectedUtxos = selectUtxos(adjustedUtxos, commitSendAmount + estimatedCommitFeeForHeaderAndOutputs);
+
+  // Now we know how many inputs we need, we can calculate the estimated commit fee
+  let inputTypes = new Array(selectedUtxos.length).fill(paymentAddressType);
+  let estimatedCommitFee = estimateVSize(inputTypes, outputTypes, paymentAddressType) * feeRate;  
+  let estimatedInscriptionFee = estimatedCommitFee + commitSendAmount;
+
+  const psbt = new bitcoin.Psbt({ network: NETWORKS[network].bitcoinjs });
+  
+  // 1. inputs
+  for (let i = 0; i < selectedUtxos.length; i++) {
+    const utxo = selectedUtxos[i];
+
+    switch (paymentAddressType) {
+      case 'P2TR':
+        psbt.addInput({
+          hash: utxo.txid,
+          index: utxo.vout,
+          witnessUtxo: {
+            script: paymentAddressScript,
+            value: utxo.value
+          },
+          tapInternalKey: toXOnly(Buffer.from(paymentPublicKey, 'hex')),
+        });
+        break;
+      case 'P2WPKH':
+        psbt.addInput({
+          hash: utxo.txid,
+          index: utxo.vout,
+          witnessUtxo: {
+            script: paymentAddressScript,
+            value: utxo.value
+          }
+        });
+        break;
+      case 'P2SH-P2WPKH':
+        const p2wpkh = bitcoin.payments.p2wpkh({
+          pubkey: Buffer.from(paymentPublicKey, 'hex'),
+          network: NETWORKS[network].bitcoinjs
+        });
+        psbt.addInput({
+          hash: utxo.txid,
+          index: utxo.vout,
+          witnessUtxo: {
+            script: paymentAddressScript,
+            value: utxo.value
+          },
+          redeemScript: p2wpkh.output,
+        });
+        break;
+      case 'P2PKH':
+        const prevTx = await getTxData(utxo.txid, network);
+        psbt.addInput({
+          hash: utxo.txid,
+          index: utxo.vout,
+          nonWitnessUtxo: Buffer.from(prevTx, 'hex'),
+        });
+        break;
+      default:
+        throw new Error("Unsupported address type");
+    }
+  }
+
+  //2. outputs
+  psbt.addOutput({
+    address: revealAddress,
+    value: estimatedRevealFee
+  });
+  if (platformFee > 0) {
+    psbt.addOutput({
+      address: platformAddress,
+      value: platformFee
+    });
+  }
+  if (ownerFee > 0) {
+    psbt.addOutput({
+      address: ownerAddress,
+      value: ownerFee
+    });
+  }
+
+  let change = selectedUtxos.reduce((acc, utxo) => acc + utxo.value, 0) - estimatedInscriptionFee;
+  if (change >= 546) {
+    psbt.addOutput({
+      address: paymentAddress,
+      value: change
+    });
+  }
+
+  return [psbt, estimatedRevealFee];
+
+}
+
+function estimateInscriptionFee(inscriptions, paymentAddress, paymentPublicKey, revealVSize, feeRate, utxos, network, platformFee = 0, platformAddress = null, ownerFee = 0, ownerAddress = null) {
   console.log("Estimating inscription fee");
   const paymentAddressScript = bitcoin.address.toOutputScript(paymentAddress, NETWORKS[network].bitcoinjs);
   const paymentAddressType = getAddressType(paymentAddressScript, paymentPublicKey, network);
@@ -287,10 +405,22 @@ function estimateInscriptionFee(inscriptions, paymentAddress, paymentPublicKey, 
   // assume 1 output to taproot reveal, 1 change output to payment address, 1 output to platform fee, 1 output to owner fee
   let outputTypes = ['P2TR', paymentAddressType];
   if (platformFee > 0) {
-    outputTypes.push("UNKNOWN");
+    if (platformAddress !== null) {
+      let platformAddressScript = bitcoin.address.toOutputScript(platformAddress, NETWORKS[network].bitcoinjs);
+      let platformAddressType = getAddressType(platformAddressScript);
+      outputTypes.push(platformAddressType);
+    } else {
+      outputTypes.push("UNKNOWN");
+    }
   }
   if (ownerFee > 0) {
-    outputTypes.push("UNKNOWN");
+    if (ownerAddress !== null) {
+      let ownerAddressScript = bitcoin.address.toOutputScript(ownerAddress, NETWORKS[network].bitcoinjs);
+      let ownerAddressType = getAddressType(ownerAddressScript);
+      outputTypes.push(ownerAddressType);
+    } else {
+      outputTypes.push("UNKNOWN");
+    }
   }
   // we don't know how many inputs yet, but we know it's type so we can work out the size of the header and outputs
   let estimatedCommitFeeForHeaderAndOutputs = estimateVSize([], outputTypes, paymentAddressType) * feeRate;
