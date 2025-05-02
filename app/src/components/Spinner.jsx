@@ -2,8 +2,8 @@ import React from 'react';
 import styled, { keyframes } from 'styled-components';
 import theme from '../styles/theme';
 
-const Spinner = () => {
-  return <SpinnerContainer />;
+const Spinner = ({ isButton }) => {
+  return <SpinnerContainer isButton={isButton} />;
 };
 
 const spin = keyframes`
@@ -12,8 +12,8 @@ const spin = keyframes`
 `;
 
 const SpinnerContainer = styled.div`
-  width: 1.25rem;
-  height: 1.25rem;
+  width: ${props => (props.isButton ? '0.75rem' : '1rem')};
+  height: ${props => (props.isButton ? '0.75rem' : '1rem')};;
   border: .25rem solid ${theme.colors.background.primary};
   border-top: .25rem solid ${theme.colors.text.secondary};
   border-radius: 50%;

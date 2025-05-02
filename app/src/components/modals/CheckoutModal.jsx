@@ -23,6 +23,8 @@ import useStore from '../../store/zustand';
 import WalletConnectMenu from '../navigation/WalletConnectMenu';
 import Spinner from '../Spinner';
 import SuccessModal from './SuccessModal';
+import Tooltip from '../common/Tooltip';
+import { SkeletonElement } from '../Inscription/LoadingSkeleton';
 
 const CheckoutModal = ({ onClose, isCheckoutModalOpen, delegateData }) => {
   const [boostComment, setBoostComment] = useState(''); 
@@ -292,7 +294,7 @@ const CheckoutModal = ({ onClose, isCheckoutModalOpen, delegateData }) => {
         <ModalContainer isOpen={isCheckoutModalOpen && !success} onClick={(e) => e.stopPropagation()}>
           <ModalHeader>
             <HeaderText>Checkout</HeaderText>
-            <CloseButton onClick={handleCheckoutModalClose}>
+            <CloseButton onClick={handleCheckoutModalClose} disabled={!!signStatus}>
               <CrossIcon size={'1.25rem'} color={theme.colors.text.secondary} />
             </CloseButton>
           </ModalHeader>
@@ -331,7 +333,11 @@ const CheckoutModal = ({ onClose, isCheckoutModalOpen, delegateData }) => {
                 <PlainText color={theme.colors.text.tertiary}>
                   (Optional)
                 </PlainText>
-                <InfoCircleIcon size="1.25rem" color={theme.colors.text.tertiary} />
+                <Tooltip content={'Comments are inscribed on the Bitcoin blockchain'}>
+                  <IconWrapper>
+                    <InfoCircleIcon size="1.25rem" color={theme.colors.text.tertiary} />
+                  </IconWrapper>
+                </Tooltip>
               </InputLabel>
               <StyledInput
                 placeholder="Add a comment"
@@ -376,8 +382,16 @@ const CheckoutModal = ({ onClose, isCheckoutModalOpen, delegateData }) => {
               <FeeRow>
                 <PlainText color={theme.colors.text.secondary}>Network fees</PlainText>
                 <FeeDetails>
-                  <PlainText color={theme.colors.text.secondary}>{formatSatsStringFull(inscriptionFee)}</PlainText>
-                  <PlainText color={theme.colors.text.tertiary}>{formatSatsToDollars(inscriptionFee, btcusd)}</PlainText>
+                  {inscriptionFee ? (
+                    <>
+                    <PlainText color={theme.colors.text.secondary}>{formatSatsStringFull(inscriptionFee)}</PlainText>
+                    <PlainText color={theme.colors.text.tertiary}>{formatSatsToDollars(inscriptionFee, btcusd)}</PlainText>
+                    </>
+                  ) : (
+                    <>
+                      <SkeletonElement width="10rem" height="1.5rem" />
+                    </>
+                  )}
                 </FeeDetails>
               </FeeRow>
 
@@ -385,8 +399,16 @@ const CheckoutModal = ({ onClose, isCheckoutModalOpen, delegateData }) => {
               <FeeRow>
                 <PlainText color={theme.colors.text.secondary}>Service fee</PlainText>
                 <FeeDetails>
-                  <PlainText color={theme.colors.text.secondary}>{formatSatsStringFull(totalPlatformFee)}</PlainText>
-                  <PlainText color={theme.colors.text.tertiary}>{formatSatsToDollars(totalPlatformFee, btcusd)}</PlainText>
+                  {inscriptionFee ? (
+                    <>
+                      <PlainText color={theme.colors.text.secondary}>{formatSatsStringFull(totalPlatformFee)}</PlainText>
+                      <PlainText color={theme.colors.text.tertiary}>{formatSatsToDollars(totalPlatformFee, btcusd)}</PlainText>
+                    </>
+                  ) : (
+                    <>
+                      <SkeletonElement width="10rem" height="1.5rem" />
+                    </>
+                  )}
                 </FeeDetails>
               </FeeRow>
 
@@ -394,8 +416,16 @@ const CheckoutModal = ({ onClose, isCheckoutModalOpen, delegateData }) => {
               <FeeRow>
                 <PlainText color={theme.colors.text.secondary}>Owner Royalty</PlainText>
                 <FeeDetails>
-                  <PlainText color={theme.colors.text.secondary}>{formatSatsStringFull(totalOwnerFee)}</PlainText>
-                  <PlainText color={theme.colors.text.tertiary}>{formatSatsToDollars(totalOwnerFee, btcusd)}</PlainText>
+                  {inscriptionFee ? (
+                    <>
+                    <PlainText color={theme.colors.text.secondary}>{formatSatsStringFull(totalOwnerFee)}</PlainText>
+                    <PlainText color={theme.colors.text.tertiary}>{formatSatsToDollars(totalOwnerFee, btcusd)}</PlainText>
+                    </>
+                  ) : (
+                    <>
+                      <SkeletonElement width="10rem" height="1.5rem" />
+                    </>
+                  )}
                 </FeeDetails>
               </FeeRow>
 
@@ -406,8 +436,16 @@ const CheckoutModal = ({ onClose, isCheckoutModalOpen, delegateData }) => {
               <FeeRow>
                 <PlainText color={theme.colors.text.primary}>Total fees</PlainText>
                 <FeeDetails>
-                  <PlainText color={theme.colors.text.primary}>{formatSatsStringFull(inscriptionFee + totalPlatformFee + totalOwnerFee)}</PlainText>
-                  <PlainText color={theme.colors.text.tertiary}>{formatSatsToDollars(inscriptionFee + totalPlatformFee + totalOwnerFee, btcusd)}</PlainText>
+                  {inscriptionFee ? (
+                    <>
+                    <PlainText color={theme.colors.text.primary}>{formatSatsStringFull(inscriptionFee + totalPlatformFee + totalOwnerFee)}</PlainText>
+                    <PlainText color={theme.colors.text.tertiary}>{formatSatsToDollars(inscriptionFee + totalPlatformFee + totalOwnerFee, btcusd)}</PlainText>
+                    </>
+                  ) : (
+                    <>
+                      <SkeletonElement width="10rem" height="1.5rem" />
+                    </>
+                  )}
                 </FeeDetails>
               </FeeRow>
             </FeeSummaryContainer>
@@ -430,7 +468,8 @@ const CheckoutModal = ({ onClose, isCheckoutModalOpen, delegateData }) => {
                 </ModalBoostButton>
               ) : (
                 <DisabledModalBoostButton>
-                  <Spinner size="1.25rem" color={theme.colors.background.white} /> {signStatus}
+                  <Spinner isButton={true} /> 
+                  {signStatus}
                 </DisabledModalBoostButton>
               )}
             </BoostButtonContainer>
@@ -531,15 +570,15 @@ const CloseButton = styled.button`
   align-items: center;
   padding: 0;
   font-size: 1.5rem;
-  cursor: pointer;
+  cursor: ${props => (props.disabled ? 'not-allowed' : 'pointer')}; /* Change cursor based on disabled prop */
   transition: all 200ms ease;
 
   &:hover {
-    background-color: ${theme.colors.background.primary};
+    background-color: ${props => (props.disabled ? theme.colors.background.white : theme.colors.background.primary)};
   }
 
   &:active {
-    transform: scale(0.96);
+    transform: ${props => (props.disabled ? 'none' : 'scale(0.96)')};
   }
 `;
 
@@ -721,7 +760,7 @@ const ModalBoostButton = styled.button`
   justify-content: center;
   gap: 0.5rem;
   background-color: ${theme.colors.background.dark};
-  font-family: ${theme.typography.fontFamilies.bold};
+  font-family: ${theme.typography.fontFamilies.medium};
   font-size: 1rem;
   line-height: 1.25rem;
   color: ${theme.colors.background.white};
@@ -748,17 +787,18 @@ const DisabledModalBoostButton = styled.button`
   justify-content: center;
   gap: 0.5rem;
   background-color: ${theme.colors.background.dark};
-  font-family: ${theme.typography.fontFamilies.bold};
+  font-family: ${theme.typography.fontFamilies.medium};
   font-size: 1rem;
   line-height: 1.25rem;
-  color: ${theme.colors.background.white};
+  color: ${theme.colors.text.white};
   border-radius: 0.75rem; /* Updated border radius */
   padding: 0.75rem 1rem;
   border: none;
   transition: all 200ms ease;
   transform-origin: center center;
   width: 100%;
-  opacity: 50%;
+  opacity: 0.5;
+  cursor: not-allowed;
 `;
 
 const ErrorContainer = styled.div`
@@ -773,6 +813,15 @@ const StatusText = styled.span`
   color: ${theme.colors.text.secondary};
   display: block;
   transition: all 200ms ease;
+`;
+
+const IconWrapper = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  cursor: pointer;
 `;
 
 export default CheckoutModal;

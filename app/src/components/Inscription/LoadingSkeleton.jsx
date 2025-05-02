@@ -1,5 +1,6 @@
 import React from 'react';
 import styled, { keyframes } from 'styled-components';
+import theme from '../../styles/theme';
 
 const LoadingSkeleton = () => {
   return (
@@ -50,8 +51,8 @@ const SkeletonGroup = styled.div`
   width: 100%;
 `;
 
-const SkeletonElement = styled.div`
-  background-color: #F5F5F5;
+export const SkeletonElement = styled.div`
+  background-color: ${theme.colors.background.primary};
   animation: ${pulse} 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
   border-radius: .5rem;
   height: ${(props) => props.height};
