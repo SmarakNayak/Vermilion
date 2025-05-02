@@ -3,11 +3,16 @@ import styled from 'styled-components';
 import theme from '../../styles/theme';
 import {
   CrossIcon,
-  CheckIcon
+  CheckIcon,
+  MailIcon,
+  MailOpenIcon,
+  ArchiveIcon
 } from '../common/Icon';
 import InscriptionIcon from '../InscriptionIcon';
 import { NETWORKS } from '../../wallet/networks';
 import useStore from '../../store/zustand';
+import { BorderedTagSection } from '../Inscription/Layout';
+import { addCommas } from '../../utils';
 
 const SuccessModal = ({ isOpen, onClose, boostDetails }) => {
   const wallet = useStore(state => state.wallet);
@@ -51,53 +56,64 @@ const SuccessModal = ({ isOpen, onClose, boostDetails }) => {
           </CloseButton>
         </ModalHeader>
         <ModalContent>
-          <InscriptionSuccessIconWrapper>
-            <InscriptionIcon
-              size="4rem"
-              useBlockIconDefault={false}
-              endpoint={`/api/inscription_number/${number}`}
-              number={number}
-            />
-            <CheckIconHover>
-              <CheckIcon size={'2.25rem'} color={theme.colors.text.success} />
-            </CheckIconHover>
-          </InscriptionSuccessIconWrapper>
-          <SuccessMessage>
-            Successfully boosted <b>{number}</b> {quantity} time{quantity > 1 ? 's' : ''}
-          </SuccessMessage>
-          {comment && (
-            // Comment in italics
-            <SuccessMessage style={{ fontStyle: 'italic' }}>
-              "{comment}"
+          <SuccessIconContainer>
+            <InscriptionSuccessIconWrapper>
+              <InscriptionIcon
+                size="4rem"
+                useBlockIconDefault={false}
+                endpoint={`/api/inscription_number/${number}`}
+                number={number}
+              />
+              <CheckIconWrapper>
+                <CheckIcon size={'1rem'} color={theme.colors.text.white} />
+              </CheckIconWrapper>
+            </InscriptionSuccessIconWrapper>
+          </SuccessIconContainer>
+          <SectionContainer>
+            <SuccessMessage>
+              You successfully boosted <b>#{addCommas(number)}</b> ({quantity}x)
             </SuccessMessage>
-          )}
-          <TxLinks>
-            {boostDetails?.commitTxid && (
-              <TxLink
-                href={getMempoolTxUrl(boostDetails.commitTxid)}
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                Commit TX
-              </TxLink>
+            {comment && (
+              <BorderedTagSection>
+                <CommentText>{comment}</CommentText>
+              </BorderedTagSection>
             )}
-            {boostDetails?.revealTxid && (
-              <TxLink
-                href={getMempoolTxUrl(boostDetails.revealTxid)}
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                Reveal TX
-              </TxLink>
-            )}
-          </TxLinks>          
-          <TxLink
-            href={"/profile/"+wallet.ordinalsAddress}
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            View boost history
-          </TxLink>
+          </SectionContainer>
+          <SectionContainer gap="0.375rem">
+            <SuccessMessage>View the transactions on memepool.space:</SuccessMessage>
+            <TxContainer>
+              {boostDetails?.commitTxid && (
+                <TxLink
+                  href={getMempoolTxUrl(boostDetails.commitTxid)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <MailIcon size={'1.25rem'} />
+                  Commit TX
+                </TxLink>
+              )}
+              {boostDetails?.revealTxid && (
+                <TxLink
+                  href={getMempoolTxUrl(boostDetails.revealTxid)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <MailOpenIcon size={'1.25rem'} />
+                  Reveal TX
+                </TxLink>
+              )}
+            </TxContainer>          
+          </SectionContainer>
+          <ButtonContainer>
+            <HistoryButton 
+              href={"/profile/"+wallet.ordinalsAddress}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <ArchiveIcon size={'1.25rem'} color={theme.colors.text.primary} />
+              View Transaction History
+            </HistoryButton>
+          </ButtonContainer>
         </ModalContent>
       </ModalContainer>
     </ModalOverlay>
@@ -147,7 +163,6 @@ const ModalHeader = styled.div`
   justify-content: space-between;
   align-items: center;
   padding: 1.25rem 1.5rem;
-  border-bottom: 1px solid ${theme.colors.border}; /* Separator line */
 `;
 
 const HeaderText = styled.p`
@@ -183,14 +198,20 @@ const CloseButton = styled.button`
 const ModalContent = styled.div`
   display: flex;
   flex-direction: column;
-  align-items: center; /* Center content horizontally */
   gap: 1.5rem;
-  padding: 2rem 1.5rem; /* Add more vertical padding */
-  text-align: center; /* Center text */
+  padding: 0.5rem 1.25rem 1.5rem; 
 `;
 
 const SuccessIconContainer = styled.div`
-  /* Optional: Add styles for the icon container if needed */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+`;
+
+const SectionContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: ${props => props.gap || '0.75rem'};
 `;
 
 const SuccessMessage = styled.p`
@@ -204,70 +225,111 @@ const SuccessMessage = styled.p`
 
 const InscriptionSuccessIconWrapper = styled.div`
   position: relative;
-  width: 4rem;
-  height: 4rem;
-  margin-bottom: 0.5rem;
+  width: 4.75rem;
+  height: 4.75rem;
+  border-radius: 0.25rem;
+  background: ${theme.colors.background.primary};
   display: flex;
   align-items: center;
   justify-content: center;
 `;
 
-const CheckIconHover = styled.div`
+const CheckIconWrapper = styled.div`
   position: absolute;
-  top: -0.5rem;
-  right: -0.5rem;
-  background: ${theme.colors.background.white};
+  bottom: -0.3125rem;
+  right: -0.3125rem;
+  background: ${theme.colors.background.success};
+  height: 1.25rem;
+  width: 1.25rem;
   border-radius: 50%;
-  box-shadow: 0 0 0.25rem rgba(0,0,0,0.08);
   display: flex;
   align-items: center;
   justify-content: center;
 `;
 
-const BoostDetails = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-  margin-bottom: 0.5rem;
-  width: 100%;
-  align-items: center;
-`;
-
-const BoostDetailRow = styled.div`
-  display: flex;
-  gap: 0.5rem;
-  align-items: baseline;
-`;
-
-const DetailLabel = styled.span`
+const CommentText = styled.p`
   font-family: ${theme.typography.fontFamilies.medium};
+  font-size: 0.875rem;
+  line-height: 1.25rem;
   color: ${theme.colors.text.secondary};
-  font-size: 0.95rem;
+  margin: 0;
+  display: -webkit-box; 
+  -webkit-line-clamp: 5; 
+  -webkit-box-orient: vertical;
+  overflow: hidden; 
+  text-overflow: ellipsis;
+
 `;
 
-const DetailValue = styled.span`
-  font-family: ${theme.typography.fontFamilies.bold};
-  color: ${theme.colors.text.primary};
-  font-size: 1rem;
-  word-break: break-word;
-`;
-
-const TxLinks = styled.div`
+const TxContainer = styled.div`
   display: flex;
-  gap: 1rem;
-  margin-top: 1rem;
+  gap: 0.25rem;
   flex-wrap: wrap;
-  justify-content: center;
 `;
 
 const TxLink = styled.a`
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
   font-family: ${theme.typography.fontFamilies.medium};
-  color: ${theme.colors.text.primary};
-  text-decoration: underline;
-  font-size: 0.95rem;
-  transition: color 0.2s;
+  background-color: ${theme.colors.background.white};
+  border-radius: 1rem;
+  padding: 0.375rem 0.5rem;
+  color: ${theme.colors.text.secondary};
+  text-decoration: none;
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  transition: all 200ms ease;
+
+  svg {
+    fill: ${theme.colors.text.secondary};
+  }
+
   &:hover {
+    background-color: ${theme.colors.background.primary};
     color: ${theme.colors.text.primary};
+
+    svg {
+      fill: ${theme.colors.text.primary};
+    }
+  }
+
+  &:active {
+    transform: scale(0.96);
+  }
+`;
+
+const ButtonContainer = styled.div`
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+`;
+
+const HistoryButton = styled.button`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  background-color: ${theme.colors.background.primary};
+  font-family: ${theme.typography.fontFamilies.medium};
+  font-size: 1rem;
+  line-height: 1.25rem;
+  color: ${theme.colors.text.primary};
+  border-radius: 0.75rem; /* Updated border radius */
+  padding: 0.75rem 1rem;
+  border: none;
+  cursor: pointer;
+  transition: all 200ms ease;
+  transform-origin: center center;
+  width: 100%;
+
+  &:hover {
+    background-color: ${theme.colors.background.secondary};
+  }
+
+  &:active {
+    transform: scale(0.98);
   }
 `;
 
