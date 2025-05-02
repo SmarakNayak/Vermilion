@@ -12,6 +12,7 @@ const useStore = create(
       },
       network: 'signet',
       platformFee: 2500,
+      platformAddress: '',
       ownerFee: 2500
     }),
     {

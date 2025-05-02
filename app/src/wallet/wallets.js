@@ -288,6 +288,7 @@ class XverseWallet extends Wallet {
       addresses: ['payment', 'ordinals'],
       message: 'Connect to Vermilion dot place plz'
     });
+    if (response.error) throw new Error(response.error.message);
     const accounts = response.result.addresses;
     const payment = accounts.find(a => a.purpose === 'payment');
     const ordinals = accounts.find(a => a.purpose === 'ordinals');
@@ -705,11 +706,11 @@ class OylWallet extends Wallet {
 
   async connect(network) {
     this.windowCheck();
-    if (!getNetworksFromAddress(payment.address).includes(network)) {
-      throw new Error('Connected to wrong network, please switch to ' + network);
-    }
-    this.network = network;
     const accounts = await window.oyl.getAddresses();
+    if (!getNetworksFromAddress(accounts.nativeSegwit.address).includes(network)) {
+      throw new Error('Connected to wrong network, please switch to ' + network);
+    }    
+    this.network = network;
     this.paymentAddress = accounts.nativeSegwit.address;
     this.ordinalsAddress = accounts.taproot.address;
     this.paymentPublicKey = accounts.nativeSegwit.publicKey;

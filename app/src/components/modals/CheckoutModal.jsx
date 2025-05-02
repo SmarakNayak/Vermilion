@@ -17,6 +17,7 @@ import InscriptionIcon from '../InscriptionIcon';
 
 import { createInscriptions, Inscription as InscriptionObject, getRevealVSize, estimateInscriptionFee, guessInscriptionFee} from '../../wallet/inscriptionBuilder';
 import { getRecommendedFees, getCoinBaseBtcPrice, getConfirmedCardinalUtxos } from '../../wallet/mempoolApi';
+import { isAddressValid } from '../../wallet/transactionUtils';
 
 import useStore from '../../store/zustand';
 import WalletConnectMenu from '../navigation/WalletConnectMenu';
@@ -37,6 +38,7 @@ const CheckoutModal = ({ onClose, isCheckoutModalOpen, delegateData }) => {
   const wallet = useStore(state => state.wallet); // Use zustand store to get the wallet (has to be top-level)
   const network = useStore(state => state.network);
   const platformFee = useStore(state => state.platformFee);
+  const platformAddress = useStore(state => state.platformAddress);
   const ownerFee = useStore(state => state.ownerFee);
 
   const [feeRate, setFeeRate] = useState(0);
@@ -45,6 +47,7 @@ const CheckoutModal = ({ onClose, isCheckoutModalOpen, delegateData }) => {
   const [inscriptionFee, setInscriptionFee] = useState(0);
   const [totalPlatformFee, setTotalPlatformFee] = useState(0);
   const [totalOwnerFee, setTotalOwnerFee] = useState(0);
+  const [ownerAddress, setOwnerAddress] = useState(null);
 
   useEffect(() => {
     if (isCheckoutModalOpen) {
@@ -99,6 +102,7 @@ const CheckoutModal = ({ onClose, isCheckoutModalOpen, delegateData }) => {
   useEffect(() => {
     if (wallet && isCheckoutModalOpen) {
       getUtxos();
+      getOwnerAddress(delegateData);
     }
   }, [wallet, isCheckoutModalOpen]);
 
@@ -107,8 +111,22 @@ const CheckoutModal = ({ onClose, isCheckoutModalOpen, delegateData }) => {
     setUtxos(utxos);
   }
 
+  const getOwnerAddress = async (delegateMetadata) => {
+    const response = await fetch(`/api/inscription_last_transfer_number/${delegateMetadata.number}`);
+    const json = await response.json();
+    let address = json.address;
+    if (isAddressValid(address, network)) {
+      setOwnerAddress(address);
+    } else {
+      setOwnerAddress('invalid');
+    }
+    if (network === 'testnet' || network === 'signet') {
+      setOwnerAddress(wallet.paymentAddress); // Refund wallet address for testnet/signet
+    }
+  }
+
   useEffect(() => {
-    if (isCheckoutModalOpen & feeRate) {      
+    if (isCheckoutModalOpen & feeRate & ownerAddress !== null) {      
       let quantity = boostQuantity;
       if (quantity < 1) { //early return if 0 (as estiamtion assumes min tx size)
         setInscriptionFee(0);
@@ -123,7 +141,10 @@ const CheckoutModal = ({ onClose, isCheckoutModalOpen, delegateData }) => {
       let revealVsize = getRevealVSize(inscriptions, wallet.ordinalsAddress, network);
       let totalPlatformFee = platformFee * quantity;
       setTotalPlatformFee(totalPlatformFee);
-      let totalOwnerFee = ownerFee * quantity;
+      let totalOwnerFee = ownerFee * quantity;      
+      if (ownerAddress === 'invalid') {
+        totalOwnerFee = 0; // no owner fee if address is invalid
+      }
       setTotalOwnerFee(totalOwnerFee);
       if (wallet && utxos.length > 0) {
         try{          
@@ -142,7 +163,7 @@ const CheckoutModal = ({ onClose, isCheckoutModalOpen, delegateData }) => {
         setInscriptionFee(inscriptionFee - totalPlatformFee - totalOwnerFee);
       }
     }
-  }, [boostQuantity, boostComment, delegateData, isCheckoutModalOpen, feeRate, utxos, wallet]);
+  }, [boostQuantity, boostComment, delegateData, isCheckoutModalOpen, feeRate, utxos, wallet, ownerAddress]);
 
   const handleBoostClick = async (delegateMetadata) => {
     setError(null); // Reset error state
@@ -165,8 +186,23 @@ const CheckoutModal = ({ onClose, isCheckoutModalOpen, delegateData }) => {
       let inscriptions = getInscriptions(delegateMetadata, boostQuantity);
       console.log("Inscribing following inscriptions: ", inscriptions);
 
+      let platformFeeAddress = platformAddress;
+      if (network === 'testnet' || network === 'signet') {
+        platformFeeAddress = wallet.paymentAddress; // Refund wallet address for testnet/signet
+      }
+
       // Create the inscription
-      let [commitTxid, revealTxid] = await createInscriptions(inscriptions, wallet, setSignStatus);      
+      let [commitTxid, revealTxid] = await createInscriptions({
+        inscriptions,
+        wallet,
+        signStatusCallback: setSignStatus,
+        feeRate,
+        utxos,
+        platformFee: totalPlatformFee,
+        platformAddress: platformFeeAddress,
+        ownerFee: totalOwnerFee,
+        ownerAddress,
+      });
       
       // Open success modal after successful inscription
       setSuccessDetails({

@@ -49,6 +49,16 @@ const getAddressType = (addressScript, publicKey, network) => {
   throw new Error("Unsupported address type");
 }
 
+const isAddressValid = (address, network) => {
+  try {
+    bitcoin.address.toOutputScript(address, network);
+    return true;
+  } catch (e) {
+    console.log("Invalid address: ",address,", ", e);
+    return false;
+  }
+}
+
 const appendUtxoEffectiveValues = (utxos, addressType, feeRate) => {
   //https://bitcoin.stackexchange.com/questions/84004/how-do-virtual-size-stripped-size-and-raw-size-compare-between-legacy-address-f/84006#84006
   if (addressType === 'P2TR') {
@@ -218,5 +228,6 @@ export {
   getAddressType,
   appendUtxoEffectiveValues,
   selectUtxos,
-  estimateVSize
+  estimateVSize,
+  isAddressValid,
 }

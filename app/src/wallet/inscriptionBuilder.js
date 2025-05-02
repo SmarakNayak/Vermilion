@@ -178,7 +178,7 @@ function getRevealSweepTransaction(receiveAddress, revealTaproot, revealKeyPair,
 }
 
 // Commit tx functions
-async function getCommitTransaction (inscriptions, paymentAddress, paymentPublicKey, revealAddress, revealVSize, network, platformFee = 0, platformAddress = null, ownerFee = 0, ownerAddress = null) {
+async function getCommitTransactionOld(inscriptions, paymentAddress, paymentPublicKey, revealAddress, revealVSize, network, platformFee = 0, platformAddress = null, ownerFee = 0, ownerAddress = null) {
   const paymentAddressScript = bitcoin.address.toOutputScript(paymentAddress, NETWORKS[network].bitcoinjs);
   const paymentAddressType = getAddressType(paymentAddressScript, paymentPublicKey, network);
 
@@ -277,7 +277,20 @@ async function getCommitTransaction (inscriptions, paymentAddress, paymentPublic
 //    Rather than targetting a shifting value (spend + size_of_tx*fee_rate) with input values -> sum(a(i)) > f(o + h + sum(i)) + p
 //    We are targetting a fixed value (spend + size_of_outputs_and_header*fee_rate) with effective values -> sum(a(i)-fi) > f(o + h) + p
 // 5. Now we can confidently add inputs knowing that we will hit the target value
-async function getCommitTransaction2(paymentAddress, paymentPublicKey, utxos, revealAddress, revealVSize, totalPostage, feeRate, network, platformFee = 0, platformAddress = null, ownerFee = 0, ownerAddress = null) {
+async function getCommitTransaction2({
+  paymentAddress, 
+  paymentPublicKey, 
+  utxos, 
+  revealAddress, 
+  revealVSize, 
+  totalPostage, 
+  feeRate, 
+  network, 
+  platformFee = 0, 
+  platformAddress = null, 
+  ownerFee = 0, 
+  ownerAddress = null
+}) {
   // 1 output to taproot reveal, 1 change output to payment address, 1 output to platform fee, 1 output to owner fee
   const paymentAddressScript = bitcoin.address.toOutputScript(paymentAddress, NETWORKS[network].bitcoinjs);
   const paymentAddressType = getAddressType(paymentAddressScript, paymentPublicKey, network);
@@ -295,10 +308,10 @@ async function getCommitTransaction2(paymentAddress, paymentPublicKey, utxos, re
 
   // we don't know how many inputs yet, but we know it's type so we can work out the size of the header and outputs
   let estimatedCommitFeeForHeaderAndOutputs = estimateVSize([], outputTypes, paymentAddressType) * feeRate;
-  let estimatedRevealFee = Math.ceil(revealVSize * feeRate);
+  let estimatedRevealPayment = Math.ceil(revealVSize * feeRate) + totalPostage;
 
   let adjustedUtxos = appendUtxoEffectiveValues(utxos, paymentAddressType, feeRate); //adjust utxos values to account for fee for size of input
-  let commitSendAmount = estimatedRevealFee + totalPostage + ownerFee + platformFee;
+  let commitSendAmount = estimatedRevealPayment + ownerFee + platformFee;
   let selectedUtxos = selectUtxos(adjustedUtxos, commitSendAmount + estimatedCommitFeeForHeaderAndOutputs);
 
   // Now we know how many inputs we need, we can calculate the estimated commit fee
@@ -365,7 +378,7 @@ async function getCommitTransaction2(paymentAddress, paymentPublicKey, utxos, re
   //2. outputs
   psbt.addOutput({
     address: revealAddress,
-    value: estimatedRevealFee
+    value: estimatedRevealPayment
   });
   if (platformFee > 0) {
     psbt.addOutput({
@@ -388,7 +401,7 @@ async function getCommitTransaction2(paymentAddress, paymentPublicKey, utxos, re
     });
   }
 
-  return [psbt, estimatedRevealFee];
+  return [psbt, estimatedRevealPayment];
 
 }
 
@@ -490,7 +503,18 @@ function intToLeBytes(value) {
 }
 
 // inscription functions
-async function createInscriptionsWithTweakedKey(inscriptions, wallet, network, signStatusCallback = () => {}) {
+async function createInscriptionsWithTweakedKey({
+  inscriptions,
+  wallet,
+  network,
+  signStatusCallback = () => {},
+  feeRate = null,
+  utxos = null,
+  platformFee = 0,
+  platformAddress = null,
+  ownerFee = 0,
+  ownerAddress = null
+}) {
   signStatusCallback("Signing 2/2 transactions");
   // 1. get inscription tapscript
   let walletTaproot = wallet.getTaproot(wallet, network);
@@ -501,9 +525,31 @@ async function createInscriptionsWithTweakedKey(inscriptions, wallet, network, s
 
   // 2. get estimated reveal vsize to work out how much commit tx should send to the reveal address
   let estRevealVSize = getRevealVSize(inscriptions, wallet.ordinalsAddress, network);
+  let totalPostage = inscriptions.reduce((acc, inscription) => acc + inscription.postage, 0);
+  
+  if (feeRate === null) {
+    feeRate = await getRecommendedFees(network);
+  }
+  if (utxos === null) {
+    utxos = await getConfirmedCardinalUtxos(wallet.paymentAddress, network);
+  }
 
   // 3. get commit transaction
-  let [ commitPsbt, estimatedRevealFee ]= await getCommitTransaction(inscriptions, wallet.paymentAddress, wallet.paymentPublicKey, revealTaproot.address, estRevealVSize, network);
+  let [ commitPsbt, estimatedRevealFee ]= await getCommitTransaction2({
+    paymentAddress: wallet.paymentAddress,
+    paymentPublicKey: wallet.paymentPublicKey,
+    utxos,
+    revealAddress: revealTaproot.address,
+    revealVSize: estRevealVSize,
+    totalPostage,
+    feeRate,
+    network,
+    platformFee,
+    platformAddress,
+    ownerFee,
+    ownerAddress
+  });
+  
   let tempCommitTx = commitPsbt.__CACHE.__TX;
   let toSignCommitInputs = commitPsbt.data.inputs.map((input, index) => {
     return {
@@ -533,7 +579,18 @@ async function createInscriptionsWithTweakedKey(inscriptions, wallet, network, s
   return [pushedCommitTx, pushedRevealTx];
 }
 
-async function createInscriptionsWithTweakedKeyTwoSign(inscriptions, wallet, network, signStatusCallback = () => {}) {
+async function createInscriptionsWithTweakedKeyTwoSign({
+  inscriptions,
+  wallet,
+  network,
+  signStatusCallback = () => {},
+  feeRate = null,
+  utxos = null,
+  platformFee = 0,
+  platformAddress = null,
+  ownerFee = 0,
+  ownerAddress = null
+}) {
   signStatusCallback("Signing 1/2 transactions");
   // 1. get inscription tapscript
   let walletTaproot = wallet.getTaproot(wallet, network);
@@ -543,10 +600,31 @@ async function createInscriptionsWithTweakedKeyTwoSign(inscriptions, wallet, net
   let revealTaproot = getRevealTaproot(inscriptions, revealKeyPair.publicKey, network);
 
   // 2. get estimated reveal vsize to work out how much commit tx should send to the reveal address
-  let estRevealVSize = getRevealVSize(inscriptions, wallet.ordinalsAddress, network);
+  let estRevealVSize = getRevealVSize(inscriptions, wallet.ordinalsAddress, network);  
+  let totalPostage = inscriptions.reduce((acc, inscription) => acc + inscription.postage, 0);
+  
+  if (feeRate === null) {
+    feeRate = await getRecommendedFees(network);
+  }
+  if (utxos === null) {
+    utxos = await getConfirmedCardinalUtxos(wallet.paymentAddress, network);
+  }
   
   // 3. get & sign commit transaction
-  let [commitPsbt, estimatedRevealFee ]= await getCommitTransaction(inscriptions, wallet.paymentAddress, wallet.paymentPublicKey, revealTaproot.address, estRevealVSize, network);
+  let [commitPsbt, estimatedRevealFee ] = await getCommitTransaction2({
+    paymentAddress: wallet.paymentAddress,
+    paymentPublicKey: wallet.paymentPublicKey, 
+    utxos,
+    revealAddress: revealTaproot.address,
+    revealVSize: estRevealVSize,
+    totalPostage,
+    feeRate,
+    network,
+    platformFee,
+    platformAddress,
+    ownerFee,
+    ownerAddress
+  });
   let toSignCommitInputs = commitPsbt.data.inputs.map((input, index) => {
     return {
       index,
@@ -569,7 +647,19 @@ async function createInscriptionsWithTweakedKeyTwoSign(inscriptions, wallet, net
   return [pushedCommitTx, pushedRevealTx];
 }
 
-async function createInscriptionsWithEphemeralKey(inscriptions, wallet, network, useWalletForKeyPath=false, signStatusCallback = () => {}) {
+async function createInscriptionsWithEphemeralKey({
+  inscriptions,
+  wallet,
+  network,
+  useWalletForKeyPath = false,
+  signStatusCallback = () => {},
+  feeRate = null,
+  utxos = null,
+  platformFee = 0,
+  platformAddress = null,
+  ownerFee = 0,
+  ownerAddress = null
+}) {
   signStatusCallback("Signing 1/1 transaction");
   // 1. get inscription tapscript
   let ephemeralKeyPair = generateKeyPair(NETWORKS[network].bitcoinjs);
@@ -583,9 +673,30 @@ async function createInscriptionsWithEphemeralKey(inscriptions, wallet, network,
 
   // 2. get estimated reveal vsize to work out how much commit tx should send to the reveal address
   let estRevealVSize = getRevealVSize(inscriptions, wallet.ordinalsAddress, network);
+  let totalPostage = inscriptions.reduce((acc, inscription) => acc + inscription.postage, 0);
+  
+  if (feeRate === null) {
+    feeRate = await getRecommendedFees(network);
+  }
+  if (utxos === null) {
+    utxos = await getConfirmedCardinalUtxos(wallet.paymentAddress, network);
+  }
 
   // 3. get & sign commit transaction
-  let [commitPsbt, estimatedRevealFee ]= await getCommitTransaction(inscriptions, wallet.paymentAddress, wallet.paymentPublicKey, revealTaproot.address, estRevealVSize, network);
+  let [commitPsbt, estimatedRevealFee ] = await getCommitTransaction2({
+    paymentAddress: wallet.paymentAddress,
+    paymentPublicKey: wallet.paymentPublicKey, 
+    utxos,
+    revealAddress: revealTaproot.address,
+    revealVSize: estRevealVSize,
+    totalPostage,
+    feeRate,
+    network,
+    platformFee,
+    platformAddress,
+    ownerFee,
+    ownerAddress
+  });
   let signedCommitPsbt = await wallet.signPsbt(commitPsbt); 
   let commitTx = signedCommitPsbt.extractTransaction();
   let commitTxId = commitTx.getId();
@@ -601,28 +712,86 @@ async function createInscriptionsWithEphemeralKey(inscriptions, wallet, network,
   return [pushedCommitTx, pushedRevealTx];
 }
 
-async function createInscriptions(inscriptions, wallet, signStatusCallback = () => {}) {
-  let network = wallet.network;;
-  let creationMethod = wallet.getInscriptionCreationMethod();
+async function createInscriptions({
+  inscriptions,
+  wallet,
+  signStatusCallback = () => {},
+  feeRate = null,
+  utxos = null,
+  platformFee = 0,
+  platformAddress = null,
+  ownerFee = 0,
+  ownerAddress = null
+}) {
+  const network = wallet.network;
+  if (feeRate === null) {
+    feeRate = await getRecommendedFees(network);
+  }
+  if (utxos === null) {
+    utxos = await getConfirmedCardinalUtxos(wallet.paymentAddress, network);
+  }
+  const creationMethod = wallet.getInscriptionCreationMethod();
   if (creationMethod === 'ephemeral') {
-    //using ephemeral key
     console.log("Using ephemeral key for script and key path");
-    return await createInscriptionsWithEphemeralKey(inscriptions, wallet, network, false, signStatusCallback);
+    return await createInscriptionsWithEphemeralKey({
+      inscriptions,
+      wallet,
+      network,
+      useWalletForKeyPath: false,
+      signStatusCallback,
+      feeRate,
+      utxos,
+      platformFee,
+      platformAddress,
+      ownerFee,
+      ownerAddress
+    });
   }
   if (creationMethod === 'ephemeral_with_wallet_key_path') {
-    //using ephemeral key for script path, wallet for key path
     console.log("Using ephemeral key for script path, wallet for key path");
-    return await createInscriptionsWithEphemeralKey(inscriptions, wallet, network, true, signStatusCallback);
+    return await createInscriptionsWithEphemeralKey({
+      inscriptions,
+      wallet,
+      network,
+      useWalletForKeyPath: true,
+      signStatusCallback,
+      feeRate,
+      utxos,
+      platformFee,
+      platformAddress,
+      ownerFee,
+      ownerAddress
+    });
   }
   if (creationMethod === 'wallet_one_sign') {
-    //using wallet internal key
     console.log("Using internal key");
-    return await createInscriptionsWithTweakedKey(inscriptions, wallet, network, signStatusCallback);
+    return await createInscriptionsWithTweakedKey({
+      inscriptions,
+      wallet,
+      network,
+      signStatusCallback,
+      feeRate,
+      utxos,
+      platformFee,
+      platformAddress,
+      ownerFee,
+      ownerAddress
+    });
   }
   if (creationMethod === 'wallet_two_sign') {
-    //using wallet internal key with two txs
     console.log("Using internal key with two txs");
-    return await createInscriptionsWithTweakedKeyTwoSign(inscriptions, wallet, network, signStatusCallback);
+    return await createInscriptionsWithTweakedKeyTwoSign({
+      inscriptions,
+      wallet,
+      network,
+      signStatusCallback,
+      feeRate,
+      utxos,
+      platformFee,
+      platformAddress,
+      ownerFee,
+      ownerAddress
+    });
   }
 }
 
