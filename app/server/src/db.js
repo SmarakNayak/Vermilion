@@ -1,7 +1,4 @@
 import { parse } from 'yaml';
-import pg from 'pg';
-const { Pool } = pg;
-import { from as copyFrom } from 'pg-copy-streams';
 import { SQL } from 'bun';
 
 const configFile = Bun.file(`${process.env.HOME}/ord.yaml`);
@@ -58,79 +55,6 @@ const db = {
       return inscriptions;
     } catch (err) {
       throw new Error('Error fetching inscriptions: ' + err.message);
-    }
-  },
-
-  async bulkInsertWithBinaryCopy(renderedContent) {
-    const client = await this.pgpool.connect();
-    try {
-      // Prepare the binary COPY command for the new table
-      const copyQuery = 'COPY rendered_content(id, sequence_number, content, content_type) FROM STDIN BINARY';
-      const stream = client.query(copyFrom(copyQuery));
-  
-      // Binary header (required for COPY BINARY)
-      const header = Buffer.from([
-        0x50, 0x47, 0x43, 0x4F, 0x50, 0x59, 0x0A, 0xFF, 0x0D, 0x0A, 0x00, // PGCOPY\nFF\r\n\0
-        0x00, 0x00, 0x00, 0x00, // Flags field (0)
-        0x00, 0x00, 0x00, 0x00  // Extension length (0)
-      ]);
-  
-      stream.write(header);
-  
-      // Write each row in binary format
-      renderedContent.forEach(item => {
-        // Tuple header: number of columns (4 in this case)
-        const tupleHeader = Buffer.from([0x00, 0x04]); // 4 fields
-  
-        // id field (VARCHAR(80) as text)
-        const idBuffer = Buffer.from(item.id, 'utf8');
-        const idLength = Buffer.alloc(4);
-        idLength.writeInt32BE(idBuffer.length, 0);
-        const idData = Buffer.concat([idLength, idBuffer]);
-  
-        // sequence_number field (BIGINT as binary)
-        const sequenceNumberBuffer = Buffer.alloc(8);
-        sequenceNumberBuffer.writeBigInt64BE(BigInt(item.sequence_number), 0);
-        const sequenceNumberLength = Buffer.alloc(4);
-        sequenceNumberLength.writeInt32BE(sequenceNumberBuffer.length, 0);
-        const sequenceNumberData = Buffer.concat([sequenceNumberLength, sequenceNumberBuffer]);
-  
-        // content field (BYTEA as binary)
-        const contentBuffer = item.content; // Already a Buffer
-        const contentLength = Buffer.alloc(4);
-        contentLength.writeInt32BE(contentBuffer.length, 0);
-        const contentData = Buffer.concat([contentLength, contentBuffer]);
-  
-        // content_type field (text as binary)
-        const contentTypeBuffer = Buffer.from(item.content_type, 'utf8');
-        const contentTypeLength = Buffer.alloc(4);
-        contentTypeLength.writeInt32BE(contentTypeBuffer.length, 0);
-        const contentTypeData = Buffer.concat([contentTypeLength, contentTypeBuffer]);
-  
-        // Combine tuple data
-        const tuple = Buffer.concat([tupleHeader, idData, sequenceNumberData, contentData, contentTypeData]);
-        stream.write(tuple);
-      });
-  
-      // Trailer: -1 to indicate end of data
-      const trailer = Buffer.from([0xFF, 0xFF]);
-      stream.write(trailer);
-  
-      // End the stream
-      stream.end();
-  
-      // Wait for the stream to complete
-      await new Promise((resolve, reject) => {
-        stream.on('finish', resolve);
-        stream.on('error', reject);
-      });
-  
-      console.log('Binary COPY completed successfully');
-    } catch (err) {
-      console.error('Error during binary COPY:', err);
-      throw new Error('Error during binary COPY: ' + err.message);
-    } finally {
-      client.release();
     }
   },
 
