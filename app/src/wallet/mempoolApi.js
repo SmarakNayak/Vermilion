@@ -38,9 +38,23 @@ async function submitPackage(commitHex, revealHex) {
     throw new Error(`Failed to broadcast transactions: ${response.statusText}`);
   }
 
-  const data = await response.text();
+  const data = await response.json();
   return data;
 }
+
+async function submitInscriptionTxs(commitHex, revealHex, network) {
+  if (network === 'mainnet') {
+    return await submitPackage(commitHex, revealHex);
+  } else if (network === 'testnet' || network === 'signet') {
+    let pushedCommitTx = await broadcastTx(commitHex, network);
+    let pushedRevealTx = await broadcastTx(revealHex, network);
+    console.log(pushedCommitTx, pushedRevealTx);
+    return [pushedCommitTx, pushedRevealTx];
+  } else {
+    throw new Error(`Unsupported network: ${network}`);
+  }
+}
+
 
 const getRecommendedFees = async(network) => {
   let fees = await fetch(`https://mempool.space/${NETWORKS[network].mempool}api/v1/fees/recommended`);
@@ -95,6 +109,7 @@ async function getCoinBaseBtcPrice() {
 export {
   broadcastTx,
   submitPackage,
+  submitInscriptionTxs,
   getRecommendedFees,
   getConfirmedCardinalUtxos,
   getTxData,

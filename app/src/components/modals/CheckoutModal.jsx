@@ -15,8 +15,8 @@ import {
 } from '../common/Icon';
 import InscriptionIcon from '../InscriptionIcon';
 
-import { createInscriptions, Inscription as InscriptionObject, getRevealVSize, estimateInscriptionFee, guessInscriptionFee} from '../../wallet/inscriptionBuilder';
-import { getRecommendedFees, getCoinBaseBtcPrice, getConfirmedCardinalUtxos } from '../../wallet/mempoolApi';
+import { constructInscriptionTxs, Inscription as InscriptionObject, getRevealVSize, estimateInscriptionFee, guessInscriptionFee} from '../../wallet/inscriptionBuilder';
+import { getRecommendedFees, getCoinBaseBtcPrice, getConfirmedCardinalUtxos, submitInscriptionTxs } from '../../wallet/mempoolApi';
 import { isAddressValid } from '../../wallet/transactionUtils';
 
 import useStore from '../../store/zustand';
@@ -194,7 +194,7 @@ const CheckoutModal = ({ onClose, isCheckoutModalOpen, delegateData }) => {
       }
 
       // Create the inscription
-      let [commitTxid, revealTxid] = await createInscriptions({
+      let [commitTxHex, revealTxHex] = await constructInscriptionTxs({
         inscriptions,
         wallet,
         signStatusCallback: setSignStatus,
@@ -205,6 +205,7 @@ const CheckoutModal = ({ onClose, isCheckoutModalOpen, delegateData }) => {
         ownerFee: totalOwnerFee,
         ownerAddress,
       });
+      let [commitTxid, revealTxid] = await submitInscriptionTxs(commitTxHex, revealTxHex, network);
       
       // Open success modal after successful inscription
       setSuccessDetails({

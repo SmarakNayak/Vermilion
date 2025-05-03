@@ -177,98 +177,6 @@ function getRevealSweepTransaction(receiveAddress, revealTaproot, revealKeyPair,
   return psbt;
 }
 
-// Commit tx functions
-async function getCommitTransactionOld(inscriptions, paymentAddress, paymentPublicKey, revealAddress, revealVSize, network, platformFee = 0, platformAddress = null, ownerFee = 0, ownerAddress = null) {
-  const paymentAddressScript = bitcoin.address.toOutputScript(paymentAddress, NETWORKS[network].bitcoinjs);
-  const paymentAddressType = getAddressType(paymentAddressScript, paymentPublicKey, network);
-
-  let feeRate = await getRecommendedFees(network);
-  let estimatedCommitFeeForHeaderAndOutputs = (10.5 + 2 * 43) * feeRate; //tx header 10.5 vBytes, 2 taproot outputs 43 vBytes each - input vB handled in selection
-  let total_postage = inscriptions.reduce((acc, inscription) => acc + inscription.postage, 0);
-  let estimatedRevealFee = Math.ceil(revealVSize * feeRate + total_postage);
-
-  let utxos = await getConfirmedCardinalUtxos(paymentAddress, network);
-  let adjustedUtxos = appendUtxoEffectiveValues(utxos, paymentAddressType, feeRate); //adjust utxos values to account for fee for size of input
-  let selectedUtxos = selectUtxos(adjustedUtxos, estimatedRevealFee + estimatedCommitFeeForHeaderAndOutputs);
-
-  let estimatedCommitFeeForInputs = selectedUtxos.reduce((acc, utxo) => acc + utxo.value - utxo.effectiveValue, 0);
-  let estimatedCommitFee = Math.ceil(estimatedCommitFeeForHeaderAndOutputs + estimatedCommitFeeForInputs);
-  let estimatedInscriptionFee = estimatedCommitFee + estimatedRevealFee;
-
-  const psbt = new bitcoin.Psbt({ network: NETWORKS[network].bitcoinjs });
-  
-  // 1. inputs
-  for (let i = 0; i < selectedUtxos.length; i++) {
-    const utxo = selectedUtxos[i];
-
-    switch (paymentAddressType) {
-      case 'P2TR':
-        psbt.addInput({
-          hash: utxo.txid,
-          index: utxo.vout,
-          witnessUtxo: {
-            script: paymentAddressScript,
-            value: utxo.value
-          },
-          tapInternalKey: toXOnly(Buffer.from(paymentPublicKey, 'hex')),
-        });
-        break;
-      case 'P2WPKH':
-        psbt.addInput({
-          hash: utxo.txid,
-          index: utxo.vout,
-          witnessUtxo: {
-            script: paymentAddressScript,
-            value: utxo.value
-          }
-        });
-        break;
-      case 'P2SH-P2WPKH':
-        const p2wpkh = bitcoin.payments.p2wpkh({
-          pubkey: Buffer.from(paymentPublicKey, 'hex'),
-          network: NETWORKS[network].bitcoinjs
-        });
-        psbt.addInput({
-          hash: utxo.txid,
-          index: utxo.vout,
-          witnessUtxo: {
-            script: paymentAddressScript,
-            value: utxo.value
-          },
-          redeemScript: p2wpkh.output,
-        });
-        break;
-      case 'P2PKH':
-        const prevTx = await getTxData(utxo.txid, network);
-        psbt.addInput({
-          hash: utxo.txid,
-          index: utxo.vout,
-          nonWitnessUtxo: Buffer.from(prevTx, 'hex'),
-        });
-        break;
-      default:
-        throw new Error("Unsupported address type");
-    }
-  }
-
-  //2. outputs
-  psbt.addOutput({
-    address: revealAddress,
-    value: estimatedRevealFee
-  });
-
-  let change = selectedUtxos.reduce((acc, utxo) => acc + utxo.value, 0) - estimatedInscriptionFee;
-  if (change >= 546) {
-    psbt.addOutput({
-      address: paymentAddress,
-      value: change
-    });
-  }
-
-  return [psbt, estimatedRevealFee];
-
-}
-
 /// Standard method of constructing bitcoin tx given a fee rate:
 // 1. Work out count and types of outputs
 // 2. Work out type of header (witness or non-witness)
@@ -277,7 +185,7 @@ async function getCommitTransactionOld(inscriptions, paymentAddress, paymentPubl
 //    Rather than targetting a shifting value (spend + size_of_tx*fee_rate) with input values -> sum(a(i)) > f(o + h + sum(i)) + p
 //    We are targetting a fixed value (spend + size_of_outputs_and_header*fee_rate) with effective values -> sum(a(i)-fi) > f(o + h) + p
 // 5. Now we can confidently add inputs knowing that we will hit the target value
-async function getCommitTransaction2({
+async function getCommitTransaction({
   paymentAddress, 
   paymentPublicKey, 
   utxos, 
@@ -503,7 +411,7 @@ function intToLeBytes(value) {
 }
 
 // inscription functions
-async function createInscriptionsWithTweakedKey({
+async function constructInscriptionTxsWithInternalKey({
   inscriptions,
   wallet,
   network,
@@ -535,7 +443,7 @@ async function createInscriptionsWithTweakedKey({
   }
 
   // 3. get commit transaction
-  let [ commitPsbt, estimatedRevealFee ]= await getCommitTransaction2({
+  let [ commitPsbt, estimatedRevealFee ]= await getCommitTransaction({
     paymentAddress: wallet.paymentAddress,
     paymentPublicKey: wallet.paymentPublicKey,
     utxos,
@@ -573,13 +481,11 @@ async function createInscriptionsWithTweakedKey({
   // 6. broadcast transactions
   let commitTx = signedCommitPsbt.extractTransaction();
   let revealTx = signedRevealPsbt.extractTransaction();
-  let pushedCommitTx = await broadcastTx(commitTx.toHex(), network);
-  let pushedRevealTx = await broadcastTx(revealTx.toHex(), network);
-  console.log(pushedCommitTx, pushedRevealTx);
-  return [pushedCommitTx, pushedRevealTx];
+  //5. Return both transactions in hex
+  return [commitTx.toHex(), revealTx.toHex()];
 }
 
-async function createInscriptionsWithTweakedKeyTwoSign({
+async function constructInscriptionTxsWithInternalKeyTwoSign({
   inscriptions,
   wallet,
   network,
@@ -611,7 +517,7 @@ async function createInscriptionsWithTweakedKeyTwoSign({
   }
   
   // 3. get & sign commit transaction
-  let [commitPsbt, estimatedRevealFee ] = await getCommitTransaction2({
+  let [commitPsbt, estimatedRevealFee ] = await getCommitTransaction({
     paymentAddress: wallet.paymentAddress,
     paymentPublicKey: wallet.paymentPublicKey, 
     utxos,
@@ -640,14 +546,11 @@ async function createInscriptionsWithTweakedKeyTwoSign({
   let signedRevealPsbt = await wallet.signPsbt(unsignedRevealPsbt, [{ index: 0, address: walletTaproot.address, useTweakSigner: false, useTweakedSigner: false }]);
   let revealTx = signedRevealPsbt.extractTransaction();
 
-  //5. broadcast transactions
-  let pushedCommitTx = await broadcastTx(commitTx.toHex(), network);
-  let pushedRevealTx = await broadcastTx(revealTx.toHex(), network);
-  console.log(pushedCommitTx, pushedRevealTx);
-  return [pushedCommitTx, pushedRevealTx];
+  //5. Return both transactions in hex
+  return [commitTx.toHex(), revealTx.toHex()];
 }
 
-async function createInscriptionsWithEphemeralKey({
+async function constructInscriptionTxsWithEphemeralKey({
   inscriptions,
   wallet,
   network,
@@ -683,7 +586,7 @@ async function createInscriptionsWithEphemeralKey({
   }
 
   // 3. get & sign commit transaction
-  let [commitPsbt, estimatedRevealFee ] = await getCommitTransaction2({
+  let [commitPsbt, estimatedRevealFee ] = await getCommitTransaction({
     paymentAddress: wallet.paymentAddress,
     paymentPublicKey: wallet.paymentPublicKey, 
     utxos,
@@ -705,14 +608,11 @@ async function createInscriptionsWithEphemeralKey({
   let signedRevealPsbt = getRevealTransaction(inscriptions, wallet.ordinalsAddress, revealTaproot, ephemeralKeyPair, commitTxId, estimatedRevealFee, network, true);
   let revealTx = signedRevealPsbt.extractTransaction();
 
-  //5. broadcast transactions
-  let pushedCommitTx = await broadcastTx(commitTx.toHex(), network);
-  let pushedRevealTx = await broadcastTx(revealTx.toHex(), network);
-  console.log(pushedCommitTx, pushedRevealTx);
-  return [pushedCommitTx, pushedRevealTx];
+  //5. Return both transactions in hex
+  return [commitTx.toHex(), revealTx.toHex()];
 }
 
-async function createInscriptions({
+async function constructInscriptionTxs({
   inscriptions,
   wallet,
   signStatusCallback = () => {},
@@ -733,7 +633,7 @@ async function createInscriptions({
   const creationMethod = wallet.getInscriptionCreationMethod();
   if (creationMethod === 'ephemeral') {
     console.log("Using ephemeral key for script and key path");
-    return await createInscriptionsWithEphemeralKey({
+    return await constructInscriptionTxsWithEphemeralKey({
       inscriptions,
       wallet,
       network,
@@ -749,7 +649,7 @@ async function createInscriptions({
   }
   if (creationMethod === 'ephemeral_with_wallet_key_path') {
     console.log("Using ephemeral key for script path, wallet for key path");
-    return await createInscriptionsWithEphemeralKey({
+    return await constructInscriptionTxsWithEphemeralKey({
       inscriptions,
       wallet,
       network,
@@ -765,7 +665,7 @@ async function createInscriptions({
   }
   if (creationMethod === 'wallet_one_sign') {
     console.log("Using internal key");
-    return await createInscriptionsWithTweakedKey({
+    return await constructInscriptionTxsWithInternalKey({
       inscriptions,
       wallet,
       network,
@@ -780,7 +680,7 @@ async function createInscriptions({
   }
   if (creationMethod === 'wallet_two_sign') {
     console.log("Using internal key with two txs");
-    return await createInscriptionsWithTweakedKeyTwoSign({
+    return await constructInscriptionTxsWithInternalKeyTwoSign({
       inscriptions,
       wallet,
       network,
@@ -792,65 +692,12 @@ async function createInscriptions({
       ownerFee,
       ownerAddress
     });
-  }
-}
-
-async function createInscriptionsExample() {
-  let inscriptions = [
-    new Inscription({
-      content: Buffer.from("Chancellor on the brink of second bailout for banks"),
-      contentType: "text/plain"
-    }),
-  ];
-  // let inscriptions = [
-  //   new Inscription({
-  //     content: Buffer.from("Chancellor on the brink of second bailout for banks"),
-  //     contentType: "text/plain;charset=utf-8"
-  //   }),
-  //   new Inscription({
-  //     content: Buffer.from("Chancellor on the brink of second bailout for banks: Billions may be needed as lending squeeze tightens"),
-  //     contentType: "text/plain;charset=utf-8"
-  //   }),
-  //   new Inscription({
-  //     content: Buffer.from("The Times 03/Jan/2009 Chancellor on the brink of second bailout for banks."),
-  //     contentType: "text/plain;charset=utf-8"
-  //   }),
-  // ];
-  // let inscriptions = Array(1000).fill().map(() => 
-  //   new Inscription({
-  //     delegate: "d386e79a0c7639805c6a63eb0d1c3e5a616c9dc8cf0dd0691e7d5440e6a175a8i2",
-  //     postage: 330,
-  //     contentType: "text/plain;charset=utf-8"
-  //   })
-  // );
-  
-  let creationMethod = wallet.getInscriptionCreationMethod();
-  if (creationMethod === 'ephemeral') {
-    //using ephemeral key
-    console.log("Using ephemeral key for script and key path");
-    createInscriptionsWithEphemeralKey(inscriptions, false);
-  }
-  if (creationMethod === 'ephemeral_with_wallet_key_path') {
-    //using ephemeral key for script path, wallet for key path
-    console.log("Using ephemeral key for script path, wallet for key path");
-    createInscriptionsWithEphemeralKey(inscriptions, true);
-  }
-  if (creationMethod === 'wallet_one_sign') {
-    //using wallet internal key
-    console.log("Using internal key");
-    createInscriptionsWithTweakedKey(inscriptions);
-  }
-  if (creationMethod === 'wallet_two_sign') {
-    //using wallet internal key with two txs
-    console.log("Using internal key with two txs");
-    createInscriptionsWithTweakedKeyTwoSign(inscriptions);
   }
 }
 
 export {
   Inscription,
-  createInscriptions,
-  createInscriptionsExample,
+  constructInscriptionTxs,
   getRevealSweepTransaction,
   getRevealVSize,
   estimateInscriptionFee,
