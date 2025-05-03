@@ -12,7 +12,14 @@ export const addCommas = (num) => {
 // Formats an address to show first and last 5 characters
 
 export const formatAddress = (address) => {
-  if (!address) return 'Address unavailable';
+  if (!address || address === 'Failed to convert script to address: script is not a p2pkh, p2sh or witness program') {
+    return 'Unknown';
+  }
+
+  if (address === 'unbound') {
+    return 'Unbound';
+  }
+
   const firstHalf = address.slice(0, 5);
   const secondHalf = address.slice(-5);
   return `${firstHalf}...${secondHalf}`;

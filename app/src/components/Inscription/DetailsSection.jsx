@@ -1,31 +1,61 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import styled from 'styled-components';
 import { Link } from 'react-router-dom';
-import { CopyIcon } from '../common/Icon';
-import { addCommas } from '../../utils/format';
+import { CheckIcon, CopyIcon } from '../common/Icon';
+import { addCommas, formatAddress } from '../../utils/format';
 import InfoText from '../common/text/InfoText';
 import theme from '../../styles/theme';
 
 const DetailsSection = ({ metadata, shortId, prettySize, address, shortAddress, onCopy }) => {
+  const [copied, setCopied] = useState(false);
+  const [validAddress, setValidAddress] = useState(false);
+
+  const handleCopyClick = (id) => {
+    onCopy(id);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000); // Reset after 2 seconds
+  };
+
   if (!metadata) return null;
+
+  // Check for address
+  const checkAddress = (address) => {
+    if (address && address !== "unbound" && address !== "Failed to convert script to address: script is not a p2pkh, p2sh or witness program") {
+      setValidAddress(true);
+    } else {
+      setValidAddress(false);
+    }
+  }
+
+  useEffect(() => {
+    checkAddress(address?.address);
+  }
+  , [address]);
   
   return (
     <DataContainer>
       <InfoRow>
         <InfoLabel>Owner</InfoLabel>
         <InfoData>
-          <UnstyledLink to={address?.address !== "unbound" ? `/address/${address?.address}` : ""}>
-            <LinkText>{address?.address ? shortAddress : ""}</LinkText>
-          </UnstyledLink>
+          {validAddress ? (
+            <UnstyledLink to={`/address/${address?.address}`}>
+              <LinkText>{shortAddress}</LinkText>
+            </UnstyledLink>
+          ) : (
+            <InfoText ismain>{formatAddress(address.address)}</InfoText>
+          )}
+          {/* <UnstyledLink to={address?.address !== "unbound" ? `/address/${address?.address}` : ""}>
+            <LinkText>{address?.address ? formatAddress(address.address) : ""}</LinkText>
+          </UnstyledLink> */}
         </InfoData>
       </InfoRow>
       
       <InfoRow isMiddle>
         <InfoLabel>Inscription ID</InfoLabel>
         <InfoData>
-          <CopyButton onClick={() => onCopy(metadata?.id)}>
-            <InfoText ismain>{metadata?.id ? shortId : ""}</InfoText>
-            <CopyIcon size={'1rem'} color={theme.colors.text.tertiary} />
+          <InfoText ismain>{metadata?.id ? shortId : ""}</InfoText>
+          <CopyButton onClick={() => handleCopyClick(metadata?.id)} copied={copied}>
+            {copied ? <CheckIcon size={'1.125rem'} /> : <CopyIcon size={'1.125rem'} />}
           </CopyButton>
         </InfoData>
       </InfoRow>
@@ -152,14 +182,28 @@ const CopyButton = styled.button`
   border: none;
   margin: 0;
   padding: 0;
+  height: 1.25rem;
+  width: 1.25rem;
   display: flex;
   flex-direction: row;
   align-items: center;
   gap: .5rem;
-  background-color: transparent;
+  background-color: ${theme.colors.background.white};
+  border-radius: 0.6125rem;
   cursor: pointer;
   transition: all 200ms ease;
   transform-origin: center center;
+
+  svg {
+    fill: ${(props) => (props.copied ? theme.colors.background.success : theme.colors.text.tertiary)};
+    transition: all 200ms ease;
+  }
+
+  &:hover {
+    svg {
+      fill: ${(props) => (props.copied ? theme.colors.background.success : theme.colors.text.primary)};
+    }
+  }
 
   &:active {
     transform: scale(0.96);

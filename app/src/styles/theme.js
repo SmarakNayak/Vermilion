@@ -27,8 +27,8 @@ export const theme = {
       success: '#34C759',    // Success background color
       tertiary: '#FBFBFB',   // Extra light grey (used in logo)
       verm: '#E94E20',       // Brand color
-      vermBorder: '#FAD1C7', // Brand color, border
-      vermPale: '#FDEDE9',   // Brand color, pale
+      vermBorder: '#FCE4DA', // Brand color, border
+      vermPale: '#FDEEE8',   // Brand color, pale
       white: '#FFFFFF',      // Default page background
     },
 

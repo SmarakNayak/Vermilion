@@ -1,7 +1,7 @@
 import React from 'react';
 import styled from 'styled-components';
 import { Link } from 'react-router-dom';
-import { RibbonIcon, RuneIcon, LayersIcon, RepeatIcon, Person2Icon, SproutIcon, ChevronUpDuoIcon } from '../common/Icon';
+import { RibbonIcon, RuneIcon, LayersIcon, RepeatIcon, Person2Icon, SproutIcon, ChevronUpDuoIcon, GalleryIcon, CurrencyIcon } from '../common/Icon';
 import Stack from '../Stack';
 import { addCommas } from '../../utils/format';
 import theme from '../../styles/theme';
@@ -13,12 +13,12 @@ const CollectionInfo = ({ metadata, editionNumber, editionCount, childrenInscrip
         <CollectionWrapper>
           <CollectionLink to={`/collection/${metadata.collection_symbol}`}>
             <CollectionContainer>
+              <IconWrapper>
+                <GalleryIcon size={'1.25rem'} color={theme.colors.background.verm} />
+              </IconWrapper>
               <CollectionText>
                 {metadata.collection_name}
               </CollectionText>
-              <IconWrapper>
-                <RibbonIcon size={'1.25rem'} color={theme.colors.background.verm} />
-              </IconWrapper>
             </CollectionContainer>
           </CollectionLink>
         </CollectionWrapper>
@@ -28,7 +28,7 @@ const CollectionInfo = ({ metadata, editionNumber, editionCount, childrenInscrip
         <RuneWrapper>
           <RuneContainer isRune={true}>
             <IconWrapper isRune={true}>
-              <RuneIcon size={'1.25rem'} color={theme.colors.background.purp} />
+              <CurrencyIcon size={'1.25rem'} color={theme.colors.background.purp} />
             </IconWrapper>
             <CollectionText>
               {metadata.spaced_rune}
@@ -104,10 +104,11 @@ const CollectionContainer = styled.div`
   align-items: center;
   box-sizing: border-box;
   background-color: ${theme.colors.background.primary};
-  padding: .25rem .5rem;
+  padding: .25rem .375rem;
   border-radius: .25rem;
   font-family: ${theme.typography.fontFamilies.medium};
   font-size: 1rem;
+  line-height: 1.5rem;
   color: ${props => props.isRune ? theme.colors.background.purp : theme.colors.background.verm}; 
   max-width: 100%;
   width: 100%;
@@ -143,14 +144,15 @@ const IconWrapper = styled.div`
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  margin: ${props => props.isRune ? '0 .25rem 0 0' : '0 0 0 .25rem'}; 
+  margin: 0 .25rem 0 0;
   width: 1.25rem;
 `;
 
-const NumberText = styled.h1`
+const NumberText = styled.p`
   font-family: ${theme.typography.fontFamilies.bold};
   color: ${theme.colors.text.primary};
-  font-size: 2em;
+  font-size: 2rem;
+  line-height: 2.5rem;
   margin: 0;
 `;
 

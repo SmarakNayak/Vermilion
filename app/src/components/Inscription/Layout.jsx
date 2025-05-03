@@ -42,6 +42,7 @@ export const ContentContainer = styled.div`
     position: static;
     background-color: ${theme.colors.background.white};
     width: 100%;
+    padding: 0 1rem;
     min-width: unset;
   }
 `;
@@ -114,7 +115,8 @@ export const SectionHeaderContainer = styled.div`
   display: flex;
   flex-direction: row;
   align-items: center;
-  gap: .5rem;
+  gap: .25rem;
+  margin: 0 0 1.5rem 0;
 `;
 
 export const SimilarText = styled.p`
@@ -122,7 +124,11 @@ export const SimilarText = styled.p`
   font-size: 1.25rem;
   line-height: 1.75rem;
   margin: 0;
-  padding: 0;
+  border: none;
+  padding: 0 .75rem;
+  height: 2rem;
+  background-color: ${theme.colors.background.white};
+  color: ${theme.colors.text.primary};
 `;
 
 export const BorderedTagSection = styled.div`

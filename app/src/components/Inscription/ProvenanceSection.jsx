@@ -9,6 +9,8 @@ import theme from '../../styles/theme';
 import { BorderedTagSection } from './Layout';
 import InscriptionIcon from '../InscriptionIcon';
 import InscriptionPreviewItem from './InscriptionPreviewItem';
+import Tooltip from '../common/Tooltip';
+import { InfoCircleIcon } from '../common/Icon';
 
 const ProvenanceSection = ({
   metadata,
@@ -22,19 +24,45 @@ const ProvenanceSection = ({
   editionCount
 }) => {
   if (!metadata) return null;
-  console.log('parents', parentsData);
-  console.log('children', childrenInscriptions);
-  console.log('referenced by', referencedByData);
-  console.log('delegate', delegateData);
-  console.log('recursive submodules', recursiveSubmodulesData);
+  // console.log('parents', parentsData);
+  // console.log('children', childrenInscriptions);
+  // console.log('referenced by', referencedByData);
+  // console.log('delegate', delegateData);
+  // console.log('recursive submodules', recursiveSubmodulesData);
   return (
     <Container>
+      {/* Delegate */}
+      {metadata?.delegate && (
+        <SubSection>
+          <SubSectionHeader>
+            <Stack horizontal center gap={'.5rem'}>
+              <HeaderText>Delegate</HeaderText>
+            </Stack>
+          </SubSectionHeader>
+          <BorderedTagSection>
+            <PreviewRow>
+              <InscriptionPreviewItem 
+                inscriptionNumber={delegateData?.metadata.number}
+                contentCategory={delegateData?.metadata.content_category}
+                size="half"
+                linkTo="inscription"
+              />
+            </PreviewRow>
+          </BorderedTagSection>
+        </SubSection>
+      )}
+
       {/* Parent Inscriptions */}
       {metadata?.parents?.length > 0 && (
         <SubSection>
           <SubSectionHeader>
             <Stack horizontal center gap={'.5rem'}>
               <HeaderText>Parent Inscriptions</HeaderText>
+              <Tooltip content={'Inscriptions that were provably owned by the inscriber and used to establish provenance at time of inscription.'}>
+                <IconWrapper>
+                  <InfoCircleIcon size="1.125rem" color={theme.colors.text.tertiary} />
+                </IconWrapper>
+              </Tooltip>
             </Stack>
           </SubSectionHeader>
           <BorderedTagSection>
@@ -57,8 +85,13 @@ const ProvenanceSection = ({
       {metadata?.referenced_ids?.length > 0 && (
         <SubSection>
           <SubSectionHeader>
-            <Stack horizontal center gap={'.5rem'}>
-              <HeaderText>Recursive Submodules</HeaderText>
+            <Stack horizontal center gap={'.375rem'}>
+              <HeaderText>Sources</HeaderText>
+              <Tooltip content={'Inscriptions whose content is referenced by this inscription via recursion.'}>
+                <IconWrapper>
+                  <InfoCircleIcon size="1.125rem" color={theme.colors.text.tertiary} />
+                </IconWrapper>
+              </Tooltip>
             </Stack>
           </SubSectionHeader>
           <BorderedTagSection>
@@ -81,8 +114,13 @@ const ProvenanceSection = ({
       {childrenInscriptions?.length > 0 && (
         <SubSection>
           <SubSectionHeader>
-            <Stack horizontal center gap={'.5rem'}>
+            <Stack horizontal center gap={'.375rem'}>
               <HeaderText>Child Inscriptions</HeaderText>
+              <Tooltip content={'Inscriptions provably created by the owner of this parent inscription at time of inscription.'}>
+                <IconWrapper>
+                  <InfoCircleIcon size="1.125rem" color={theme.colors.text.tertiary} />
+                </IconWrapper>
+              </Tooltip>
             </Stack>
             <UnstyledLink to={`/children/${metadata.id}`}>
               <LinkText>View all</LinkText>
@@ -111,8 +149,13 @@ const ProvenanceSection = ({
       {referencedByData?.length > 0 && (
         <SubSection>
           <SubSectionHeader>
-            <Stack horizontal center gap={'.5rem'}>
-              <HeaderText>Referenced By</HeaderText>
+            <Stack horizontal center gap={'.375rem'}>
+              <HeaderText>Attributions</HeaderText>
+              <Tooltip content={'Inscriptions that reference or build upon this inscription.'}>
+                <IconWrapper>
+                  <InfoCircleIcon size="1.125rem" color={theme.colors.text.tertiary} />
+                </IconWrapper>
+              </Tooltip>
             </Stack>
             <UnstyledLink to={`/references/${number}`}>
               <LinkText>View all</LinkText>
@@ -134,33 +177,17 @@ const ProvenanceSection = ({
         </SubSection>
       )}
       
-      {/* Delegate */}
-      {metadata?.delegate && (
-        <SubSection>
-          <SubSectionHeader>
-            <Stack horizontal center gap={'.5rem'}>
-              <HeaderText>Delegate</HeaderText>
-            </Stack>
-          </SubSectionHeader>
-          <BorderedTagSection>
-            <PreviewRow>
-              <InscriptionPreviewItem 
-                inscriptionNumber={delegateData?.metadata.number}
-                contentCategory={delegateData?.metadata.content_category}
-                size="half"
-                linkTo="inscription"
-              />
-            </PreviewRow>
-          </BorderedTagSection>
-        </SubSection>
-      )}
-      
       {/* Editions */}
       {editionNumber != null && editionCount != null && metadata?.delegate == null && (
         <SubSection>
           <SubSectionHeader>
-            <Stack horizontal center gap={'.5rem'}>
+            <Stack horizontal center gap={'.375rem'}>
               <HeaderText>Editions</HeaderText>
+              <Tooltip content={'Inscriptions that share identical content are known as editions. Their edition number reflects their order of inscription.'}>
+                <IconWrapper>
+                  <InfoCircleIcon size="1.125rem" color={theme.colors.text.tertiary} />
+                </IconWrapper>
+              </Tooltip>
               <CountBadge>
                 {editionNumber} of {editionCount}
               </CountBadge>
@@ -257,6 +284,15 @@ const PreviewRow = styled.div`
   flex-wrap: wrap;
   gap: .75rem;
   width: 100%;
+`;
+
+const IconWrapper = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.25rem;
+  height: 1.25rem;
+  cursor: pointer;
 `;
 
 export default ProvenanceSection;

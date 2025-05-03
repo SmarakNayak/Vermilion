@@ -214,8 +214,7 @@ const SvgContainer = styled.iframe`
 `;
 
 const TextContainer = styled.div`
-  background-color: #FFFFFF;
-  border: 2px solid #F5F5F5;
+  background-color: ${theme.colors.background.white};
   box-sizing: border-box;
   padding: .5rem;
   max-width: 100%;
@@ -230,13 +229,17 @@ const TextContainer = styled.div`
   margin: 0;
   font-size: .875rem;
   font-family: ${theme.typography.fontFamilies.medium};
-  color: ${props => props.loading ? '#959595' : '#000000'};
+  color: ${theme.colors.text.primary};
   object-fit: contain;
   aspect-ratio: 1/1;
   white-space-collapse: preserve;
   overflow: hidden;
   overflow-y: scroll;
   text-wrap: wrap;
+
+  @media (max-width: 864px) {
+    border: 2px solid ${theme.colors.border};
+  }
 `;
 
 const HtmlContainer = styled.div`
@@ -285,7 +288,7 @@ const ModelViewerContainer = styled.div`
 const MediaText = styled.p`
   font-family: ${theme.typography.fontFamilies.medium};
   font-size: .875rem;
-  color: #000000;
+  color: ${theme.colors.text.primary};
   margin: 0;
   padding: 0;
   overflow-wrap: break-word;

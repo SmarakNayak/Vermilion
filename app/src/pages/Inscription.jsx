@@ -59,8 +59,13 @@ import {
   CrossIcon,
   MinusIcon,
   PlusIcon,
+  ArrowRotateIcon,
+  CheckIcon,
+  ClockIcon,
+  ScanIcon
 } from '../components/common/Icon';
 import theme from '../styles/theme';
+import Tooltip from '../components/common/Tooltip';
 
 // Custom hook for handling section visibility
 const useSectionVisibility = (initialState) => {
@@ -275,6 +280,9 @@ const Inscription = () => {
   
   // Compute overall loading state
   const isLoading = metadataLoading || addressLoading || editionsLoading || relatedInscriptionsLoading;
+
+  // State for managing copy action
+  const [copied, setCopied] = useState(false);
   
   // 3D model reference
   const modelViewerRef = useRef(null);
@@ -468,9 +476,6 @@ const Inscription = () => {
     fetchMetadata();
     fetchAddress();
     fetchEditions();
-    
-    // Reset scroll position when inscription number changes
-    window.scrollTo(0, 0);
   }, [number, fetchMetadata, fetchAddress, fetchEditions]);
 
   // Fetch boosts and comments when metadata is available
@@ -483,8 +488,8 @@ const Inscription = () => {
 
   // Check if comments match the current inscription number
   useEffect(() => {
-    console.log("Checking comments for number:", number);
-    console.log("Comments list:", commentsList);
+    // console.log("Checking comments for number:", number);
+    // console.log("Comments list:", commentsList);
     if (commentsList.length > 0) {
       commentsList.forEach((comment) => {
         if (comment.comment_number == number) {
@@ -692,6 +697,36 @@ const Inscription = () => {
     });
   };
 
+  const handleCopyClick = () => {
+    copyText(`https://vermilion.place/inscription/${number}`)
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000); // Reset after 2 seconds
+  };
+
+  useEffect(() => {
+    // Reset state when navigating to a new inscription
+    setBoosts(0);
+    setBoostsList([]);
+    setBoostEdition(null);
+    setBoostsPage(0);
+    setHasMoreBoosts(true);
+    setIsBoostsLoading(false);
+    setCommentCount(0);
+    setCommentsList([]);
+    setHasMatchingComment(false);
+    setCommentContent(null);
+    setActiveDot(0);
+    setSlideDirection(null);
+  
+    // Close all modals
+    setBoostsModalOpen(false);
+    setCommentsModalOpen(false);
+    setCheckoutModalOpen(false);
+  
+    // Reset scroll position
+    window.scrollTo(0, 0);
+  }, [number]);
+
   return (
     <>
       <MainContainer>
@@ -724,11 +759,13 @@ const Inscription = () => {
           {hasMatchingComment && (
             <CarouselDots>
               {[0, 1].map((dotIndex) => (
-                <Dot
-                  key={dotIndex}
-                  isActive={activeDot === dotIndex}
-                  onClick={() => handleDotClick(dotIndex)}
-                />
+                <Tooltip content={dotIndex === 0 ? 'View delegate inscription' : 'View comment'} key={dotIndex}>
+                  <Dot
+                    key={dotIndex}
+                    isActive={activeDot === dotIndex}
+                    onClick={() => handleDotClick(dotIndex)}
+                  />
+                </Tooltip>
               ))}
             </CarouselDots>
           )}
@@ -769,8 +806,8 @@ const Inscription = () => {
                       <ChevronUpDuoIcon size={'1.25rem'} color={theme.colors.background.white} />
                       Boost
                     </BoostButton>
-                    <IconButton onClick={() => copyText(`https://vermilion.place/inscription/${number}`)}>
-                      <LinkIcon size={'1.25rem'} color={theme.colors.text.primary} />
+                    <IconButton onClick={() => handleCopyClick()} copied={copied}>
+                      {copied ? <CheckIcon size={'1.25rem'} color={theme.colors.background.success} /> : <LinkIcon size={'1.25rem'} color={theme.colors.text.primary} />}
                     </IconButton>
                     <IconButton onClick={() => window.open(`https://ordinals.com/inscription/${number}`, '_blank')}>
                       <WebIcon size={'1.25rem'} color={theme.colors.text.primary} />
@@ -907,12 +944,17 @@ const Inscription = () => {
       {/* Similar Inscriptions Section */}
       {similarInscriptions?.length > 0 && (
         <SimilarContentContainer>
-          <SectionContainer>
-            <SectionHeaderContainer>
-              <SparklesIcon size={'1.25rem'} color={theme.colors.text.primary} />
-              <SimilarText>Similar Inscriptions</SimilarText>
-            </SectionHeaderContainer>
-          </SectionContainer>
+          <SectionHeaderContainer>
+            <TabButton isActive={true}>
+              <ScanIcon size={'1.25rem'} />
+              Similar Inscriptions
+            </TabButton>
+            <DisabledButton isActive={false}>
+              <ClockIcon size={'1.25rem'} />
+              Activity
+              <SoonTag>Coming Soon</SoonTag>
+            </DisabledButton>
+          </SectionHeaderContainer>
           <Gallery inscriptionList={similarInscriptions} numberVisibility={false} zoomGrid={true} />
         </SimilarContentContainer>
       )}
@@ -1053,6 +1095,98 @@ const Dot = styled.div`
 
   &:hover {
     background-color: ${theme.colors.text.secondary};
+  }
+`;
+
+const TabButton = styled.button`
+  border: none;
+  padding: 0 .75rem;
+  height: 2rem;
+  border-radius: 1rem;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: .25rem;
+  cursor: pointer;
+  font-family: ${theme.typography.fontFamilies.medium};
+  font-size: 1rem;
+  line-height: 1.25rem;
+  color: ${props => props.isActive ? theme.colors.text.primary : theme.colors.text.tertiary}; 
+  background-color: ${props => props.isActive ? theme.colors.background.primary : theme.colors.background.white}; 
+  transition: all 200ms ease;
+  transform-origin: center center;
+  text-decoration: none;
+
+  &:hover {
+    color: ${theme.colors.text.primary};
+    background-color: ${theme.colors.background.primary};
+
+    svg {
+      fill: ${theme.colors.text.primary};
+    }
+  }
+
+  &:active {
+    transform: scale(0.96);
+  }
+
+  svg {
+    fill: ${props => props.isActive ? theme.colors.text.primary : theme.colors.text.tertiary};
+    transition: fill 200ms ease;
+  }
+
+  @media (max-width: 416px) {
+    svg {
+      display: none; /* Hides the icons when the screen width is less than 416px */
+    }
+  }
+`;
+
+const DisabledButton = styled.button`
+  border: none;
+  padding: 0 .75rem;
+  height: 2rem;
+  border-radius: 1rem;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: .25rem;
+  cursor: not-allowed;
+  font-family: ${theme.typography.fontFamilies.medium};
+  font-size: 1rem;
+  line-height: 1.25rem;
+  color: ${theme.colors.text.tertiary}; 
+  background-color: ${theme.colors.background.white}; 
+  transition: all 200ms ease;
+  transform-origin: center center;
+  text-decoration: none;
+
+  svg {
+    fill: ${theme.colors.text.tertiary};
+    transition: fill 200ms ease;
+  }
+
+  @media (max-width: 416px) {
+    svg {
+      display: none; /* Hides the icons when the screen width is less than 416px */
+    }
+  }
+`;
+
+const SoonTag = styled.span`
+  background-color: ${theme.colors.background.primary};
+  color: ${theme.colors.text.tertiary};
+  font-family: ${theme.typography.fontFamilies.medium};
+  font-size: .875rem;
+  line-height: 1.25rem;
+  padding: .125rem .25rem;
+  border-radius: .25rem;
+  margin-left: .375rem;
+
+  @media (max-width: 480px) {
+    display: none; 
   }
 `;
 

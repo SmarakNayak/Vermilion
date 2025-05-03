@@ -291,6 +291,7 @@ const TxLink = styled.a`
 
     svg {
       fill: ${theme.colors.text.primary};
+      transition: all 200ms ease;
     }
   }
 
