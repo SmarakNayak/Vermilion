@@ -136,7 +136,11 @@ const db = {
 
   async bulkInsertBun(renderedContent) {    
     try {      
-      await this.sql`INSERT INTO rendered_content ${this.sql(renderedContent)}`;
+      await this.sql`INSERT INTO rendered_content ${this.sql(renderedContent)} ON CONFLICT (id) DO UPDATE
+        SET sequence_number = EXCLUDED.sequence_number,
+            content = EXCLUDED.content,
+            content_type = EXCLUDED.content_type,
+            render_status = EXCLUDED.render_status;`;
     } catch (err) {
       throw new Error('Error during insert: ', { cause: err });
     }
