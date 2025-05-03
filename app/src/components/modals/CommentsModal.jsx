@@ -73,7 +73,7 @@ const CommentsModal = ({ commentsList, onClose, isCommentsModalOpen }) => {
                     >
                       <BoostText>{formatAddress(comment.address)}</BoostText>
                     </TextLink>
-                    <TimeText>{calcTimeAgo(comment.block_timestamp)}</TimeText>
+                    <TimeText>{calcTimeAgo(comment.block_timestamp)} ago</TimeText>
                   </DetailsInfo>
                 </DetailsRow>
                 <CommentText>{comment.content}</CommentText>
