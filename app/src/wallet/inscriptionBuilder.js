@@ -5,7 +5,7 @@ import * as ecc from '@bitcoinerlab/secp256k1' // 'tiny-secp256k1' needs a wasm 
 
 import { NETWORKS } from './networks'
 import { getAddressType, selectUtxos, appendUtxoEffectiveValues, estimateVSize } from './transactionUtils'
-import { broadcastTx, submitPackage, getRecommendedFees, getConfirmedCardinalUtxos, getTxData } from './mempoolApi'
+import { getRecommendedFees, getConfirmedCardinalUtxos, getTxData } from './mempoolApi'
 
 bitcoin.initEccLib(ecc);
 const ECPair = ECPairFactory(ecc);
@@ -224,7 +224,7 @@ async function getCommitTransaction({
 
   // Now we know how many inputs we need, we can calculate the estimated commit fee
   let inputTypes = new Array(selectedUtxos.length).fill(paymentAddressType);
-  let estimatedCommitFee = estimateVSize(inputTypes, outputTypes, paymentAddressType) * feeRate;  
+  let estimatedCommitFee = Math.ceil(estimateVSize(inputTypes, outputTypes, paymentAddressType) * feeRate);  
   let estimatedInscriptionFee = estimatedCommitFee + commitSendAmount;
 
   const psbt = new bitcoin.Psbt({ network: NETWORKS[network].bitcoinjs });

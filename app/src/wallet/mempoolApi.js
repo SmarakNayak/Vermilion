@@ -107,8 +107,6 @@ async function getCoinBaseBtcPrice() {
 }
 
 export {
-  broadcastTx,
-  submitPackage,
   submitInscriptionTxs,
   getRecommendedFees,
   getConfirmedCardinalUtxos,
