@@ -19,6 +19,7 @@ import NotFound from '../pages/NotFound';
 import Edition from '../pages/Edition';
 import Children from '../pages/Children';
 import References from '../pages/References';
+import History from '../pages/History';
 
 import { addCommas, formatAddress } from '../utils/format';
 
@@ -172,7 +173,8 @@ const Navigation = () => {
           <Route path="/discover" element={<TitledComponent title="Discover" Component={Discover} />} />
           <Route path="/trending" element={<TitledComponent title="Trending" Component={Trending} />} />
           <Route path="/search" element={<TitledComponent title="Search" Component={Search} />} />
-          <Route path="/search/:query" element={<TitledComponent title="Search" Component={Search} />} />          
+          <Route path="/search/:query" element={<TitledComponent title="Search" Component={Search} />} />   
+          <Route path="/history" element={<TitledComponent title="Order History" Component={History} />} />       
 
           {/* Add 404 route */}
           <Route path="*" element={<TitledComponent title="404 - Page Not Found" Component={NotFound} />} />
