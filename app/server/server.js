@@ -2,6 +2,7 @@ import db from './src/db';
 import bundexer from './src/bundexer';
 import { renderContent, browserPool } from './src/puppeteer';
 import { addInscriptionPreviewsToHtml, renderInscriptionCard } from './src/ssr';
+import { broadcastTx } from './src/broadcast';
 
 // Configuration - use local address in production or fall back to external URL
 const isProd = process.env.NODE_ENV === 'production';
@@ -56,50 +57,85 @@ const server = Bun.serve({
       });
     },
     // social routes
-    '/social/boost': async req => {
-      let body = await req.json();
-      let boostId;
+    '/social/boost': async req => {      
       try {
+        let body = await req.json();
+        let boostId;
         boostId = await db.recordBoost({
           ...body,
           broadcast_status: 'scheduled',
           commit_tx_status: 'scheduled',
           reveal_tx_status: 'scheduled',
         });
-        let response = await fetch(apiBaseUrl + "/api/submit_package", {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify([
-            body.commit_tx_hex, body.reveal_tx_hex
-          ]),
-        });
-      
-        if (!response.ok) {
-          let text = await response.text();
-          let errorString = `Error submitting package: ${text}, ${response.statusText}`;
-          db.updateBoost(boostId, {
-            broadcast_status: 'failed',
-            broadcast_error: errorString,
-            commit_tx_status: 'failed',
-            reveal_tx_status: 'failed'
-          });
-          return new Response(errorString, { status: 500 });
-        }
 
-        const data = await response.json();
-        db.updateBoost(boostId, {
-          broadcast_status: 'broadcasted',
-          commit_tx_status: 'pending',
-          reveal_tx_status: 'pending',
-          commit_tx_id: data[0],
-          reveal_tx_id: data[1]
-        });
-        return data;
+        if (body.network === 'testnet' || body.network === 'signet') {
+          let commitResponse = await broadcastTx(body.commit_tx_hex, body.network + '/');
+          if (!commitResponse.ok) {
+            let text = await commitResponse.text();
+            let errorString = `Error broadcasting commit transaction: ${text}, ${commitResponse.statusText}`;
+            db.updateBoost(boostId, {
+              broadcast_status: 'failed',
+              broadcast_error: errorString,
+              commit_tx_status: 'failed',
+              reveal_tx_status: 'abandoned'
+            });
+            return new Response(errorString, { status: 500 });
+          }
+          let revealResponse = await broadcastTx(body.reveal_tx_hex, body.network + '/');
+          if (!revealResponse.ok) {
+            let text = await revealResponse.text();
+            let errorString = `Error broadcasting reveal transaction: ${text}, ${revealResponse.statusText}`;
+            db.updateBoost(boostId, {
+              broadcast_status: 'failed',
+              broadcast_error: errorString,
+              commit_tx_status: 'failed',
+              reveal_tx_status: 'failed'
+            });
+            return new Response(errorString, { status: 500 });
+          }
+          db.updateBoost(boostId, {
+            broadcast_status: 'broadcasted',
+            commit_tx_status: 'pending',
+            reveal_tx_status: 'pending',
+            commit_tx_id: commitResponse.text(),
+            reveal_tx_id: revealResponse.text()
+          });
+          return [ commitResponse.text(), revealResponse.text()];
+        } else if (body.network === 'mainnet') {
+          let response = await fetch(apiBaseUrl + "/api/submit_package", {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify([
+              body.commit_tx_hex, body.reveal_tx_hex
+            ]),
+          });
+          if (!response.ok) {
+            let text = await response.text();
+            let errorString = `Error submitting package: ${text}, ${response.statusText}`;
+            db.updateBoost(boostId, {
+              broadcast_status: 'failed',
+              broadcast_error: errorString,
+              commit_tx_status: 'failed',
+              reveal_tx_status: 'failed'
+            });
+            return new Response(errorString, { status: 500 });
+          }
+
+          const data = await response.json();
+          db.updateBoost(boostId, {
+            broadcast_status: 'broadcasted',
+            commit_tx_status: 'pending',
+            reveal_tx_status: 'pending',
+            commit_tx_id: data[0],
+            reveal_tx_id: data[1]
+          });
+          return data;
+        } 
       } catch (err) {
-        console.error('Error recording boost:', err);
-        return new Response('Error recording boost', { status: 500 });
+        console.error('Error boosting:', err);
+        return new Response('Error boosting: ' + err.message, { status: 500 });
       }
     },
   }

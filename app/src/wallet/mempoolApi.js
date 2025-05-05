@@ -56,6 +56,74 @@ async function submitInscriptionTxs(commitHex, revealHex, network) {
 }
 
 
+// -- boost info
+// delegate_id varchar(80) NOT NULL,
+// boost_quantity INT NOT NULL,
+// boost_comment TEXT,
+// platform_address VARCHAR(64),
+// platform_fee bigint,
+// owner_address VARCHAR(64),
+// owner_fee bigint,
+// -- wallet info
+// network VARCHAR(10) NOT NULL,
+// wallet_type VARCHAR(10) NOT NULL,
+// inscription_method VARCHAR(40) NOT NULL,
+// ordinals_address VARCHAR(64) NOT NULL,
+// ordinals_public_key VARCHAR(66) NOT NULL,
+// payment_address VARCHAR(64) NOT NULL,
+// payment_public_key VARCHAR(66) NOT NULL,
+// ephemeral_public_key VARCHAR(66),
+// -- inscription info
+// fee_rate INT NOT NULL,
+// commit_tx_hex TEXT NOT NULL,
+// commit_tx_id VARCHAR(64) NOT NULL,
+// reveal_tx_hex TEXT NOT NULL,
+// reveal_tx_id VARCHAR(64) NOT NULL,
+// reveal_address_script VARCHAR(64) NOT NULL,
+// reveal_tapmerkleroot VARCHAR(64) NOT NULL,
+// reveal_input_value BIGINT NOT NULL,
+// reveal_script TEXT NOT NULL,
+async function submitBoost(wallet, inscriptionInfo, boostInfo) {
+  const url = `https://blue.vermilion.place/api/bun/social/boost`;
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      // boost info
+      delegate_id: boostInfo.delegate_id,
+      boost_quantity: boostInfo.boost_quantity,
+      boost_comment: boostInfo.boost_comment,
+      platform_address: boostInfo.platform_address,
+      platform_fee: boostInfo.platform_fee,
+      owner_address: boostInfo.owner_address,
+      owner_fee: boostInfo.owner_fee,
+      // wallet info
+      network: wallet.network,
+      wallet_type: wallet.walletType,
+      inscription_method: inscriptionInfo.inscription_method,
+      ordinals_address: wallet.ordinalsAddress,
+      ordinals_public_key: wallet.ordinalsPublicKey,
+      payment_address: wallet.paymentAddress,
+      payment_public_key: wallet.paymentPublicKey,
+      ephemeral_public_key: inscriptionInfo.ephemeral_public_key,
+      // inscription info
+      fee_rate: inscriptionInfo.fee_rate,
+      commit_tx_hex: inscriptionInfo.commit_tx_hex,
+      commit_tx_id: inscriptionInfo.commit_tx_id,
+      reveal_tx_hex: inscriptionInfo.reveal_tx_hex,
+      reveal_tx_id: inscriptionInfo.reveal_tx_id,
+      reveal_address_script: inscriptionInfo.reveal_address_script,
+      reveal_tapmerkleroot: inscriptionInfo.reveal_tapmerkleroot,
+      reveal_input_value: inscriptionInfo.reveal_input_value,
+      reveal_script: inscriptionInfo.reveal_script
+    })
+  });
+
+}
+
+
 const getRecommendedFees = async(network) => {
   let fees = await fetch(`https://mempool.space/${NETWORKS[network].mempool}api/v1/fees/recommended`);
   let feesJson = await fees.json();
@@ -108,6 +176,7 @@ async function getCoinBaseBtcPrice() {
 
 export {
   submitInscriptionTxs,
+  submitBoost,
   getRecommendedFees,
   getConfirmedCardinalUtxos,
   getTxData,

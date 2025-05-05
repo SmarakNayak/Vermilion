@@ -17,7 +17,7 @@ import {
 import InscriptionIcon from '../InscriptionIcon';
 
 import { constructInscriptionTxs, Inscription as InscriptionObject, getRevealVSize, estimateInscriptionFee, guessInscriptionFee} from '../../wallet/inscriptionBuilder';
-import { getRecommendedFees, getCoinBaseBtcPrice, getConfirmedCardinalUtxos, submitInscriptionTxs } from '../../wallet/mempoolApi';
+import { getRecommendedFees, getCoinBaseBtcPrice, getConfirmedCardinalUtxos, submitInscriptionTxs, submitBoost } from '../../wallet/mempoolApi';
 import { isAddressValid } from '../../wallet/transactionUtils';
 
 import useStore from '../../store/zustand';
@@ -194,8 +194,8 @@ const CheckoutModal = ({ onClose, isCheckoutModalOpen, delegateData }) => {
         platformFeeAddress = wallet.paymentAddress; // Refund wallet address for testnet/signet
       }
 
-      // Create the inscription
-      let [commitTxHex, revealTxHex] = await constructInscriptionTxs({
+      // Construct the inscription txs
+      let inscriptionInfo = await constructInscriptionTxs({
         inscriptions,
         wallet,
         signStatusCallback: setSignStatus,
@@ -206,7 +206,15 @@ const CheckoutModal = ({ onClose, isCheckoutModalOpen, delegateData }) => {
         ownerFee: totalOwnerFee,
         ownerAddress,
       });
-      let [commitTxid, revealTxid] = await submitInscriptionTxs(commitTxHex, revealTxHex, network);
+      let [commitTxid, revealTxid] = await submitBoost(wallet, inscriptionInfo, {
+        delegate_id: delegateMetadata.id,
+        boost_quantity: boostQuantity,
+        boost_comment: boostComment,
+        platform_address: platformFeeAddress,
+        platform_fee: totalPlatformFee,
+        owner_address: ownerAddress,
+        owner_fee: totalOwnerFee
+      });
       
       // Open success modal after successful inscription
       setSuccessDetails({

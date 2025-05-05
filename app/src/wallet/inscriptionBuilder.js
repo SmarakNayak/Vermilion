@@ -481,8 +481,21 @@ async function constructInscriptionTxsWithInternalKey({
   // 6. broadcast transactions
   let commitTx = signedCommitPsbt.extractTransaction();
   let revealTx = signedRevealPsbt.extractTransaction();
-  //5. Return both transactions in hex
-  return [commitTx.toHex(), revealTx.toHex()];
+  //5. Return both transactions in hex + other metadata
+  let inscriptionInfo = {
+    fee_rate: feeRate,
+    commit_tx_hex: commitTx.toHex(),
+    commit_tx_id: commitTx.getId(),
+    reveal_tx_hex: revealTx.toHex(),
+    reveal_tx_id: revealTx.getId(),
+    reveal_address_script: revealTaproot.output.toString('hex'),
+    reveal_tapmerkleroot: revealTaproot.hash.toString('hex'),
+    reveal_input_value: estimatedRevealFee,
+    reveal_script: revealTaproot.redeem.output.toString('hex'),
+    inscription_method: "wallet_one_sign"
+  }
+  
+  return inscriptionInfo;
 }
 
 async function constructInscriptionTxsWithInternalKeyTwoSign({
@@ -546,8 +559,21 @@ async function constructInscriptionTxsWithInternalKeyTwoSign({
   let signedRevealPsbt = await wallet.signPsbt(unsignedRevealPsbt, [{ index: 0, address: walletTaproot.address, useTweakSigner: false, useTweakedSigner: false }]);
   let revealTx = signedRevealPsbt.extractTransaction();
 
-  //5. Return both transactions in hex
-  return [commitTx.toHex(), revealTx.toHex()];
+  //5. Return both transactions in hex + other metadata
+  let inscriptionInfo = {
+    fee_rate: feeRate,
+    commit_tx_hex: commitTx.toHex(),
+    commit_tx_id: commitTx.getId(),
+    reveal_tx_hex: revealTx.toHex(),
+    reveal_tx_id: revealTx.getId(),
+    reveal_address_script: revealTaproot.output.toString('hex'),
+    reveal_tapmerkleroot: revealTaproot.hash.toString('hex'),
+    reveal_input_value: estimatedRevealFee,
+    reveal_script: revealTaproot.redeem.output.toString('hex'),
+    inscription_method: "wallet_two_sign"
+  }
+  
+  return inscriptionInfo;
 }
 
 async function constructInscriptionTxsWithEphemeralKey({
@@ -608,8 +634,25 @@ async function constructInscriptionTxsWithEphemeralKey({
   let signedRevealPsbt = getRevealTransaction(inscriptions, wallet.ordinalsAddress, revealTaproot, ephemeralKeyPair, commitTxId, estimatedRevealFee, network, true);
   let revealTx = signedRevealPsbt.extractTransaction();
 
-  //5. Return both transactions in hex
-  return [commitTx.toHex(), revealTx.toHex()];
+  //5. Return both transactions in hex + other metadata
+  let inscriptionInfo = {
+    fee_rate: feeRate,
+    commit_tx_hex: commitTx.toHex(),
+    commit_tx_id: commitTxId,
+    reveal_tx_hex: revealTx.toHex(),
+    reveal_tx_id: revealTx.getId(),
+    reveal_address_script: revealTaproot.output.toString('hex'),
+    reveal_tapmerkleroot: revealTaproot.hash.toString('hex'),
+    reveal_input_value: estimatedRevealFee,
+    reveal_script: revealTaproot.redeem.output.toString('hex'),
+    ephemeral_public_key: ephemeralKeyPair.publicKey.toString('hex'),
+    inscription_method: "ephemeral"
+  }
+  if (useWalletForKeyPath) {
+    inscriptionInfo.inscription_method = "ephemeral_with_wallet_key_path";
+  }
+
+  return inscriptionInfo;
 }
 
 async function constructInscriptionTxs({
