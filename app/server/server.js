@@ -87,12 +87,12 @@ const server = Bun.serve({
           });
           return new Response(errorString, { status: 500 });
         }
-        
+
         const data = await response.json();
         db.updateBoost(boostId, {
           broadcast_status: 'broadcasted',
-          commit_tx_status: 'failed',
-          reveal_tx_status: 'failed',
+          commit_tx_status: 'pending',
+          reveal_tx_status: 'pending',
           commit_tx_id: data[0],
           reveal_tx_id: data[1]
         });
