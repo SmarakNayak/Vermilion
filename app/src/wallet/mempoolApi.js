@@ -84,7 +84,7 @@ async function submitInscriptionTxs(commitHex, revealHex, network) {
 // reveal_input_value BIGINT NOT NULL,
 // reveal_script TEXT NOT NULL,
 async function submitBoost(wallet, inscriptionInfo, boostInfo) {
-  const url = `https://blue.vermilion.place/api/bun/social/boost`;
+  const url = `/bun/social/boost`;
   const response = await fetch(url, {
     method: 'POST',
     headers: {
@@ -120,7 +120,14 @@ async function submitBoost(wallet, inscriptionInfo, boostInfo) {
       reveal_script: inscriptionInfo.reveal_script
     })
   });
-
+  if (!response.ok) {
+    console.log(response);
+    let text = await response.text();
+    console.log(text);
+    throw new Error(`Failed to broadcast transactions: ${response.statusText}`);
+  }
+  const data = await response.json();
+  return data;
 }
 
 

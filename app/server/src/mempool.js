@@ -12,6 +12,6 @@ async function broadcastTx(txHex, networkString='') {
   return response;
 }
 
-export default {
+export {
   broadcastTx
 };

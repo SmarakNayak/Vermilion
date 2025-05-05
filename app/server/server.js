@@ -2,7 +2,7 @@ import db from './src/db';
 import bundexer from './src/bundexer';
 import { renderContent, browserPool } from './src/puppeteer';
 import { addInscriptionPreviewsToHtml, renderInscriptionCard } from './src/ssr';
-import { broadcastTx } from './src/broadcast';
+import { broadcastTx } from './src/mempool';
 
 // Configuration - use local address in production or fall back to external URL
 const isProd = process.env.NODE_ENV === 'production';

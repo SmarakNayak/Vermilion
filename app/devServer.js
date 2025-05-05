@@ -16,6 +16,11 @@ const server = Bun.serve({
     '/bun/*': async req => {
       return proxyRequest(req, 'https://blue.vermilion.place');
     },
+    '/bun/social/boost': {
+      POST: async req => {
+        return proxyRequest(req, 'https://blue.vermilion.place');
+      }
+    },
     '/r/*': async req => {
       return proxyRequest(req, 'https://blue.vermilion.place');
     },
@@ -28,6 +33,10 @@ const server = Bun.serve({
     '/blocktime/*': async req => {
       return proxyRequest(req, 'https://blue.vermilion.place');
     }
+  },
+  fetch(req) {
+    console.log(`Received request for ${req.url} - Not Found`);
+    return new Response("Not Found", { status: 404 });
   }
 });
 
@@ -37,6 +46,8 @@ async function proxyRequest(req, targetHost) {
   try {
     // Forward the original request to the target server
     let response = await fetch(targetUrl, {
+      method: req.method,
+      body: req.body,
       // disable decompression - otherwise it will be decompressed here and again when sent to the client
       decompress: false, 
     });

@@ -53,8 +53,8 @@ const db = {
           commit_tx_id VARCHAR(64) NOT NULL,
           reveal_tx_hex TEXT NOT NULL,
           reveal_tx_id VARCHAR(64) NOT NULL,
-          reveal_address_script VARCHAR(64) NOT NULL,
-          reveal_tapmerkleroot VARCHAR(64) NOT NULL,
+          reveal_address_script TEXT NOT NULL,
+          reveal_tapmerkleroot TEXT NOT NULL,
           reveal_input_value BIGINT NOT NULL,
           reveal_script TEXT NOT NULL,
           -- status
