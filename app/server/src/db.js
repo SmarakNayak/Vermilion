@@ -58,10 +58,10 @@ const db = {
           reveal_input_value BIGINT NOT NULL,
           reveal_script TEXT NOT NULL,
           -- status
-          broadcast_status VARCHAR(10),
+          broadcast_status VARCHAR(11),
           broadcast_error TEXT,
-          commit_tx_status VARCHAR(10),
-          reveal_tx_status VARCHAR(10),
+          commit_tx_status VARCHAR(11),
+          reveal_tx_status VARCHAR(11),
 
           timestamp TIMESTAMP DEFAULT NOW(),
         );
@@ -72,9 +72,9 @@ const db = {
           boost_id UUID NOT NULL REFERENCES social.boosts(boost_id),
           fee_rate INT NOT NULL,
           reveaL_sweep_tx_hex TEXT NOT NULL,
-          broadcast_status VARCHAR(10),
+          broadcast_status VARCHAR(11),
           broadcast_error TEXT,
-          reveal_sweep_tx_status VARCHAR(10),
+          reveal_sweep_tx_status VARCHAR(11),
           broadcast_timestamp TIMESTAMP DEFAULT NULL,
         );
       `;
@@ -151,14 +151,23 @@ const db = {
   // Social
   async recordBoost(boost) {
     try {
-      await this.sql`INSERT INTO social.boosts ${this.sql(boost)};`;
+      let boostId = await this.sql`INSERT INTO social.boosts ${this.sql(boost)} RETURNING boost_id;`;
+      return boostId;
     } catch (err) {
       throw new Error('Error during insert: ', { cause: err });
     }
   },
+  async updateBoost(boostId, boost) {
+    try {
+      await this.sql`UPDATE social.boosts SET ${this.sql(boost)} WHERE boost_id = ${boostId}`;
+    } catch (err) {
+      throw new Error('Error during update: ', { cause: err });
+    }
+  },
   async recordEphemeralSweep(sweep) {
     try {
-      await this.sql`INSERT INTO social.ephemeral_sweeps ${this.sql(sweep)};`;
+      let sweepId = await this.sql`INSERT INTO social.ephemeral_sweeps ${this.sql(sweep)} RETURNING sweep_id;`;
+      return sweepId;
     } catch (err) {
       throw new Error('Error during insert: ', { cause: err });
     }

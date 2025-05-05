@@ -55,6 +55,53 @@ const server = Bun.serve({
         headers: { 'Content-Type': 'text/html' },
       });
     },
+    // social routes
+    '/social/boost': async req => {
+      let body = await req.json();
+      let boostId;
+      try {
+        boostId = await db.recordBoost({
+          ...body,
+          broadcast_status: 'scheduled',
+          commit_tx_status: 'scheduled',
+          reveal_tx_status: 'scheduled',
+        });
+        let response = await fetch(apiBaseUrl + "/api/submit_package", {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify([
+            body.commit_tx_hex, body.reveal_tx_hex
+          ]),
+        });
+      
+        if (!response.ok) {
+          let text = await response.text();
+          let errorString = `Error submitting package: ${text}, ${response.statusText}`;
+          db.updateBoost(boostId, {
+            broadcast_status: 'failed',
+            broadcast_error: errorString,
+            commit_tx_status: 'failed',
+            reveal_tx_status: 'failed'
+          });
+          return new Response(errorString, { status: 500 });
+        }
+        
+        const data = await response.json();
+        db.updateBoost(boostId, {
+          broadcast_status: 'broadcasted',
+          commit_tx_status: 'failed',
+          reveal_tx_status: 'failed',
+          commit_tx_id: data[0],
+          reveal_tx_id: data[1]
+        });
+        return data;
+      } catch (err) {
+        console.error('Error recording boost:', err);
+        return new Response('Error recording boost', { status: 500 });
+      }
+    },
   }
 });
 
