@@ -154,14 +154,14 @@ const db = {
       let boostId = await this.sql`INSERT INTO social.boosts ${this.sql(boost)} RETURNING boost_id;`;
       return boostId;
     } catch (err) {
-      throw new Error('Error during insert: ', { cause: err });
+      throw new Error(`Error during insert: ${err.message}`, { cause: err });
     }
   },
   async updateBoost(boostId, boost) {
     try {
       await this.sql`UPDATE social.boosts SET ${this.sql(boost)} WHERE boost_id = ${boostId}`;
-    } catch (err) {
-      throw new Error('Error during update: ', { cause: err });
+    } catch (err) { 
+      throw new Error(`Error during update: ${err.message}`, { cause: err });
     }
   },
   async recordEphemeralSweep(sweep) {
@@ -169,7 +169,7 @@ const db = {
       let sweepId = await this.sql`INSERT INTO social.ephemeral_sweeps ${this.sql(sweep)} RETURNING sweep_id;`;
       return sweepId;
     } catch (err) {
-      throw new Error('Error during insert: ', { cause: err });
+      throw new Error(`Error during insert: ${err.message}`, { cause: err });
     }
   },
 

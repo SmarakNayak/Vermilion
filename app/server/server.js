@@ -60,20 +60,19 @@ const server = Bun.serve({
     '/social/boost': async req => {      
       try {
         let body = await req.json();
-        let boostId;
-        boostId = await db.recordBoost({
+        let [ insertRecord ] = await db.recordBoost({
           ...body,
           broadcast_status: 'scheduled',
           commit_tx_status: 'scheduled',
           reveal_tx_status: 'scheduled',
         });
-
+        let boostId = insertRecord.boost_id;
         if (body.network === 'testnet' || body.network === 'signet') {
           let commitResponse = await broadcastTx(body.commit_tx_hex, body.network + '/');
           if (!commitResponse.ok) {
             let text = await commitResponse.text();
             let errorString = `Error broadcasting commit transaction: ${text}, ${commitResponse.statusText}`;
-            db.updateBoost(boostId, {
+            await db.updateBoost(boostId, {
               broadcast_status: 'failed',
               broadcast_error: errorString,
               commit_tx_status: 'failed',
@@ -85,7 +84,7 @@ const server = Bun.serve({
           if (!revealResponse.ok) {
             let text = await revealResponse.text();
             let errorString = `Error broadcasting reveal transaction: ${text}, ${revealResponse.statusText}`;
-            db.updateBoost(boostId, {
+            await db.updateBoost(boostId, {
               broadcast_status: 'failed',
               broadcast_error: errorString,
               commit_tx_status: 'failed',
@@ -93,14 +92,16 @@ const server = Bun.serve({
             });
             return new Response(errorString, { status: 500 });
           }
-          db.updateBoost(boostId, {
+          let commitTxId = await commitResponse.text();
+          let revealTxId = await revealResponse.text();
+          await db.updateBoost(boostId, {
             broadcast_status: 'broadcasted',
             commit_tx_status: 'pending',
             reveal_tx_status: 'pending',
-            commit_tx_id: commitResponse.text(),
-            reveal_tx_id: revealResponse.text()
+            commit_tx_id: commitTxId,
+            reveal_tx_id: revealTxId
           });
-          return [ commitResponse.text(), revealResponse.text()];
+          return Response.json([ commitTxId, revealTxId ]);
         } else if (body.network === 'mainnet') {
           let response = await fetch(apiBaseUrl + "/api/submit_package", {
             method: 'POST',
@@ -114,7 +115,7 @@ const server = Bun.serve({
           if (!response.ok) {
             let text = await response.text();
             let errorString = `Error submitting package: ${text}, ${response.statusText}`;
-            db.updateBoost(boostId, {
+            await db.updateBoost(boostId, {
               broadcast_status: 'failed',
               broadcast_error: errorString,
               commit_tx_status: 'failed',
@@ -124,14 +125,16 @@ const server = Bun.serve({
           }
 
           const data = await response.json();
-          db.updateBoost(boostId, {
+          if (data[0] !== body.commit_tx_id || data[1] !== body.reveal_tx_id) {
+            let errorString = `Error: commit/reveal tx IDs do not match. Expected ${body.commit_tx_id} / ${body.reveal_tx_id}, got ${data[0]} / ${data[1]}`;
+            console.warn(errorString);
+          }
+          await db.updateBoost(boostId, {
             broadcast_status: 'broadcasted',
             commit_tx_status: 'pending',
-            reveal_tx_status: 'pending',
-            commit_tx_id: data[0],
-            reveal_tx_id: data[1]
+            reveal_tx_status: 'pending'
           });
-          return data;
+          return Response.json(data);
         } 
       } catch (err) {
         console.error('Error boosting:', err);

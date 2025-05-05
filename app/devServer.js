@@ -19,6 +19,7 @@ const server = Bun.serve({
     '/bun/social/boost': {
       POST: async req => {
         return proxyRequest(req, 'https://blue.vermilion.place');
+        //return proxyRequest(req, 'localhost:1082',  '/social/boost');
       }
     },
     '/r/*': async req => {
@@ -40,9 +41,12 @@ const server = Bun.serve({
   }
 });
 
-async function proxyRequest(req, targetHost) {
+async function proxyRequest(req, targetHost, rewrite) {
   const url = new URL(req.url);
-  const targetUrl = `${targetHost}${url.pathname}${url.search}`;  
+  let targetUrl = `${targetHost}${url.pathname}${url.search}`;
+  if (rewrite) {
+    targetUrl = `${targetHost}${rewrite}${url.search}`;
+  }
   try {
     // Forward the original request to the target server
     let response = await fetch(targetUrl, {
