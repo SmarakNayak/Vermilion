@@ -12,6 +12,7 @@ import {
   MinusIcon,
   PlusIcon,
   LoginIcon,
+  ErrorCircleIcon,
 } from '../common/Icon';
 import InscriptionIcon from '../InscriptionIcon';
 
@@ -478,6 +479,7 @@ const CheckoutModal = ({ onClose, isCheckoutModalOpen, delegateData }) => {
             {/* Error message */}
             {error && (
               <ErrorContainer style={{ backgroundColor: theme.colors.background.white }}>
+                <ErrorCircleIcon size="1rem" color={theme.colors.text.error} />
                 <StatusText style={{ color: theme.colors.text.error }}>{error}</StatusText>
               </ErrorContainer>
             )}
@@ -803,8 +805,11 @@ const DisabledModalBoostButton = styled.button`
 `;
 
 const ErrorContainer = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
   background-color: ${theme.colors.background.white};
-  padding: 0.525rem 0.5rem 0.125rem;
+  padding: 0.5rem 0.5rem 0 0.5rem;
 `;
 
 const StatusText = styled.span`

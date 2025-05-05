@@ -215,10 +215,14 @@ const Overlay = styled.div`
   position: fixed;
   top: 0;
   left: 0;
-  width: 100%;
-  height: 100%;
-  backdrop-filter: blur(.125rem);
-  z-index: 100;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(0.125rem);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: ${props => (props?.zIndex ? props.zIndex : 1000)};
   opacity: ${props => (props.isOpen ? 1 : 0)};
   visibility: ${props => (props.isOpen ? 'visible' : 'hidden')};
   transition: opacity 200ms ease, visibility 200ms ease, backdrop-filter 200ms ease;

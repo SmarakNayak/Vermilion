@@ -20,6 +20,24 @@ const SearchMenu = ({ isOpen, closeMenu }) => {
   const menuRef = useRef(null);
   const inputRef = useRef(null);
   const searchTimeoutRef = useRef(null);
+  const modalContentRef = useRef(); // Ref for the modal content
+
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden'; // Disable page scrolling
+    } else {
+      document.body.style.overflow = 'auto'; // Enable page scrolling
+
+      // Reset scroll position when modal is closed
+      if (modalContentRef.current) {
+        modalContentRef.current.scrollTop = 0;
+      }
+    }
+
+    return () => {
+      document.body.style.overflow = 'auto'; // Cleanup on unmount
+    };
+  }, [isOpen]);
   
   const isNumberInput = !isNaN(searchInput);
   
@@ -173,7 +191,7 @@ const SearchMenu = ({ isOpen, closeMenu }) => {
           <CrossIcon size="1.25rem" color={theme.colors.text.secondary} />
         </CloseButton>
       </SearchInputSection>      
-      <MenuContent>
+      <MenuContent ref={modalContentRef}>
         {!searchInput ? (
           <>          
             <LinkSection>
