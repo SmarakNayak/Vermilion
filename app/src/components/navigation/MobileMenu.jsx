@@ -15,6 +15,7 @@ import {
   SparklesIcon,
   ScanIcon,
   SwitchIcon,
+  ArchiveIcon,
 } from '../common/Icon';
 import { theme } from '../../styles/theme';
 import Brand from './Brand';
@@ -120,6 +121,15 @@ const MobileMenu = ({ isOpen, onClose, onConnectWallet, wallet, onViewProfile, o
                 icon={AvatarCircleIcon} 
                 isStandard={true}
                 title="View Profile"
+              />
+              <MenuListItem
+                link="/history"
+                action={() => {
+                  onClose();
+                }}
+                icon={ArchiveIcon}
+                isStandard={true}
+                title="Order History"
               />
               <MenuListItem 
                 link="#" 

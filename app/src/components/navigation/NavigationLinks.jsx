@@ -56,6 +56,10 @@ const NavLink = styled(Link)`
       fill: ${theme.colors.text.primary};
     }
   }
+
+  &:active {
+    transform: scale(0.98);
+  }
 `;
 
 const DropdownContainer = styled.div`
@@ -138,7 +142,7 @@ const NavigationLinks = () => {
         </DropdownContainer>
       </NavLinkWrapper>
       <NavLink to="/discover">
-        <DiscoverIcon size={'1.25rem'} />
+        <SparklesIcon size={'1.25rem'} />
         Discover
       </NavLink>
       {/* <NavLink>Search</NavLink> */}

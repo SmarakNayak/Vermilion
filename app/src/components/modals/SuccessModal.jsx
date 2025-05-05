@@ -111,7 +111,7 @@ const SuccessModal = ({ isOpen, onClose, boostDetails }) => {
               rel="noopener noreferrer"
             >
               <ArchiveIcon size={'1.25rem'} color={theme.colors.text.primary} />
-              View Transaction History
+              View Order History
             </HistoryButton>
           </ButtonContainer>
         </ModalContent>

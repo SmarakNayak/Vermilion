@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom'; 
 import styled from 'styled-components';
-import { BurgerMenuIcon, LogoutIcon, SwitchIcon } from '../common/Icon';
+import { ArchiveIcon, BurgerMenuIcon, LogoutIcon, SwitchIcon } from '../common/Icon';
 import theme from '../../styles/theme';
 import MobileMenu from './MobileMenu';
 import WalletConnectMenu from './WalletConnectMenu';
@@ -66,6 +66,10 @@ const UserActions = () => {
               {/* <DropdownItem href={"/address/" + wallet.ordinalsAddress}>
                 View Profile
               </DropdownItem> */}
+              <DropdownItem href={"/history/"}>
+                <ArchiveIcon size={"1.25rem"} />
+                Order History
+              </DropdownItem>
               <DropdownItem onClick={openWalletMenu}>
                 <SwitchIcon size={"1.25rem"} />
                 Switch Wallet
@@ -125,7 +129,7 @@ const ConnectButton = styled.button`
   }
 
   &:active {
-    transform: scale(0.96);
+    transform: scale(0.98);
   }
 
   @media (max-width: 864px) {
@@ -158,7 +162,7 @@ const AddressButton = styled.button`
   }
 
   &:active {
-    transform: scale(0.96);
+    transform: scale(0.98);
   }
 
   svg {

@@ -94,7 +94,7 @@ const Navigation = () => {
       <PageWrapper>
         <TopBar />
         <Routes>
-          <Route path="/" element={<TitledComponent title="Inscriptions" Component={ExploreInscriptions} />} />
+          <Route path="/" element={<TitledComponent title="Trending" Component={Trending} />} />
           <Route path="/explore/inscriptions" element={<TitledComponent title="Inscriptions" Component={ExploreInscriptions} />} />
           <Route path="/explore/blocks" element={<TitledComponent title="Blocks" Component={ExploreBlocks} />} />
           <Route path="/explore/collections" element={<TitledComponent title="Collections" Component={ExploreCollections} />} />
@@ -171,7 +171,7 @@ const Navigation = () => {
             element={<CollectionWithDynamicTitle />}
           />
           <Route path="/discover" element={<TitledComponent title="Discover" Component={Discover} />} />
-          <Route path="/trending" element={<TitledComponent title="Trending" Component={Trending} />} />
+          {/* <Route path="/trending" element={<TitledComponent title="Trending" Component={Trending} />} /> */}
           <Route path="/search" element={<TitledComponent title="Search" Component={Search} />} />
           <Route path="/search/:query" element={<TitledComponent title="Search" Component={Search} />} />   
           <Route path="/history" element={<TitledComponent title="Order History" Component={History} />} />       
