@@ -63,7 +63,7 @@ const db = {
           commit_tx_status VARCHAR(11),
           reveal_tx_status VARCHAR(11),
 
-          timestamp TIMESTAMP DEFAULT NOW(),
+          timestamp TIMESTAMP DEFAULT NOW()
         );
       `;
       await this.sql`
@@ -75,7 +75,7 @@ const db = {
           broadcast_status VARCHAR(11),
           broadcast_error TEXT,
           reveal_sweep_tx_status VARCHAR(11),
-          broadcast_timestamp TIMESTAMP DEFAULT NULL,
+          broadcast_timestamp TIMESTAMP DEFAULT NULL
         );
       `;
     } catch (err) {
