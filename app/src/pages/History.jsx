@@ -1,12 +1,56 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import styled from 'styled-components';
-import CollectionsTable from '../components/CollectionsTable';
-import OnChainCollectionsTable from '../components/OnChainCollectionsTable';
-import { QuestionIcon } from '../components/common/Icon';
+import { CheckIcon, ChevronUpDuoIcon, CopyIcon, QuestionIcon, SweepIcon } from '../components/common/Icon';
 import theme from '../styles/theme';
+import { copyText, formatAddress, formatTimestampMs } from '../utils';
 
 const History = () => {
+  const [copied, setCopied] = useState(false);
+  const [copiedRowId, setCopiedRowId] = useState(null);
+
+  const handleCopyClick = (id, content) => {
+    copyText(content);
+    setCopiedRowId(id);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000); // Reset after 2 seconds
+    setTimeout(() => setCopiedRowId(null), 2000); // Reset after 2 seconds
+  };
+
+  const dummyData = [
+    {
+      id: '8d8bc47b3008',
+      type: 'Boost',
+      creationDate: 1735689600, 
+      status: 'Confirmed',
+      commitTx: '38d8bc47b3008f3e7d8f3e7d8f3e7d8f3',
+      revealTx: '7h3ed8f3e7d8f3e7d8f3e7d8f3e7d8f3',
+    },
+    {
+      id: '2daf8c4b3009',
+      type: 'Boost',
+      creationDate: 1735776000,
+      status: 'Confirmed',
+      commitTx: '7e382hc4b3009f3e7d8f3e7d8fe23e23',
+      revealTx: 'e37d8f3e7d8f3e7d8f3e7d8f3e7d8f3',
+    },
+    {
+      id: '789abc123def',
+      type: 'Boost',
+      creationDate: 1735862400, 
+      status: 'Pending',
+      commitTx: 'e37d8f3e7d8f3e7d8f3e7d8f3e7d8f3',
+      revealTx: 'e3e238989f3e7d8f3e7d8f3er34rr4',
+    },
+    {
+      id: '456def789abc',
+      type: 'Boost',
+      creationDate: 1735948800, 
+      status: 'Pending',
+      commitTx: 'r34r34r3e7d8f3e7d8f3e7d8f3e7d8f3',
+      revealTx: 'r34r34r3e7d8f3e7d8f3e7d8f3e7d8f3',
+    },
+  ];
 
   return (
     <MainContainer>
@@ -21,9 +65,58 @@ const History = () => {
         </ButtonContainer>
       </LinkContainer>
       <Divider />
-      <ExploreContainer>
-        {/* <CollectionsTable/> */}
-      </ExploreContainer>
+      <ScrollContainer>
+          <TableContainer>
+            <HeaderRow>
+              <HeaderCell>ID</HeaderCell>
+              <HeaderCell>Type</HeaderCell>
+              <HeaderCell>Creation Date</HeaderCell>
+              <HeaderCell>Status</HeaderCell>
+              <HeaderCell>Commit TX</HeaderCell>
+              <HeaderCell>Reveal TX</HeaderCell>
+              <HeaderCell></HeaderCell>
+            </HeaderRow>
+            {dummyData.map((row, index) => (
+              <DataRow key={index} isLastRow={index === dummyData.length - 1}>
+                <DataCell>
+                  {formatAddress(row.id)}
+                  <CopyButton onClick={() => handleCopyClick(index, row.id)} copied={copied}>
+                    {copiedRowId === index ? <CheckIcon size={'1rem'} color={theme.colors.background.success} /> : <CopyIcon size={'1rem'} />}
+                  </CopyButton>
+                </DataCell>
+                <DataCell>
+                  <TypeTag>
+                    <ChevronUpDuoIcon size={'1rem'} color={theme.colors.background.verm} />
+                    {row.type}
+                  </TypeTag>
+                </DataCell>
+                <DataCell>{formatTimestampMs(row.creationDate)}</DataCell>
+                <DataCell>
+                  <StatusDot status={row.status} />
+                  {row.status}
+                </DataCell>
+                <DataCell>
+                  <StyledLink href="#" target="_blank">
+                    {formatAddress(row.commitTx)}
+                  </StyledLink>
+                </DataCell>
+                <DataCell>
+                  <StyledLink href="#" target="_blank">
+                    {formatAddress(row.revealTx)}
+                  </StyledLink>
+                </DataCell>
+                <ActionCell>
+                  {row.status === 'Pending' && (
+                    <SweepButton>
+                      <SweepIcon size={'1.125rem'} />
+                      Sweep
+                    </SweepButton>
+                  )}
+                </ActionCell>
+              </DataRow>
+            ))}
+          </TableContainer>
+      </ScrollContainer>
     </MainContainer>    
   )
 }
@@ -114,12 +207,201 @@ const TabButton = styled(Link)`
   }
 `;
 
-const ExploreContainer = styled.div`
+const ScrollContainer = styled.div`
+  position: relative;
+  width: 100%;
+  overflow-x: auto;
+  
+  /* Hide scrollbar for WebKit-based browsers (Chrome, Safari, Edge) */
+  &::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Hide scrollbar for Firefox */
+  scrollbar-width: none; /* Firefox */
+`;
+
+const TableContainer = styled.div`
   display: flex;
   flex-direction: column;
   width: 100%;
-  flex; 1;
-  gap: 1.5rem;
+`;
+
+const HeaderRow = styled.div`
+  display: flex;
+  flex-direction: row;
+  gap: 0.5rem;
+  width: 100%;
+  background-color: ${theme.colors.background.white};
+  font-family: ${theme.typography.fontFamilies.medium};
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  color: ${theme.colors.text.secondary};
+  box-sizing: border-box;
+  padding: 0.125rem 0.375rem;
+`;
+
+const HeaderCell = styled.div`
+  flex: 1;
+  min-width: 9.5rem;
+  text-align: left;
+  white-space: nowrap; // Prevent text from wrapping
+  overflow: hidden; // Hide overflow text
+  text-overflow: ellipsis; // Show ellipsis for overflow text
+  // min-width: 0;
+  flex: 1;
+
+  &:last-child {
+    text-align: center;
+  }
+`;
+
+const DataRow = styled.div`
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+  height: 3.5rem;
+  background-color: ${theme.colors.background.white};
+  font-family: ${theme.typography.fontFamilies.medium};
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  color: ${theme.colors.text.primary};
+  box-sizing: border-box;
+  padding: 0.75rem 0.375rem;
+  border-bottom: ${(props) => (props.isLastRow ? 'none' : `1px solid ${theme.colors.background.primary}`)};
+`;
+
+const DataCell = styled.div`
+  display: flex;
+  align-items: center;
+  min-width: 9.5rem;
+  gap: 0.375rem;
+  flex: 1;
+  text-align: left;
+  white-space: nowrap; // Prevent text from wrapping
+  overflow: hidden; // Hide overflow text
+  text-overflow: ellipsis; // Show ellipsis for overflow text
+  // min-width: 0;
+  flex: 1;
+
+  &:last-child {
+    text-align: center;
+  }
+`;
+
+const ActionCell = styled.div`
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+`;
+
+const CopyButton = styled.button`
+  border: none;
+  margin: 0;
+  padding: 0;
+  height: 1rem;
+  width: 1rem;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: .5rem;
+  background-color: ${theme.colors.background.white};
+  border-radius: 0.5rem;
+  cursor: pointer;
+  transition: all 200ms ease;
+  transform-origin: center center;
+
+  svg {
+    fill: ${theme.colors.text.tertiary};
+    transition: all 200ms ease;
+  }
+
+  &:hover {
+    svg {
+      fill: ${theme.colors.text.primary};
+    }
+  }
+
+  &:active {
+    transform: scale(0.96);
+  }
+`;
+
+const TypeTag = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.375rem;
+  width: fit-content;
+  background-color: ${theme.colors.background.vermPale};
+  color: ${theme.colors.background.verm};
+  font-family: ${theme.typography.fontFamilies.medium};
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  padding: 0.125rem 0.375rem;
+  border-radius: 0.25rem;
+  cursor: pointer;
+  transition: all 200ms ease;
+
+  &:hover {
+    background-color: ${theme.colors.background.vermBorder};
+  }
+
+  &:active {
+    transform: scale(0.96);
+  }
+`;
+
+const StatusDot = styled.div`
+  width: 0.375rem;
+  height: 0.375rem;
+  border-radius: 50%;
+  background-color: ${(props) =>
+    props.status === 'Confirmed' ? theme.colors.background.success : '#FCDC35'};
+`;
+
+const StyledLink = styled.a`
+  color: ${theme.colors.text.primary};
+  text-decoration: underline;
+  text-decoration-color: ${theme.colors.background.secondary};
+  text-decoration-thickness: 0.125rem;
+  text-underline-offset: 0.125rem;
+  transition: all 200ms ease;
+
+  &:hover {
+    text-decoration-color: ${theme.colors.text.primary};
+  }
+`;
+
+const SweepButton = styled.button`
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  font-family: ${theme.typography.fontFamilies.medium};
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  color: ${theme.colors.text.primary};
+  background-color: ${theme.colors.background.primary};
+  border: none;
+  border-radius: 1rem;
+  padding: 0.375rem 0.75rem;
+  cursor: pointer;
+  transition: all 200ms ease;
+
+  &:hover {
+    background-color: ${theme.colors.background.secondary};
+  }
+
+  svg {
+    fill: ${theme.colors.text.primary};
+  }
+
+  &:active {
+    transform: scale(0.96);
+  }
 `;
 
 export default History;
