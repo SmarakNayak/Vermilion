@@ -141,6 +141,15 @@ const server = Bun.serve({
         return new Response('Error boosting: ' + err.message, { status: 500 });
       }
     },
+    '/social/boost_history/:address': async req => {
+      try {
+        const boosts = await db.getBoostsForAddress(req.params.address);
+        return Response.json(boosts);
+      } catch (err) {
+        console.error('Error fetching boost history:', err);
+        return new Response('Error fetching boost history: ' + err.message, { status: 500 });
+      }
+    }
   }
 });
 

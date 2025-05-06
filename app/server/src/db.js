@@ -185,6 +185,14 @@ const db = {
       throw new Error('Error fetching transactions to monitor: ' + err.message);
     }
   },
+  async getBoostsForAddress(address) {
+    try {
+      const boosts = await this.sql`SELECT * FROM social.boosts WHERE (ordinals_address = ${address} OR payment_address = ${address})`;
+      return boosts;
+    } catch (err) {
+      throw new Error('Error fetching transactions to monitor: ' + err.message);
+    }
+  },
 
   // Shutdown
   async close() {
