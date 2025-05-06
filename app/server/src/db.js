@@ -179,7 +179,7 @@ const db = {
   },
   async getBoostsToMonitor() {
     try {
-      const txs = await this.sql`SELECT boost_id, commit_tx_id, reveal_tx_id, network, timestamp FROM social.boosts WHERE commit_tx_status = 'pending' OR reveal_tx_status = 'pending'`;
+      const txs = await this.sql`SELECT boost_id, commit_tx_id, reveal_tx_id, commit_tx_status, reveal_tx_status, network, timestamp FROM social.boosts WHERE commit_tx_status = 'pending' OR reveal_tx_status = 'pending'`;
       return txs;
     } catch (err) {
       throw new Error('Error fetching transactions to monitor: ' + err.message);

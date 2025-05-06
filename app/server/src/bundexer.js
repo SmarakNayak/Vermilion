@@ -1,5 +1,6 @@
 import { renderContent } from './puppeteer';
 import db from './db';
+import { getTxStatus } from './mempool';
 // Configuration - use local address in production or fall back to external URL
 const isProd = process.env.NODE_ENV === 'production';
 const apiBaseUrl = isProd ? 'http://127.0.0.1:80' : 'https://blue.vermilion.place';
@@ -60,29 +61,36 @@ const bundexer = {
       }
 
       for (let boost of boostsToMonitor) {
-        let networkString ='';
-        if (boost.network === 'testnet' || boost.network === 'signet') {
-          networkString = boost.network + '/';
-        }
+        let boostTime = new Date(boost.timestamp).getTime();
+        let fiveMinutesAgo = Date.now() - 5 * 60 * 1000;
         if (boost.commit_tx_status === 'pending') {
-          let txStatus = await db.getTxStatus(boost.commit_tx_id, networkString);
-          if (txStatus.confirmed === true) {
-            await db.updateBoostStatus(boost.boost_id, {
+          let txStatus = await getTxStatus(boost.commit_tx_id, boost.network);
+          if (txStatus ==='confirmed') {
+            await db.updateBoost(boost.boost_id, {
               commit_tx_status: 'confirmed'
+            });
+          }
+          if (txStatus ==='not_found' && boostTime < fiveMinutesAgo) {
+            await db.updateBoost(boost.boost_id, {
+              commit_tx_status: 'not_found'
             });
           }
         }
         if (boost.reveal_tx_status === 'pending') {
-          let txStatus = await db.getTxStatus(boost.reveal_tx_id, networkString);
-          if (txStatus.confirmed === true) {
-            await db.updateBoostStatus(boost.boost_id, {
+          let txStatus = await getTxStatus(boost.reveal_tx_id, boost.network);
+          if (txStatus ==='confirmed') {
+            await db.updateBoost(boost.boost_id, {
               reveal_tx_status: 'confirmed'
+            });
+          }
+          if (txStatus ==='not_found' && boostTime < fiveMinutesAgo) {
+            await db.updateBoost(boost.boost_id, {
+              reveal_tx_status: 'not_found'
             });
           }
         }
       }
-
-      Bun.sleep(60000);
+      await Bun.sleep(60000);
     }
   },
   
