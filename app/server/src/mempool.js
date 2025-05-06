@@ -12,6 +12,34 @@ async function broadcastTx(txHex, networkString='') {
   return response;
 }
 
+async function getTxStatus(txId, networkString='') {
+  const url = `https://mempool.space/${networkString}api/tx/${txId}/status`;
+
+  const response = await fetch(url, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  });
+
+  return await response.json();
+}
+
+async function getMempoolTxids(networkString='') {
+  const url = `https://mempool.space/${networkString}api/mempool/txids`;
+
+  const response = await fetch(url, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  });
+
+  return await response.json();
+}
+
 export {
-  broadcastTx
+  broadcastTx,
+  getTxStatus,
+  getMempoolTxids,
 };

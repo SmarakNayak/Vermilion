@@ -22,39 +22,77 @@ const bundexer = {
       throw err;
     }
   },
-  
-  // Main loop
-  async runBundexer() {
-    this.stopped = false;
-    await db.setupDatabase();
-    let offset = await db.getStartingOffset();
+
+  async runRenderLoop() {
+    let offset = await db.getStartingOffset(true);
     while (!this.shouldStop) {
       try {
         let t0 = performance.now();
-        console.log('Fetching inscriptions starting from:', offset);
         const inscriptions = await db.getInscriptionsToRender(5, offset);
         if (inscriptions.length === 0) {
-          console.log('No more inscriptions to render');
           await Bun.sleep(1000);
           continue;
         }
         
         let t1 = performance.now();
-        console.log('Rendering inscriptions:', inscriptions.map(i => i.sequence_number));
         const renderedContent = await this.renderInscriptions(inscriptions);
         
         let t2 = performance.now();
-        console.log('Inserting rendered content:', renderedContent.length);
         await db.bulkInsertBun(renderedContent);
   
         let t3 = performance.now();
-        console.log('Fetched in: ', t1 - t0, 'Rendered in: ', t2-t1, 'inserted in: ', t3-t2, 'Total time:', t3 - t0, 'ms');
+        console.log(`Fetched from ${offset} in: `, t1 - t0, 'Rendered in: ', t2-t1, 'inserted in: ', t3-t2, 'Total time:', t3 - t0, 'ms');
         offset = Number(inscriptions[inscriptions.length - 1].sequence_number) + 1;
+
       } catch (err) {
         console.warn('Error in main loop, waiting a minute', err);
         await Bun.sleep(50000);
       }
     }
+  },
+
+  async runTxMonitorLoop() {
+    while (!this.shouldStop) {
+      let boostsToMonitor = await db.getBoostsToMonitor();
+      if (boostsToMonitor.length === 0) {
+        await Bun.sleep(1000);
+        continue;
+      }
+
+      for (let boost of boostsToMonitor) {
+        let networkString ='';
+        if (boost.network === 'testnet' || boost.network === 'signet') {
+          networkString = boost.network + '/';
+        }
+        if (boost.commit_tx_status === 'pending') {
+          let txStatus = await db.getTxStatus(boost.commit_tx_id, networkString);
+          if (txStatus.confirmed === true) {
+            await db.updateBoostStatus(boost.boost_id, {
+              commit_tx_status: 'confirmed'
+            });
+          }
+        }
+        if (boost.reveal_tx_status === 'pending') {
+          let txStatus = await db.getTxStatus(boost.reveal_tx_id, networkString);
+          if (txStatus.confirmed === true) {
+            await db.updateBoostStatus(boost.boost_id, {
+              reveal_tx_status: 'confirmed'
+            });
+          }
+        }
+      }
+
+      Bun.sleep(60000);
+    }
+  },
+  
+  // Main loop
+  async runBundexer() {
+    this.stopped = false;
+    await Promise.all([
+      this.runRenderLoop(),
+      this.runTxMonitorLoop()
+    ]);
     this.stopped = true;
   },
 

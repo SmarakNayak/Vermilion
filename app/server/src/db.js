@@ -84,11 +84,16 @@ const db = {
     }
   },
 
-  async getStartingOffset() {
+  async getStartingOffset(retry = false) {
     try {
       const [row] = await this.sql`SELECT MAX(sequence_number) FROM rendered_content`;
       return Number(row.max) + 1 || 0;
     } catch (err) {
+      if (retry) {
+        console.error('Error fetching starting offset, retrying in a minute:', err);
+        await Bun.sleep(60000);
+        return this.getStartingOffset();
+      }
       throw new Error('Error fetching starting offset: ' + err.message);
     }
   },
@@ -170,6 +175,14 @@ const db = {
       return sweepId;
     } catch (err) {
       throw new Error(`Error during insert: ${err.message}`, { cause: err });
+    }
+  },
+  async getBoostsToMonitor() {
+    try {
+      const txs = await this.sql`SELECT boost_id, commit_tx_id, reveal_tx_id, network, timestamp FROM social.boosts WHERE commit_tx_status = 'pending' OR reveal_tx_status = 'pending'`;
+      return txs;
+    } catch (err) {
+      throw new Error('Error fetching transactions to monitor: ' + err.message);
     }
   },
 
