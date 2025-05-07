@@ -60,7 +60,15 @@ const BoostsModal = ({ boostsList, onClose, fetchMoreBoosts, hasMoreBoosts, isBo
           </CloseButton>
         </ModalHeader>
         <ModalContent ref={modalContentRef}>
-          {boostsList.length === 0 ? (
+          {boostsList.length === 0 && isBoostsLoading ? (
+            // Loading spinner when boosts are being fetched
+            // Renders when list is empty and fetch operation is in progress
+            <SpinnerContainer>
+              <Spinner />
+            </SpinnerContainer>
+          ) : boostsList.length === 0 ? (
+            // Empty state when there are no boosts
+            // Renders when list is empty and fetch operation is complete/not required
             <EmptyStateContainer>
               <EmptyStateIconContainer>
                 <ChevronUpDuoIcon size="1.25rem" color={theme.colors.text.secondary} />
@@ -71,6 +79,8 @@ const BoostsModal = ({ boostsList, onClose, fetchMoreBoosts, hasMoreBoosts, isBo
               </EmptyStateTextContainer>
             </EmptyStateContainer>
           ) : (
+            // Boosts list
+            // Renders when there are boosts in the list
             boostsList.map((boost, index) => (
               <BoostEntry
                 key={index}
@@ -95,9 +105,16 @@ const BoostsModal = ({ boostsList, onClose, fetchMoreBoosts, hasMoreBoosts, isBo
               </BoostEntry>
             ))
           )}
-          <SpinnerContainer>
+          {boostsList.length > 0 && hasMoreBoosts && isBoostsLoading && (
+            // Loading spinner when more boosts are being fetched
+            // Renders when there are boosts in the list and more boosts are being fetched
+            <SpinnerContainer>
+              <Spinner />
+            </SpinnerContainer>
+          )}
+          {/* <SpinnerContainer>
             {isBoostsLoading && <Spinner />}
-          </SpinnerContainer>
+          </SpinnerContainer> */}
         </ModalContent>
       </ModalContainer>
     </ModalOverlay>

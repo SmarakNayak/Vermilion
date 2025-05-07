@@ -49,7 +49,7 @@ const MobileMenu = ({ isOpen, onClose, onConnectWallet, wallet, onViewProfile, o
       <MenuContent>
         <LinkSection>
           <MenuListItem 
-            link="/trending" 
+            link="/" 
             action={onClose} 
             icon={FireIcon} 
             isStandard={true}

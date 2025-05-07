@@ -7,25 +7,36 @@ import RecentBoosts from '../components/RecentBoosts';
 import InnerInscriptionContent from '../components/common/InnerInscriptionContent';
 import { addCommas, formatAddress } from '../utils/format';
 import { copyText } from '../utils/clipboard';
-import { BoostIcon, CommentIcon, FireIcon, GalleryIcon, LinkIcon, Person2Icon, RefreshIcon, RuneIcon, SparklesIcon } from '../components/common/Icon';
+import { BoostIcon, CheckIcon, ChevronUpDuoIcon, CommentIcon, CopyIcon, FireIcon, GalleryIcon, LinkIcon, Person2Icon, RefreshIcon, RuneIcon, SparklesIcon, SproutIcon } from '../components/common/Icon';
 import theme from '../styles/theme';
-
+import CheckoutModal from '../components/modals/CheckoutModal';
+import BoostsModal from '../components/modals/BoostsModal';
+import CommentsModal from '../components/modals/CommentsModal';
 
 const Trending = () => {
   const [inscriptions, setInscriptions] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [hasMore, setHasMore] = useState(true);
+  const [copied, setCopied] = useState(false);
+  const [copiedRowId, setCopiedRowId] = useState(null);
+
+  const handleCopyClick = (id, content) => {
+    copyText(content);
+    setCopiedRowId(id);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000); // Reset after 2 seconds
+    setTimeout(() => setCopiedRowId(null), 2000); // Reset after 2 seconds
+  };
 
   // Create a single observer ref
   const observerRef = useRef();
   // Create ref for the sentinel element
   const loadMoreRef = useRef();
-  
     
   const fetchInscriptions = async () => {
     try {
       setIsLoading(true);
-      const response = await fetch(`/api/trending_feed?n=30`);
+      const response = await fetch(`/api/trending_feed?n=8`);
       const newInscriptions = await response.json();
       
       if (newInscriptions.length === 0) {
@@ -79,6 +90,115 @@ const Trending = () => {
     fetchInscriptions();
   }, []);
 
+  // Manage modal state
+  const [isBoostsModalOpen, setBoostsModalOpen] = useState(false);
+  const [boostsList, setBoostsList] = useState([]);
+  const [isBoostsLoading, setIsBoostsLoading] = useState(false);
+  const [hasMoreBoosts, setHasMoreBoosts] = useState(true);
+  const [boostsPage, setBoostsPage] = useState(0);
+  const [selectedBoostId, setSelectedBoostId] = useState(null);
+  
+  const fetchBoosts = async (boostId) => {
+    if (isBoostsLoading || !hasMoreBoosts) return;
+  
+    try {
+      setIsBoostsLoading(true);
+  
+      const response = await fetch(`/api/inscription_bootlegs/${boostId}?page_size=20&page_number=${boostsPage}`);
+      const data = await response.json();
+  
+      if (Array.isArray(data) && data.length > 0) {
+        setBoostsList((prev) => [...prev, ...data]);
+        setBoostsPage((prev) => prev + 1);
+      } else {
+        setHasMoreBoosts(false);
+      }
+    } catch (error) {
+      console.error('Error fetching boosts:', error);
+    } finally {
+      setIsBoostsLoading(false);
+    }
+  };
+  
+  const toggleBoostsModal = (boostId = null, delegateCount = 0) => {
+    if (!isBoostsModalOpen && boostId) {
+      setSelectedBoostId(boostId);
+      setBoostsList([]); // Reset boosts list
+      setBoostsPage(0); // Reset pagination
+      setHasMoreBoosts(true); // Reset "has more" state
+  
+      if (delegateCount > 0) {
+        // Only fetch boosts if there are any
+        fetchBoosts(boostId);
+      }
+    } else if (isBoostsModalOpen) {
+      setBoostsList([]); // Clear boosts list when closing the modal
+      setBoostsPage(0); // Reset pagination
+    }
+  
+    setBoostsModalOpen((prev) => {
+      const isOpening = !prev;
+      document.body.style.overflow = isOpening ? 'hidden' : 'auto';
+      return isOpening;
+    });
+  };
+
+  const [isCommentsModalOpen, setCommentsModalOpen] = useState(false);
+  const [commentsList, setCommentsList] = useState([]);
+  const [isCommentsLoading, setIsCommentsLoading] = useState(false);
+  const [selectedCommentId, setSelectedCommentId] = useState(null);
+
+  const fetchComments = async (commentId) => {
+    if (isCommentsLoading) return;
+  
+    try {
+      setIsCommentsLoading(true);
+  
+      const response = await fetch(`/api/inscription_comments/${commentId}`);
+      const data = await response.json();
+  
+      if (Array.isArray(data)) {
+        setCommentsList(data);
+      } else {
+        setCommentsList([]); // Handle case where no comments are returned
+      }
+    } catch (error) {
+      console.error('Error fetching comments:', error);
+    } finally {
+      setIsCommentsLoading(false);
+    }
+  };
+
+  const toggleCommentsModal = (commentId = null, commentCount = 0) => {
+    if (!isCommentsModalOpen && commentId) {
+      setSelectedCommentId(commentId);
+      setCommentsList([]); // Reset comments list
+  
+      if (commentCount > 0) {
+        // Only fetch comments if there are any
+        fetchComments(commentId);
+      }
+    }
+  
+    setCommentsModalOpen((prev) => {
+      const isOpening = !prev;
+      document.body.style.overflow = isOpening ? 'hidden' : 'auto';
+      return isOpening;
+    });
+  };
+
+  const [isCheckoutModalOpen, setCheckoutModalOpen] = useState(false);
+  const [selectedDelegateData, setSelectedDelegateData] = useState(null);
+
+  const toggleCheckoutModal = (delegateData = null) => {
+    setSelectedDelegateData(delegateData);
+    setCheckoutModalOpen((prev) => {
+      const isOpening = !prev;
+      document.body.style.overflow = isOpening ? 'hidden' : 'auto';
+      return isOpening;
+    });
+  };
+
   return (
     <MainContainer>
       <FeedContainer>
@@ -105,52 +225,80 @@ const Trending = () => {
                     <NumberText>#{addCommas(inscription.inscriptions[0].number)}</NumberText>
                   </UnstyledLink>
                   {inscription.inscriptions[0].spaced_rune && (
-                    <RuneTag>
+                    <Tag>
                       <RuneIcon size={'1rem'} color={theme.colors.background.purp} />
-                      {inscription.inscriptions[0].spaced_rune}
-                    </RuneTag>
+                      <TagSpan color={theme.colors.background.purp}>
+                        {inscription.inscriptions[0].spaced_rune}
+                      </TagSpan>
+                    </Tag>
                   )}
                   {inscription.inscriptions[0].collection_name && (
                     <UnstyledLink to={'/collection/' + inscription.inscriptions[0].collection_symbol}>
-                      <CollectionTag>
+                      <Tag>
                         <GalleryIcon size={'1rem'} color={theme.colors.background.verm} />
-                        {inscription.inscriptions[0].collection_name}
-                      </CollectionTag>
+                        <TagSpan color={theme.colors.background.verm}>
+                          {inscription.inscriptions[0].collection_name}
+                        </TagSpan>
+                      </Tag>
                     </UnstyledLink>
                   )}
                   {inscription.activity.children_count > 0 && (
                     <UnstyledLink to={'/children/' + inscription.inscriptions[0].id}>
-                      <ParentTag>
-                        <Person2Icon size={'1rem'} color={theme.colors.text.primary} />
-                        Parent
-                      </ParentTag>
+                      <Tag>
+                        <Person2Icon size={'1rem'} color={theme.colors.text.secondary} />
+                        <TagSpan color={theme.colors.text.secondary}>
+                          Parent
+                        </TagSpan>
+                        <TagSpan color={theme.colors.text.tertiary}>{" • " + addCommas(inscription.activity.children_count)}</TagSpan>
+                      </Tag>
                     </UnstyledLink>
                   )}
                 </TitleContainer>
                 <DetailsContainer>
-                  <SocialButton empty onClick={() => copyText('https://vermilion.place/inscription/' + inscription.inscriptions[0].number)}>
-                    <LinkIcon size={'1.25rem'} color={theme.colors.text.secondary} />
-                  </SocialButton>
+                  <CopyButton onClick={() => handleCopyClick(i, 'https://vermilion.place/inscription/' + inscription.inscriptions[0].number)} copied={copied}>
+                    {copiedRowId === i ? <CheckIcon size={'1.25rem'} color={theme.colors.background.success} /> : <LinkIcon size={'1.25rem'} />}
+                  </CopyButton>
                 </DetailsContainer>
               </InfoContainer>
               <UnstyledLink to={'/inscription/' + inscription.inscriptions[0].number}>
                 <InscriptionContainer>
-                  <InnerInscriptionContent
-                    contentType={
-                      inscription.inscriptions[0].content_type === 'loading' ? 'loading' : 
-                      inscription.inscriptions[0].content_type.startsWith('image/') ? 'image' : 'html'
-                    }
-                    blobUrl={`/api/inscription_number/${inscription.inscriptions[0].number}`}
-                    number={inscription.inscriptions[0].number}
-                    metadata={{
-                      id: inscription.inscriptions[0].id,
-                      content_type: inscription.inscriptions[0].content_type,
-                      is_recursive: inscription.inscriptions[0].is_recursive
-                    }}
-                    useFeedStyles={true}
-                  />
+                  <InscriptionContentWrapper>
+                    <InnerInscriptionContent
+                      contentType={
+                        inscription.inscriptions[0].content_type === 'loading' ? 'loading' : 
+                        inscription.inscriptions[0].content_type.startsWith('image/') ? 'image' : 'html'
+                      }
+                      blobUrl={`/api/inscription_number/${inscription.inscriptions[0].number}`}
+                      number={inscription.inscriptions[0].number}
+                      metadata={{
+                        id: inscription.inscriptions[0].id,
+                        content_type: inscription.inscriptions[0].content_type,
+                        is_recursive: inscription.inscriptions[0].is_recursive
+                      }}
+                      useFeedStyles={true}
+                    />
+                    <ContentOverlay />
+                  </InscriptionContentWrapper>
                 </InscriptionContainer>
               </UnstyledLink>
+              <ActionContainer>
+                <SocialContainer>
+                  <SocialButton onClick={() => toggleBoostsModal(inscription.inscriptions[0].id, inscription.activity.delegate_count)}>
+                    <ChevronUpDuoIcon size={'1.25rem'} color={theme.colors.text.primary}></ChevronUpDuoIcon>
+                    {addCommas(inscription.activity.delegate_count)}
+                  </SocialButton>
+                  <SocialButton onClick={() => toggleCommentsModal(inscription.inscriptions[0].id, inscription.activity.comment_count)}>
+                    <CommentIcon size={'1.25rem'} color={theme.colors.text.primary}></CommentIcon>
+                    {addCommas(inscription.activity.comment_count)}
+                  </SocialButton>
+                </SocialContainer>
+                <BoostContainer>
+                <BoostButton onClick={() => toggleCheckoutModal(inscription.inscriptions[0])}>
+                  <ChevronUpDuoIcon size={'1.25rem'} color={theme.colors.background.white}></ChevronUpDuoIcon>
+                    Boost
+                  </BoostButton>
+                </BoostContainer>
+              </ActionContainer>
               {/* <ActionContainer>
                 <SocialContainer>
                   <SocialButton>
@@ -170,14 +318,37 @@ const Trending = () => {
                 </BoostContainer>
               </ActionContainer> */}
             </ContentContainer>
-            {i < inscriptions.length - 1 && <Divider />}
+            {i < inscriptions.length - 1 && <Divider />}  
           </React.Fragment>
         ))}
-        
         <LoadingContainer ref={loadMoreRef}>
           {isLoading && <Spinner />}
         </LoadingContainer>
       </FeedContainer>
+
+      {/* Boosts Modal */}
+      <BoostsModal
+        boostsList={boostsList}
+        onClose={() => toggleBoostsModal(null)}
+        fetchMoreBoosts={() => fetchBoosts(selectedBoostId)}
+        hasMoreBoosts={hasMoreBoosts}
+        isBoostsLoading={isBoostsLoading}
+        isBoostsModalOpen={isBoostsModalOpen}
+      />
+
+      {/* Comments Modal */}
+      <CommentsModal
+        commentsList={commentsList}
+        onClose={() => toggleCommentsModal(null)}
+        isCommentsModalOpen={isCommentsModalOpen}
+      />
+
+      {/* Checkout Modal */}
+      <CheckoutModal
+        onClose={() => toggleCheckoutModal(null)}
+        isCheckoutModalOpen={isCheckoutModalOpen}
+        delegateData={selectedDelegateData || ""}
+      />
     </MainContainer>
   );
 };
@@ -318,6 +489,21 @@ const InscriptionContainer = styled.div`
   }
 `;
 
+const InscriptionContentWrapper = styled.div`
+  position: relative;
+`;
+
+const ContentOverlay = styled.div`
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 100%;
+  width: 100%;
+  cursor: pointer;
+`;
+
 const ImageContainer = styled.img`
   width: 32rem;
   height: auto;
@@ -397,46 +583,27 @@ const StyledIframe = styled.iframe`
   //aspect-ratio: 1/1;
 `;
 
-const CollectionTag = styled.div`
-  display: flex;
+const Tag = styled.div`
+  display: inline-flex;
   flex-direction: row;
   align-items: center;
+  justify-content: center;
   gap: .25rem;
   padding: .125rem .375rem;
-  border-radius: .5rem;
+  border-radius: .25rem;
   font-family: ${theme.typography.fontFamilies.medium};
   font-size: .875rem;
+  line-height: 1.125rem;
   margin: 0;
-  color: ${theme.colors.background.verm};
-  background-color: #FCECEB;
-  cursor: pointer;
-  transition: all 200ms ease;
-  transform-origin: center center;
-
-  &:hover {
-    background-color: #FBE3E1;
-  }
-
-  &:active {
-    transform: scale(0.96);
-  }
-`;
-
-const ParentTag = styled.div`
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  gap: .25rem;
-  padding: .125rem .375rem;
-  border-radius: .5rem;
-  font-family: ${theme.typography.fontFamilies.medium};
-  font-size: .875rem;
-  margin: 0;
-  color: ${theme.colors.text.primary};
   background-color: ${theme.colors.background.primary};
   cursor: pointer;
   transition: all 200ms ease;
   transform-origin: center center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+  width: fit-content;
 
   &:hover {
     background-color: ${theme.colors.background.secondary};
@@ -447,29 +614,18 @@ const ParentTag = styled.div`
   }
 `;
 
-const RuneTag = styled.div`
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  gap: .25rem;
-  padding: .125rem .375rem;
-  border-radius: .5rem;
+const TagSpan = styled.span`
   font-family: ${theme.typography.fontFamilies.medium};
   font-size: .875rem;
+  line-height: 1.125rem;
+  color: ${props => props.color};
   margin: 0;
-  color: ${theme.colors.background.purp};
-  background-color: #FAEBF1;
-  cursor: pointer;
-  transition: all 200ms ease;
-  transform-origin: center center;
-
-  &:hover {
-    background-color: #F8E2EA;
-  }
-
-  &:active {
-    transform: scale(0.96);
-  }
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+  flex: 0 1 auto; 
+  white-space: nowrap;
+  min-width: 0; 
 `;
 
 const InfoContainer = styled.div`
@@ -498,7 +654,6 @@ const DetailsContainer = styled.div`
   flex-direction: row;
   align-items: center;
   justify-content: flex-end;
-  gap: .5rem;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -506,33 +661,41 @@ const DetailsContainer = styled.div`
 `;
 
 const NumberText = styled.p`
-  font-family: ${theme.typography.fontFamilies.bold};
+  font-family: ${theme.typography.fontFamilies.medium};
   font-size: 1rem;
+  line-height: 1.5rem;
   margin: 0;
 `;
 
-const SocialButton = styled.button`
-  height: 2.5rem;
-  min-height: 2.5rem;
-  min-width: 2.5rem;
-  border-radius: 1.25rem;
-  font-family: ${theme.typography.fontFamilies.medium};
-  font-size: 1rem;
-  color: ${theme.colors.background.dark};
+const CopyButton = styled.button`
   border: none;
-  padding: ${props => props.empty ? '.375rem' : '.375rem .75rem'};
   margin: 0;
+  padding: 0;
+  height: 2rem;
+  width: 2rem;
+  min-height: 2rem;
+  min-width: 2rem;
   display: flex;
+  flex-direction: row;
   align-items: center;
   justify-content: center;
-  gap: .375rem;
-  cursor: pointer;
+  gap: .5rem;
   background-color: ${theme.colors.background.white};
+  border-radius: 1rem;
+  cursor: pointer;
   transition: all 200ms ease;
   transform-origin: center center;
 
+  svg {
+    fill: ${theme.colors.text.tertiary};
+    transition: all 200ms ease;
+  }
+
   &:hover {
     background-color: ${theme.colors.background.primary};
+    svg {
+      fill: ${theme.colors.text.primary};
+    }
   }
 
   &:active {
@@ -554,6 +717,35 @@ const SocialContainer = styled.div`
   gap: .5rem;
 `;
 
+const SocialButton = styled.button`
+  height: 2rem;
+  min-height: 2rem;
+  min-width: 2rem;
+  border-radius: 1rem;
+  font-family: ${theme.typography.fontFamilies.medium};
+  font-size: 1rem;
+  color: ${theme.colors.text.primary};
+  border: none;
+  padding: 0.375rem 0.75rem;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: .375rem;
+  cursor: pointer;
+  background-color: ${theme.colors.background.white};
+  transition: all 200ms ease;
+  transform-origin: center center;
+
+  &:hover {
+    background-color: ${theme.colors.background.primary};
+  }
+
+  &:active {
+    transform: scale(0.96);
+  }
+`;
+
 const SocialText = styled.p`
   font-family: ${theme.typography.fontFamilies.medium};
   font-size: 1rem;
@@ -568,6 +760,7 @@ const BoostContainer = styled.div`
 
 const BoostButton = styled.button`
   height: 2.5rem;
+  min-height: 2.5rem;
   border-radius: 1.25rem;
   font-family: ${theme.typography.fontFamilies.medium};
   font-size: 1rem;
@@ -585,11 +778,11 @@ const BoostButton = styled.button`
   transform-origin: center center;
 
   &:hover {
-    background-color: ${theme.colors.background.dark};};
+    opacity: 0.75;
   }
 
   &:active {
-    transform: scale(0.96);
+    transform: scale(0.98);
   }
 `;
 
@@ -715,6 +908,8 @@ const LinkText = styled.p`
 const UnstyledLink = styled(Link)`
   color: unset;
   text-decoration: unset;
+  display: inline-block;
+  max-width: 100%;
 `;
 
 export default Trending;

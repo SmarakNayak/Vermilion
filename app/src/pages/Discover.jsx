@@ -83,7 +83,7 @@ const Discover = () => {
           <PageText>Feed</PageText>
           <VerticalDivider />
           <ButtonContainer>
-            <TabButton to="/trending" isActive={false}>
+            <TabButton to="/" isActive={false}>
               <FireIcon size={'1.25rem'} />
               Trending
             </TabButton>
