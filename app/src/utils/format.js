@@ -159,3 +159,7 @@ export const calcTimeAgo = (timestamp) => {
     return `${days}d`;
   }
 };
+
+export const capitalizeFirstLetter = (string) => {
+  return string.charAt(0).toUpperCase() + string.slice(1);
+};

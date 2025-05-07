@@ -106,7 +106,7 @@ const SuccessModal = ({ isOpen, onClose, boostDetails }) => {
           </SectionContainer>
           <ButtonContainer>
             <HistoryButton 
-              href={"/profile/"+wallet.ordinalsAddress}
+              href={"/history"}
               target="_blank"
               rel="noopener noreferrer"
             >
@@ -307,7 +307,8 @@ const ButtonContainer = styled.div`
   width: 100%;
 `;
 
-const HistoryButton = styled.button`
+const HistoryButton = styled.a`
+  text-decoration: none;
   display: flex;
   align-items: center;
   justify-content: center;

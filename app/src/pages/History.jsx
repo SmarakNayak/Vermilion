@@ -3,11 +3,15 @@ import { Link } from 'react-router-dom';
 import styled from 'styled-components';
 import { CheckIcon, ChevronUpDuoIcon, CopyIcon, QuestionIcon, SweepIcon } from '../components/common/Icon';
 import theme from '../styles/theme';
-import { copyText, formatAddress, formatTimestampMs } from '../utils';
+import { copyText, formatAddress, formatTimestampMs, capitalizeFirstLetter } from '../utils';
+import useStore from '../store/zustand';
+import { NETWORKS } from '../wallet/networks';
 
 const History = () => {
   const [copied, setCopied] = useState(false);
   const [copiedRowId, setCopiedRowId] = useState(null);
+  const [boostHistory, setBoostHistory] = useState([]);
+  const wallet = useStore((state) => state.wallet);
 
   const handleCopyClick = (id, content) => {
     copyText(content);
@@ -16,6 +20,35 @@ const History = () => {
     setTimeout(() => setCopied(false), 2000); // Reset after 2 seconds
     setTimeout(() => setCopiedRowId(null), 2000); // Reset after 2 seconds
   };
+
+  const fetchBoostHistory = async () => {
+    let url = `/bun/social/boost_history/${wallet.ordinalsAddress}`;
+    const response = await fetch(url);
+    if (response.ok) {
+      const data = await response.json();
+      data.forEach((row) => {
+        row.type = "Boost";
+      });
+      setBoostHistory(data);
+      console.log('Boost history:', data);
+    } else {
+      console.error('Error fetching boost history:', response.statusText);
+    }
+  }
+
+  const getMempoolTxUrl = (txid) => {
+    if (!wallet) return `https://memepool.space/tx/${txid}`;
+    let link = `https://memepool.space/${NETWORKS[wallet.network].mempool}tx/${txid}`;
+    return link;
+  };
+
+  useEffect(() => {
+    if (wallet?.ordinalsAddress) {
+      fetchBoostHistory();
+    } else {
+      setBoostHistory([]);
+    }
+  }, [wallet]);
 
   const dummyData = [
     {
@@ -71,16 +104,18 @@ const History = () => {
               <HeaderCell>ID</HeaderCell>
               <HeaderCell>Type</HeaderCell>
               <HeaderCell>Creation Date</HeaderCell>
+              <HeaderCell>Quantity</HeaderCell>
+              <HeaderCell>Comment</HeaderCell>
               <HeaderCell>Status</HeaderCell>
               <HeaderCell>Commit TX</HeaderCell>
               <HeaderCell>Reveal TX</HeaderCell>
               <HeaderCell></HeaderCell>
             </HeaderRow>
-            {dummyData.map((row, index) => (
-              <DataRow key={index} isLastRow={index === dummyData.length - 1}>
+            {boostHistory.map((row, index) => (
+              <DataRow key={index} isLastRow={index === boostHistory.length - 1}>
                 <DataCell>
-                  {formatAddress(row.id)}
-                  <CopyButton onClick={() => handleCopyClick(index, row.id)} copied={copied}>
+                  {formatAddress(row.boost_id)}
+                  <CopyButton onClick={() => handleCopyClick(index, row.boost_id)} copied={copied}>
                     {copiedRowId === index ? <CheckIcon size={'1rem'} color={theme.colors.background.success} /> : <CopyIcon size={'1rem'} />}
                   </CopyButton>
                 </DataCell>
@@ -90,23 +125,25 @@ const History = () => {
                     {row.type}
                   </TypeTag>
                 </DataCell>
-                <DataCell>{formatTimestampMs(row.creationDate)}</DataCell>
+                <DataCell>{formatTimestampMs(row.timestamp)}</DataCell>
+                <DataCell>{row.boost_quantity}</DataCell>
+                <DataCell>{row.boost_comment}</DataCell>
                 <DataCell>
-                  <StatusDot status={row.status} />
-                  {row.status}
+                  <StatusDot status={capitalizeFirstLetter(row.reveal_tx_status)} />
+                  {capitalizeFirstLetter(row.reveal_tx_status)}
                 </DataCell>
                 <DataCell>
-                  <StyledLink href="#" target="_blank">
-                    {formatAddress(row.commitTx)}
+                  <StyledLink href={getMempoolTxUrl(row.reveal_tx_id)} target="_blank">
+                    {formatAddress(row.commit_tx_id)}
                   </StyledLink>
                 </DataCell>
                 <DataCell>
-                  <StyledLink href="#" target="_blank">
-                    {formatAddress(row.revealTx)}
+                  <StyledLink href={getMempoolTxUrl(row.reveal_tx_id)} target="_blank">
+                    {formatAddress(row.reveal_tx_id)}
                   </StyledLink>
                 </DataCell>
                 <ActionCell>
-                  {row.status === 'Pending' && (
+                  {row.commit_tx_status === 'confirmed' && (row.reveal_tx_status in ['scheduled', 'pending', 'not_found']) && (
                     <SweepButton>
                       <SweepIcon size={'1.125rem'} />
                       Sweep
