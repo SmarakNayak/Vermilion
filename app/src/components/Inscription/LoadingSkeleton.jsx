@@ -26,6 +26,23 @@ const LoadingSkeleton = () => {
   );
 };
 
+const CompactLoadingSkeleton = () => {
+  return (
+    <SkeletonContainer>      
+      <SkeletonGroup gap={'1.5rem'}>
+        <SkeletonElement width={'100%'} height={'3rem'} />
+        <SkeletonElement width={'100%'} height={'1.125rem'} />
+      </SkeletonGroup>
+    </SkeletonContainer>
+  );
+};
+
+const StatsSkeleton = () => {
+  return (
+    <SkeletonElement width={'7.5rem'} height={'2rem'} radius={'1rem'} />
+  );
+}
+
 const pulse = keyframes`
   0%, 100% {
     opacity: 1;
@@ -54,9 +71,9 @@ const SkeletonGroup = styled.div`
 export const SkeletonElement = styled.div`
   background-color: ${theme.colors.background.primary};
   animation: ${pulse} 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-  border-radius: .5rem;
+  border-radius: ${(props) => props.radius || '0.5rem'};
   height: ${(props) => props.height};
   width: ${(props) => props.width};
 `;
 
-export default LoadingSkeleton;
+export { LoadingSkeleton, CompactLoadingSkeleton, StatsSkeleton };

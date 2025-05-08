@@ -3,13 +3,11 @@ import React, { useEffect, useRef, useState, useCallback } from 'react';
 import styled from 'styled-components';
 import { Link } from 'react-router-dom';
 
-
 // Components from Inscription folder
 import {
   CollectionInfo,
   CollectionMetadata,
   DetailsSection,
-  LoadingSkeleton,
   MediaDisplay,
   ProvenanceSection,
   SatributeSection,
@@ -29,6 +27,13 @@ import {
   SectionHeaderContainer,
   SimilarText
 } from '../components/Inscription/Layout';
+
+// Skeleton components
+import { 
+  LoadingSkeleton, 
+  CompactLoadingSkeleton, 
+  StatsSkeleton 
+} from '../components/Inscription/LoadingSkeleton';
 
 // Other components
 import Gallery from '../components/Gallery';
@@ -265,10 +270,12 @@ const Inscription = () => {
   const [boostsPage, setBoostsPage] = useState(0); 
   const [isBoostsLoading, setIsBoostsLoading] = useState(false);
   const [hasMoreBoosts, setHasMoreBoosts] = useState(true); 
+  const [boostCountLoading, setBoostCountLoading] = useState(true);
   const [commentCount, setCommentCount] = useState(0);
   const [commentsList, setCommentsList] = useState([]);
   const [hasMatchingComment, setHasMatchingComment] = useState(false);
   const [commentContent, setCommentContent] = useState(null);
+  const [commentCountLoading, setCommentCountLoading] = useState(true);
   const [activeDot, setActiveDot] = useState(0);
   const [slideDirection, setSlideDirection] = useState(null); // Track slide direction
 
@@ -279,7 +286,11 @@ const Inscription = () => {
   const [relatedInscriptionsLoading, setRelatedInscriptionsLoading] = useState(true);
   
   // Compute overall loading state
-  const isLoading = metadataLoading || addressLoading || editionsLoading || relatedInscriptionsLoading;
+  // const isLoading = metadataLoading || addressLoading || editionsLoading || relatedInscriptionsLoading;
+  const isLoading = metadataLoading || addressLoading;
+  const dataLoading = editionsLoading || relatedInscriptionsLoading;
+  const socialCountLoading = commentCountLoading || boostCountLoading;
+  // console.log("Main loading state:", isLoading, "Data loading state:", dataLoading, "Social count loading state:", socialCountLoading);
 
   // State for managing copy action
   const [copied, setCopied] = useState(false);
@@ -374,6 +385,7 @@ const Inscription = () => {
         setBoostsList([]);
         setBoostEdition(null);
         setIsBoostsLoading(false);
+        setBoostCountLoading(false);
         return;
       }
   
@@ -399,9 +411,11 @@ const Inscription = () => {
       }
   
       setIsBoostsLoading(false);
+      setBoostCountLoading(false);
     } catch (error) {
       console.error("Error fetching boosts:", error);
       setIsBoostsLoading(false);
+      setBoostCountLoading(false);
     }
   }, [metadata, boostsPage, hasMoreBoosts, isBoostsLoading]);
 
@@ -420,6 +434,7 @@ const Inscription = () => {
       if (!targetId) {
         setCommentCount(0);
         setCommentsList([]); // Reset comments list
+        setCommentCountLoading(false);
         return;
       }
   
@@ -460,14 +475,17 @@ const Inscription = () => {
         );
   
         setCommentsList(enrichedComments); // Store enriched comments
+        setCommentCountLoading(false);
       } else {
         setCommentCount(0);
         setCommentsList([]); // Reset comments list if no data
+        setCommentCountLoading(false);
       }
     } catch (error) {
       console.error("Error fetching comments:", error);
       setCommentCount(0);
       setCommentsList([]); // Reset comments list on error
+      setCommentCountLoading(false);
     }
   }, [metadata]);
 
@@ -717,6 +735,13 @@ const Inscription = () => {
     setCommentContent(null);
     setActiveDot(0);
     setSlideDirection(null);
+
+    // Reset loading states
+    setMetadataLoading(true);
+    setAddressLoading(true);
+    setEditionsLoading(true);
+    setBoostCountLoading(true);
+    setCommentCountLoading(true);      
   
     // Close all modals
     setBoostsModalOpen(false);
@@ -792,14 +817,23 @@ const Inscription = () => {
               <DataContainer gapsize={'.75rem'}>
                 <SectionPadding gap={'.75rem'}>
                   <ButtonsRow gap={'.5rem'}>
-                    <CountButton onClick={toggleBoostsModal}>
-                      <ChevronUpDuoIcon size={'1.25rem'} color={theme.colors.text.primary} />
-                        {boostEdition ? `${addCommas(boostEdition)} / ${addCommas(boosts)} boosts` : `${addCommas(boosts)} boosts`}
-                      </CountButton>
-                    <CountButton onClick={toggleCommentsModal}>
-                      <CommentIcon size={'1.25rem'} color={theme.colors.text.primary} />
-                      {addCommas(commentCount)} comments
-                    </CountButton>
+                    {socialCountLoading ? (
+                      <>
+                        <StatsSkeleton />
+                        <StatsSkeleton />
+                      </>
+                    ) : (
+                      <>
+                        <CountButton onClick={toggleBoostsModal}>
+                          <ChevronUpDuoIcon size={'1.25rem'} color={theme.colors.text.primary} />
+                            {boostEdition ? `${addCommas(boostEdition)} / ${addCommas(boosts)} boosts` : `${addCommas(boosts)} boosts`}
+                          </CountButton>
+                        <CountButton onClick={toggleCommentsModal}>
+                          <CommentIcon size={'1.25rem'} color={theme.colors.text.primary} />
+                          {addCommas(commentCount)} comments
+                        </CountButton>
+                      </>
+                    )}
                   </ButtonsRow>
                   <ButtonsRow gap={'.75rem'}>
                     <BoostButton onClick={toggleCheckoutModal}>
