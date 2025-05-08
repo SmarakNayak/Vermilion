@@ -301,7 +301,9 @@ const BackButton = styled.button`
   align-items: center;
   justify-content: center;
   width: 2rem;
+  min-width: 2rem;
   height: 2rem;
+  min-height: 2rem;
   border: none;
   border-radius: 1rem;
   background-color: ${theme.colors.background.white};
@@ -322,7 +324,9 @@ const CloseButton = styled.button`
   align-items: center;
   justify-content: center;
   width: 2rem;
+  min-width: 2rem;
   height: 2rem;
+  min-height: 2rem;
   border: none;
   border-radius: 1rem;
   background-color: ${theme.colors.background.white};
