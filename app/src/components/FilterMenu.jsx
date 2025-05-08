@@ -9,14 +9,14 @@ const MenuContainer = styled.div`
   visibility: ${props => (props.isOpen ? 'visible' : 'hidden')};
   width: 100%;
   max-width: 18rem;
-  transition: left 0.3s ease-in-out;
+  transition: all 200ms ease;
   margin-right: 2rem;
   gap: 1rem;
 
   @media (max-width: 630px) {
     background-color: ${theme.colors.background.white};
     max-width: calc(100% - 2rem);  
-    max-height: calc(100% - 2rem);
+    max-height: calc(100% - 1.5rem);
     margin-right: 0;  
     width: 100%;     
     height: 100%;    
@@ -24,7 +24,7 @@ const MenuContainer = styled.div`
     top: 0;          
     left: 0;          
     z-index: 1000;    
-    padding: 1rem;
+    padding: .75rem 1rem;
   }
 `;
 
@@ -41,9 +41,10 @@ const MenuHeader = styled.div`
 `;
 
 const MenuText = styled.p`
-  font-family: Relative Trial Bold;
-  font-size: 1rem;
-  color: #000000;
+  font-family: ${theme.typography.fontFamilies.bold};
+  font-size: 1.125rem;
+  line-height: 1.5rem;
+  color: ${theme.colors.text.primary};
   margin: 0;
   padding: 0;
 `;
@@ -68,7 +69,7 @@ const CategoryHeader = styled.div`
   transform-origin: center center;
 
   &:hover {
-    background-color: #F5F5F5;
+    background-color: ${theme.colors.background.primary};
   }
 `;
 
@@ -84,7 +85,7 @@ const Option = styled.button`
   justify-content: flex-start;
   align-items: center;
   padding: .25rem .5rem;
-  color: ${props => (props.isSelected ? 'white' : 'black')};
+  color: ${props => (props.isSelected ? theme.colors.text.white : theme.colors.text.primary)};
   background-color: ${props => (props.isSelected ? theme.colors.background.dark : theme.colors.background.primary)};
   text-align: left;
   border: none;
@@ -105,8 +106,11 @@ const Option = styled.button`
 `;
 
 const CloseButton = styled.button`
-  padding: .5rem 1rem;
-  border-radius: .5rem;
+  width: 2.5rem;
+  min-width: 2.5rem;
+  height: 2.5rem;
+  min-height: 2.5rem;
+  border-radius: 1.25rem;
   border: none;
   margin: 0;
   display: flex;
@@ -116,13 +120,12 @@ const CloseButton = styled.button`
   gap: .375rem;
   font-family: ${theme.typography.fontFamilies.medium};
   font-size: 1rem;
-  color: #959595;
-  background-color: #F5F5F5;
+  background-color: ${theme.colors.background.white};
   transition: all 200ms ease;
   transform-origin: center center;
 
   &:hover {
-    background-color: #E9E9E9;
+    background-color: ${theme.colors.background.primary};
   }
 
   &:active {
@@ -174,8 +177,7 @@ const FilterMenu = ({ isOpen, onClose, onSelectionChange, initialSelection }) =>
       <MenuHeader>
         <MenuText>Filters</MenuText>
         <CloseButton onClick={onClose}>
-          Close
-          <CrossIcon color={'#959595'} size={'1rem'} />
+          <CrossIcon color={theme.colors.text.secondary} size={'1.25rem'} />
         </CloseButton>
       </MenuHeader>
       {categories.map(category => (
