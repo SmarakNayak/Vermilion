@@ -157,7 +157,38 @@ const WalletConnectMenu = ({ isOpen, onClose }) => {
     setConnectingWallet(walletType); // Track the wallet being connected
     setIsConnecting(true);
     try {
+      //1. Connect to the wallet
       let wallet = await connectWallet(walletType, "signet");
+      //2. Fetch sign in message
+      const messageResponse = await fetch(`/bun/social/generate_sign_in_message`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          address: wallet.ordinalsAddress,
+          walletType: wallet.walletType
+        })
+      });
+      const messageJson = await messageResponse.json();
+      const signInMessage = messageJson.signInMessage;
+      console.log("Sign in message:", signInMessage);
+      //3. Sign the message
+      const signature = await wallet.signMessage(signInMessage, 'bip322', wallet.ordinalsAddress);
+      //4. Send the signature to the server
+      const response = await fetch(`/bun/social/verify_signature`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          address: wallet.ordinalsAddress,
+          signInMessage,
+          signature,
+          signatureType: 'bip322',
+        })
+      });
+      console.log("Response from server:", response);
       setWallet(wallet);
       wallet.setupAccountChangeListener(async (accounts) => {
         console.log(accounts);

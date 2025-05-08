@@ -22,6 +22,18 @@ const server = Bun.serve({
         //return proxyRequest(req, 'localhost:1082',  '/social/boost');
       }
     },
+    '/bun/social/generate_sign_in_message': {
+      POST: async req => {
+        return proxyRequest(req, 'https://blue.vermilion.place');
+        //return proxyRequest(req, 'localhost:1082',  '/social/generate_sign_in_message');
+      }
+    },
+    '/bun/social/verify_signature': {
+      POST: async req => {
+        return proxyRequest(req, 'https://blue.vermilion.place');
+        //return proxyRequest(req, 'localhost:1082',  '/social/verify_signature');
+      }
+    },
     '/r/*': async req => {
       return proxyRequest(req, 'https://blue.vermilion.place');
     },

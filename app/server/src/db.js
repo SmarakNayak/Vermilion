@@ -78,6 +78,26 @@ const db = {
           broadcast_timestamp TIMESTAMP DEFAULT NULL
         );
       `;
+      await this.sql`
+        CREATE TABLE IF NOT EXISTS social.sign_ins (
+          sign_in_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+          sign_in_status VARCHAR(20) NOT NULL DEFAULT 'pending',
+          signature_type VARCHAR(10) DEFAULT 'bip322',
+          address VARCHAR(64) NOT NULL,
+          sign_in_message TEXT NOT NULL,
+          wallet_type VARCHAR(10),
+          timestamp TIMESTAMP DEFAULT NOW(),
+          signature TEXT,
+          verified BOOLEAN DEFAULT FALSE,
+          verified_timestamp TIMESTAMP DEFAULT NULL,
+          verify_error TEXT,
+          sec_ch_ua TEXT,
+          sec_ch_ua_mobile TEXT,
+          sec_ch_ua_platform TEXT,
+          user_agent TEXT,
+          accept_language TEXT
+        );
+      `;
     } catch (err) {
       console.error(err);
       throw new Error('Error setting up database: ' + err.message);
@@ -191,6 +211,28 @@ const db = {
       return boosts;
     } catch (err) {
       throw new Error('Error fetching transactions to monitor: ' + err.message);
+    }
+  },
+  async appendSignInRecord(signInRecord) {
+    try {
+      await this.sql`INSERT INTO social.sign_ins ${this.sql(signInRecord)}`;
+    } catch (err) {
+      throw new Error('Error appending sign in record: ' + err.message);
+    }
+  },
+  async getSignInRecord(address, message) {
+    try {
+      const signIn = await this.sql`SELECT * FROM social.sign_ins WHERE address = ${address} AND sign_in_message = ${message} LIMIT 1`;
+      return signIn;
+    } catch (err) {
+      throw new Error('Error fetching sign in record: ' + err.message);
+    }
+  },
+  async updateSignInRecord(address, message, signInRecord) {
+    try {
+      await this.sql`UPDATE social.sign_ins SET ${this.sql(signInRecord)} WHERE address = ${address} AND sign_in_message = ${message}`;
+    } catch (err) {
+      throw new Error('Error updating sign in record: ' + err.message);
     }
   },
 

@@ -3,6 +3,7 @@ import bundexer from './src/bundexer';
 import { renderContent, browserPool } from './src/puppeteer';
 import { addInscriptionPreviewsToHtml, renderInscriptionCard } from './src/ssr';
 import { broadcastTx } from './src/mempool';
+import { Authenticator } from './src/authenticator';
 
 // Configuration - use local address in production or fall back to external URL
 const isProd = process.env.NODE_ENV === 'production';
@@ -57,7 +58,10 @@ const server = Bun.serve({
       });
     },
     // social routes
-    '/social/boost': async req => {      
+    '/social/boost': async req => {
+      if (req.method !== 'POST') {
+        return new Response('Method Not Allowed', { status: 405 });
+      }
       try {
         let body = await req.json();
         let [ insertRecord ] = await db.recordBoost({
@@ -149,10 +153,46 @@ const server = Bun.serve({
         console.error('Error fetching boost history:', err);
         return new Response('Error fetching boost history: ' + err.message, { status: 500 });
       }
+    },
+    '/social/generate_sign_in_message': async req => {
+      if (req.method !== 'POST') {
+        return new Response('Method Not Allowed', { status: 405 });
+      }
+      try {
+        let body = await req.json();
+        let address = body.address;
+        let walletType = body.walletType;
+        let headers = req.headers;
+        let authenticator = new Authenticator();
+        let signInMessage = await authenticator.GenerateSignInMessage(address, walletType, headers);
+        return Response.json({ signInMessage });
+      } catch (err) {
+        console.error('Error generating sign in message:', err);
+        return new Response('Error generating sign in message: ' + err.message, { status: 500 });
+      }
+    },
+    '/social/verify_signature': async req => {
+      if (req.method !== 'POST') {
+        return new Response('Method Not Allowed', { status: 405 });
+      }
+      try {
+        let body = await req.json();
+        let address = body.address;
+        let message = body.signInMessage;
+        let signature = body.signature;
+        let signatureType = body.signatureType;
+        let authenticator = new Authenticator();
+        let response = await authenticator.VerifySignature(address, message, signature, signatureType);
+        return Response.json(response);
+      } catch (err) {
+        console.error('Error verifying signature:', err);
+        return new Response('Error verifying signature: ' + err.message, { status: 500 });
+      }
     }
   }
 });
 
+await db.setupDatabase();
 bundexer.runBundexer();
 
 async function getRenderedContentResponse(id, content_type, is_recursive) {

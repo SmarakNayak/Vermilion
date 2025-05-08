@@ -54,6 +54,10 @@ class Wallet {
     return signedPsbts;
   }
 
+  async signMessage(message, type, address = this.ordinalsAddress) {
+    throw new Error('signMessage must be implemented by subclass');
+  }
+
   async setupAccountChangeListener(callback) {
     console.log(`${this.walletType} does not support account change listener by default`);
   }
@@ -246,6 +250,13 @@ class UnisatWallet extends Wallet {
     const finalizedPsbts = psbts.map(psbt => psbt.finalizeAllInputs());
     return finalizedPsbts;
   }
+  // "bip322-simple". default is "ecdsa"
+  async signMessage(message, type) {
+    this.windowCheck();
+    if (type && type === 'bip322') type = 'bip322-simple';
+    let signature = await window.unisat.signMessage(message, type);
+    return signature;
+  } 
 
   async setupAccountChangeListener(callback) {
     this.windowCheck();
@@ -372,6 +383,17 @@ class XverseWallet extends Wallet {
 
     return response.result.map(r => bitcoin.Psbt.fromBase64(r.psbt).finalizeAllInputs());
   }
+  
+  async signMessage(message, type, address = this.ordinalsAddress) {
+    this.windowCheck();
+    const response = await window.XverseProviders.BitcoinProvider.request("signMessage", {
+      address,
+      message,
+      protocol: type
+    });
+    if (response.error) throw new Error(response.error.message);
+    return response.result.signature;
+  }
 
   async setupAccountChangeListener(callback) {
     this._accountChangedListener = window.XverseProviders.BitcoinProvider.addListener('accountChange', async () => {
@@ -433,6 +455,19 @@ class LeatherWallet extends Wallet {
     if (response.error) throw new Error(response.error.message);
     const signedPsbt = bitcoin.Psbt.fromHex(response.result.hex);
     return signedPsbt.finalizeAllInputs();
+  }
+
+  async signMessage(message, type, address = this.ordinalsAddress) {
+    if(type && type !== 'bip322') throw new Error('Leather only supports bip322 signing');
+    this.windowCheck();
+    let paymentType = address === this.ordinalsAddress ? 'p2tr' : 'p2wpkh';
+    const response = await window.LeatherProvider.request('signMessage', {
+      message,
+      paymentType,
+      network: this.network,
+    });
+    if (response.error) throw new Error(response.error.message);
+    return response.result.signature;
   }
 
 }
@@ -518,6 +553,15 @@ class OkxWallet extends Wallet {
     return signedPsbtHexs.map(hex => bitcoin.Psbt.fromHex(hex));
   }
 
+  //type - (optional) 'ecdsa' | 'bip322-simple', default is 'ecdsa'.
+  async signMessage(message, type) {
+    this.windowCheck();
+    if (type && type === 'bip322') type = 'bip322-simple';
+    const provider = this._getProvider();
+    const signature = await provider.signMessage(message, type);
+    return signature;
+  }
+
   async setupAccountChangeListener(callback) {
     this.windowCheck();
     this._accountChangedListener = async (addressInfo) => {
@@ -599,6 +643,20 @@ class MagicEdenWallet extends Wallet {
     return signedPsbt.finalizeAllInputs();
   }
 
+  async signMessage(message, type, address = this.ordinalsAddress) {
+    if (type && type !== 'bip322') throw new Error('MagicEden only supports bip322 signing');
+    this.windowCheck();
+    const payload = {
+      network: { type: 'Mainnet' },
+      address,
+      message,
+    }
+    const request = jsontokens.createUnsecuredToken(payload);
+    const response = await window.magicEden.bitcoin.signMessage(request);
+    if (response.error) throw new Error(response.error.message);
+    return response.result.signature;
+  }
+
   async setupAccountChangeListener(callback) {
     this.windowCheck();
     this._accountChangedListener = async (accounts) => {
@@ -666,6 +724,14 @@ class PhantomWallet extends Wallet {
     });
     const signedPsbt = bitcoin.Psbt.fromBuffer(Buffer.from(signedPSBTBytes));
     return signedPsbt.finalizeAllInputs();
+  }
+
+  async signMessage(message, type, address = this.ordinalsAddress) {
+    this.windowCheck();
+    if (type && type !== 'bip322') throw new Error('Phantom only supports bip322 signing');
+    message = new TextEncoder().encode('hello world');
+    const signature =  await window.phantom.bitcoin.signMessage(address, message);
+    return signature;
   }
 
   async setupAccountChangeListener(callback) {
@@ -747,6 +813,16 @@ class OylWallet extends Wallet {
       }))
     );
     return response.map(signed => bitcoin.Psbt.fromHex(signed.psbt));
+  }
+
+  async signMessage(message, type, address = this.ordinalsAddress) {
+    this.windowCheck();
+    const response = await window.oyl.signMessage({
+      address,
+      message,
+      protocol: type
+    });
+    return response.signature;
   }
 }
 

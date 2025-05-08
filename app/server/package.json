@@ -8,6 +8,7 @@
     "typescript": "^5"
   },
   "dependencies": {
+    "bip322-js": "^3.0.0",
     "jimp": "^1.6.0",
     "pg": "^8.13.3",
     "pg-copy-streams": "^6.0.6",
