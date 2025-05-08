@@ -355,7 +355,7 @@ const CheckoutModal = ({ onClose, isCheckoutModalOpen, delegateData }) => {
                 <PlainText color={theme.colors.text.tertiary}>
                   (Optional)
                 </PlainText>
-                <Tooltip content={'Comments are inscribed on the Bitcoin blockchain'}>
+                <Tooltip content={'Comments are inscribed on the Bitcoin blockchain.'}>
                   <IconWrapper>
                     <InfoCircleIcon size="1.25rem" color={theme.colors.text.tertiary} />
                   </IconWrapper>
@@ -436,7 +436,14 @@ const CheckoutModal = ({ onClose, isCheckoutModalOpen, delegateData }) => {
 
               {/* Row 3: Owner Royalty */}
               <FeeRow>
-                <PlainText color={theme.colors.text.secondary}>Owner Royalty</PlainText>
+                <InputLabel>
+                  <PlainText color={theme.colors.text.secondary}>Owner Royalty</PlainText>
+                  <Tooltip content={'Paid to the owner of the original inscription.'}>
+                    <IconWrapper>
+                      <InfoCircleIcon size="1.25rem" color={theme.colors.text.secondary} />
+                    </IconWrapper>
+                  </Tooltip>
+                </InputLabel>
                 <FeeDetails>
                   {inscriptionFee ? (
                     <>
