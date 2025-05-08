@@ -806,12 +806,20 @@ const Inscription = () => {
                       <ChevronUpDuoIcon size={'1.25rem'} color={theme.colors.background.white} />
                       Boost
                     </BoostButton>
-                    <IconButton onClick={() => handleCopyClick()} copied={copied}>
-                      {copied ? <CheckIcon size={'1.25rem'} color={theme.colors.background.success} /> : <LinkIcon size={'1.25rem'} color={theme.colors.text.primary} />}
-                    </IconButton>
-                    <IconButton onClick={() => window.open(`https://ordinals.com/inscription/${number}`, '_blank')}>
-                      <WebIcon size={'1.25rem'} color={theme.colors.text.primary} />
-                    </IconButton>
+                    <Tooltip content={copied ? 'Copied!' : 'Copy link'}>
+                      <ButtonWrapper>
+                        <IconButton onClick={() => handleCopyClick()} copied={copied}>
+                          {copied ? <CheckIcon size={'1.25rem'} color={theme.colors.background.success} /> : <LinkIcon size={'1.25rem'} color={theme.colors.text.primary} />}
+                        </IconButton>
+                      </ButtonWrapper>
+                    </Tooltip>
+                    <Tooltip content={'View on ordinals.com'}>
+                      <ButtonWrapper>
+                        <IconButton onClick={() => window.open(`https://ordinals.com/inscription/${number}`, '_blank')}>
+                          <WebIcon size={'1.25rem'} color={theme.colors.text.primary} />
+                        </IconButton>
+                      </ButtonWrapper>
+                    </Tooltip>
                   </ButtonsRow>
                   <Separator />
                 </SectionPadding>
@@ -1136,7 +1144,7 @@ const TabButton = styled.button`
     transition: fill 200ms ease;
   }
 
-  @media (max-width: 416px) {
+  @media (max-width: 420px) {
     svg {
       display: none; /* Hides the icons when the screen width is less than 416px */
     }
@@ -1168,7 +1176,7 @@ const DisabledButton = styled.button`
     transition: fill 200ms ease;
   }
 
-  @media (max-width: 416px) {
+  @media (max-width: 420px) {
     svg {
       display: none; /* Hides the icons when the screen width is less than 416px */
     }
@@ -1179,15 +1187,23 @@ const SoonTag = styled.span`
   background-color: ${theme.colors.background.primary};
   color: ${theme.colors.text.tertiary};
   font-family: ${theme.typography.fontFamilies.medium};
-  font-size: .875rem;
-  line-height: 1.25rem;
+  font-size: .75rem;
+  line-height: 1rem;
   padding: .125rem .25rem;
   border-radius: .25rem;
   margin-left: .375rem;
 
-  @media (max-width: 480px) {
+  @media (max-width: 372px) {
     display: none; 
   }
+`;
+
+const ButtonWrapper = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  margin: 0;
 `;
 
 export default Inscription;

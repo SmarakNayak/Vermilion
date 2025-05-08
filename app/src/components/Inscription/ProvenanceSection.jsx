@@ -60,7 +60,7 @@ const ProvenanceSection = ({
               <HeaderText>Parent Inscriptions</HeaderText>
               <Tooltip content={'Inscriptions that were provably owned by the inscriber and used to establish provenance at time of inscription.'}>
                 <IconWrapper>
-                  <InfoCircleIcon size="1.125rem" color={theme.colors.text.tertiary} />
+                  <InfoCircleIcon size="1.125rem" color={theme.colors.text.secondary} />
                 </IconWrapper>
               </Tooltip>
             </Stack>
@@ -89,7 +89,7 @@ const ProvenanceSection = ({
               <HeaderText>Sources</HeaderText>
               <Tooltip content={'Inscriptions whose content is referenced by this inscription via recursion.'}>
                 <IconWrapper>
-                  <InfoCircleIcon size="1.125rem" color={theme.colors.text.tertiary} />
+                  <InfoCircleIcon size="1.125rem" color={theme.colors.text.secondary} />
                 </IconWrapper>
               </Tooltip>
             </Stack>
@@ -118,7 +118,7 @@ const ProvenanceSection = ({
               <HeaderText>Child Inscriptions</HeaderText>
               <Tooltip content={'Inscriptions provably created by the owner of this parent inscription at time of inscription.'}>
                 <IconWrapper>
-                  <InfoCircleIcon size="1.125rem" color={theme.colors.text.tertiary} />
+                  <InfoCircleIcon size="1.125rem" color={theme.colors.text.secondary} />
                 </IconWrapper>
               </Tooltip>
             </Stack>
@@ -153,7 +153,7 @@ const ProvenanceSection = ({
               <HeaderText>Attributions</HeaderText>
               <Tooltip content={'Inscriptions that reference or build upon this inscription.'}>
                 <IconWrapper>
-                  <InfoCircleIcon size="1.125rem" color={theme.colors.text.tertiary} />
+                  <InfoCircleIcon size="1.125rem" color={theme.colors.text.secondary} />
                 </IconWrapper>
               </Tooltip>
             </Stack>
@@ -185,7 +185,7 @@ const ProvenanceSection = ({
               <HeaderText>Editions</HeaderText>
               <Tooltip content={'Inscriptions that share identical content are known as editions. Their edition number reflects their order of inscription.'}>
                 <IconWrapper>
-                  <InfoCircleIcon size="1.125rem" color={theme.colors.text.tertiary} />
+                  <InfoCircleIcon size="1.125rem" color={theme.colors.text.secondary} />
                 </IconWrapper>
               </Tooltip>
               <CountBadge>
