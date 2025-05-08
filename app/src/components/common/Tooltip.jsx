@@ -54,12 +54,10 @@ const StyledContent = styled(TooltipPrimitive.Content)`
   font-family: ${theme.typography.fontFamilies.medium};
   font-size: 0.75rem;
   line-height: 1rem;
-  // text-align: center;
-  color: ${theme.colors.text.primary};
-  background-color: ${theme.colors.background.white};
-  border: 1px solid ${theme.colors.border};
+  color: ${theme.colors.text.white};
+  background-color: #343434;
   box-shadow: rgba(10, 10, 10, 0.1) 0px 4px 8px 0px;
-  max-width: calc(100vw - 4.5rem); 
+  max-width: min(calc(100vw - 4.5rem), 20rem);
   width: auto;
   white-space: normal;
   word-wrap: break-word;
