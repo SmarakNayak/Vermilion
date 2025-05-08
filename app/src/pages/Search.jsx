@@ -4,7 +4,6 @@ import styled from 'styled-components';
 import Gallery from '../components/Gallery';
 import Stack from '../components/Stack';
 import SortbyDropdown from '../components/Dropdown';
-import MainText from '../components/common/text/MainText';
 import InfoText from '../components/common/text/InfoText';
 import PageContainer from '../components/layout/PageContainer';
 import { HorizontalDivider } from '../components/grid/Layout';
@@ -167,7 +166,7 @@ const Search = () => {
   return (
     <PageContainer>
       <RowContainer style={{justifyContent: 'flex-start'}}>
-        <MainText>Visual Search</MainText>
+        <PageText>Visual Search</PageText>
       </RowContainer>
       <HorizontalDivider></HorizontalDivider>
       <RowContainer style={{gap: '0.75rem'}}>
@@ -266,6 +265,13 @@ const RowContainer = styled.div`
   align-items: center;
   justify-content: center;
   width: 100%;
+`;
+
+const PageText = styled.p`
+  font-family: ${theme.typography.fontFamilies.bold};
+  font-size: 1.5rem;
+  line-height: 2rem;
+  margin: 0;
 `;
 
 const SearchContainer = styled.div`
