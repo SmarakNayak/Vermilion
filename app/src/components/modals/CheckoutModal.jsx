@@ -103,9 +103,16 @@ const CheckoutModal = ({ onClose, isCheckoutModalOpen, delegateData }) => {
   }
 
   useEffect(() => {
+    if (isCheckoutModalOpen) {
+      console.log("Fetching owner address...");
+      getOwnerAddress(delegateData);
+    }
+  }, [isCheckoutModalOpen, delegateData]);
+
+  useEffect(() => {
     if (wallet && isCheckoutModalOpen) {
       getUtxos();
-      getOwnerAddress(delegateData);
+      // getOwnerAddress(delegateData);
     }
   }, [wallet, isCheckoutModalOpen]);
 
@@ -124,6 +131,10 @@ const CheckoutModal = ({ onClose, isCheckoutModalOpen, delegateData }) => {
       setOwnerAddress('invalid');
     }
     if (network === 'testnet' || network === 'signet') {
+      if (!wallet) {
+        setOwnerAddress('tb1p25h2pkfjwpha0zd5t4f3t6k85swjcgujjjwa9vp8kefncx5fg58s4g443c'); // Default testnet address
+        return;
+      }
       setOwnerAddress(wallet.paymentAddress); // Refund wallet address for testnet/signet
     }
   }
@@ -141,7 +152,6 @@ const CheckoutModal = ({ onClose, isCheckoutModalOpen, delegateData }) => {
         quantity = 100;
       }
       let inscriptions = getInscriptions(delegateData, quantity);
-      let revealVsize = getRevealVSize(inscriptions, wallet.ordinalsAddress, network);
       let totalPlatformFee = platformFee * quantity;
       setTotalPlatformFee(totalPlatformFee);
       let totalOwnerFee = ownerFee * quantity;      
@@ -150,6 +160,7 @@ const CheckoutModal = ({ onClose, isCheckoutModalOpen, delegateData }) => {
       }
       setTotalOwnerFee(totalOwnerFee);
       if (wallet && utxos.length > 0) {
+        let revealVsize = getRevealVSize(inscriptions, wallet.ordinalsAddress, network);
         try{          
           let inscriptionFee = estimateInscriptionFee(inscriptions, wallet.paymentAddress, wallet.paymentPublicKey, revealVsize, feeRate, utxos, network, totalPlatformFee, null, totalOwnerFee, null);
           setInscriptionFee(inscriptionFee - totalPlatformFee - totalOwnerFee);
@@ -162,6 +173,7 @@ const CheckoutModal = ({ onClose, isCheckoutModalOpen, delegateData }) => {
       } else {
         //guess without wallet.
         //Assumes 2 taproot inputs and 4 taproot outputs (reveal, change, owner, platform), 
+        let revealVsize = getRevealVSize(inscriptions, "tb1p25h2pkfjwpha0zd5t4f3t6k85swjcgujjjwa9vp8kefncx5fg58s4g443c", network);
         let inscriptionFee = guessInscriptionFee(inscriptions, revealVsize, feeRate, totalPlatformFee, totalOwnerFee);
         setInscriptionFee(inscriptionFee - totalPlatformFee - totalOwnerFee);
       }
@@ -390,7 +402,7 @@ const CheckoutModal = ({ onClose, isCheckoutModalOpen, delegateData }) => {
             <FeeSummaryContainer>
               {/* Row 1: Network Fees */}
               <FeeRow>
-                <PlainText color={theme.colors.text.secondary}>Network fees</PlainText>
+                <PlainText color={theme.colors.text.secondary}>Network Fees</PlainText>
                 <FeeDetails>
                   {inscriptionFee ? (
                     <>
@@ -407,7 +419,7 @@ const CheckoutModal = ({ onClose, isCheckoutModalOpen, delegateData }) => {
 
               {/* Row 2: Service Fees */}
               <FeeRow>
-                <PlainText color={theme.colors.text.secondary}>Service fee</PlainText>
+                <PlainText color={theme.colors.text.secondary}>Service Fee</PlainText>
                 <FeeDetails>
                   {inscriptionFee ? (
                     <>
@@ -444,7 +456,7 @@ const CheckoutModal = ({ onClose, isCheckoutModalOpen, delegateData }) => {
 
               {/* Row 3: Total Fees */}
               <FeeRow>
-                <PlainText color={theme.colors.text.primary}>Total fees</PlainText>
+                <PlainText color={theme.colors.text.primary}>Total</PlainText>
                 <FeeDetails>
                   {inscriptionFee ? (
                     <>
