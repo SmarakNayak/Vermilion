@@ -126,7 +126,7 @@ async function submitBoost(wallet, authToken, inscriptionInfo, boostInfo, unauth
     if (response.status === 401) {
       unauthCallback();
       let json = await response.json();
-      errorText = 'Unauthorized' + json.error;
+      errorText = 'Unauthorized: ' + json.error;
     }
     throw new Error(`Failed to broadcast transactions: ${errorText}`);
   }

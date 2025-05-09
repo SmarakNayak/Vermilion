@@ -103,7 +103,7 @@ export class Authenticator {
           isValid: false,
           error: 'Your session has expired. Please sign in again.'
         };
-      } else if (err.message === 'invalid signature') {
+      } else if (err.message in ['invalid signature', 'jwt malformed']) {
         return {
           isValid: false,
           error: 'Your authentication token is invalid. Please sign in again.'
