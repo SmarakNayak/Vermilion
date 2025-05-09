@@ -68,7 +68,7 @@ const SkeletonGroup = styled.div`
   width: 100%;
 `;
 
-export const SkeletonElement = styled.div`
+const SkeletonElement = styled.div`
   background-color: ${theme.colors.background.primary};
   animation: ${pulse} 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
   border-radius: ${(props) => props.radius || '0.5rem'};
@@ -76,4 +76,4 @@ export const SkeletonElement = styled.div`
   width: ${(props) => props.width};
 `;
 
-export { LoadingSkeleton, CompactLoadingSkeleton, StatsSkeleton };
+export { LoadingSkeleton, CompactLoadingSkeleton, StatsSkeleton, SkeletonElement };
