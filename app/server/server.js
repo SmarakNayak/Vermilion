@@ -160,6 +160,46 @@ const server = Bun.serve({
         return new Response('Error fetching boost history: ' + err.message, { status: 500 });
       }
     },
+    '/social/broadcast_sweep': async req => {
+      if (req.method !== 'POST') {
+        return new Response('Method Not Allowed', { status: 405 });
+      }
+      try {
+        let body = await req.json();
+        const authFail = checkAuthFail(req.headers.get('Authorization'), body.ordinals_address);
+        if (authFail) return authFail;
+
+        let [insertRecord] = await db.recordSweep({
+          ...body,
+          broadcast_status: 'scheduled',
+          reveal_sweep_tx_status: 'scheduled'
+        });
+        broadcast_sweep_id = insertRecord.broadcast_sweep_id;
+        let networkString = body.network in ['testnet', 'signet'] ? body.network + '/' : '';
+        let response = await broadcastTx(body.reveal_tx_hex, networkString);
+        if (!response.ok) {
+          let text = await response.text();
+          let errorString = `Error broadcasting sweep transaction: ${text}, ${response.statusText}`;
+          await db.updateSweep(broadcast_sweep_id, {
+            broadcast_status: 'failed',
+            broadcast_error: errorString,
+            sweep_tx_status: 'failed'
+          });
+          return new Response(errorString, { status: 500 });
+        }
+        let sweepTxId = await response.text();
+        await db.updateSweep(broadcast_sweep_id, {
+          broadcast_status: 'broadcasted',
+          sweep_tx_status: 'pending',
+          sweep_tx_id: sweepTxId
+        });
+        return Response.json([ sweepTxId ]);
+
+      } catch (err) {
+        console.error('Error broadcasting sweep:', err);
+        return new Response('Error broadcasting sweep: ' + err.message, { status: 500 });
+      }
+    },
     '/social/generate_sign_in_message': async req => {
       if (req.method !== 'POST') {
         return new Response('Method Not Allowed', { status: 405 });

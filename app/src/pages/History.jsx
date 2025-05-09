@@ -6,6 +6,8 @@ import theme from '../styles/theme';
 import { copyText, formatAddress, formatTimestampMs, capitalizeFirstLetter } from '../utils';
 import useStore from '../store/zustand';
 import { NETWORKS } from '../wallet/networks';
+import { getRevealSweepTransaction } from '../wallet/inscriptionBuilder';
+import { getRecommendedFees } from '../wallet/mempoolApi';
 
 const History = () => {
   const [copied, setCopied] = useState(false);
@@ -53,6 +55,33 @@ const History = () => {
     return link;
   };
 
+  const handleSweep = async (boostHistoryRow) => {
+    if (boostHistoryRow.inscription_method in ['ephemeral_with_wallet_key_path', 'wallet_one_sign', 'wallet_two_sign']) {
+      if (!(wallet.walletType in ['okx', 'xverse'])) {
+        if (wallet.walletType === 'unisat') {
+          throw new Error(`Unisat does not support key-path signing. Please import your wallet into Okx to sweep.`);
+        } else {
+          throw new Error(`${wallet.walletType} does not support key-path signing. Please import your wallet into Xverse to sweep.`);
+        }
+      }
+      let feeRate = await getRecommendedFees(wallet.network);
+      let walletTaproot = wallet.getTaproot(wallet, wallet.network);
+      let revealKeyPair = {
+        publicKey: walletTaproot.internalPubkey,
+      }
+      const revealTaproot = {
+        output: boostHistoryRow.reveal_address_script,
+        hash: boostHistoryRow.reveal_tapmerkleroot,
+      };
+      const sweepTx = getRevealSweepTransaction(wallet.paymentAddress, revealTaproot, revealKeyPair, boostHistoryRow.commit_tx_id, boostHistoryRow.reveal_input_value, feeRate, wallet.network, false);
+      const signedSweep = await wallet.signPsbt(sweepTx, [{ index: 0, address: wallet.ordinalsAddress}]);
+      // broadcast the sweep transaction and log it
+    } else if (boostHistoryRow.inscription_method === 'ephemeral') {
+      console.log('Ephemeral method not supported yet');
+      // TODO: implement ephemeral method
+    }
+  }
+
   useEffect(() => {
     if (wallet?.ordinalsAddress) {
       fetchBoostHistory();
@@ -60,41 +89,6 @@ const History = () => {
       setBoostHistory([]);
     }
   }, [wallet]);
-
-  const dummyData = [
-    {
-      id: '8d8bc47b3008',
-      type: 'Boost',
-      creationDate: 1735689600, 
-      status: 'Confirmed',
-      commitTx: '38d8bc47b3008f3e7d8f3e7d8f3e7d8f3',
-      revealTx: '7h3ed8f3e7d8f3e7d8f3e7d8f3e7d8f3',
-    },
-    {
-      id: '2daf8c4b3009',
-      type: 'Boost',
-      creationDate: 1735776000,
-      status: 'Confirmed',
-      commitTx: '7e382hc4b3009f3e7d8f3e7d8fe23e23',
-      revealTx: 'e37d8f3e7d8f3e7d8f3e7d8f3e7d8f3',
-    },
-    {
-      id: '789abc123def',
-      type: 'Boost',
-      creationDate: 1735862400, 
-      status: 'Pending',
-      commitTx: 'e37d8f3e7d8f3e7d8f3e7d8f3e7d8f3',
-      revealTx: 'e3e238989f3e7d8f3e7d8f3er34rr4',
-    },
-    {
-      id: '456def789abc',
-      type: 'Boost',
-      creationDate: 1735948800, 
-      status: 'Pending',
-      commitTx: 'r34r34r3e7d8f3e7d8f3e7d8f3e7d8f3',
-      revealTx: 'r34r34r3e7d8f3e7d8f3e7d8f3e7d8f3',
-    },
-  ];
 
   return (
     <MainContainer>

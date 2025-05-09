@@ -67,15 +67,35 @@ const db = {
         );
       `;
       await this.sql`
-        CREATE TABLE IF NOT EXISTS social.ephemeral_sweeps (
-          sweep_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        CREATE TABLE IF NOT EXISTS social.broadcasted_reveal_sweeps (
+          broadcast_sweep_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+          sweep_type VARCHAR(20) NOT NULL,
           boost_id UUID NOT NULL REFERENCES social.boosts(boost_id),
+          ordinals_address VARCHAR(64) NOT NULL,
+          payment_address VARCHAR(64) NOT NULL,
+          sweep_tx_id VARCHAR(64) NOT NULL,
           fee_rate INT NOT NULL,
-          reveaL_sweep_tx_hex TEXT NOT NULL,
+          wallet_type VARCHAR(10),
+          network VARCHAR(10),
+          -- broadcast info
           broadcast_status VARCHAR(11),
           broadcast_error TEXT,
-          reveal_sweep_tx_status VARCHAR(11),
-          broadcast_timestamp TIMESTAMP DEFAULT NULL
+          sweep_tx_status VARCHAR(11),
+
+          timestamp TIMESTAMP DEFAULT NOW()
+        );
+      `;
+      await this.sql`
+        CREATE TABLE IF NOT EXISTS social.stored_ephemeral_sweeps (
+          ephemeral_sweep_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+          boost_id UUID NOT NULL REFERENCES social.boosts(boost_id),
+          ordinals_address VARCHAR(64) NOT NULL,
+          payment_address VARCHAR(64) NOT NULL,
+          network VARCHAR(10),
+          fee_rate INT NOT NULL,
+          reveaL_sweep_tx_hex TEXT NOT NULL,
+          broadcasted BOOLEAN DEFAULT FALSE,
+          broadcast_sweep_id UUID REFERENCES social.broadcasted_reveal_sweeps(broadcast_sweep_id)
         );
       `;
       await this.sql`
@@ -189,9 +209,25 @@ const db = {
       throw new Error(`Error during update: ${err.message}`, { cause: err });
     }
   },
-  async recordEphemeralSweep(sweep) {
+  async recordSweep(sweep) {
     try {
-      let sweepId = await this.sql`INSERT INTO social.ephemeral_sweeps ${this.sql(sweep)} RETURNING sweep_id;`;
+      let sweepId = await this.sql`INSERT INTO social.broadcasted_reveal_sweeps ${this.sql(sweep)} RETURNING broadcast_sweep_id;`;
+      return sweepId;
+    } catch (err) {
+      throw new Error(`Error during insert: ${err.message}`, { cause: err });
+    }
+  },
+  async updateSweep(sweepId, sweep) {
+    try {
+      await this.sql`UPDATE social.broadcasted_reveal_sweeps SET ${this.sql(sweep)} WHERE broadcast_sweep_id = ${sweepId}`;
+    }
+    catch (err) {
+      throw new Error(`Error during update: ${err.message}`, { cause: err });
+    }
+  },
+  async storeEphemeralSweep(sweep) {
+    try {
+      let sweepId = await this.sql`INSERT INTO social.stored_ephemeral_sweeps ${this.sql(sweep)} RETURNING ephemeral_sweep_id;`;
       return sweepId;
     } catch (err) {
       throw new Error(`Error during insert: ${err.message}`, { cause: err });
@@ -200,6 +236,14 @@ const db = {
   async getBoostsToMonitor() {
     try {
       const txs = await this.sql`SELECT boost_id, commit_tx_id, reveal_tx_id, commit_tx_status, reveal_tx_status, network, timestamp FROM social.boosts WHERE commit_tx_status = 'pending' OR reveal_tx_status = 'pending'`;
+      return txs;
+    } catch (err) {
+      throw new Error('Error fetching transactions to monitor: ' + err.message);
+    }
+  },
+  async getSweepsToMonitor() {
+    try {
+      const txs = await this.sql`SELECT broadcast_sweep_id, sweep_tx_id, sweep_tx_status, network, timestamp FROM social.broadcasted_reveal_sweeps WHERE sweep_tx_status = 'pending'`;
       return txs;
     } catch (err) {
       throw new Error('Error fetching transactions to monitor: ' + err.message);

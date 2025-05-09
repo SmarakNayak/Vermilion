@@ -55,7 +55,8 @@ const bundexer = {
   async runTxMonitorLoop() {
     while (!this.shouldStop) {
       let boostsToMonitor = await db.getBoostsToMonitor();
-      if (boostsToMonitor.length === 0) {
+      let sweepsToMonitor = await db.getSweepsToMonitor();
+      if (boostsToMonitor.length === 0 && sweepsToMonitor.length === 0) {
         await Bun.sleep(1000);
         continue;
       }
@@ -90,6 +91,24 @@ const bundexer = {
           }
         }
       }
+      for (let sweep of sweepsToMonitor) {
+        let sweepTime = new Date(sweep.timestamp).getTime();
+        let fiveMinutesAgo = Date.now() - 5 * 60 * 1000;
+        if (sweep.sweep_tx_status === 'pending') {
+          let txStatus = await getTxStatus(sweep.sweep_tx_id, sweep.network);
+          if (txStatus ==='confirmed') {
+            await db.updateSweep(sweep.sweep_id, {
+              sweep_tx_status: 'confirmed'
+            });
+          }
+          if (txStatus ==='not_found' && sweepTime < fiveMinutesAgo) {
+            await db.updateSweep(sweep.sweep_id, {
+              sweep_tx_status: 'not_found'
+            });
+          }
+        }
+      }
+      
       await Bun.sleep(60000);
     }
   },
