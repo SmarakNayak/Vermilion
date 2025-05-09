@@ -1,7 +1,12 @@
 
-import { randomBytes, sign, verify } from 'crypto';
+import { randomBytes } from 'crypto';
 import db from './db';
 import { Verifier } from "bip322-js";
+import jwt from 'jsonwebtoken';
+import { parse } from 'yaml';
+
+const configFile = Bun.file(`${process.env.HOME}/ord.yaml`);
+const config = parse(await configFile.text());
 
 export class Authenticator {
   private GenerateNonce(): string {
@@ -28,6 +33,7 @@ export class Authenticator {
     const signInRecord = await db.getSignInRecord(ordinalsAddress, message);
     let verifyError = null;
     let isValid = false;
+    let authToken = null;
     if (!signInRecord) {
       verifyError = 'Sign in record not found';
     }
@@ -57,6 +63,7 @@ export class Authenticator {
         verified: true,
         verified_timestamp: new Date(),
       });
+      authToken = this.GenerateAccessToken(ordinalsAddress);
     } else {
       await db.updateSignInRecord(ordinalsAddress, message, {
         sign_in_status: 'failed',
@@ -68,8 +75,46 @@ export class Authenticator {
     }
     let response = {
       isValid,
+      authToken,
       verifyError,
     };
     return response;
+  }
+  public GenerateAccessToken(ordinalsAddress: string): string {
+    const secret = config.access_token_secret;
+    const token = jwt.sign(
+      { address: ordinalsAddress },
+      secret,
+      { expiresIn: '30s' }
+    );
+    return token;
+  }
+  public VerifyAccessToken(token: string, address: string): {isValid: boolean, error?: string} {
+    const secret = config.access_token_secret;
+    try {
+      const decoded = jwt.verify(token, secret) as { address: string };
+      return {
+        isValid: decoded.address === address,
+        error: decoded.address === address ? undefined : 'Addresses do not match'
+      };
+    } catch (err: any) {
+      if (err.name === 'TokenExpiredError') {
+        return {
+          isValid: false,
+          error: 'Your session has expired. Please sign in again.'
+        };
+      } else if (err.message === 'invalid signature') {
+        return {
+          isValid: false,
+          error: 'Your authentication token is invalid. Please sign in again.'
+        };
+      } else {
+        console.error('Error verifying access token:', err);
+        return {
+          isValid: false,
+          error: err.name
+        };
+      }
+    }
   }
 }

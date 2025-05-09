@@ -12,6 +12,9 @@ const History = () => {
   const [copiedRowId, setCopiedRowId] = useState(null);
   const [boostHistory, setBoostHistory] = useState([]);
   const wallet = useStore((state) => state.wallet);
+  const setWallet = useStore((state) => state.setWallet);
+  const authToken = useStore((state) => state.authToken);
+  const setAuthToken = useStore((state) => state.setAuthToken);
 
   const handleCopyClick = (id, content) => {
     copyText(content);
@@ -23,7 +26,11 @@ const History = () => {
 
   const fetchBoostHistory = async () => {
     let url = `/bun/social/boost_history/${wallet.ordinalsAddress}`;
-    const response = await fetch(url);
+    const response = await fetch(url, {
+      headers: {
+        'Authorization': `Bearer ${authToken}`,
+      }
+    });
     if (response.ok) {
       const data = await response.json();
       data.forEach((row) => {
@@ -31,6 +38,10 @@ const History = () => {
       });
       setBoostHistory(data);
       console.log('Boost history:', data);
+    } else if (response.status===401) {
+      console.log('Unauthorized. Please log in again.');
+      setWallet(null);
+      setAuthToken(null);
     } else {
       console.error('Error fetching boost history:', response.statusText);
     }

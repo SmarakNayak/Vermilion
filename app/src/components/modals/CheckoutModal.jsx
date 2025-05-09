@@ -39,6 +39,9 @@ const CheckoutModal = ({ onClose, isCheckoutModalOpen, delegateData }) => {
 
   const modalContentRef = useRef(); // Ref for the modal content
   const wallet = useStore(state => state.wallet); // Use zustand store to get the wallet (has to be top-level)
+  const setWallet = useStore(state => state.setWallet);
+  const authToken = useStore(state => state.authToken);
+  const setAuthToken = useStore(state => state.setAuthToken);
   const network = useStore(state => state.network);
   const platformFee = useStore(state => state.platformFee);
   const platformAddress = useStore(state => state.platformAddress);
@@ -218,15 +221,21 @@ const CheckoutModal = ({ onClose, isCheckoutModalOpen, delegateData }) => {
         ownerFee: totalOwnerFee,
         ownerAddress,
       });
-      let [commitTxid, revealTxid] = await submitBoost(wallet, inscriptionInfo, {
-        delegate_id: delegateMetadata.id,
-        boost_quantity: boostQuantity,
-        boost_comment: boostComment,
-        platform_address: platformFeeAddress,
-        platform_fee: totalPlatformFee,
-        owner_address: ownerAddress,
-        owner_fee: totalOwnerFee
-      });
+      let [commitTxid, revealTxid] = await submitBoost(wallet, authToken, inscriptionInfo, {
+          delegate_id: delegateMetadata.id,
+          boost_quantity: boostQuantity,
+          boost_comment: boostComment,
+          platform_address: platformFeeAddress,
+          platform_fee: totalPlatformFee,
+          owner_address: ownerAddress,
+          owner_fee: totalOwnerFee
+        },
+        () => { // log out on unauthorized
+          console.log("Unauthorized, logging out...");
+          setWallet(null); // Reset wallet in zustand store
+          setAuthToken(null); // Reset auth token in zustand store
+        }
+      );
       
       // Open success modal after successful inscription
       setSuccessDetails({

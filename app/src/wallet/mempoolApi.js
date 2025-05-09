@@ -83,12 +83,13 @@ async function submitInscriptionTxs(commitHex, revealHex, network) {
 // reveal_tapmerkleroot VARCHAR(64) NOT NULL,
 // reveal_input_value BIGINT NOT NULL,
 // reveal_script TEXT NOT NULL,
-async function submitBoost(wallet, inscriptionInfo, boostInfo) {
+async function submitBoost(wallet, authToken, inscriptionInfo, boostInfo, unauthCallback) {
   const url = `/bun/social/boost`;
   const response = await fetch(url, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
+      'Authorization': `Bearer ${authToken}`,
     },
     body: JSON.stringify({
       // boost info
@@ -121,10 +122,13 @@ async function submitBoost(wallet, inscriptionInfo, boostInfo) {
     })
   });
   if (!response.ok) {
-    console.log(response);
-    let text = await response.text();
-    console.log(text);
-    throw new Error(`Failed to broadcast transactions: ${response.statusText}`);
+    let errorText = response.statusText;
+    if (response.status === 401) {
+      unauthCallback();
+      let json = await response.json();
+      errorText = 'Unauthorized' + json.error;
+    }
+    throw new Error(`Failed to broadcast transactions: ${errorText}`);
   }
   const data = await response.json();
   return data;

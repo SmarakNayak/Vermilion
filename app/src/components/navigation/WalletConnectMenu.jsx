@@ -84,6 +84,7 @@ const WalletConnectMenu = ({ isOpen, onClose }) => {
 
   // Use Zustand store to manage wallet state - has to be top-level
   const setWallet = useStore(state => state.setWallet);
+  const setAuthToken = useStore(state => state.setAuthToken);
 
   useEffect(() => {
     if (isOpen) {
@@ -172,11 +173,10 @@ const WalletConnectMenu = ({ isOpen, onClose }) => {
       });
       const messageJson = await messageResponse.json();
       const signInMessage = messageJson.signInMessage;
-      console.log("Sign in message:", signInMessage);
       //3. Sign the message
       const signature = await wallet.signMessage(signInMessage, 'bip322', wallet.ordinalsAddress);
       //4. Send the signature to the server
-      const response = await fetch(`/bun/social/verify_signature`, {
+      const verificationResponse = await fetch(`/bun/social/verify_signature`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -188,18 +188,29 @@ const WalletConnectMenu = ({ isOpen, onClose }) => {
           signatureType: 'bip322',
         })
       });
-      console.log("Response from server:", response);
-      setWallet(wallet);
+      const verificationJson = await verificationResponse.json();
+      // 5. Set the auth token in Zustand store
+      if (verificationJson.isValid) {
+        setAuthToken(verificationJson.authToken);
+        setWallet(wallet);
+      } else {
+        throw new Error('Signature verification failed');
+      }
       wallet.setupAccountChangeListener(async (accounts) => {
         console.log(accounts);
         if (accounts?.disconnected === true) {
           console.log("Wallet disconnected");
           setWallet(null);
+          setAuthToken(null);
           setIsConnecting(false);
           setConnectingWallet(null); // Reset the connecting wallet
         } else {
-          let newWallet = await connectWallet(walletType, "signet");
-          setWallet(newWallet);
+          // disconnect even if new wallet is connected
+          // firing a new signature request with no user interaction is bad UX
+          // let newWallet = await connectWallet(walletType, "signet");
+          // setWallet(newWallet);
+          setWallet(null);
+          setAuthToken(null);
           setIsConnecting(false);
           setConnectingWallet(null); // Reset the connecting wallet
         }

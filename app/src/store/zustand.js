@@ -10,6 +10,10 @@ const useStore = create(
         console.log("wallet update hit with:", wallet)
         set({wallet})
       },
+      authToken : null,
+      setAuthToken : (authToken) => {
+        set({authToken})
+      },
       network: 'signet',
       platformFee: 2500,
       platformAddress: '',
@@ -28,6 +32,9 @@ const useStore = create(
         if (persistedState.wallet) {
           let rehydratedWallet = rehydrateWallet(persistedState.wallet);
           returnedState.wallet = rehydratedWallet;
+        }
+        if (persistedState.authToken) {
+          returnedState.authToken = persistedState.authToken;
         }
 
         return returnedState;

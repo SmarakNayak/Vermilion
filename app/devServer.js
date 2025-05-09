@@ -16,22 +16,14 @@ const server = Bun.serve({
     '/bun/*': async req => {
       return proxyRequest(req, 'https://blue.vermilion.place');
     },
-    '/bun/social/boost': {
+    '/bun/social/*': {
+      GET: async req => {
+        //return proxyRequest(req, 'https://blue.vermilion.place');
+        return proxyRequest(req, 'localhost:1082',  '/social/*');
+      },
       POST: async req => {
-        return proxyRequest(req, 'https://blue.vermilion.place');
-        //return proxyRequest(req, 'localhost:1082',  '/social/boost');
-      }
-    },
-    '/bun/social/generate_sign_in_message': {
-      POST: async req => {
-        return proxyRequest(req, 'https://blue.vermilion.place');
-        //return proxyRequest(req, 'localhost:1082',  '/social/generate_sign_in_message');
-      }
-    },
-    '/bun/social/verify_signature': {
-      POST: async req => {
-        return proxyRequest(req, 'https://blue.vermilion.place');
-        //return proxyRequest(req, 'localhost:1082',  '/social/verify_signature');
+        //return proxyRequest(req, 'https://blue.vermilion.place');
+        return proxyRequest(req, 'localhost:1082',  '/social/*');
       }
     },
     '/r/*': async req => {
@@ -55,17 +47,41 @@ const server = Bun.serve({
 
 async function proxyRequest(req, targetHost, rewrite) {
   const url = new URL(req.url);
-  let targetUrl = `${targetHost}${url.pathname}${url.search}`;
+  let path = url.pathname;
+
+  // handle wildcard in rewrite
   if (rewrite) {
-    targetUrl = `${targetHost}${rewrite}${url.search}`;
+    if (rewrite.includes('*')) {
+      const [prefix, suffix] = rewrite.split('*');
+
+      let wildcard = '';
+      const idx = path.indexOf(prefix);
+      if (idx !== -1) {
+        wildcard = path.slice(idx + prefix.length);
+      }
+      // strip off suffix if present
+      if (suffix && wildcard.endsWith(suffix)) {
+        wildcard = wildcard.slice(0, -suffix.length);
+      }
+
+      path = `${prefix}${wildcard}${suffix}`;
+    } else {
+      path = rewrite;
+    }
   }
+
+  const targetUrl = `${targetHost}${path}${url.search}`;
+
+  // clone incoming headers and add auth
+  const headers = new Headers();
+  headers.set('Authorization', req.headers.get('Authorization') || '');
+
   try {
-    // Forward the original request to the target server
-    let response = await fetch(targetUrl, {
+    const response = await fetch(targetUrl, {
       method: req.method,
-      body: req.body,
-      // disable decompression - otherwise it will be decompressed here and again when sent to the client
-      decompress: false, 
+      headers,
+      body: ['GET', 'HEAD'].includes(req.method) ? undefined : req.body,
+      decompress: false,
     });
     return response;
   } catch (error) {

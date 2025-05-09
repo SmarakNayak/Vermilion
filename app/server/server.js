@@ -64,6 +64,9 @@ const server = Bun.serve({
       }
       try {
         let body = await req.json();
+        const authFail = checkAuthFail(req.headers.get('Authorization'), body.ordinals_address);
+        if (authFail) return authFail;
+
         let [ insertRecord ] = await db.recordBoost({
           ...body,
           broadcast_status: 'scheduled',
@@ -147,6 +150,9 @@ const server = Bun.serve({
     },
     '/social/boost_history/:address': async req => {
       try {
+        const authFail = checkAuthFail(req.headers.get('Authorization'), req.params.address);
+        if (authFail) return authFail;
+
         const boosts = await db.getBoostsForAddress(req.params.address);
         return Response.json(boosts);
       } catch (err) {
@@ -215,6 +221,24 @@ async function getRenderedContentResponse(id, content_type, is_recursive) {
   }
 }
 
+function checkAuthFail(authHeader, ordinalsAddress) {
+  if (!authHeader?.startsWith('Bearer ')) {
+    console.log('Unauthorized: No bearer token provided');
+    return new Response('Unauthorized: No bearer token provided', { status: 401, statusText: 'Unauthorized' });
+  }
+  const token = authHeader.slice(7);
+  let authenticator = new Authenticator();
+  const verification = authenticator.VerifyAccessToken(token, ordinalsAddress);
+  if (!verification.isValid) {
+    let response = new Response(JSON.stringify(verification), {
+      status: 401,
+      statusText: 'Unauthorized: ' + verification.error,
+      headers: { 'Content-Type': 'application/json' }
+    })
+    return response;
+  }
+}
+
 // Shutdown function to clean up everything
 async function shutdown() {
   // Stop Bun server
@@ -246,3 +270,5 @@ process.on("SIGTERM", async () => {
   console.log("Shutdown complete");
   process.exit(0);
 });
+
+console.log(`🚀 Server running at ${server.url}`);
