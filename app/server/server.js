@@ -74,6 +74,27 @@ const server = Bun.serve({
           reveal_tx_status: 'scheduled',
         });
         let boostId = insertRecord.boost_id;
+        if (body.inscription_method === 'ephemeral') {
+          let backups = body.ephemeral_sweep_backups;
+          if (!backups || backups.length === 0) {
+            let errorString = 'Error: ephemeral_sweep_backups is empty, did not broadcast';
+            await db.updateBoost(boostId, {
+              broadcast_status: 'failed',
+              broadcast_error: errorString,
+              commit_tx_status: 'failed',
+              reveal_tx_status: 'failed'
+            });
+            return new Response(errorString, { status: 500 });
+          }
+          backups = backups.map(backup => ({
+            ...backup,
+            boost_id: boostId,
+            ordinals_address: body.ordinals_address,
+            payment_address: body.payment_address,
+            network: body.network,
+          }));
+          await db.storeEphemeralSweeps(backups);
+        }
         if (body.network === 'testnet' || body.network === 'signet') {
           let commitResponse = await broadcastTx(body.commit_tx_hex, body.network + '/');
           if (!commitResponse.ok) {
@@ -160,6 +181,23 @@ const server = Bun.serve({
         return new Response('Error fetching boost history: ' + err.message, { status: 500 });
       }
     },
+    '/social/get_stored_sweeps/:boost_id': async req => {
+      try {
+        const authorizedAddress = getAuthorizedAddress(req.headers.get('Authorization'));
+        if (authorizedAddress.isValid === false) {
+          return new Response.json(authorizedAddress, {
+            status: 401,
+            statusText: 'Unauthorized: ' + authorizedAddress.error,
+            headers: { 'Content-Type': 'application/json' }
+          });
+        }
+        let storedSweeps = await db.getStoredEphemeralSweeps(req.params.boost_id, authorizedAddress.address);
+        return Response.json(storedSweeps);
+      } catch (err) {
+        console.error('Error fetching stored sweeps:', err);
+        return new Response('Error fetching stored sweeps: ' + err.message, { status: 500 });
+      }
+    },
     '/social/broadcast_sweep': async req => {
       if (req.method !== 'POST') {
         return new Response('Method Not Allowed', { status: 405 });
@@ -176,7 +214,7 @@ const server = Bun.serve({
         });
         broadcast_sweep_id = insertRecord.broadcast_sweep_id;
         let networkString = body.network in ['testnet', 'signet'] ? body.network + '/' : '';
-        let response = await broadcastTx(body.reveal_tx_hex, networkString);
+        let response = await broadcastTx(body.sweep_tx_hex, networkString);
         if (!response.ok) {
           let text = await response.text();
           let errorString = `Error broadcasting sweep transaction: ${text}, ${response.statusText}`;
@@ -198,6 +236,17 @@ const server = Bun.serve({
       } catch (err) {
         console.error('Error broadcasting sweep:', err);
         return new Response('Error broadcasting sweep: ' + err.message, { status: 500 });
+      }
+    },
+    '/social/sweep_history/:address': async req => {
+      try {
+        const authFail = checkAuthFail(req.headers.get('Authorization'), req.params.address);
+        if (authFail) return authFail;
+        const sweeps = await db.getSweepsForAddress(req.params.address);
+        return Response.json(sweeps);
+      } catch (err) {
+        console.error('Error fetching sweep history:', err);
+        return new Response('Error fetching sweep history: ' + err.message, { status: 500 });
       }
     },
     '/social/generate_sign_in_message': async req => {
@@ -277,6 +326,17 @@ function checkAuthFail(authHeader, ordinalsAddress) {
     })
     return response;
   }
+}
+
+function getAuthorizedAddress(authHeader) {
+  if (!authHeader?.startsWith('Bearer ')) {
+    console.log('Unauthorized: No bearer token provided');
+    return null;
+  }
+  const token = authHeader.slice(7);
+  let authenticator = new Authenticator();
+  const verification = authenticator.GetAuthorizedAddressFromToken(token);
+  return verification;
 }
 
 // Shutdown function to clean up everything

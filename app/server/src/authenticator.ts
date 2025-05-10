@@ -117,4 +117,32 @@ export class Authenticator {
       }
     }
   }
+  public GetAuthorizedAddressFromToken(token: string): {isValid: boolean, address?: string, error?: string} {
+    const secret = config.access_token_secret;
+    try {
+      const decoded = jwt.verify(token, secret) as { address: string };
+      return {
+        isValid: true,
+        address: decoded.address
+      };
+    } catch (err: any) {
+      if (err.name === 'TokenExpiredError') {
+        return {
+          isValid: false,
+          error: 'Your session has expired. Please sign in again.'
+        };
+      } else if (err.message in ['invalid signature', 'jwt malformed']) {
+        return {
+          isValid: false,
+          error: 'Your authentication token is invalid. Please sign in again.'
+        };
+      } else {
+        console.error('Error verifying access token:', err);
+        return {
+          isValid: false,
+          error: err.name
+        };
+      }
+    }
+  }
 }

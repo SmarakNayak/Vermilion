@@ -7,7 +7,7 @@ import { copyText, formatAddress, formatTimestampMs, capitalizeFirstLetter } fro
 import useStore from '../store/zustand';
 import { NETWORKS } from '../wallet/networks';
 import { getRevealSweepTransaction } from '../wallet/inscriptionBuilder';
-import { getRecommendedFees } from '../wallet/mempoolApi';
+import { getRecommendedFees, submitSweep } from '../wallet/mempoolApi';
 
 const History = () => {
   const [copied, setCopied] = useState(false);
@@ -73,9 +73,23 @@ const History = () => {
         output: boostHistoryRow.reveal_address_script,
         hash: boostHistoryRow.reveal_tapmerkleroot,
       };
-      const sweepTx = getRevealSweepTransaction(wallet.paymentAddress, revealTaproot, revealKeyPair, boostHistoryRow.commit_tx_id, boostHistoryRow.reveal_input_value, feeRate, wallet.network, false);
-      const signedSweep = await wallet.signPsbt(sweepTx, [{ index: 0, address: wallet.ordinalsAddress}]);
+      const unsignedSweep = getRevealSweepTransaction(wallet.paymentAddress, revealTaproot, revealKeyPair, boostHistoryRow.commit_tx_id, boostHistoryRow.reveal_input_value, feeRate, wallet.network, false);
+      const signedSweep = await wallet.signPsbt(unsignedSweep, [{ index: 0, address: wallet.ordinalsAddress}]);
+      const sweepTx = signedSweep.extractTransaction();
       // broadcast the sweep transaction and log it
+      const sweepInfo = {
+        sweep_type: boostHistoryRow.inscription_method,
+        boost_id: boostHistoryRow.boost_id,
+        sweep_tx_id: sweepTx.getId(),
+        sweep_tx_hex: sweepTx.toHex(),
+        fee_rate: feeRate
+      }
+      const sweepTxId = await submitSweep(wallet, authToken, sweepInfo, () => {
+          setWallet(null);
+          setAuthToken(null);
+        }
+      );
+      console.log('Sweep transaction submitted:', sweepTxId);
     } else if (boostHistoryRow.inscription_method === 'ephemeral') {
       console.log('Ephemeral method not supported yet');
       // TODO: implement ephemeral method

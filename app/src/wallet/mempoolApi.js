@@ -118,7 +118,8 @@ async function submitBoost(wallet, authToken, inscriptionInfo, boostInfo, unauth
       reveal_address_script: inscriptionInfo.reveal_address_script,
       reveal_tapmerkleroot: inscriptionInfo.reveal_tapmerkleroot,
       reveal_input_value: inscriptionInfo.reveal_input_value,
-      reveal_script: inscriptionInfo.reveal_script
+      reveal_script: inscriptionInfo.reveal_script,
+      ephemeral_sweep_backups: inscriptionInfo.ephemeral_sweep_backups,
     })
   });
   if (!response.ok) {
@@ -129,6 +130,39 @@ async function submitBoost(wallet, authToken, inscriptionInfo, boostInfo, unauth
       errorText = 'Unauthorized: ' + json.error;
     }
     throw new Error(`Failed to broadcast transactions: ${errorText}`);
+  }
+  const data = await response.json();
+  return data;
+}
+
+async function submitSweep(wallet, authToken, sweepInfo, unauthCallback) {
+  const url = `/bun/social/sweep`;
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${authToken}`,
+    },
+    body: JSON.stringify({
+      sweep_type: sweepInfo.sweep_type,
+      boost_id: sweepInfo.boost_id,
+      ordinals_address: wallet.ordinalsAddress,
+      payment_address: wallet.paymentAddress,
+      sweep_tx_id: sweepInfo.sweep_tx_id,
+      sweep_tx_hex: sweepInfo.sweep_tx_hex,
+      fee_rate: sweepInfo.fee_rate,
+      wallet_type: wallet.walletType,
+      network: wallet.network
+    })
+  });
+  if (!response.ok) {
+    let errorText = response.statusText;
+    if (response.status === 401) {
+      unauthCallback();
+      let json = await response.json();
+      errorText = 'Unauthorized: ' + json.error;
+    }
+    throw new Error(`Failed to broadcast sweep: ${errorText}`);
   }
   const data = await response.json();
   return data;
@@ -188,6 +222,7 @@ async function getCoinBaseBtcPrice() {
 export {
   submitInscriptionTxs,
   submitBoost,
+  submitSweep,
   getRecommendedFees,
   getConfirmedCardinalUtxos,
   getTxData,

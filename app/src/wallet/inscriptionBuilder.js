@@ -146,6 +146,9 @@ function getRevealSweepTransaction(receiveAddress, revealTaproot, revealKeyPair,
   let inputSize = 40 + 1 + 66/4; //40 for header, 1 for witness, 66/4 for taproot input
   let outputSize = 43; //43 is wcs for taproot output
   let vSize = headerSize + inputSize + outputSize;
+  if (revealFee - feeRate * vSize < 546) {
+    throw new Error("Fee rate too high");
+  }
 
   const psbt = new bitcoin.Psbt({ network: NETWORKS[network].bitcoinjs })
     .addInput({
@@ -650,6 +653,35 @@ async function constructInscriptionTxsWithEphemeralKey({
   }
   if (useWalletForKeyPath) {
     inscriptionInfo.inscription_method = "ephemeral_with_wallet_key_path";
+  }
+  if (!useWalletForKeyPath) {
+    let feeRates = [1, 5, 10, 20, 30, 40, 50, 75, 100, 200, 500, 1000];
+    if (!(feeRate in feeRates)) {
+      feeRates.push(feeRate);
+      feeRates.sort((a, b) => a - b);
+    }
+    let sweepArray = [];
+
+    for (let i = 0; i < feeRates.length; i++) {
+      let backupFeeRate = feeRates[i];
+      try {
+        let signedSweepPsbt = getRevealSweepTransaction(wallet.paymentAddress, revealTaproot, ephemeralKeyPair, commitTxId, estimatedRevealFee, backupFeeRate, network, true);
+        let sweepTx = signedSweepPsbt.extractTransaction();
+        sweepArray.push({
+          fee_rate: backupFeeRate,
+          sweep_tx_hex: sweepTx.toHex(),
+          sweep_tx_id: sweepTx.getId()
+        });
+      } catch (err) {
+        if (err.message === "Fee rate too high") {
+          console.log("Fee rate too high for sweep transaction, breaking here");
+          break;
+        } else {
+          throw new Error("Error getting sweep transaction: " + err.message);
+        }
+      }
+    }
+    inscriptionInfo.ephemeral_sweep_backups = sweepArray;
   }
 
   return inscriptionInfo;

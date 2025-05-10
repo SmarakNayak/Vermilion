@@ -93,7 +93,8 @@ const db = {
           payment_address VARCHAR(64) NOT NULL,
           network VARCHAR(10),
           fee_rate INT NOT NULL,
-          reveaL_sweep_tx_hex TEXT NOT NULL,
+          sweep_tx_id VARCHAR(64) NOT NULL,
+          sweep_tx_hex TEXT NOT NULL,
           broadcasted BOOLEAN DEFAULT FALSE,
           broadcast_sweep_id UUID REFERENCES social.broadcasted_reveal_sweeps(broadcast_sweep_id)
         );
@@ -199,14 +200,14 @@ const db = {
       let boostId = await this.sql`INSERT INTO social.boosts ${this.sql(boost)} RETURNING boost_id;`;
       return boostId;
     } catch (err) {
-      throw new Error(`Error during insert: ${err.message}`, { cause: err });
+      throw new Error(`Error during boost insert: ${err.message}`, { cause: err });
     }
   },
   async updateBoost(boostId, boost) {
     try {
       await this.sql`UPDATE social.boosts SET ${this.sql(boost)} WHERE boost_id = ${boostId}`;
     } catch (err) { 
-      throw new Error(`Error during update: ${err.message}`, { cause: err });
+      throw new Error(`Error during boost update: ${err.message}`, { cause: err });
     }
   },
   async recordSweep(sweep) {
@@ -214,7 +215,7 @@ const db = {
       let sweepId = await this.sql`INSERT INTO social.broadcasted_reveal_sweeps ${this.sql(sweep)} RETURNING broadcast_sweep_id;`;
       return sweepId;
     } catch (err) {
-      throw new Error(`Error during insert: ${err.message}`, { cause: err });
+      throw new Error(`Error during sweep insert: ${err.message}`, { cause: err });
     }
   },
   async updateSweep(sweepId, sweep) {
@@ -222,15 +223,23 @@ const db = {
       await this.sql`UPDATE social.broadcasted_reveal_sweeps SET ${this.sql(sweep)} WHERE broadcast_sweep_id = ${sweepId}`;
     }
     catch (err) {
-      throw new Error(`Error during update: ${err.message}`, { cause: err });
+      throw new Error(`Error during sweep update: ${err.message}`, { cause: err });
     }
   },
-  async storeEphemeralSweep(sweep) {
+  async storeEphemeralSweeps(sweep) {
     try {
       let sweepId = await this.sql`INSERT INTO social.stored_ephemeral_sweeps ${this.sql(sweep)} RETURNING ephemeral_sweep_id;`;
       return sweepId;
     } catch (err) {
-      throw new Error(`Error during insert: ${err.message}`, { cause: err });
+      throw new Error(`Error during sweep backup: ${err.message}`, { cause: err });
+    }
+  },
+  async getStoredEphemeralSweeps(boostId, address) {
+    try {
+      const sweeps = await this.sql`SELECT * FROM social.stored_ephemeral_sweeps WHERE boost_id = ${boostId} AND ordinals_address = ${ordinalsAddress}`;
+      return sweeps;
+    } catch (err) {
+      throw new Error('Error fetching ephemeral backups: ' + err.message, { cause: err });
     }
   },
   async getBoostsToMonitor() {
@@ -254,7 +263,15 @@ const db = {
       const boosts = await this.sql`SELECT * FROM social.boosts WHERE (ordinals_address = ${address} OR payment_address = ${address})`;
       return boosts;
     } catch (err) {
-      throw new Error('Error fetching transactions to monitor: ' + err.message);
+      throw new Error('Error fetching boosts: ' + err.message);
+    }
+  },
+  async getSweepsForAddress(address) {
+    try {
+      const sweeps = await this.sql`SELECT * FROM social.broadcasted_reveal_sweeps WHERE (ordinals_address = ${address} OR payment_address = ${address})`;
+      return sweeps;
+    } catch (err) {
+      throw new Error('Error fetching sweeps: ' + err.message);
     }
   },
   async appendSignInRecord(signInRecord) {
