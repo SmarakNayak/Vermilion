@@ -54,6 +54,7 @@ const CheckoutModal = ({ onClose, isCheckoutModalOpen, delegateData }) => {
   const [totalPlatformFee, setTotalPlatformFee] = useState(0);
   const [totalOwnerFee, setTotalOwnerFee] = useState(0);
   const [ownerAddress, setOwnerAddress] = useState(null);
+  const [canBoost, setCanBoost] = useState(false);
 
   useEffect(() => {
     if (isCheckoutModalOpen) {
@@ -143,7 +144,7 @@ const CheckoutModal = ({ onClose, isCheckoutModalOpen, delegateData }) => {
   }
 
   useEffect(() => {
-    if (isCheckoutModalOpen & feeRate & ownerAddress !== null) {      
+    if (isCheckoutModalOpen & feeRate & ownerAddress !== null) {
       let quantity = boostQuantity;
       if (quantity < 1) { //early return if 0 (as estiamtion assumes min tx size)
         setInscriptionFee(0);
@@ -182,16 +183,19 @@ const CheckoutModal = ({ onClose, isCheckoutModalOpen, delegateData }) => {
       }
     }
   }, [boostQuantity, boostComment, delegateData, isCheckoutModalOpen, feeRate, utxos, wallet, ownerAddress]);
+  
+  // wait for data to load before enabling boost button
+  useEffect(() => {
+    if (isCheckoutModalOpen, utxos.length > 0 & feeRate > 0 && inscriptionFee > 0 && ownerAddress !== null) {
+      setCanBoost(true);
+    } else {
+      setCanBoost(false);
+    }
+  }, [isCheckoutModalOpen, utxos, feeRate, inscriptionFee, ownerAddress]);
 
   const handleBoostClick = async (delegateMetadata) => {
     setError(null); // Reset error state
-    if (!delegateMetadata) {
-      console.warn("No delegate or inscription ID available for boosting");
-      return;
-    }
-
     try {
-      console.log(boostComment, boostQuantity);
       if (boostQuantity < 1 || boostQuantity > 100) {        
         setError("Boost quantity must be between 1 and 100.");
         return;
@@ -201,6 +205,11 @@ const CheckoutModal = ({ onClose, isCheckoutModalOpen, delegateData }) => {
         setOverlayWalletConnect(true);
         return;
       }
+      if (!delegateMetadata || feeRate === 0 || !ownerAddress || utxos.length === 0) {
+        setError("Still loading data, try again in a moment.");
+        return;
+      }
+
       let inscriptions = getInscriptions(delegateMetadata, boostQuantity);
       console.log("Inscribing following inscriptions: ", inscriptions);
 
@@ -490,7 +499,7 @@ const CheckoutModal = ({ onClose, isCheckoutModalOpen, delegateData }) => {
 
             {/* Boost Button Section */}
             <BoostButtonContainer>
-              {!signStatus ? (
+              {!signStatus & canBoost ? ( // do not enable until all data is loaded
                 <ModalBoostButton onClick={() => handleBoostClick(delegateData)}>
                   {wallet ? (
                     <>

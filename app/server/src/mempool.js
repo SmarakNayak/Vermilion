@@ -16,54 +16,62 @@ async function broadcastTx(txHex, networkString='') {
 }
 
 async function getTxStatus(txId, network='mainnet') {
-  if (network === 'testnet' || network === 'signet') {
+  try {
+    if (network === 'testnet' || network === 'signet') {
+      
+      const url = `https://mempool.space/${network}/api/tx/${txId}`;
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      let text = await response.text();    
+      if (text === 'Transaction not found') {
+        return 'not_found';
+      }
+      if (text === 'Invalid hex string') {
+        return 'invalid';
+      }
+
+      let json = JSON.parse(text);
+      if (json?.status?.confirmed === true) {
+        return 'confirmed';
+      }
+      if (json?.status?.confirmed === false) {
+        return 'pending';
+      }
+      return 'Error fetching transaction status, invalid response';
+    }
+    if (network === 'mainnet') {
+      const url = `${apiBaseUrl}/api/get_raw_transaction/${txId}`;
+
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
     
-    const url = `https://mempool.space/${network}/api/tx/${txId}`;
-    const response = await fetch(url, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
+      let json = await response.json();
+      if (json?.error) {
+        return 'not_found';
+      }
+      if (json?.confirmations > 0) {
+        return 'confirmed';
+      }
+      if (json?.confirmations === null) {
+        return 'pending';
+      }
 
-    let text = await response.text();    
-    if (text === 'Transaction not found') {
-      return 'not_found';
+      throw new Error('Error fetching transaction status, invalid response');
     }
-
-    let json = JSON.parse(text);
-    if (json?.status?.confirmed === true) {
-      return 'confirmed';
-    }
-    if (json?.status?.confirmed === false) {
-      return 'pending';
-    }
-    throw new Error('Error fetching transaction status, invalid response');
+    return 'Invalid network';
+  } catch (err) {
+    console.error('Error fetching transaction status', err);
+    return 'error: ' + err.message;
   }
-  if (network === 'mainnet') {
-    const url = `${apiBaseUrl}/api/get_raw_transaction/${txId}`;
-
-    const response = await fetch(url, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
-  
-    let json = await response.json();
-    if (json?.error) {
-      return 'not_found';
-    }
-    if (json?.confirmations > 0) {
-      return 'confirmed';
-    }
-    if (json?.confirmations === null) {
-      return 'pending';
-    }
-
-    throw new Error('Error fetching transaction status, invalid response');
-  }
-  throw new Error('Invalid network');
 }
 
 async function getMempoolTxids(networkString='') {

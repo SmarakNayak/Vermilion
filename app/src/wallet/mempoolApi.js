@@ -123,13 +123,13 @@ async function submitBoost(wallet, authToken, inscriptionInfo, boostInfo, unauth
     })
   });
   if (!response.ok) {
-    let errorText = response.statusText;
+    let errorText = await response.text();
     if (response.status === 401) {
       unauthCallback();
-      let json = await response.json();
+      let json = await JSON.parse(errorText);
       errorText = 'Unauthorized: ' + json.error;
     }
-    throw new Error(`Failed to broadcast transactions: ${errorText}`);
+    throw new Error(`${errorText}`);
   }
   const data = await response.json();
   return data;

@@ -54,62 +54,67 @@ const bundexer = {
 
   async runTxMonitorLoop() {
     while (!this.shouldStop) {
-      let boostsToMonitor = await db.getBoostsToMonitor();
-      let sweepsToMonitor = await db.getSweepsToMonitor();
-      if (boostsToMonitor.length === 0 && sweepsToMonitor.length === 0) {
-        await Bun.sleep(1000);
-        continue;
-      }
+      try {
+        let boostsToMonitor = await db.getBoostsToMonitor();
+        let sweepsToMonitor = await db.getSweepsToMonitor();
+        if (boostsToMonitor.length === 0 && sweepsToMonitor.length === 0) {
+          await Bun.sleep(1000);
+          continue;
+        }
 
-      for (let boost of boostsToMonitor) {
-        let boostTime = new Date(boost.timestamp).getTime();
-        let fiveMinutesAgo = Date.now() - 5 * 60 * 1000;
-        if (boost.commit_tx_status === 'pending') {
-          let txStatus = await getTxStatus(boost.commit_tx_id, boost.network);
-          if (txStatus ==='confirmed') {
-            await db.updateBoost(boost.boost_id, {
-              commit_tx_status: 'confirmed'
-            });
+        for (let boost of boostsToMonitor) {
+          let boostTime = new Date(boost.timestamp).getTime();
+          let fiveMinutesAgo = Date.now() - 5 * 60 * 1000;
+          if (boost.commit_tx_status === 'pending') {
+            let txStatus = await getTxStatus(boost.commit_tx_id, boost.network);
+            if (txStatus ==='confirmed') {
+              await db.updateBoost(boost.boost_id, {
+                commit_tx_status: 'confirmed'
+              });
+            }
+            if (txStatus ==='not_found' && boostTime < fiveMinutesAgo) {
+              await db.updateBoost(boost.boost_id, {
+                commit_tx_status: 'not_found'
+              });
+            }
           }
-          if (txStatus ==='not_found' && boostTime < fiveMinutesAgo) {
-            await db.updateBoost(boost.boost_id, {
-              commit_tx_status: 'not_found'
-            });
+          if (boost.reveal_tx_status === 'pending') {
+            let txStatus = await getTxStatus(boost.reveal_tx_id, boost.network);
+            if (txStatus ==='confirmed') {
+              await db.updateBoost(boost.boost_id, {
+                reveal_tx_status: 'confirmed'
+              });
+            }
+            if (txStatus ==='not_found' && boostTime < fiveMinutesAgo) {
+              await db.updateBoost(boost.boost_id, {
+                reveal_tx_status: 'not_found'
+              });
+            }
           }
         }
-        if (boost.reveal_tx_status === 'pending') {
-          let txStatus = await getTxStatus(boost.reveal_tx_id, boost.network);
-          if (txStatus ==='confirmed') {
-            await db.updateBoost(boost.boost_id, {
-              reveal_tx_status: 'confirmed'
-            });
-          }
-          if (txStatus ==='not_found' && boostTime < fiveMinutesAgo) {
-            await db.updateBoost(boost.boost_id, {
-              reveal_tx_status: 'not_found'
-            });
+        for (let sweep of sweepsToMonitor) {
+          let sweepTime = new Date(sweep.timestamp).getTime();
+          let fiveMinutesAgo = Date.now() - 5 * 60 * 1000;
+          if (sweep.sweep_tx_status === 'pending') {
+            let txStatus = await getTxStatus(sweep.sweep_tx_id, sweep.network);
+            if (txStatus ==='confirmed') {
+              await db.updateSweep(sweep.sweep_id, {
+                sweep_tx_status: 'confirmed'
+              });
+            }
+            if (txStatus ==='not_found' && sweepTime < fiveMinutesAgo) {
+              await db.updateSweep(sweep.sweep_id, {
+                sweep_tx_status: 'not_found'
+              });
+            }
           }
         }
+        
+        await Bun.sleep(60000);
+      } catch (err) {
+        console.warn('Error in tx monitor loop, waiting a minute', err);
+        await Bun.sleep(60000);
       }
-      for (let sweep of sweepsToMonitor) {
-        let sweepTime = new Date(sweep.timestamp).getTime();
-        let fiveMinutesAgo = Date.now() - 5 * 60 * 1000;
-        if (sweep.sweep_tx_status === 'pending') {
-          let txStatus = await getTxStatus(sweep.sweep_tx_id, sweep.network);
-          if (txStatus ==='confirmed') {
-            await db.updateSweep(sweep.sweep_id, {
-              sweep_tx_status: 'confirmed'
-            });
-          }
-          if (txStatus ==='not_found' && sweepTime < fiveMinutesAgo) {
-            await db.updateSweep(sweep.sweep_id, {
-              sweep_tx_status: 'not_found'
-            });
-          }
-        }
-      }
-      
-      await Bun.sleep(60000);
     }
   },
   
