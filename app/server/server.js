@@ -104,24 +104,25 @@ const server = Bun.serve({
               broadcast_status: 'failed',
               broadcast_error: errorString,
               commit_tx_status: 'failed',
-              reveal_tx_status: 'abandoned'
-            });
-            return new Response(errorString, { status: 500 });
-          }
-          let revealResponse = await broadcastTx(body.reveal_tx_hex, body.network + '/');
-          if (!revealResponse.ok) {
-            let text = await revealResponse.text();
-            let errorString = `Error broadcasting reveal transaction: ${text}, ${revealResponse.statusText}`;
-            await db.updateBoost(boostId, {
-              broadcast_status: 'failed',
-              broadcast_error: errorString,
-              commit_tx_status: 'failed',
               reveal_tx_status: 'failed'
             });
             return new Response(errorString, { status: 500 });
           }
+          // let revealResponse = await broadcastTx(body.reveal_tx_hex, body.network + '/');
+          // if (!revealResponse.ok) {
+          //   let text = await revealResponse.text();
+          //   let errorString = `Error broadcasting reveal transaction: ${text}, ${revealResponse.statusText}`;
+          //   await db.updateBoost(boostId, {
+          //     broadcast_status: 'failed',
+          //     broadcast_error: errorString,
+          //     commit_tx_status: 'failed',
+          //     reveal_tx_status: 'failed'
+          //   });
+          //   return new Response(errorString, { status: 500 });
+          // }
           let commitTxId = await commitResponse.text();
-          let revealTxId = await revealResponse.text();
+          //let revealTxId = await revealResponse.text();
+          let revealTxId = 'lmao';
           await db.updateBoost(boostId, {
             broadcast_status: 'broadcasted',
             commit_tx_status: 'pending',
@@ -208,12 +209,19 @@ const server = Bun.serve({
         if (authFail) return authFail;
 
         let [insertRecord] = await db.recordSweep({
-          ...body,
+          sweep_type: body.sweep_type,
+          boost_id: body.boost_id,
+          ordinals_address: body.ordinals_address,
+          payment_address: body.payment_address,
+          sweep_tx_id: body.sweep_tx_id,
+          fee_rate: body.fee_rate,
+          wallet_type: body.wallet_type,
+          network: body.network,
           broadcast_status: 'scheduled',
-          reveal_sweep_tx_status: 'scheduled'
+          sweep_tx_status: 'scheduled'
         });
-        broadcast_sweep_id = insertRecord.broadcast_sweep_id;
-        let networkString = body.network in ['testnet', 'signet'] ? body.network + '/' : '';
+        let broadcast_sweep_id = insertRecord.broadcast_sweep_id;
+        let networkString = ['testnet', 'signet'].includes(body.network) ? body.network + '/' : '';
         let response = await broadcastTx(body.sweep_tx_hex, networkString);
         if (!response.ok) {
           let text = await response.text();

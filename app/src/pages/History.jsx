@@ -56,8 +56,8 @@ const History = () => {
   };
 
   const handleSweep = async (boostHistoryRow) => {
-    if (boostHistoryRow.inscription_method in ['ephemeral_with_wallet_key_path', 'wallet_one_sign', 'wallet_two_sign']) {
-      if (!(wallet.walletType in ['okx', 'xverse'])) {
+    if (['ephemeral_with_wallet_key_path', 'wallet_one_sign', 'wallet_two_sign'].includes(boostHistoryRow.inscription_method)) {
+      if (!(['okx', 'xverse'].includes(wallet.walletType))) {
         if (wallet.walletType === 'unisat') {
           throw new Error(`Unisat does not support key-path signing. Please import your wallet into Okx to sweep.`);
         } else {
@@ -70,10 +70,10 @@ const History = () => {
         publicKey: walletTaproot.internalPubkey,
       }
       const revealTaproot = {
-        output: boostHistoryRow.reveal_address_script,
-        hash: boostHistoryRow.reveal_tapmerkleroot,
+        output: Buffer.from(boostHistoryRow.reveal_address_script, 'hex'),
+        hash: Buffer.from(boostHistoryRow.reveal_tapmerkleroot, 'hex'),
       };
-      const unsignedSweep = getRevealSweepTransaction(wallet.paymentAddress, revealTaproot, revealKeyPair, boostHistoryRow.commit_tx_id, boostHistoryRow.reveal_input_value, feeRate, wallet.network, false);
+      const unsignedSweep = getRevealSweepTransaction(wallet.paymentAddress, revealTaproot, revealKeyPair, boostHistoryRow.commit_tx_id, parseInt(boostHistoryRow.reveal_input_value), feeRate, wallet.network, false);
       const signedSweep = await wallet.signPsbt(unsignedSweep, [{ index: 0, address: wallet.ordinalsAddress}]);
       const sweepTx = signedSweep.extractTransaction();
       // broadcast the sweep transaction and log it
@@ -162,8 +162,8 @@ const History = () => {
                   </StyledLink>
                 </DataCell>
                 <ActionCell>
-                  {row.commit_tx_status === 'confirmed' && (row.reveal_tx_status in ['scheduled', 'pending', 'not_found']) && (
-                    <SweepButton>
+                  {row.commit_tx_status === 'confirmed' && ['scheduled', 'pending', 'not_found'].includes(row.reveal_tx_status) && (
+                    <SweepButton onClick={() => handleSweep(row)}>
                       <SweepIcon size={'1.125rem'} />
                       Sweep
                     </SweepButton>

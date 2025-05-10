@@ -84,6 +84,7 @@ async function submitInscriptionTxs(commitHex, revealHex, network) {
 // reveal_input_value BIGINT NOT NULL,
 // reveal_script TEXT NOT NULL,
 async function submitBoost(wallet, authToken, inscriptionInfo, boostInfo, unauthCallback) {
+  console.log(wallet, authToken, inscriptionInfo, boostInfo);
   const url = `/bun/social/boost`;
   const response = await fetch(url, {
     method: 'POST',
@@ -122,6 +123,37 @@ async function submitBoost(wallet, authToken, inscriptionInfo, boostInfo, unauth
       ephemeral_sweep_backups: inscriptionInfo.ephemeral_sweep_backups,
     })
   });
+  let body = JSON.stringify({
+      // boost info
+      delegate_id: boostInfo.delegate_id,
+      boost_quantity: boostInfo.boost_quantity,
+      boost_comment: boostInfo.boost_comment,
+      platform_address: boostInfo.platform_address,
+      platform_fee: boostInfo.platform_fee,
+      owner_address: boostInfo.owner_address,
+      owner_fee: boostInfo.owner_fee,
+      // wallet info
+      network: wallet.network,
+      wallet_type: wallet.walletType,
+      inscription_method: inscriptionInfo.inscription_method,
+      ordinals_address: wallet.ordinalsAddress,
+      ordinals_public_key: wallet.ordinalsPublicKey,
+      payment_address: wallet.paymentAddress,
+      payment_public_key: wallet.paymentPublicKey,
+      ephemeral_public_key: inscriptionInfo.ephemeral_public_key,
+      // inscription info
+      fee_rate: inscriptionInfo.fee_rate,
+      commit_tx_hex: inscriptionInfo.commit_tx_hex,
+      commit_tx_id: inscriptionInfo.commit_tx_id,
+      reveal_tx_hex: inscriptionInfo.reveal_tx_hex,
+      reveal_tx_id: inscriptionInfo.reveal_tx_id,
+      reveal_address_script: inscriptionInfo.reveal_address_script,
+      reveal_tapmerkleroot: inscriptionInfo.reveal_tapmerkleroot,
+      reveal_input_value: inscriptionInfo.reveal_input_value,
+      reveal_script: inscriptionInfo.reveal_script,
+      ephemeral_sweep_backups: inscriptionInfo.ephemeral_sweep_backups,
+    });
+  console.log(body);
   if (!response.ok) {
     let errorText = await response.text();
     if (response.status === 401) {
@@ -136,7 +168,7 @@ async function submitBoost(wallet, authToken, inscriptionInfo, boostInfo, unauth
 }
 
 async function submitSweep(wallet, authToken, sweepInfo, unauthCallback) {
-  const url = `/bun/social/sweep`;
+  const url = `/bun/social/broadcast_sweep`;
   const response = await fetch(url, {
     method: 'POST',
     headers: {

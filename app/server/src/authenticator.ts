@@ -85,7 +85,7 @@ export class Authenticator {
     const token = jwt.sign(
       { address: ordinalsAddress },
       secret,
-      { expiresIn: '30s' }
+      { expiresIn: '1d' }
     );
     return token;
   }
@@ -103,7 +103,7 @@ export class Authenticator {
           isValid: false,
           error: 'Your session has expired. Please sign in again.'
         };
-      } else if (err.message in ['invalid signature', 'jwt malformed']) {
+      } else if (['invalid signature', 'jwt malformed'].includes(err.message)) {
         return {
           isValid: false,
           error: 'Your authentication token is invalid. Please sign in again.'
@@ -131,7 +131,7 @@ export class Authenticator {
           isValid: false,
           error: 'Your session has expired. Please sign in again.'
         };
-      } else if (err.message in ['invalid signature', 'jwt malformed']) {
+      } else if (['invalid signature', 'jwt malformed'].includes(err.message)) {
         return {
           isValid: false,
           error: 'Your authentication token is invalid. Please sign in again.'
