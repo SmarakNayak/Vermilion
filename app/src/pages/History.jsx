@@ -8,11 +8,17 @@ import useStore from '../store/zustand';
 import { NETWORKS } from '../wallet/networks';
 import { getRevealSweepTransaction } from '../wallet/inscriptionBuilder';
 import { getRecommendedFees, submitSweep } from '../wallet/mempoolApi';
+import SweepModal from '../components/modals/SweepModal';
+import * as bitcoin from 'bitcoinjs-lib';
 
 const History = () => {
   const [copied, setCopied] = useState(false);
   const [copiedRowId, setCopiedRowId] = useState(null);
   const [boostHistory, setBoostHistory] = useState([]);
+  const [displaySweepColumn, setDisplaySweepColumn] = useState(false);
+  const [isSweepModalOpen, setIsSweepModalOpen] = useState(false);
+  const [sweepInfo, setSweepInfo] = useState(null);
+
   const wallet = useStore((state) => state.wallet);
   const setWallet = useStore((state) => state.setWallet);
   const authToken = useStore((state) => state.authToken);
@@ -27,26 +33,44 @@ const History = () => {
   };
 
   const fetchBoostHistory = async () => {
-    let url = `/bun/social/boost_history/${wallet.ordinalsAddress}`;
+    let url = `/bun/social/full_boost_history/${wallet.ordinalsAddress}`;
     const response = await fetch(url, {
       headers: {
         'Authorization': `Bearer ${authToken}`,
       }
     });
-    if (response.ok) {
-      const data = await response.json();
-      data.forEach((row) => {
-        row.type = "Boost";
-      });
-      setBoostHistory(data);
-      console.log('Boost history:', data);
-    } else if (response.status===401) {
-      console.log('Unauthorized. Please log in again.');
-      setWallet(null);
-      setAuthToken(null);
-    } else {
-      console.error('Error fetching boost history:', response.statusText);
+    if (!response.ok) {
+      if (response.status===401) {
+        console.log('Unauthorized. Please log in again.');
+        setWallet(null);
+        setAuthToken(null);
+      } else {
+        console.error('Error fetching boost history:', response.statusText);
+      }
+      return;
     }
+    const data = await response.json();
+    console.log('Boost history:', data);
+    data.forEach((row) => {
+      row.type = "Boost";
+      if (row?.sweep_tx_status === 'pending') {
+        row.status = 'Sweep Pending';
+      } else if (row?.sweep_tx_status === 'confirmed') {
+        row.status = 'Sweep Confirmed';
+      } else if (row.commit_tx_status === 'confirmed' && ['scheduled', 'pending'].includes(row.reveal_tx_status)) {
+        row.status = 'Reveal Pending';
+      } else if (row.commit_tx_status === 'confirmed' && row.reveal_tx_status === 'not_found') {
+        row.status = 'Reveal Dropped';
+      } else if (row.commit_tx_status === 'confirmed' && row.reveal_tx_status === 'failed') {
+        row.status = 'Reveal Failed';
+      } else {
+        row.status = capitalizeFirstLetter(row.reveal_tx_status);
+      }
+    });
+    setBoostHistory(data);
+    let displaySweepButton = data.some((row) => ['Reveal Pending', 'Reveal Failed', 'Reveal Dropped'].includes(row.status));
+    let displaySweepTxid = data.some((row) => row.sweep_tx_id);
+    setDisplaySweepColumn(displaySweepButton || displaySweepTxid);
   }
 
   const getMempoolTxUrl = (txid) => {
@@ -73,23 +97,38 @@ const History = () => {
         output: Buffer.from(boostHistoryRow.reveal_address_script, 'hex'),
         hash: Buffer.from(boostHistoryRow.reveal_tapmerkleroot, 'hex'),
       };
-      const unsignedSweep = getRevealSweepTransaction(wallet.paymentAddress, revealTaproot, revealKeyPair, boostHistoryRow.commit_tx_id, parseInt(boostHistoryRow.reveal_input_value), feeRate, wallet.network, false);
-      const signedSweep = await wallet.signPsbt(unsignedSweep, [{ index: 0, address: wallet.ordinalsAddress}]);
-      const sweepTx = signedSweep.extractTransaction();
+      let unsignedSweep;
+      try {
+        unsignedSweep = getRevealSweepTransaction(wallet.paymentAddress, revealTaproot, revealKeyPair, boostHistoryRow.commit_tx_id, parseInt(boostHistoryRow.reveal_input_value), feeRate, wallet.network, false);
+      } catch (error) {
+        if (error.message === "Fee rate too high") {
+          unsignedSweep = getRevealSweepTransaction(wallet.paymentAddress, revealTaproot, revealKeyPair, boostHistoryRow.commit_tx_id, parseInt(boostHistoryRow.reveal_input_value), boostHistoryRow.fee_rate, wallet.network, false);
+        } else {
+          console.error('Error creating sweep transaction:', error);
+          throw new Error('Error creating sweep transaction:', error);
+        }
+      }
       // broadcast the sweep transaction and log it
+      console.log('Sweep transaction:', unsignedSweep.__CACHE);
       const sweepInfo = {
         sweep_type: boostHistoryRow.inscription_method,
         boost_id: boostHistoryRow.boost_id,
-        sweep_tx_id: sweepTx.getId(),
-        sweep_tx_hex: sweepTx.toHex(),
-        fee_rate: feeRate
+        unsigned_sweep: unsignedSweep,
+        fee_rate: feeRate,
+        reveal_address: bitcoin.address.fromOutputScript(revealTaproot.output, NETWORKS[wallet.network].bitcoinjs),
+        reveal_amount: parseInt(boostHistoryRow.reveal_input_value),
+        reveal_tx_id: boostHistoryRow.reveal_tx_id,
+        reveal_tx_status: boostHistoryRow.reveal_tx_status,
+        sweep_fees: parseInt(boostHistoryRow.reveal_input_value) - unsignedSweep.txOutputs[0].value,
       }
-      const sweepTxId = await submitSweep(wallet, authToken, sweepInfo, () => {
-          setWallet(null);
-          setAuthToken(null);
-        }
-      );
-      console.log('Sweep transaction submitted:', sweepTxId);
+      setSweepInfo(sweepInfo);
+      setIsSweepModalOpen(true);
+      // const sweepTxId = await submitSweep(wallet, authToken, sweepInfo, () => {
+      //     setWallet(null);
+      //     setAuthToken(null);
+      //   }
+      // );
+      // console.log('Sweep transaction submitted:', sweepTxId);
     } else if (boostHistoryRow.inscription_method === 'ephemeral') {
       console.log('Ephemeral method not supported yet');
       // TODO: implement ephemeral method
@@ -128,7 +167,7 @@ const History = () => {
               <HeaderCell>Status</HeaderCell>
               <HeaderCell>Commit TX</HeaderCell>
               <HeaderCell>Reveal TX</HeaderCell>
-              <HeaderCell></HeaderCell>
+              {displaySweepColumn ? <HeaderCell>Sweep TX</HeaderCell> : <HeaderCell></HeaderCell>}
             </HeaderRow>
             {boostHistory.map((row, index) => (
               <DataRow key={index} isLastRow={index === boostHistory.length - 1}>
@@ -148,8 +187,8 @@ const History = () => {
                 <DataCell>{row.boost_quantity}</DataCell>
                 <DataCell>{row.boost_comment}</DataCell>
                 <DataCell>
-                  <StatusDot status={capitalizeFirstLetter(row.reveal_tx_status)} />
-                  {capitalizeFirstLetter(row.reveal_tx_status)}
+                  <StatusDot status={row.status} />
+                  {row.status}
                 </DataCell>
                 <DataCell>
                   <StyledLink href={getMempoolTxUrl(row.reveal_tx_id)} target="_blank">
@@ -162,7 +201,11 @@ const History = () => {
                   </StyledLink>
                 </DataCell>
                 <ActionCell>
-                  {row.commit_tx_status === 'confirmed' && ['scheduled', 'pending', 'not_found'].includes(row.reveal_tx_status) && (
+                  {row.sweep_tx_id ? (
+                    <StyledLink href={getMempoolTxUrl(row.sweep_tx_id)} target="_blank">
+                      {formatAddress(row.sweep_tx_id)}
+                    </StyledLink>
+                  ) : ['Reveal Pending', 'Reveal Failed', 'Reveal Dropped'].includes(row.status) && (
                     <SweepButton onClick={() => handleSweep(row)}>
                       <SweepIcon size={'1.125rem'} />
                       Sweep
@@ -173,6 +216,14 @@ const History = () => {
             ))}
           </TableContainer>
       </ScrollContainer>
+      <SweepModal
+        isOpen={isSweepModalOpen}
+        onClose={() => {
+          setIsSweepModalOpen(false);
+          setSweepInfo(null);
+        }}
+        sweepData={sweepInfo}
+      />
     </MainContainer>    
   )
 }
@@ -415,8 +466,19 @@ const StatusDot = styled.div`
   width: 0.375rem;
   height: 0.375rem;
   border-radius: 50%;
-  background-color: ${(props) =>
-    props.status === 'Confirmed' ? theme.colors.background.success : '#FCDC35'};
+  background-color: ${(props) => {
+    if (props.status === 'Confirmed' || props.status === 'Sweep Confirmed') {
+      return theme.colors.background.success;
+    }
+    if (props.status === 'Reveal Failed' || props.status === 'Reveal Dropped' || props.status === 'Reveal Pending') {
+      // Partial failure, action required (orange)
+      return '#FFA500';
+    }
+    if (props.status === 'Failed') {
+      return '#D32F2F'; // Failed, no action required (red)
+    }
+    return '#FCDC35'; // Default pending/other state color (yellow)
+  }};
 `;
 
 const StyledLink = styled.a`

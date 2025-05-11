@@ -170,7 +170,7 @@ const server = Bun.serve({
         return new Response('Error boosting: ' + err.message, { status: 500 });
       }
     },
-    '/social/boost_history/:address': async req => {
+    '/social/boost_history/:address': async req => { //TODO: not used, remove?
       try {
         const authFail = checkAuthFail(req.headers.get('Authorization'), req.params.address);
         if (authFail) return authFail;
@@ -246,11 +246,22 @@ const server = Bun.serve({
         return new Response('Error broadcasting sweep: ' + err.message, { status: 500 });
       }
     },
-    '/social/sweep_history/:address': async req => {
+    '/social/sweep_history/:address': async req => { //TODO: not used, remove?
       try {
         const authFail = checkAuthFail(req.headers.get('Authorization'), req.params.address);
         if (authFail) return authFail;
         const sweeps = await db.getSweepsForAddress(req.params.address);
+        return Response.json(sweeps);
+      } catch (err) {
+        console.error('Error fetching sweep history:', err);
+        return new Response('Error fetching sweep history: ' + err.message, { status: 500 });
+      }
+    },
+    '/social/full_boost_history/:address': async req => {
+      try {
+        const authFail = checkAuthFail(req.headers.get('Authorization'), req.params.address);
+        if (authFail) return authFail;
+        const sweeps = await db.getBoostsAndSweepsForAddress(req.params.address);
         return Response.json(sweeps);
       } catch (err) {
         console.error('Error fetching sweep history:', err);

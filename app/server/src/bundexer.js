@@ -98,12 +98,12 @@ const bundexer = {
           if (sweep.sweep_tx_status === 'pending') {
             let txStatus = await getTxStatus(sweep.sweep_tx_id, sweep.network);
             if (txStatus ==='confirmed') {
-              await db.updateSweep(sweep.sweep_id, {
+              await db.updateSweep(sweep.broadcast_sweep_id, {
                 sweep_tx_status: 'confirmed'
               });
             }
             if (txStatus ==='not_found' && sweepTime < fiveMinutesAgo) {
-              await db.updateSweep(sweep.sweep_id, {
+              await db.updateSweep(sweep.broadcast_sweep_id, {
                 sweep_tx_status: 'not_found'
               });
             }

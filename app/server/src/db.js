@@ -236,7 +236,7 @@ const db = {
   },
   async getStoredEphemeralSweeps(boostId, address) {
     try {
-      const sweeps = await this.sql`SELECT * FROM social.stored_ephemeral_sweeps WHERE boost_id = ${boostId} AND ordinals_address = ${ordinalsAddress}`;
+      const sweeps = await this.sql`SELECT * FROM social.stored_ephemeral_sweeps WHERE boost_id = ${boostId} AND ordinals_address = ${address}`;
       return sweeps;
     } catch (err) {
       throw new Error('Error fetching ephemeral backups: ' + err.message, { cause: err });
@@ -272,6 +272,34 @@ const db = {
       return sweeps;
     } catch (err) {
       throw new Error('Error fetching sweeps: ' + err.message);
+    }
+  },
+  async getBoostsAndSweepsForAddress(address) {
+    try {
+      const boostsAndSweeps = await this.sql`
+        with ranked_sweeps as (
+          select 
+            boost_id, 
+            broadcast_sweep_id, 
+            sweep_tx_id, 
+            sweep_tx_status, 
+            ROW_NUMBER() OVER (PARTITION BY boost_id order by fee_rate desc) as rn 
+          from social.broadcasted_reveal_sweeps 
+          where sweep_tx_status in ('pending', 'confirmed')
+        )
+        SELECT 
+          b.*, 
+          rs.broadcast_sweep_id, 
+          rs.sweep_tx_id, 
+          rs.sweep_tx_status 
+        from social.boosts b
+        left join ranked_sweeps rs 
+          on b.boost_id=rs.boost_id 
+          and rs.rn=1
+        where b.ordinals_address = ${address};`
+      return boostsAndSweeps;
+    } catch (err) {
+      throw new Error('Error fetching boosts and sweeps: ' + err.message);
     }
   },
   async appendSignInRecord(signInRecord) {
