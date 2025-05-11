@@ -6,10 +6,7 @@ import theme from '../styles/theme';
 import { copyText, formatAddress, formatTimestampMs, capitalizeFirstLetter } from '../utils';
 import useStore from '../store/zustand';
 import { NETWORKS } from '../wallet/networks';
-import { getRevealSweepTransaction } from '../wallet/inscriptionBuilder';
-import { getRecommendedFees, submitSweep } from '../wallet/mempoolApi';
 import SweepModal from '../components/modals/SweepModal';
-import * as bitcoin from 'bitcoinjs-lib';
 
 const History = () => {
   const [copied, setCopied] = useState(false);
@@ -17,7 +14,7 @@ const History = () => {
   const [boostHistory, setBoostHistory] = useState([]);
   const [displaySweepColumn, setDisplaySweepColumn] = useState(false);
   const [isSweepModalOpen, setIsSweepModalOpen] = useState(false);
-  const [sweepInfo, setSweepInfo] = useState(null);
+  const [boostHistoryRow, setBoostHistoryRow] = useState(null);
 
   const wallet = useStore((state) => state.wallet);
   const setWallet = useStore((state) => state.setWallet);
@@ -80,59 +77,8 @@ const History = () => {
   };
 
   const handleSweep = async (boostHistoryRow) => {
-    if (['ephemeral_with_wallet_key_path', 'wallet_one_sign', 'wallet_two_sign'].includes(boostHistoryRow.inscription_method)) {
-      if (!(['okx', 'xverse'].includes(wallet.walletType))) {
-        if (wallet.walletType === 'unisat') {
-          throw new Error(`Unisat does not support key-path signing. Please import your wallet into Okx to sweep.`);
-        } else {
-          throw new Error(`${wallet.walletType} does not support key-path signing. Please import your wallet into Xverse to sweep.`);
-        }
-      }
-      let feeRate = await getRecommendedFees(wallet.network);
-      let walletTaproot = wallet.getTaproot(wallet, wallet.network);
-      let revealKeyPair = {
-        publicKey: walletTaproot.internalPubkey,
-      }
-      const revealTaproot = {
-        output: Buffer.from(boostHistoryRow.reveal_address_script, 'hex'),
-        hash: Buffer.from(boostHistoryRow.reveal_tapmerkleroot, 'hex'),
-      };
-      let unsignedSweep;
-      try {
-        unsignedSweep = getRevealSweepTransaction(wallet.paymentAddress, revealTaproot, revealKeyPair, boostHistoryRow.commit_tx_id, parseInt(boostHistoryRow.reveal_input_value), feeRate, wallet.network, false);
-      } catch (error) {
-        if (error.message === "Fee rate too high") {
-          unsignedSweep = getRevealSweepTransaction(wallet.paymentAddress, revealTaproot, revealKeyPair, boostHistoryRow.commit_tx_id, parseInt(boostHistoryRow.reveal_input_value), boostHistoryRow.fee_rate, wallet.network, false);
-        } else {
-          console.error('Error creating sweep transaction:', error);
-          throw new Error('Error creating sweep transaction:', error);
-        }
-      }
-      // broadcast the sweep transaction and log it
-      console.log('Sweep transaction:', unsignedSweep.__CACHE);
-      const sweepInfo = {
-        sweep_type: boostHistoryRow.inscription_method,
-        boost_id: boostHistoryRow.boost_id,
-        unsigned_sweep: unsignedSweep,
-        fee_rate: feeRate,
-        reveal_address: bitcoin.address.fromOutputScript(revealTaproot.output, NETWORKS[wallet.network].bitcoinjs),
-        reveal_amount: parseInt(boostHistoryRow.reveal_input_value),
-        reveal_tx_id: boostHistoryRow.reveal_tx_id,
-        reveal_tx_status: boostHistoryRow.reveal_tx_status,
-        sweep_fees: parseInt(boostHistoryRow.reveal_input_value) - unsignedSweep.txOutputs[0].value,
-      }
-      setSweepInfo(sweepInfo);
-      setIsSweepModalOpen(true);
-      // const sweepTxId = await submitSweep(wallet, authToken, sweepInfo, () => {
-      //     setWallet(null);
-      //     setAuthToken(null);
-      //   }
-      // );
-      // console.log('Sweep transaction submitted:', sweepTxId);
-    } else if (boostHistoryRow.inscription_method === 'ephemeral') {
-      console.log('Ephemeral method not supported yet');
-      // TODO: implement ephemeral method
-    }
+    setBoostHistoryRow(boostHistoryRow);
+    setIsSweepModalOpen(true);
   }
 
   useEffect(() => {
@@ -220,9 +166,9 @@ const History = () => {
         isOpen={isSweepModalOpen}
         onClose={() => {
           setIsSweepModalOpen(false);
-          setSweepInfo(null);
+          setBoostHistoryRow(null);
         }}
-        sweepData={sweepInfo}
+        boostHistoryRow={boostHistoryRow}
       />
     </MainContainer>    
   )

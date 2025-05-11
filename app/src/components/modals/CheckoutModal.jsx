@@ -499,7 +499,7 @@ const CheckoutModal = ({ onClose, isCheckoutModalOpen, delegateData }) => {
 
             {/* Boost Button Section */}
             <BoostButtonContainer>
-              {!signStatus & canBoost ? ( // do not enable until all data is loaded
+              {!signStatus & (canBoost || !wallet) ? ( // do not enable until all data is loaded if wallet is connected
                 <ModalBoostButton onClick={() => handleBoostClick(delegateData)}>
                   {wallet ? (
                     <>

@@ -67,6 +67,11 @@ const server = Bun.serve({
         const authFail = checkAuthFail(req.headers.get('Authorization'), body.ordinals_address);
         if (authFail) return authFail;
 
+        
+        // grab the ephemeral_sweep_backups before deleting it from the body
+        let backups = body.ephemeral_sweep_backups;
+        delete body.ephemeral_sweep_backups;
+
         let [ insertRecord ] = await db.recordBoost({
           ...body,
           broadcast_status: 'scheduled',
@@ -75,7 +80,6 @@ const server = Bun.serve({
         });
         let boostId = insertRecord.boost_id;
         if (body.inscription_method === 'ephemeral') {
-          let backups = body.ephemeral_sweep_backups;
           if (!backups || backups.length === 0) {
             let errorString = 'Error: ephemeral_sweep_backups is empty, did not broadcast';
             await db.updateBoost(boostId, {

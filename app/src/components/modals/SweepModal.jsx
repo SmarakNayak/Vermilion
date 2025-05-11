@@ -5,14 +5,16 @@ import theme from '../../styles/theme';
 import { CrossIcon, SweepIcon, CheckIcon } from '../common/Icon'; // Added SuccessIcon, LinkIcon (or similar for TX link)
 import Spinner from '../Spinner'; // Assuming you have a Spinner component
 import { formatAddress, capitalizeFirstLetter, formatSatsStringFull, formatSatsToDollars } from '../../utils';
-import { submitSweep, getCoinBaseBtcPrice } from '../../wallet/mempoolApi';
+import { submitSweep, getCoinBaseBtcPrice, getRecommendedFees } from '../../wallet/mempoolApi';
 import useStore from '../../store/zustand';
 import { NETWORKS } from '../../wallet/networks';
+import { getRevealSweepTransaction } from '../../wallet/inscriptionBuilder';
+import * as bitcoin from 'bitcoinjs-lib';
 
 const SweepModal = ({
   isOpen,
   onClose,
-  sweepData
+  boostHistoryRow
 }) => {
   useEffect(() => {
     // Prevent background scrolling when the modal is open
@@ -33,8 +35,10 @@ const SweepModal = ({
   const setAuthToken = useStore((state) => state.setAuthToken);
   const [error, setError] = useState(null);
   const [isSweeping, setIsSweeping] = useState(false);
+  const [loadingSweepData, setLoadingSweepData] = useState(true);
   const [success, setSuccess] = useState(false);
   const [btcusd, setBtcusd] = useState(100000);
+  const [sweepData, setSweepData] = useState(null);
   const [confirmedSweepTxId, setConfirmedSweepTxId] = useState('');
 
   useEffect(() => {
@@ -63,6 +67,83 @@ const SweepModal = ({
     return link;
   };
 
+  const populateSweepData = async () => {
+    setLoadingSweepData(true);
+    let feeRate = await getRecommendedFees(wallet.network);
+    if (['ephemeral_with_wallet_key_path', 'wallet_one_sign', 'wallet_two_sign'].includes(boostHistoryRow.inscription_method)) {
+      let walletTaproot = wallet.getTaproot(wallet, wallet.network);
+      let revealKeyPair = {
+        publicKey: walletTaproot.internalPubkey,
+      }
+      const revealTaproot = {
+        output: Buffer.from(boostHistoryRow.reveal_address_script, 'hex'),
+        hash: Buffer.from(boostHistoryRow.reveal_tapmerkleroot, 'hex'),
+      };
+      let unsignedSweep;
+      try {
+        unsignedSweep = getRevealSweepTransaction(wallet.paymentAddress, revealTaproot, revealKeyPair, boostHistoryRow.commit_tx_id, parseInt(boostHistoryRow.reveal_input_value), feeRate, wallet.network, false);
+      } catch (error) {
+        if (error.message === "Fee rate too high") {
+          unsignedSweep = getRevealSweepTransaction(wallet.paymentAddress, revealTaproot, revealKeyPair, boostHistoryRow.commit_tx_id, parseInt(boostHistoryRow.reveal_input_value), boostHistoryRow.fee_rate, wallet.network, false);
+        } else {
+          console.error('Error creating sweep transaction:', error);
+          throw new Error('Error creating sweep transaction:', error);
+        }
+      }
+      // broadcast the sweep transaction and log it
+      console.log('Sweep transaction:', unsignedSweep.__CACHE);
+      const sweepInfo = {
+        sweep_type: boostHistoryRow.inscription_method,
+        boost_id: boostHistoryRow.boost_id,
+        unsigned_sweep: unsignedSweep,
+        fee_rate: feeRate,
+        reveal_address: bitcoin.address.fromOutputScript(revealTaproot.output, NETWORKS[wallet.network].bitcoinjs),
+        reveal_amount: parseInt(boostHistoryRow.reveal_input_value),
+        reveal_tx_id: boostHistoryRow.reveal_tx_id,
+        reveal_tx_status: boostHistoryRow.reveal_tx_status,
+        sweep_fees: parseInt(boostHistoryRow.reveal_input_value) - unsignedSweep.txOutputs[0].value,
+      }
+      setSweepData(sweepInfo);
+    } else if (boostHistoryRow.inscription_method === 'ephemeral') {
+      let storedSweepResponse = await fetch('/bun/social/get_stored_sweeps/' + boostHistoryRow.boost_id, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${authToken}`,
+        }
+      });
+      const storedSweepData = await storedSweepResponse.json();
+      // pick the sweep based on how close the fee rate is to the current fee rate
+      let closestSweep = storedSweepData.reduce((prev, curr) => {
+        return (Math.abs(curr.fee_rate - feeRate) < Math.abs(prev.fee_rate - feeRate) ? curr : prev);
+      });
+      let sweepTx = bitcoin.Transaction.fromHex(closestSweep.sweep_tx_hex);
+      console.log('Sweep transaction:', NETWORKS[wallet.network].bitcoinjs);
+      let sweepInfo = {
+        sweep_type: boostHistoryRow.inscription_method,
+        boost_id: closestSweep.boost_id,
+        sweep_tx_hex: closestSweep.sweep_tx_hex,
+        fee_rate: feeRate,
+        reveal_address: bitcoin.address.fromOutputScript(Buffer.from(boostHistoryRow.reveal_address_script, 'hex'), NETWORKS[wallet.network].bitcoinjs),
+        reveal_amount: parseInt(boostHistoryRow.reveal_input_value),
+        reveal_tx_id: boostHistoryRow.reveal_tx_id,
+        reveal_tx_status: boostHistoryRow.reveal_tx_status,
+        sweep_fees: parseInt(boostHistoryRow.reveal_input_value) - sweepTx.outs[0].value,
+      }
+      setSweepData(sweepInfo);
+    }
+    setLoadingSweepData(false);
+  }
+
+  useEffect(() => {
+    if (isOpen) {
+      if (boostHistoryRow) {
+        populateSweepData(boostHistoryRow);
+      } else {
+        setError('No boost history row provided.');
+      }
+    }
+  }, [isOpen, boostHistoryRow]);
+
   const handleConfirmSweep = async () => {
     setIsSweeping(true);
     setError(null);
@@ -74,15 +155,36 @@ const SweepModal = ({
       return;
     }
     try {
-      let unsignedSweep = sweepData.unsigned_sweep;
-      const signedSweep = await wallet.signPsbt(unsignedSweep, [{ index: 0, address: wallet.ordinalsAddress}]);
-      const sweepTx = signedSweep.extractTransaction();
-      let sweepRequestBody = {
-        sweep_type: sweepData.sweep_type,
-        boost_id: sweepData.boost_id,
-        sweep_tx_hex: sweepTx.toHex(),
-        sweep_tx_id: sweepTx.getId(),
-        fee_rate: sweepData.fee_rate,
+      let sweepRequestBody;
+      if (['ephemeral_with_wallet_key_path', 'wallet_one_sign', 'wallet_two_sign'].includes(sweepData.sweep_type)) {
+        if (!(['okx', 'xverse'].includes(wallet.walletType))) {
+          if (wallet.walletType === 'unisat') {
+            throw new Error(`Unisat does not support key-path signing. Please import your wallet into Okx to sweep.`);
+          } else {
+            throw new Error(`${wallet.walletType} does not support key-path signing. Please import your wallet into Xverse to sweep.`);
+          }
+        }
+        let unsignedSweep = sweepData.unsigned_sweep;
+        const signedSweep = await wallet.signPsbt(unsignedSweep, [{ index: 0, address: wallet.ordinalsAddress}]);
+        const sweepTx = signedSweep.extractTransaction();
+        sweepRequestBody = {
+          sweep_type: sweepData.sweep_type,
+          boost_id: sweepData.boost_id,
+          sweep_tx_hex: sweepTx.toHex(),
+          sweep_tx_id: sweepTx.getId(),
+          fee_rate: sweepData.fee_rate,
+        }
+      } else if (sweepData.sweep_type === 'ephemeral') {
+        let sweepTx = bitcoin.Transaction.fromHex(sweepData.sweep_tx_hex);
+        sweepRequestBody = {
+          sweep_type: sweepData.sweep_type,
+          boost_id: sweepData.boost_id,
+          sweep_tx_hex: sweepData.sweep_tx_hex,
+          sweep_tx_id: sweepTx.getId(),
+          fee_rate: sweepData.fee_rate,
+        }
+      } else {
+        throw new Error('Invalid sweep type');
       }
       const sweepTxId = await submitSweep(wallet, authToken, sweepRequestBody, () => {
         setWallet(null);
@@ -110,11 +212,12 @@ const SweepModal = ({
     onClose();
   }
 
-  if (!isOpen) {
+  if (!isOpen || loadingSweepData) { // Todo: might be a little hacky
     return null;
   }
 
   return (
+    
     <ModalOverlay isOpen={isOpen} onClick={handleModalClose}>
       <ModalContainer isOpen={isOpen} onClick={(e) => e.stopPropagation()}>
         <ModalHeader>
@@ -225,6 +328,7 @@ const SweepModal = ({
         </ModalContent>
       </ModalContainer>
     </ModalOverlay>
+
   );
 };
 
