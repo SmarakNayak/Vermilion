@@ -67,8 +67,9 @@ const server = Bun.serve({
         const authFail = checkAuthFail(req.headers.get('Authorization'), body.ordinals_address);
         if (authFail) return authFail;
 
-        
-        // grab the ephemeral_sweep_backups before deleting it from the body
+        // we need to insert the entire body into the boosts table without the ephemeral_sweep_backups
+        // but we also need to insert the ephemeral_sweep_backups later
+        // so we store it in a variable and delete it from the body
         let backups = body.ephemeral_sweep_backups;
         delete body.ephemeral_sweep_backups;
 
