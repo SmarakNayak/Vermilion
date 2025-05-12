@@ -321,7 +321,7 @@ async function getRenderedContentResponse(id, content_type, is_recursive) {
     if (!ss) {
       ss = await renderContent(`${apiBaseUrl}/content/${id}`);
       db.safeInsertRenderedContent({ 
-        id: row.id,
+        id: id,
         content: ss.buffer, 
         content_type: 'image/png', 
         render_status: ss.renderStatus 
