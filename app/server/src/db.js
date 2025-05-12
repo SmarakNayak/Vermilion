@@ -170,6 +170,27 @@ const db = {
     }
   },
 
+  async safeInsertRenderedContent(renderedContent) {
+    try {
+      const { id, content, content_type, render_status } = renderedContent;
+      const [row] = await this.sql`SELECT sequence_number FROM ordinals WHERE id = ${id}`;
+      const sequence_number = row.sequence_number;
+      // only insert if sequence_number is less than the current max - this stops the indexer from breaking
+      await this.sql`
+        INSERT INTO rendered_content (id, sequence_number, content, content_type, render_status)
+        SELECT ${id}, ${sequence_number}, ${content}, ${content_type}, ${render_status}
+        WHERE ${sequence_number} < (SELECT MAX(rc.sequence_number) FROM rendered_content rc)
+        ON CONFLICT (id) DO UPDATE
+        SET sequence_number = EXCLUDED.sequence_number,
+            content = EXCLUDED.content,
+            content_type = EXCLUDED.content_type,
+            render_status = EXCLUDED.render_status;
+      `;
+    } catch (err) {
+      throw new Error('Error during insert: ', { cause: err });
+    }
+  },
+
   // Endpoints
   async getBlockIcon(block) {
     const [row] = await this.sql`SELECT id, content_type, is_recursive FROM ordinals 

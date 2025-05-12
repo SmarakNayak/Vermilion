@@ -320,6 +320,12 @@ async function getRenderedContentResponse(id, content_type, is_recursive) {
     let ss = row?.content;
     if (!ss) {
       ss = await renderContent(`${apiBaseUrl}/content/${id}`);
+      db.safeInsertRenderedContent({ 
+        id: row.id,
+        content: ss.buffer, 
+        content_type: 'image/png', 
+        render_status: ss.renderStatus 
+      });
     }
     if (!ss) return new Response('Error rendering content', { status: 404 });
     return new Response(ss.buffer, {
