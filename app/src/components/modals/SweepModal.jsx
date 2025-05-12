@@ -230,11 +230,11 @@ const SweepModal = ({
           {success ? (
             <>
               <SuccessIconContainer>
-                <CheckIcon size={'2rem'} color={theme.colors.text.white} />
+                <CheckIcon size={'1.75rem'} color={theme.colors.text.white} />
               </SuccessIconContainer>
               <SectionContainer>
                 <SuccessMessage>
-                  Your funds have been successfully swept
+                  You have successfully swept the funds from the reveal address.
                 </SuccessMessage>
               </SectionContainer>
               <SectionContainer gap="0.375rem">
@@ -277,8 +277,9 @@ const SweepModal = ({
                     <FeeRow>
                       <PlainText color={theme.colors.text.primary}>Reveal TX Status</PlainText>
                       <FeeDetails>
+                        <PlainText color={theme.colors.text.secondary}>{capitalizeFirstLetter(sweepData.reveal_tx_status)} •</PlainText>
                         <StyledLink href={getMempoolTxUrl(sweepData.reveal_tx_id)} target="_blank" color={theme.colors.text.secondary}>
-                          {capitalizeFirstLetter(sweepData.reveal_tx_status)}
+                          {formatAddress(sweepData.reveal_tx_id)}
                         </StyledLink>
                       </FeeDetails>
                     </FeeRow>
@@ -290,14 +291,14 @@ const SweepModal = ({
                       </FeeDetails>
                     </FeeRow>
                     <FeeRow>
-                      <PlainText color={theme.colors.text.primary}>Sweep fees</PlainText>
+                      <PlainText color={theme.colors.text.primary}>Sweep Fees</PlainText>
                       <FeeDetails>
                         <PlainText color={theme.colors.text.secondary}>{formatSatsStringFull(sweepData.sweep_fees)}</PlainText>
                         <PlainText color={theme.colors.text.tertiary}>{formatSatsToDollars(sweepData.sweep_fees, btcusd)}</PlainText>
                       </FeeDetails>
                     </FeeRow>
                     <FeeRow>
-                      <PlainText color={theme.colors.text.primary}>Amount recovered</PlainText>
+                      <PlainText color={theme.colors.text.primary}>Amount Recovered</PlainText>
                       <FeeDetails>
                         <PlainText color={theme.colors.text.secondary}>{formatSatsStringFull(sweepData.reveal_amount - sweepData.sweep_fees)}</PlainText>
                         <PlainText color={theme.colors.text.tertiary}>{formatSatsToDollars(sweepData.reveal_amount - sweepData.sweep_fees, btcusd)}</PlainText>
@@ -373,7 +374,6 @@ const ModalHeader = styled.div`
   justify-content: space-between;
   align-items: center;
   padding: 1.25rem 1.5rem;
-  border-bottom: 1px solid ${theme.colors.border};
 `;
 
 const HeaderText = styled.p`
@@ -411,8 +411,7 @@ const ModalContent = styled.div`
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
-  padding: 1.5rem;
-  overflow-y: auto;
+  padding: 0.5rem 1.25rem 1.5rem; 
 `;
 
 const InfoSection = styled.div`
@@ -432,7 +431,7 @@ const InfoText = styled.p`
 const FeeSummaryContainer = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 0.25rem; 
+  gap: 0.375rem; 
   padding-top: 0.5rem; 
 `;
 
@@ -455,19 +454,19 @@ const ButtonContainer = styled.div`
   display: flex;
   justify-content: flex-end;
   gap: 0.75rem;
-  margin-top: 0.5rem;
 `;
 
 const BaseButton = styled.button`
   display: flex;
   align-items: center;
   justify-content: center;
+  width: 100%;
   gap: 0.5rem;
   font-family: ${theme.typography.fontFamilies.medium};
   font-size: 1rem;
   line-height: 1.25rem;
   border-radius: 0.75rem;
-  padding: 0.625rem 1rem; // Adjusted padding
+  padding: 0.75rem 1rem;
   border: none;
   cursor: pointer;
   transition: all 200ms ease;
@@ -484,7 +483,7 @@ const BaseButton = styled.button`
 `;
 
 const ConfirmButton = styled(BaseButton)`
-  background-color: ${theme.colors.background.verm};
+  background-color: ${theme.colors.background.dark};
   color: ${theme.colors.background.white};
 
   svg {
@@ -492,7 +491,7 @@ const ConfirmButton = styled(BaseButton)`
   }
 
   &:hover:not(:disabled) {
-    opacity: 0.85;
+    opacity: 0.75;
   }
 `;
 
@@ -529,8 +528,8 @@ const StyledLink = styled.a`
 
 const PlainText = styled.p`
   font-family: ${theme.typography.fontFamilies.medium};
-  font-size: 1rem;
-  line-height: 1.5rem;
+  font-size: 0.875rem;
+  line-height: 1.25rem;
   color: ${props => props.color || theme.colors.text.primary};
   margin: 0;
   white-space: nowrap;
@@ -550,9 +549,9 @@ const TxLink = styled.a`
   align-items: center;
   gap: 0.375rem;
   font-family: ${theme.typography.fontFamilies.medium};
-  background-color: ${theme.colors.background.white}; /* Subtle background */
+  background-color: ${theme.colors.background.white}; 
   border-radius: 1rem;
-  padding: 0.5rem 0.75rem; /* Adjusted padding */
+  padding: 0.375rem 0.5rem;
   color: ${theme.colors.text.secondary};
   text-decoration: none;
   font-size: 0.875rem;
@@ -608,7 +607,6 @@ const SuccessIconContainer = styled.div`
 
 const TxContainer = styled.div`
   display: flex;
-  justify-content: center; /* Added: Centers the link horizontally */
   gap: 0.25rem;
   flex-wrap: wrap;
 `;

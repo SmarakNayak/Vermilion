@@ -77,8 +77,8 @@ const History = () => {
   };
 
   const handleSweep = async (boostHistoryRow) => {
-    setBoostHistoryRow(boostHistoryRow);
     setIsSweepModalOpen(true);
+    setBoostHistoryRow(boostHistoryRow);
   }
 
   useEffect(() => {
@@ -109,7 +109,6 @@ const History = () => {
               <HeaderCell>Type</HeaderCell>
               <HeaderCell>Creation Date</HeaderCell>
               <HeaderCell>Quantity</HeaderCell>
-              <HeaderCell>Comment</HeaderCell>
               <HeaderCell>Status</HeaderCell>
               <HeaderCell>Commit TX</HeaderCell>
               <HeaderCell>Reveal TX</HeaderCell>
@@ -131,7 +130,6 @@ const History = () => {
                 </DataCell>
                 <DataCell>{formatTimestampMs(row.timestamp)}</DataCell>
                 <DataCell>{row.boost_quantity}</DataCell>
-                <DataCell>{row.boost_comment}</DataCell>
                 <DataCell>
                   <StatusDot status={row.status} />
                   {row.status}
@@ -303,10 +301,6 @@ const HeaderCell = styled.div`
   text-overflow: ellipsis; // Show ellipsis for overflow text
   // min-width: 0;
   flex: 1;
-
-  &:last-child {
-    text-align: center;
-  }
 `;
 
 const DataRow = styled.div`
@@ -338,16 +332,12 @@ const DataCell = styled.div`
   text-overflow: ellipsis; // Show ellipsis for overflow text
   // min-width: 0;
   flex: 1;
-
-  &:last-child {
-    text-align: center;
-  }
 `;
 
 const ActionCell = styled.div`
   flex: 1;
   display: flex;
-  justify-content: center;
+  justify-content: flex-start;
   align-items: center;
 `;
 
