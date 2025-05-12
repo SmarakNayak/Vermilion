@@ -17,22 +17,22 @@ const server = Bun.serve({
     '/rendered_content/:id': async req => {
       let metadata =  await fetch(apiBaseUrl + "/api/inscription_metadata/" + req.params.id);
       let metadataJson = await metadata.json();
-      return await getRenderedContentResponse(metadataJson.id, metadataJson.content_type, metadataJson.is_recursive);  
+      return await getRenderedContentResponse(metadataJson.id, metadataJson.content_type, metadataJson.is_recursive, req.headers);  
     },
     '/rendered_content_number/:number': async req => {
       let metadata =  await fetch(apiBaseUrl + "/api/inscription_metadata_number/" + req.params.number);
       let metadataJson = await metadata.json();
-      return await getRenderedContentResponse(metadataJson.id, metadataJson.content_type, metadataJson.is_recursive);     
+      return await getRenderedContentResponse(metadataJson.id, metadataJson.content_type, metadataJson.is_recursive, req.headers);     
     },
     '/block_icon/:block': async req => {
       const row = await db.getBlockIcon(req.params.block);
       if (!row) return new Response('No inscriptions found in block', { status: 404 });
-      return await getRenderedContentResponse(row.id, row.content_type, row.is_recursive);     
+      return await getRenderedContentResponse(row.id, row.content_type, row.is_recursive, req.headers);     
     },
     '/sat_block_icon/:block': async req => {
       const row = await db.getSatBlockIcon(req.params.block);
       if (!row) return new Response('No inscriptions found in block', { status: 404 });
-      return await getRenderedContentResponse(row.id, row.content_type, row.is_recursive);      
+      return await getRenderedContentResponse(row.id, row.content_type, row.is_recursive, req.headers);      
     },
     '/inscription_card/:id': async req => {
       let metadata =  await fetch(apiBaseUrl + "/api/inscription_metadata/" + req.params.id);
@@ -314,7 +314,7 @@ const server = Bun.serve({
 await db.setupDatabase();
 bundexer.runBundexer();
 
-async function getRenderedContentResponse(id, content_type, is_recursive) {
+async function getRenderedContentResponse(id, content_type, is_recursive, originalHeaders) {
   if (content_type?.startsWith('text/html') || (content_type?.startsWith('image/svg') && is_recursive)) {
     let row = await db.getRenderedContent(id);
     let ss = row?.content;
@@ -332,19 +332,20 @@ async function getRenderedContentResponse(id, content_type, is_recursive) {
       headers: { 'Content-Type': 'image/png' },
     });
   } else {
+    const upstreamHeaders = new Headers();
+    if (originalHeaders?.has('accept')) {
+      upstreamHeaders.set('accept', originalHeaders.get('accept'));
+    }
+    if (originalHeaders?.has('accept-encoding')) {
+      upstreamHeaders.set('accept-encoding', originalHeaders.get('accept-encoding'));
+    }
     let content = await fetch(apiBaseUrl + "/content/" + id, {
-      decompress: true
+      decompress: false,
+      headers: upstreamHeaders,
     });
     if (!content.ok) return new Response('Content fetch failed', { status: content.status });
-    let headers = content.headers;
-    console.log('Content headers:', headers);
-    let body = await content.arrayBuffer();
-    let length = body.byteLength;
-    return new Response(body, {
-      headers: {
-        'Content-Type': content_type,
-        'Content-Length': length,
-      }
+    return new Response(content.body, {
+      headers: content.headers,
     });
   }
 }
