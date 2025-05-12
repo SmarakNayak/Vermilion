@@ -52,7 +52,7 @@ const GalleryInfiniteScroll = ({ baseApi, isCollectionPage, numberVisibility, zo
           <Spinner />
         </LoaderContainer>
       }
-      scrollThreshold="0.8"
+      scrollThreshold="80%"
       style={{ overflow: 'visible' }}
     >
       <GridContainer zoomGrid={zoomGrid}>

@@ -7,6 +7,7 @@ import Tag from '../components/Tag';
 import CopyTag from '../components/CopyTag';
 import { addCommas, formatAddress } from '../utils/format';
 import theme from '../styles/theme';
+import Spinner from '../components/Spinner';
 
 const Edition = () => {
   let { sha256 } = useParams();
@@ -121,8 +122,6 @@ const Edition = () => {
     setEditions(newEditions);
     setHasMore(newEditions?.length === pageSize);
     setNextPageNo(1);
-
-    console.log('ed', newEditions)
   }
 
   const fetchData = async () => {
@@ -179,9 +178,10 @@ const Edition = () => {
               hasMore={hasMore}
               loader={
                 <LoaderContainer>
-                  <p style={{color: '#959595', margin: 0}}>Loading...</p>
+                  <Spinner />
                 </LoaderContainer>
               }
+              scrollThreshold="80%"
             >
               {editions.map((edition, index) => (
                 <UnstyledLink to={'/inscription/' + edition.number}>
@@ -481,8 +481,7 @@ const LoaderContainer = styled.div`
   justify-content: center;
   align-items: center;
   width: 100%;
-  max-width: 
-  max-height:
+  padding-top: 0.5rem;
 `;
 
 

@@ -159,7 +159,7 @@ const BlockTable = () => {
             <Spinner />
           </LoaderContainer>
         }
-        scrollThreshold="0.8"
+        scrollThreshold="80%"
         style={{ overflow: 'visible' }}
       >
         {blockData.map((row, index) => (
