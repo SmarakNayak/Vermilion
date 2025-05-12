@@ -17,22 +17,22 @@ const server = Bun.serve({
     '/rendered_content/:id': async req => {
       let metadata =  await fetch(apiBaseUrl + "/api/inscription_metadata/" + req.params.id);
       let metadataJson = await metadata.json();
-      return getRenderedContentResponse(metadataJson.id, metadataJson.content_type, metadataJson.is_recursive);  
+      return await getRenderedContentResponse(metadataJson.id, metadataJson.content_type, metadataJson.is_recursive);  
     },
     '/rendered_content_number/:number': async req => {
       let metadata =  await fetch(apiBaseUrl + "/api/inscription_metadata_number/" + req.params.number);
       let metadataJson = await metadata.json();
-      return getRenderedContentResponse(metadataJson.id, metadataJson.content_type, metadataJson.is_recursive);     
+      return await getRenderedContentResponse(metadataJson.id, metadataJson.content_type, metadataJson.is_recursive);     
     },
     '/block_icon/:block': async req => {
       const row = await db.getBlockIcon(req.params.block);
       if (!row) return new Response('No inscriptions found in block', { status: 404 });
-      return getRenderedContentResponse(row.id, row.content_type, row.is_recursive);     
+      return await getRenderedContentResponse(row.id, row.content_type, row.is_recursive);     
     },
     '/sat_block_icon/:block': async req => {
-      const row = db.getSatBlockIcon(req.params.block);
+      const row = await db.getSatBlockIcon(req.params.block);
       if (!row) return new Response('No inscriptions found in block', { status: 404 });
-      return getRenderedContentResponse(row.id, row.content_type, row.is_recursive);      
+      return await getRenderedContentResponse(row.id, row.content_type, row.is_recursive);      
     },
     '/inscription_card/:id': async req => {
       let metadata =  await fetch(apiBaseUrl + "/api/inscription_metadata/" + req.params.id);
