@@ -344,7 +344,8 @@ async function getRenderedContentResponse(id, content_type, is_recursive, origin
       headers: upstreamHeaders,
     });
     if (!content.ok) return new Response('Content fetch failed', { status: content.status });
-    return new Response(content.body, {
+    let body = await content.arrayBuffer();
+    return new Response(body, {
       headers: content.headers,
     });
   }
