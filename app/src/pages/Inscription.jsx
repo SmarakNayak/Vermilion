@@ -729,19 +729,39 @@ const Inscription = () => {
     setBoostsPage(0);
     setHasMoreBoosts(true);
     setIsBoostsLoading(false);
+    setBoostCountLoading(true);
+  
     setCommentCount(0);
     setCommentsList([]);
     setHasMatchingComment(false);
     setCommentContent(null);
+    setCommentCountLoading(true);
+  
+    setMetadata(null);
+    setEditionNumber(null);
+    setEditionCount(null);
+    setAddress(null);
+    setShortId(null);
+    setShortAddress(null);
+    setPrettySize(null);
+    setSha256(null);
+  
+    setParentsData([]);
+    setDelegateData(null);
+    setRecursiveSubmodulesData([]);
+    setSatributeEditions(null);
+    setReferencedByData([]);
+    setChildrenInscriptions([]);
+    setSimilarInscriptions(null);
+  
     setActiveDot(0);
     setSlideDirection(null);
-
+  
     // Reset loading states
     setMetadataLoading(true);
     setAddressLoading(true);
     setEditionsLoading(true);
-    setBoostCountLoading(true);
-    setCommentCountLoading(true);      
+    setRelatedInscriptionsLoading(true);
   
     // Close all modals
     setBoostsModalOpen(false);
