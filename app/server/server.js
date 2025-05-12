@@ -333,10 +333,19 @@ async function getRenderedContentResponse(id, content_type, is_recursive) {
     });
   } else {
     let content = await fetch(apiBaseUrl + "/content/" + id, {
-      decompress: false
+      decompress: true
     });
     if (!content.ok) return new Response('Content fetch failed', { status: content.status });
-    return content;
+    let headers = content.headers;
+    console.log('Content headers:', headers);
+    let body = await content.arrayBuffer();
+    let length = body.byteLength;
+    return new Response(body, {
+      headers: {
+        'Content-Type': content_type,
+        'Content-Length': length,
+      }
+    });
   }
 }
 
