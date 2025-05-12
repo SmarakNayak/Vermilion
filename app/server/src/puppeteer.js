@@ -151,6 +151,7 @@ async function renderContent(url, retryCount = 0, fullPage = true) {
   const browser = await browserPool.getBrowser();
   let launchTime = performance.now();
   let page = await browser.newPage();
+  let unindexedResourceFound = false; // Flag for unindexed inscriptions
   try {
     const threshold = 0.1; // Similarity threshold
     const interval = 100; // Check every 100 ms
@@ -159,8 +160,18 @@ async function renderContent(url, retryCount = 0, fullPage = true) {
     page.on('request', () => {
       activeRequests++
     });
-    page.on('response', () => {
-      //activeRequests--
+    page.on('response', async (response) => {
+      // activeRequests--;
+      if (unindexedResourceFound) return;
+      try {
+        const responseText = await response.text();
+        if (responseText.includes("This content hasn't been indexed yet.")) {
+          console.log(`Unindexed content found in a resource from: ${response.url()}`);
+          unindexedResourceFound = true;
+        }
+      } catch (err) {
+        // ignore response.text() errors
+      }
     });
     page.on('requestfailed', () => {
       activeRequests--
@@ -214,6 +225,10 @@ async function renderContent(url, retryCount = 0, fullPage = true) {
         return renderContent(url, retryCount + 1, fullPage);
       }
     }
+    const pageContent = await page.content();
+    if (pageContent.includes("This content hasn't been indexed yet.")) {
+      throw new Error("Content not indexed yet");
+    }
     activeRequestArr.push(activeRequests);
     buffer = Buffer.from(await page.screenshot({ fullPage: fullPage, }));
     imageArr.push(await Jimp.read(buffer));
@@ -250,6 +265,10 @@ async function renderContent(url, retryCount = 0, fullPage = true) {
       }
     }
 
+    if (unindexedResourceFound) {
+      throw new Error("Content not indexed yet: Recursive content was unindexed");
+    }
+
     await page.close();
     browserPool.releaseBrowser(browser);
 
@@ -266,7 +285,9 @@ async function renderContent(url, retryCount = 0, fullPage = true) {
       }
     }
 
-    if (error.message.includes('Navigation timeout')) {
+    if (unindexedResourceFound) {
+      throw new Error("Content not indexed yet: Recursive content was unindexed");
+    } else if (error.message.includes('Navigation timeout')) {
       if (retryCount > 1) {
         console.log(`Navigation timeout after 2 retries`);
         return {buffer, renderStatus: "NAVIGATION_TIMEOUT"};
@@ -314,6 +335,8 @@ async function renderContent(url, retryCount = 0, fullPage = true) {
       console.log('Network aborted, trying again: ', url);
       return renderContent(url, retryCount + 1, false);
 
+    } else if (error.message.includes('Content not indexed yet')) {
+      throw new Error("Content not indexed yet: " + url, { cause: error });
     } else {
       throw new Error(`Unhandled puppeteer error: ${url}`, { cause: error });
     }
