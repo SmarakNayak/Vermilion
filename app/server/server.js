@@ -25,7 +25,7 @@ const server = Bun.serve({
       return getRenderedContentResponse(metadataJson.id, metadataJson.content_type, metadataJson.is_recursive);     
     },
     '/block_icon/:block': async req => {
-      const row = db.getBlockIcon(req.params.block);
+      const row = await db.getBlockIcon(req.params.block);
       if (!row) return new Response('No inscriptions found in block', { status: 404 });
       return getRenderedContentResponse(row.id, row.content_type, row.is_recursive);     
     },
