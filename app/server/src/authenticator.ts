@@ -85,7 +85,7 @@ export class Authenticator {
     const token = jwt.sign(
       { address: ordinalsAddress },
       secret,
-      { expiresIn: '1d' }
+      { expiresIn: '30s' }
     );
     return token;
   }
