@@ -15,6 +15,7 @@ const History = () => {
   const [displaySweepColumn, setDisplaySweepColumn] = useState(false);
   const [isSweepModalOpen, setIsSweepModalOpen] = useState(false);
   const [boostHistoryRow, setBoostHistoryRow] = useState(null);
+  const [isUnauthorized, setIsUnauthorized] = useState(false); 
 
   const wallet = useStore((state) => state.wallet);
   const setWallet = useStore((state) => state.setWallet);
@@ -41,11 +42,13 @@ const History = () => {
         console.log('Unauthorized. Please log in again.');
         setWallet(null);
         setAuthToken(null);
+        setIsUnauthorized(true); // Set unauthorized state
       } else {
         console.error('Error fetching boost history:', response.statusText);
       }
       return;
     }
+    setIsUnauthorized(false); // Reset unauthorized state if response is valid
     const data = await response.json();
     console.log('Boost history:', data);
     data.forEach((row) => {
@@ -86,6 +89,7 @@ const History = () => {
       fetchBoostHistory();
     } else {
       setBoostHistory([]);
+      setIsUnauthorized(true); // Set unauthorized state
     }
   }, [wallet]);
 
@@ -102,7 +106,15 @@ const History = () => {
         </ButtonContainer>
       </LinkContainer>
       <Divider />
-      <ScrollContainer>
+      {isUnauthorized ? (
+        <UnauthorizedContainer>
+          <UnauthorizedText>
+            History unavailable.
+            <UnauthorizedTextDetail> Connect your wallet to view your order history.</UnauthorizedTextDetail>
+          </UnauthorizedText>
+        </UnauthorizedContainer>
+      ) : (
+        <ScrollContainer>
           <TableContainer>
             <HeaderRow>
               <HeaderCell>ID</HeaderCell>
@@ -159,7 +171,8 @@ const History = () => {
               </DataRow>
             ))}
           </TableContainer>
-      </ScrollContainer>
+        </ScrollContainer>
+      )}
       <SweepModal
         isOpen={isSweepModalOpen}
         onClose={() => {
@@ -456,6 +469,34 @@ const SweepButton = styled.button`
   &:active {
     transform: scale(0.96);
   }
+`;
+
+const UnauthorizedContainer = styled.div`
+  background-color: #FEF0F0;
+  box-sizing: border-box;
+  padding: 0.75rem;
+  border-radius: 0.25rem;
+  width: 100%;
+  display: flex;
+  margin: 0;
+`;
+
+const UnauthorizedText = styled.span`
+  font-family: ${theme.typography.fontFamilies.bold};
+  font-size: 1rem;
+  line-height: 1.5rem;
+  color: #730F14;
+  margin: 0;
+  padding: 0;
+`;
+
+const UnauthorizedTextDetail = styled.span`
+  font-family: ${theme.typography.fontFamilies.medium};
+  font-size: 1rem;
+  line-height: 1.5rem;
+  color: #730F14;
+  margin: 0;
+  padding: 0;
 `;
 
 export default History;
