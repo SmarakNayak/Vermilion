@@ -40,8 +40,15 @@ jobs:
       - name: Install nginx
         run: ssh staging 'sudo apt-get -y install nginx'
 
+      # to upgrade on ubuntu:
+      # apt-get install postgresql-17
+      # pg_upgradecluster 16 main -v 17 -m upgrade -k
+      # pg_dropcluster 16 main
       - name: Install postgres
-        run: ssh staging 'sudo apt-get -y install postgresql'
+        run: |
+          ssh staging 'sudo apt install -y postgresql-common'
+          ssh staging 'sudo /usr/share/postgresql-common/pgdg/apt.postgresql.org.sh -y'
+          ssh staging 'sudo apt-get -y install postgresql'
 
       - name: Install aws
         run: ssh staging 'sudo apt-get -y install unzip; curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"; unzip awscliv2.zip; sudo ./aws/install;'
