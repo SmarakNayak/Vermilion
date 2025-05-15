@@ -77,6 +77,9 @@ jobs:
       - name: Setup postgres config
         run: |
           ssh staging 'sudo cp Vermilion/postgres/postgresql.conf /etc/postgresql/17/main/postgresql.conf;'
+          ssh staging 'sudo cp Vermilion/postgres/pg_hba.conf /etc/postgresql/17/main/pg_hba.conf;'
+          #                                 TYPE DB  USER    ADDRESS                          METHOD
+          ssh staging 'sudo bash -c "echo \"host all all ${{ vars.ALTERNATE_SERVER_HOST }}/32 scram-sha-256\" >> /etc/postgresql/17/main/pg_hba.conf";'
 
       # Note: '"'"' = escaped single ' - bash implicitly concatenates differently quoted string expressions
       - name: Init postgres server
