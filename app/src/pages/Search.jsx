@@ -163,6 +163,8 @@ const Search = () => {
     console.log('Selected inscription sort option:', option);
   };
 
+  console.log("inscriptionList", inscriptionList);
+
   return (
     <PageContainer>
       <RowContainer style={{justifyContent: 'flex-start'}}>

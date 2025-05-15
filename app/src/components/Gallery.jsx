@@ -20,7 +20,19 @@ const Gallery = (props) => {
     <GridContainer zoomGrid={props.zoomGrid}>
       {inscriptions.map(
         entry => 
-        <GridItemContainer collection={entry.collection_name} key={entry.number} number={entry.number} id={entry.id} numberVisibility={props.numberVisibility} rune={entry.spaced_rune}></GridItemContainer>
+          <GridItemContainer 
+            collection={entry.collection_name} 
+            collection_symbol={entry.collection_symbol} 
+            content_length={entry.content_length}
+            id={entry.id} 
+            is_child={entry.parents.length > 0}
+            is_recursive={entry.is_recursive}
+            item_name={entry.off_chain_metadata?.name}
+            key={entry.number} 
+            number={entry.number} 
+            numberVisibility={props.numberVisibility} 
+            rune={entry.spaced_rune}
+          />
       )}
     </GridContainer>
   )
