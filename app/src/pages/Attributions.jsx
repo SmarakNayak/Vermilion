@@ -36,7 +36,7 @@ import {
   shortenDate 
 } from '../utils/format';
 
-const References = () => {
+const Attributions = () => {
   const [baseApi, setBaseApi] = useState(null); 
   let { number } = useParams();
   const [metadata, setMetadata] = useState(null);
@@ -104,7 +104,7 @@ const References = () => {
     <PageContainer>
       {loading ? (
         <GridHeaderSkeleton 
-          pageType={'References'}
+          pageType={'Attributions'}
           removeInfoText={true} 
           hasDescription={false} 
           numTags={0}
@@ -114,7 +114,7 @@ const References = () => {
         <>
           <HeaderContainer>
             <MainContentStack>
-              <InfoText>References</InfoText>
+              <InfoText>Attributions</InfoText>
               <DetailsStack>
                 <ImageContainer>
                   <InscriptionIcon endpoint={"/api/inscription_number/"+number} useBlockIconDefault={false} size={'8rem'} />
@@ -152,4 +152,4 @@ const References = () => {
   );
 };
 
-export default References;
+export default Attributions;
