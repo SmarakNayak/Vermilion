@@ -1,21 +1,25 @@
-# This is a workflow that add collection json to the server
-name: 7. Hetzner Collection json upload (deprecated)
+# This is a workflow that promotes one server to primary and demotes the other to secondary
+name: 7. Hetzner Blue Green Switchover
 
 # Controls when the workflow will run
 on:
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
     inputs:
-      hetzner_server:
-        description: 'Which server to deploy to? Hetzner_blue or Hetzner_green'
+      hetzner_promote_server:
+        description: 'Which server to promote? Hetzner_blue or Hetzner_green'
+        required: true
+        default: 'Hetzner_'
+      hetzner_demote_server:
+        description: 'Which server to demote? Hetzner_blue or Hetzner_green'
         required: true
         default: 'Hetzner_'
         
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
-  Vermilion-Collections-Upload:
+  Promote-Secondary:
     runs-on: ubuntu-latest
-    environment: '${{ github.event.inputs.hetzner_server }}'
+    environment: '${{ github.event.inputs.hetzner_promote_server }}'
     steps:
       - name: Configure SSH
         run: |
@@ -35,4 +39,6 @@ jobs:
           SSH_HOST: ${{ vars.SERVER_HOST }}
 
       - name: Check out the new code from Github
-        run: ssh staging 'git -C ordinal-collections fetch && git -C ordinal-collections reset --hard origin/main || git clone https://github.com/SmarakNayak/ordinal-collections.git' # This pulls if directory exists, otherwise clones
+        run: ssh staging 'PGPASSWORD=${{secrets.MYSQL_PASS}} psql -U ${{ secrets.MYSQL_USER }} -d vermilion -h localhost -c "select pg_reload_conf();"'
+
+  
