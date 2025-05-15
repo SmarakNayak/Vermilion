@@ -17,7 +17,35 @@ on:
         
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
-  Promote-Secondary:
+  Promote-Secondary: ## promoting secondary works by enabling sub on current primary
+    runs-on: ubuntu-latest
+    environment: '${{ github.event.inputs.hetzner_demote_server }}'
+    steps:
+      - name: Configure SSH
+        run: |
+          mkdir -p ~/.ssh/
+          echo "$SSH_KEY" > ~/.ssh/staging.key
+          chmod 600 ~/.ssh/staging.key
+          cat >>~/.ssh/config <<END
+          Host staging
+            HostName $SSH_HOST
+            User $SSH_USER
+            IdentityFile ~/.ssh/staging.key
+            StrictHostKeyChecking no
+          END
+        env:
+          SSH_USER: ${{ vars.SERVER_USER }}
+          SSH_KEY: ${{ secrets.SERVER_SSH_KEY }}
+          SSH_HOST: ${{ vars.SERVER_HOST }}
+
+      - name: Promote Secondary 
+        run: |
+          SECONDARY_SERVER_COLOR=$(echo "${{ github.event.inputs.hetzner_promote_server }}" | sed 's/Hetzner_//')
+          ssh staging 'PGPASSWORD=${{secrets.MYSQL_PASS}} psql -U ${{ secrets.MYSQL_USER }} -d vermilion -h localhost -c "ALTER SUBSCRIPTION social_sub_to_${SECONDARY_SERVER_COLOR} ENABLE;"'
+  
+  ## switch traffic goes here
+  
+  Demote-Primary: ## demoting primary works by disabling sub on current secondary
     runs-on: ubuntu-latest
     environment: '${{ github.event.inputs.hetzner_promote_server }}'
     steps:
@@ -38,7 +66,10 @@ jobs:
           SSH_KEY: ${{ secrets.SERVER_SSH_KEY }}
           SSH_HOST: ${{ vars.SERVER_HOST }}
 
-      - name: Check out the new code from Github
-        run: ssh staging 'PGPASSWORD=${{secrets.MYSQL_PASS}} psql -U ${{ secrets.MYSQL_USER }} -d vermilion -h localhost -c "select pg_reload_conf();"'
+      - name: Demote Primary 
+        run: |
+          PRIMARY_SERVER_COLOR=$(echo "${{ github.event.inputs.hetzner_demote_server }}" | sed 's/Hetzner_//')
+          ssh staging 'PGPASSWORD=${{secrets.MYSQL_PASS}} psql -U ${{ secrets.MYSQL_USER }} -d vermilion -h localhost -c "ALTER SUBSCRIPTION social_sub_to_${PRIMARY_SERVER_COLOR} DISABLE;"'
 
-  
+
+          
