@@ -38,10 +38,11 @@ jobs:
           SSH_KEY: ${{ secrets.SERVER_SSH_KEY }}
           SSH_HOST: ${{ vars.SERVER_HOST }}
 
+      - name: Set secondary server color
+        run: echo "SECONDARY_SERVER_COLOR=$(echo ${{ github.event.inputs.hetzner_promote_server }} | sed 's/Hetzner_//')" >> $GITHUB_ENV
+        
       - name: Promote Secondary 
-        run: |
-          SECONDARY_SERVER_COLOR=$(echo "${{ github.event.inputs.hetzner_promote_server }}" | sed 's/Hetzner_//')
-          ssh staging 'PGPASSWORD=${{secrets.MYSQL_PASS}} psql -U ${{ secrets.MYSQL_USER }} -d vermilion -h localhost -c "ALTER SUBSCRIPTION social_sub_to_${SECONDARY_SERVER_COLOR} ENABLE;"'
+        run: ssh staging 'PGPASSWORD=${{secrets.MYSQL_PASS}} psql -U ${{ secrets.MYSQL_USER }} -d vermilion -h localhost -c "ALTER SUBSCRIPTION social_sub_to_${{env.SECONDARY_SERVER_COLOR}} ENABLE;"'
   
   ## switch traffic goes here
   
@@ -65,11 +66,12 @@ jobs:
           SSH_USER: ${{ vars.SERVER_USER }}
           SSH_KEY: ${{ secrets.SERVER_SSH_KEY }}
           SSH_HOST: ${{ vars.SERVER_HOST }}
+      
+      - name: Set primary server color
+        run: echo "PRIMARY_SERVER_COLOR=$(echo ${{ github.event.inputs.hetzner_demote_server }} | sed 's/Hetzner_//')" >> $GITHUB_ENV
 
       - name: Demote Primary 
-        run: |
-          PRIMARY_SERVER_COLOR=$(echo "${{ github.event.inputs.hetzner_demote_server }}" | sed 's/Hetzner_//')
-          ssh staging 'PGPASSWORD=${{secrets.MYSQL_PASS}} psql -U ${{ secrets.MYSQL_USER }} -d vermilion -h localhost -c "ALTER SUBSCRIPTION social_sub_to_${PRIMARY_SERVER_COLOR} DISABLE;"'
+        run: ssh staging 'PGPASSWORD=${{secrets.MYSQL_PASS}} psql -U ${{ secrets.MYSQL_USER }} -d vermilion -h localhost -c "ALTER SUBSCRIPTION social_sub_to_${{env.PRIMARY_SERVER_COLOR}} DISABLE;"'
 
 
           
