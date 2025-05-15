@@ -40,13 +40,14 @@ jobs:
 
       - name: Set secondary server color
         run: echo "SECONDARY_SERVER_COLOR=$(echo ${{ github.event.inputs.hetzner_promote_server }} | sed 's/Hetzner_//')" >> $GITHUB_ENV
-        
+
       - name: Promote Secondary 
         run: ssh staging 'PGPASSWORD=${{secrets.MYSQL_PASS}} psql -U ${{ secrets.MYSQL_USER }} -d vermilion -h localhost -c "ALTER SUBSCRIPTION social_sub_to_${{env.SECONDARY_SERVER_COLOR}} ENABLE;"'
   
   ## switch traffic goes here
   
   Demote-Primary: ## demoting primary works by disabling sub on current secondary
+    needs: Promote-Secondary
     runs-on: ubuntu-latest
     environment: '${{ github.event.inputs.hetzner_promote_server }}'
     steps:
