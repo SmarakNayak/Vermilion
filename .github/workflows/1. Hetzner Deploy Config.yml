@@ -73,6 +73,10 @@ jobs:
           ssh staging 'sudo cp Vermilion/nginx/server.conf /etc/nginx/conf.d/server.conf;' 
           ssh staging 'sudo cp Vermilion/nginx/nginx.conf /etc/nginx/nginx.conf;'
           ssh staging 'sudo rm -f /etc/nginx/sites-enabled/default;'
+      
+      - name: Setup postgres config
+        run: |
+          ssh staging 'sudo cp Vermilion/postgres/postgresql.conf /etc/postgresql/17/main/postgresql.conf;'
 
       # Note: '"'"' = escaped single ' - bash implicitly concatenates differently quoted string expressions
       - name: Init postgres server
