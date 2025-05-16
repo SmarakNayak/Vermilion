@@ -1,0 +1,214 @@
+# This is a workflow that promotes one server to primary and demotes the other to secondary
+name: 7. Initialize Blue Green replication
+
+# Controls when the workflow will run
+on:
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+    inputs:
+      hetzner_primary_server:
+        description: 'Which server to promote? Hetzner_blue or Hetzner_green'
+        required: true
+        default: 'Hetzner_'
+      hetzner_secondary_server:
+        description: 'Which server to demote? Hetzner_blue or Hetzner_green'
+        required: true
+        default: 'Hetzner_'
+        
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  Check-Inputs:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check Inputs
+        run: | ## make sure hetzner_primary_server and hetzner_secondary_server are not the same, make sure one of them is Hetzner_blue and the other is Hetzner_green
+          if [ "${{ github.event.inputs.hetzner_primary_server }}" == "${{ github.event.inputs.hetzner_secondary_server }}" ]; then
+            echo "Error: hetzner_primary_server and hetzner_secondary_server cannot be the same."
+            exit 1
+          fi
+          if [ "${{ github.event.inputs.hetzner_primary_server }}" != "Hetzner_blue" ] && [ "${{ github.event.inputs.hetzner_primary_server }}" != "Hetzner_green" ]; then
+            echo "Error: hetzner_primary_server must be Hetzner_blue or Hetzner_green."
+            exit 1
+          fi
+          if [ "${{ github.event.inputs.hetzner_secondary_server }}" != "Hetzner_blue" ] && [ "${{ github.event.inputs.hetzner_secondary_server }}" != "Hetzner_green" ]; then
+            echo "Error: hetzner_secondary_server must be Hetzner_blue or Hetzner_green."
+            exit 1
+          fi
+          if [ "${{ github.event.inputs.hetzner_primary_server }}" == "Hetzner_blue" ]; then
+            echo "PRIMARY_SERVER_COLOR=blue" >> $GITHUB_ENV
+            echo "SECONDARY_SERVER_COLOR=green" >> $GITHUB_ENV
+          else
+            echo "PRIMARY_SERVER_COLOR=green" >> $GITHUB_ENV
+            echo "SECONDARY_SERVER_COLOR=blue" >> $GITHUB_ENV
+          fi
+
+  Check-Primary:
+    needs: Check-Inputs
+    runs-on: ubuntu-latest
+    environment: '${{ github.event.inputs.hetzner_primary_server }}'
+    steps:
+      - name: Configure SSH
+        run: |
+          mkdir -p ~/.ssh/
+          echo "$SSH_KEY" > ~/.ssh/staging.key
+          chmod 600 ~/.ssh/staging.key
+          cat >>~/.ssh/config <<END
+          Host staging
+            HostName $SSH_HOST
+            User $SSH_USER
+            IdentityFile ~/.ssh/staging.key
+            StrictHostKeyChecking no
+          END
+        env:
+          SSH_USER: ${{ vars.SERVER_USER }}
+          SSH_KEY: ${{ secrets.SERVER_SSH_KEY }}
+          SSH_HOST: ${{ vars.SERVER_HOST }}
+
+      - name: Check colour and status match
+        run: | ## check to see if ~/server_colour exists, if it does, check to see if the colour matches the server colour
+          if [ -f ~/server_colour ]; then
+            COLOUR=$(cat ~/server_colour)
+            if [ "$COLOUR" != "${{ env.PRIMARY_SERVER_COLOR }}" ]; then
+              echo "Error: server_colour does not match provided server colour."
+              exit 1
+            fi
+          else
+            echo "${{ env.PRIMARY_SERVER_COLOR }}" > ~/server_colour
+          fi
+          if [ -f ~/server_status ]; then
+            STATE=$(cat ~/server_status)
+            if [ "$STATE" != "primary" ]; then
+              echo "Error: server_status does not match provided server status."
+              exit 1
+            fi
+          else
+            echo "primary" > ~/server_status
+          fi
+    
+  Check-Secondary:
+    needs: Check-Inputs
+    runs-on: ubuntu-latest
+    environment: '${{ github.event.inputs.hetzner_secondary_server }}'
+    steps:
+      - name: Configure SSH
+        run: |
+          mkdir -p ~/.ssh/
+          echo "$SSH_KEY" > ~/.ssh/staging.key
+          chmod 600 ~/.ssh/staging.key
+          cat >>~/.ssh/config <<END
+          Host staging
+            HostName $SSH_HOST
+            User $SSH_USER
+            IdentityFile ~/.ssh/staging.key
+            StrictHostKeyChecking no
+          END
+        env:
+          SSH_USER: ${{ vars.SERVER_USER }}
+          SSH_KEY: ${{ secrets.SERVER_SSH_KEY }}
+          SSH_HOST: ${{ vars.SERVER_HOST }}
+
+      - name: Check colour and status match
+        run: | ## check to see if ~/server_colour exists, if it does, check to see if the colour matches the server colour
+          if [ -f ~/server_colour ]; then
+            COLOUR=$(cat ~/server_colour)
+            if [ "$COLOUR" != "${{ env.SECONDARY_SERVER_COLOR }}" ]; then
+              echo "Error: server_colour does not match provided server colour."
+              exit 1
+            fi
+          else
+            echo "${{ env.SECONDARY_SERVER_COLOR }}" > ~/server_colour
+          fi
+          if [ -f ~/server_status ]; then
+            STATE=$(cat ~/server_status)
+            if [ "$STATE" != "secondary" ]; then
+              echo "Error: server_status does not match provided server status."
+              exit 1
+            fi
+          else
+            echo "secondary" > ~/server_status
+          fi
+
+  Initialize-Primary:
+    needs: [Check-Primary, Check-Secondary]
+    runs-on: ubuntu-latest
+    environment: '${{ github.event.inputs.hetzner_primary_server }}'
+    steps:
+      - name: Configure SSH
+        run: |
+          mkdir -p ~/.ssh/
+          echo "$SSH_KEY" > ~/.ssh/staging.key
+          chmod 600 ~/.ssh/staging.key
+          cat >>~/.ssh/config <<END
+          Host staging
+            HostName $SSH_HOST
+            User $SSH_USER
+            IdentityFile ~/.ssh/staging.key
+            StrictHostKeyChecking no
+          END
+        env:
+          SSH_USER: ${{ vars.SERVER_USER }}
+          SSH_KEY: ${{ secrets.SERVER_SSH_KEY }}
+          SSH_HOST: ${{ vars.SERVER_HOST }}
+
+      - name: Initialize Primary 
+        run: |
+          PGPASSWORD=${{ secrets.MYSQL_PASS }} psql \
+            -U ${{ secrets.MYSQL_USER }} \
+            -d vermilion \
+            -h localhost <<'EOF'
+          DO $$
+          BEGIN
+            IF NOT EXISTS (
+              SELECT 1
+                FROM pg_publication
+               WHERE pubname = 'social_pub_from_${{ env.PRIMARY_SERVER_COLOR }}'
+            ) THEN
+              CREATE PUBLICATION social_pub_from_${{ env.PRIMARY_SERVER_COLOR }}
+                FOR TABLE social.test;
+            END IF;
+          END;
+          $$;
+          EOF
+
+  Initialize-Secondary:
+    needs: Initialize-Primary
+    runs-on: ubuntu-latest
+    environment: '${{ github.event.inputs.hetzner_secondary_server }}'
+    steps:
+      - name: Configure SSH
+        run: |
+          mkdir -p ~/.ssh/
+          echo "$SSH_KEY" > ~/.ssh/staging.key
+          chmod 600 ~/.ssh/staging.key
+          cat >>~/.ssh/config <<END
+          Host staging
+            HostName $SSH_HOST
+            User $SSH_USER
+            IdentityFile ~/.ssh/staging.key
+            StrictHostKeyChecking no
+          END
+        env:
+          SSH_USER: ${{ vars.SERVER_USER }}
+          SSH_KEY: ${{ secrets.SERVER_SSH_KEY }}
+          SSH_HOST: ${{ vars.SERVER_HOST }}
+
+      - name: Initialize Secondary 
+        run: |
+          PGPASSWORD=${{ secrets.MYSQL_PASS }} psql \
+            -U ${{ secrets.MYSQL_USER }} \
+            -d vermilion \
+            -h localhost <<'EOF'
+          DO $$
+          BEGIN
+            IF NOT EXISTS (
+              SELECT 1
+                FROM pg_subscription
+               WHERE subname = 'social_sub_to_${{ env.PRIMARY_SERVER_COLOR }}'
+            ) THEN
+              CREATE SUBSCRIPTION social_sub_to_${{ env.PRIMARY_SERVER_COLOR }}
+                CONNECTION 'host=${{ vars.ALTERNATE_SERVER_HOST }} port=5432 user=${{ secrets.MYSQL_USER }} dbname=vermilion'
+                PUBLICATION social_pub_from_${{ env.PRIMARY_SERVER_COLOR }};
+            END IF;
+          END;
+          $$;
+          EOF
