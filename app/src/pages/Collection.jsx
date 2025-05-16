@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import styled from 'styled-components';
 import { useParams, Link } from "react-router-dom";
 import { theme } from '../styles/theme';
 
@@ -18,6 +19,7 @@ import GridControls from '../components/grid/GridControls';
 import { GridHeaderSkeleton } from '../components/grid/GridHeaderSkeleton';
 import MainText from '../components/common/text/MainText';
 import InfoText from '../components/common/text/InfoText';
+import Tooltip from '../components/common/Tooltip';
 import UnstyledLink from '../components/common/UnstyledLink';
 import IconButton from '../components/common/buttons/IconButton';
 import Stack from '../components/Stack';
@@ -144,25 +146,37 @@ const Collection = () => {
             {hasSocialLinks && (
               <SocialStack>
                 {collectionSummary?.twitter && (
-                  <UnstyledLink to={collectionSummary.twitter} target='_blank'>
-                    <IconButton>
-                      <TwitterIcon size={'1.25rem'} color={theme.colors.text.primary} />
-                    </IconButton>
-                  </UnstyledLink>
+                  <Tooltip content={"Twitter"}>
+                    <ButtonWrapper>
+                      <UnstyledLink to={collectionSummary.twitter} target='_blank'>
+                        <IconButton>
+                          <TwitterIcon size={'1.25rem'} color={theme.colors.text.primary} />
+                        </IconButton>
+                      </UnstyledLink>
+                    </ButtonWrapper>
+                  </Tooltip>
                 )}
                 {collectionSummary?.discord && (
-                  <UnstyledLink to={collectionSummary.discord} target='_blank'>
-                    <IconButton>
-                      <DiscordIcon size={'1.25rem'} color={theme.colors.text.primary} />
-                    </IconButton>
-                  </UnstyledLink>
+                  <Tooltip content={"Discord"}>
+                    <ButtonWrapper>
+                      <UnstyledLink to={collectionSummary.discord} target='_blank'>
+                        <IconButton>
+                          <DiscordIcon size={'1.25rem'} color={theme.colors.text.primary} />
+                        </IconButton>
+                      </UnstyledLink>
+                    </ButtonWrapper>
+                  </Tooltip>
                 )}
                 {collectionSummary?.website && (
-                  <UnstyledLink to={collectionSummary.website} target='_blank'>
-                    <IconButton>
-                      <WebIcon size={'1.25rem'} color={theme.colors.text.primary} />
-                    </IconButton>
-                  </UnstyledLink>
+                  <Tooltip content={"Website"}>
+                    <ButtonWrapper>
+                      <UnstyledLink to={collectionSummary.website} target='_blank'>
+                        <IconButton>
+                          <WebIcon size={'1.25rem'} color={theme.colors.text.primary} />
+                        </IconButton>
+                      </UnstyledLink>
+                    </ButtonWrapper>
+                  </Tooltip>
                 )}
               </SocialStack>
             )}
@@ -205,5 +219,14 @@ const Collection = () => {
     </PageContainer>
   )
 }
+
+const ButtonWrapper = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  margin: 0;
+`;
+
 
 export default Collection;
