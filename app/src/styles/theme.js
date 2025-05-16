@@ -5,24 +5,30 @@ export const theme = {
     
     // Text colors
     text: {
-      primary: '#121212',    // Main text color
-      secondary: '#848281',  // Secondary text, captions, etc.
+      primary: '#0A0A0A',    // Main text color
+      secondary: '#999999',  // Secondary text, captions, etc.
       tertiary: '#C2C2C2',   // Tertiary text, inactive, etc.
       white: '#FFFFFF',      // White text
+      error: '#FF0000',      // Error text color
+      success: '#28a745',    // Success text color
     },
 
     // Background colors
     background: {
       aqua: '#5EDED1',       // Aqua background (used in logo)
       aquaLight: '#BFF2ED',   // Dark aqua background (used in logo)
-      dark: '#121212',       // Dark background (used in important buttons)
+      acquaExtraLight: '#DFF9F6' , // Extra light aqua background (used in logo)
+      dark: '#0A0A0A',       // Dark background (used in important buttons)
       light: '#FBFAF9',
       primary: '#F6F6F6',    // Primary background (used in buttons, cards)
       purp: '#D23B75',       // Runes color
       purpPale: '#FAEBF1',   // Runes color, pale
       secondary: '#EAEAEA',  // Secondary background (used in hover states)
+      success: '#34C759',    // Success background color
+      tertiary: '#FBFBFB',   // Extra light grey (used in logo)
       verm: '#E94E20',       // Brand color
-      vermPale: '#FDEDE9',   // Brand color, pale
+      vermBorder: '#FCE4DA', // Brand color, border
+      vermPale: '#FDEEE8',   // Brand color, pale
       white: '#FFFFFF',      // Default page background
     },
 

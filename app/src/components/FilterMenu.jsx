@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import styled, { keyframes } from 'styled-components';
+import theme from '../styles/theme';
 import { ChevronDownIcon, ChevronUpIcon, CrossIcon } from './common/Icon';
 
 const MenuContainer = styled.div`
@@ -8,14 +9,14 @@ const MenuContainer = styled.div`
   visibility: ${props => (props.isOpen ? 'visible' : 'hidden')};
   width: 100%;
   max-width: 18rem;
-  transition: left 0.3s ease-in-out;
+  transition: all 200ms ease;
   margin-right: 2rem;
   gap: 1rem;
 
   @media (max-width: 630px) {
-    background-color: #FFFFFF;
+    background-color: ${theme.colors.background.white};
     max-width: calc(100% - 2rem);  
-    max-height: calc(100% - 2rem);
+    max-height: calc(100% - 1.5rem);
     margin-right: 0;  
     width: 100%;     
     height: 100%;    
@@ -23,7 +24,7 @@ const MenuContainer = styled.div`
     top: 0;          
     left: 0;          
     z-index: 1000;    
-    padding: 1rem;
+    padding: .75rem 1rem;
   }
 `;
 
@@ -40,9 +41,10 @@ const MenuHeader = styled.div`
 `;
 
 const MenuText = styled.p`
-  font-family: Relative Trial Bold;
-  font-size: 1rem;
-  color: #000000;
+  font-family: ${theme.typography.fontFamilies.bold};
+  font-size: 1.125rem;
+  line-height: 1.5rem;
+  color: ${theme.colors.text.primary};
   margin: 0;
   padding: 0;
 `;
@@ -58,24 +60,23 @@ const CategoryHeader = styled.div`
   justify-content: space-between;
   align-items: center;
   cursor: pointer;
-  font-family: Relative Trial Bold;
+  font-family: ${theme.typography.fontFamilies.bold};
   font-size: 1rem;
   height: 3rem;
   padding: 0 1rem;
   border-radius: 1.5rem;
-  transition: 
-    background-color 350ms ease;
+  transition: all 200ms ease;
   transform-origin: center center;
 
   &:hover {
-    background-color: #F5F5F5;
+    background-color: ${theme.colors.background.primary};
   }
 `;
 
 const CategoryOptions = styled.div`
   display: ${props => (props.isOpen ? 'flex' : 'none')};
   flex-wrap: wrap;
-  gap: .5rem;
+  gap: .375rem;
   padding: 0 1rem;
 `;
 
@@ -83,17 +84,16 @@ const Option = styled.button`
   display: flex;
   justify-content: flex-start;
   align-items: center;
-  padding: .375rem .75rem;
-  color: ${props => (props.isSelected ? 'white' : 'black')};
-  background-color: ${props => (props.isSelected ? '#000' : '#f5f5f5')};
+  padding: .25rem .5rem;
+  color: ${props => (props.isSelected ? theme.colors.text.white : theme.colors.text.primary)};
+  background-color: ${props => (props.isSelected ? theme.colors.background.dark : theme.colors.background.primary)};
   text-align: left;
   border: none;
   cursor: pointer;
-  border-radius: .5rem;
-  font-family: Relative Trial Medium;
+  border-radius: .25rem;
+  font-family: ${theme.typography.fontFamilies.medium};
   font-size: .875rem;
-  transition: 
-    transform 150ms ease;
+  transition: all 200ms ease;
   transform-origin: center center;
 
   &:active {
@@ -101,13 +101,16 @@ const Option = styled.button`
   }
 
   &:hover {
-    background-color: ${props => (props.isSelected ? '#000' : '#e0e0e0')};
+    background-color: ${props => (props.isSelected ? theme.colors.background.dark : theme.colors.border)};
   }
 `;
 
 const CloseButton = styled.button`
-  padding: .5rem 1rem;
-  border-radius: .5rem;
+  width: 2.5rem;
+  min-width: 2.5rem;
+  height: 2.5rem;
+  min-height: 2.5rem;
+  border-radius: 1.25rem;
   border: none;
   margin: 0;
   display: flex;
@@ -115,17 +118,14 @@ const CloseButton = styled.button`
   justify-content: center;
   cursor: pointer;
   gap: .375rem;
-  font-family: Relative Trial Medium;
+  font-family: ${theme.typography.fontFamilies.medium};
   font-size: 1rem;
-  color: #959595;
-  background-color: #F5F5F5;
-  transition: 
-    background-color 350ms ease,
-    transform 150ms ease;
+  background-color: ${theme.colors.background.white};
+  transition: all 200ms ease;
   transform-origin: center center;
 
   &:hover {
-    background-color: #E9E9E9;
+    background-color: ${theme.colors.background.primary};
   }
 
   &:active {
@@ -143,7 +143,7 @@ const FilterMenu = ({ isOpen, onClose, onSelectionChange, initialSelection }) =>
     { name: 'Satributes', options: [
       "vintage", "nakamoto", "firsttransaction", "palindrome", "pizza", "block9", "block9_450", "block78", 
       "alpha", "omega", "uniform_palinception", "perfect_palinception", "block286", "jpeg", 
-      "uncommon", "rare", "epic", "legendary", "mythic", 
+      "uncommon", "rare", "epic", "legendary", "mythic", "hitman",
       "black_uncommon", "black_rare", "black_epic", "black_legendary" 
     ] },
   ];
@@ -177,8 +177,7 @@ const FilterMenu = ({ isOpen, onClose, onSelectionChange, initialSelection }) =>
       <MenuHeader>
         <MenuText>Filters</MenuText>
         <CloseButton onClick={onClose}>
-          Close
-          <CrossIcon color={'#959595'} size={'1rem'} />
+          <CrossIcon color={theme.colors.text.secondary} size={'1.25rem'} />
         </CloseButton>
       </MenuHeader>
       {categories.map(category => (

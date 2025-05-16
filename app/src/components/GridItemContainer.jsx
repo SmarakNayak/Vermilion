@@ -1,8 +1,10 @@
 import React, { useEffect, useRef, useState } from 'react';
 import styled from 'styled-components';
-import { Link, useNavigate } from 'react-router-dom';
-import { GalleryIcon, RuneIcon } from './common/Icon';
-import { addCommas } from '../utils/format'
+import { Link } from 'react-router-dom';
+import InnerInscriptionContent from './common/InnerInscriptionContent';
+import GridTag from './common/GridTag';
+import { addCommas, shortenBytesString } from '../utils/format';
+import theme from '../styles/theme';
 
 const GridItemContainer = (props) => {
   const [binaryContent, setBinaryContent] = useState(null);
@@ -14,6 +16,9 @@ const GridItemContainer = (props) => {
   // state for 3d
   const [modelUrl, setModelUrl] = useState(null);
   const modelViewerRef = useRef(null);
+
+  // state for display name
+  const displayName = props.item_name && props.item_name.trim() !== "" ? props.item_name : addCommas(props.number);
 
   //Update content
   useEffect(() => {
@@ -121,265 +126,121 @@ const GridItemContainer = (props) => {
     updateText();    
   },[contentType]);
 
-  const shouldApplyMargin = 
-    (props.numberVisibility && !props.collection && !props.rune);
-
-  // render 3d inscriptions
-  useEffect(() => {
-    if (contentType === 'model' && modelUrl) {
-      const modelViewer = modelViewerRef.current;
-      if (modelViewer) {
-        modelViewer.src = modelUrl;
-        modelViewer.alt = "3D model";
-        modelViewer.autoRotate = true;
-        modelViewer.cameraControls = true;
-        modelViewer.environmentImage = "neutral";
-        modelViewer.shadowIntensity = 1;
-        modelViewer.exposure = 0.7;  // Adjust this for overall brightness
-        modelViewer.style.backgroundColor = "transparent";
-      }
-    }
-  }, [contentType, modelUrl]);
-
+  const shouldApplySpace = props.isCollectionPage
+  ? (props.numberVisibility && !props.rune && !props.is_child && !props.is_recursive && !(props.content_length > 2000000) && !(props.item_name?.length > 0))
+  : (props.numberVisibility && !props.collection && !props.rune && !props.is_child && !props.is_recursive && !(props.content_length > 2000000));
+  
   return(
+  <ItemContainer>
     <UnstyledLink 
       to={'/inscription/' + props.number} 
-      applyMargin={shouldApplyMargin}
+      applySpace={shouldApplySpace}
     >
-      <ItemContainer>
-        <MediaContainer>
-          {
-            {
-              'image': <ImageContainer src={blobUrl} />,
-              'svg': <ImageContainer src={"/api/inscription_number/"+ props.number} />,
-              'svg-recursive': <SvgContainer src={"/api/inscription_number/"+ props.number} scrolling='no' sandbox='allow-scripts allow-same-origin' loading="lazy"/>,
-              'html': <HtmlContainer><ContentOverlay /><StyledIframe src={"/content/" + props.id} sandbox='allow-scripts allow-same-origin' loading='lazy' controls muted></StyledIframe></HtmlContainer>,
-              'text': <TextContainer><MediaText>{textContent}</MediaText></TextContainer>,
-              'video': <div style={{position: 'relative', width: '100%', height: 'auto'}}>
-                        <ContentOverlay />
-                        <video controls loop muted autoplay style={{width: '100%', height: 'auto', aspectRatio: '1/1'}}>
-                          <source src={blobUrl} type={rawContentType}/>
-                        </video>
-                      </div>,
-              'audio': <div style={{position: 'relative'}}>
-                        <ContentOverlay />
-                        <audio controls>
-                          <source src={blobUrl} type={rawContentType}/>
-                        </audio>
-                      </div>,
-              'pdf': <TextContainer>PDF not yet supported</TextContainer>,
-              'model': modelUrl ? (
-                        <ModelViewerContainer>
-                          <model-viewer
-                          ref={modelViewerRef}
-                          // camera-controls
-                          disable-zoom
-                          auto-rotate
-                          ar
-                          ar-status="not-presenting"
-                          interaction-prompt="none"
-                          loading="lazy"
-                          touch-action="none"
-                          src={modelUrl}
-                          style={{height: '100%', width: '100%'}}
-                          >
-                            <div slot="progress-bar" />
-                          </model-viewer>
-                        </ModelViewerContainer>
-                      ) : <TextContainer loading isCentered>Loading 3D model...</TextContainer>,                
-              'unsupported': <TextContainer isCentered>{rawContentType} content type not yet supported</TextContainer>,
-              'loading': <TextContainer loading isCentered>Loading...</TextContainer>
-            }[contentType]
-          }
-        </MediaContainer>
-        {props.numberVisibility && (
-          <InfoContainer>
-            <ItemText>{addCommas(props.number)}</ItemText>
-            {props.collection && (
-              <MetadataContainer>
-                <GalleryIcon size={'1rem'} color={'#E34234'} />
-                <InfoText>{props.collection}</InfoText>
-              </MetadataContainer>
-            )}
-            {props.rune && (
-              <MetadataContainer>
-                <RuneIcon size={'1rem'} color={'#D23B75'} />
-                <InfoText isRune>{props.rune}</InfoText>
-              </MetadataContainer>
-            )}
-          </InfoContainer>
-        )}
-      </ItemContainer>
-
+      <MediaContainer>
+        <InnerInscriptionContent
+          contentType={contentType}
+          blobUrl={blobUrl}
+          number={props.number}
+          metadata={{
+            id: props.id,
+            content_type: rawContentType
+          }}
+          textContent={textContent}
+          modelUrl={modelUrl}
+          serverHTML={true}
+        />
+        <ContentOverlay />
+      </MediaContainer>
     </UnstyledLink>
+    
+    {props.numberVisibility && (
+      <InfoContainer applySpace={shouldApplySpace}>
+        <TextLink to={'/inscription/' + props.number} >
+          <ItemText>{props.isCollectionPage ? displayName : addCommas(props.number)}</ItemText>
+        </TextLink>
+        <TagContainer>
+          {props.isCollectionPage && props.item_name?.length > 0 && (
+            <GridTag
+              color={theme.colors.text.secondary}
+              value={addCommas(props.number)}
+            />
+          )}
+          {!props.isCollectionPage && props.collection && (
+            <GridTag 
+              color={theme.colors.background.verm}
+              link={`/collection/${encodeURIComponent(props.collection_symbol)}`}
+              value={props.collection}
+            />
+          )}
+          {props.rune && (
+            <GridTag
+              color={theme.colors.background.purp}
+              value={props.rune}
+            />
+          )}
+          {props.is_child && (
+            <GridTag
+              color={theme.colors.text.secondary}
+              value={'Child'}
+            />
+          )}
+          {props.is_recursive && (
+            <GridTag
+              color={theme.colors.text.secondary}
+              value={'Recursive'}
+            />
+          )}
+          {props.content_length > 1000000 && (
+            <GridTag
+              color={theme.colors.text.secondary}
+              value={shortenBytesString(props.content_length)}
+            />
+          )}
+        </TagContainer>
+      </InfoContainer>
+    )}
+  </ItemContainer>
   )
 }
 
 const UnstyledLink = styled(Link)`
   color: unset;
   text-decoration: unset;
-  margin-bottom: ${props => props.applyMargin ? '1.625rem' : '0'};
-`
+  width: 100%; 
+  display: block; 
+`;
+
+const TextLink = styled(Link)`
+  color: unset;
+  text-decoration: unset;
+  display: block; 
+`;
 
 const ItemContainer = styled.div`
   display: flex;
   flex-direction: column;
   align-items: flex-start;
   gap: .75rem;
-  cursor: pointer;
   width: 100%;
 `;
 
 const MediaContainer = styled.div`
-  background-color: #F5F5F5;
-  border-radius: .25rem;
-  padding: 8%;
+  background-color: ${theme.colors.background.primary};
+  border-radius: .125rem;
+  padding: 16% 10%;
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 84%;
+  width: 80%;
   height: auto;
   aspect-ratio: 1/1;
-  transition: 
-    background-color 350ms ease,
-    transform 150ms ease;
-  transform-origin: center center;
+  cursor: pointer;
+  transition: background-color 200ms ease;
+  position: relative;
 
-  ${ItemContainer}:hover & {
-    background-color: #E9E9E9;
+  &:hover {
+    background-color: ${theme.colors.border};
   }
-`;
-
-const ImageContainer = styled.img`
-  max-width: 100%;
-  max-height: 100%;
-  min-width: 100%; /* Ensures scaling up */
-  min-height: 100%; /* Ensures scaling up */
-  width: auto;
-  height: auto;
-  object-fit: contain;
-  aspect-ratio: 1/1;
-  image-rendering: pixelated;
-  // filter: drop-shadow(0 8px 24px rgba(158,158,158,.2));
-  transition: 
-    background-color 200ms ease,
-    transform 200ms ease;
-  transform-origin: center center;
-
-  // ${ItemContainer}:hover & {
-  //   transform: scale(1.01);
-  // }
-`;
-
-const TextContainer = styled.div`
-  max-width: 100%;
-  max-height: 100%;
-  min-width: 100%; /* Ensures scaling up */
-  min-height: 100%; /* Ensures scaling up */
-  width: auto;
-  height: auto;
-  display: flex;
-  align-items: ${props => props.isCentered ? 'center' : ''};
-  justify-content: ${props => props.isCentered ? 'center' : ''};
-  margin: 0;
-  font-size: .875rem;
-  font-family: Relative Trial Medium;
-  color: ${props => props.loading ? '#959595' : '#000000'};
-  object-fit: contain;
-  aspect-ratio: 1/1;
-  // filter: drop-shadow(0 8px 24px rgba(158,158,158,.2));
-  transition: 
-    background-color 350ms ease,
-    transform 150ms ease;
-  transform-origin: center center;
-
-  // ${ItemContainer}:hover & {
-  //   transform: scale(1.03);
-  // }
-
-  white-space-collapse: preserve;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  text-wrap: wrap;
-`;
-
-const MediaText = styled.p`
-  font-family: Relative Trial Medium;
-  font-size: .875rem;
-  color: #000000;
-  margin: 0;
-  padding: 0;
-  overflow-wrap: break-word;
-  word-break: break-word;
-  white-space: pre-wrap;
-`;
-
-const HtmlContainer = styled.div`
-  position: relative;
-  max-width: 100%;
-  max-height: 100%;
-  min-width: 100%; /* Ensures scaling up */
-  min-height: 100%; /* Ensures scaling up */
-  width: auto;
-  height: auto;
-  display: flex;
-  margin: 0;
-  font-size: .875rem;
-  font-family: monospace;
-  white-space-collapse: preserve;
-  object-fit: contain;
-  aspect-ratio: 1/1;
-  // filter: drop-shadow(0 8px 24px rgba(158,158,158,.2));
-  transition: all 350ms ease;  transition: 
-    background-color 350ms ease,
-    transform 150ms ease;
-  transform-origin: center center;
-
-  // ${ItemContainer}:hover & {
-  //   transform: scale(1.03);
-  // }
-
-  overflow: hidden;
-  text-overflow: ellipsis;
-  text-wrap: wrap;
-`;
-
-const SvgContainer = styled.iframe`
-  border: none;
-  max-width: 100%;
-  max-height: 100%;
-  min-width: 100%; /* Ensures scaling up */
-  min-height: 100%; /* Ensures scaling up */
-  width: auto;
-  height: auto;
-  object-fit: contain;
-  aspect-ratio: 1/1;
-  image-rendering: pixelated;
-  // filter: drop-shadow(0 8px 24px rgba(158,158,158,.2));
-  transition: 
-    background-color 350ms ease,
-    transform 150ms ease;
-  transform-origin: center center;
-
-  // ${ItemContainer}:hover & {
-  //   transform: scale(1.03);
-  // }
-`;
-
-const StyledIframe = styled.iframe`
-  border: none;
-  //flex: 0 100%;
-  //flex-grow: 1;
-  width: 100%;
-  resize: both;
-  //aspect-ratio: 1/1;
-`;
-
-const ModelViewerContainer = styled.div`
-  position: relative;
-  width: 100%;
-  height: 100%;
-  aspect-ratio: 1/1;
 `;
 
 const ContentOverlay = styled.div`
@@ -395,36 +256,26 @@ const ContentOverlay = styled.div`
 
 const ItemText = styled.p`
   font-size: 1rem;
-  color: #000000;
+  color: #121212;
   margin: 0;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  width: 100%;
+  line-height: 1.375rem;
+  // width: 100%;
+  text-decoration-line: underline;
+  text-decoration-color: transparent;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 2px;
 
   transition: 
-    background-color 350ms ease,
-    transform 150ms ease;
+    background-color 200ms ease,
+    transform 200ms ease;
   transform-origin: center center;
 
-  // ${ItemContainer}:hover & {
-  //   color: #000000;
-  // }
-`;
-
-const InfoText = styled.p`
-  font-size: .875rem;
-  color: ${props => props.isRune ? '#D23B75' : '#E34234'};
-  margin: 0;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  width: 100%;
-
-  transition: 
-    background-color 350ms ease,
-    transform 150ms ease;
-  transform-origin: center center;
+  &:hover {
+    text-decoration-color: #121212;
+  }
 `;
 
 const InfoContainer = styled.div`
@@ -432,26 +283,30 @@ const InfoContainer = styled.div`
   flex-direction: column;
   align-items: flex-start;
   gap: .5rem;
-  cursor: pointer;
   width: 100%;
+  padding-bottom: ${props => props.applySpace ? '1.625rem' : '0'};
+  margin-bottom: 1rem;
 `;
 
-const MetadataContainer = styled.div`
+const TagContainer = styled.div`
   display: flex;
   flex-direction: row;
-  align-items: center;
-  justify-content: flex-start;
-  height: 1.125rem;
   gap: .25rem;
-  cursor: pointer;
-  margin: 0;
-  padding: 0;
-  font-size: .875rem;
-  font-family: Relative Trial Medium;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
   width: 100%;
+  overflow: hidden; 
+  white-space: nowrap; 
+  
+  /* Prioritize first tag */
+  & > *:first-child {
+    flex-shrink: 0; /* Don't shrink first tag */
+    min-width: 1rem; /* Ensure first tag is always visible */
+  }
+  
+  /* Make remaining tags share available space */
+  & > *:not(:first-child) {
+    flex-shrink: 1; /* Allow shrinking */
+    min-width: 0; /* Allow complete shrinking if needed */
+  }
 `;
 
 export default GridItemContainer;

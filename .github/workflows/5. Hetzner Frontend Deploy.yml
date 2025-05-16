@@ -49,15 +49,24 @@ jobs:
           ssh staging 'sudo cp Vermilion/nginx/server.conf /etc/nginx/conf.d/server.conf;' 
           ssh staging 'sudo cp Vermilion/nginx/nginx.conf /etc/nginx/nginx.conf;'
           ssh staging 'sudo rm -f /etc/nginx/sites-enabled/default;'
-
-      - name: Install node 20.4.0
-        run: ssh staging 'curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.3/install.sh | bash; . ~/.nvm/nvm.sh; nvm install 20.4.0;'
-  
-      - name: Install client node dependencies
-        run: ssh staging 'cd Vermilion/app; . ~/.nvm/nvm.sh; npm install; npm run build;'
         
+      - name: Install bun
+        run: ssh staging 'curl -fsSL https://bun.sh/install | bash;'
+
+      - name: Build Frontend
+        run: ssh staging 'cd Vermilion/app; /home/ubuntu/.bun/bin/bun install; /home/ubuntu/.bun/bin/bun run build;'
+
+      - name: Setup Bun server
+        run: ssh staging 'cd Vermilion/app/server; /home/ubuntu/.bun/bin/bun install;'
+     
+      - name: Configure Bun service
+        run: ssh staging 'sudo cp Vermilion/systemd/bun.service /etc/systemd/system/; sudo systemctl daemon-reload;'
+
       - name: Set up static files
         run: ssh staging 'sudo rm -r /var/www/html/*; sudo cp -r ~/Vermilion/app/dist/. /var/www/html/;'
       
       - name: Restart nginx
         run: ssh staging 'sudo systemctl is-active nginx.service && sudo systemctl restart nginx.service || sudo systemctl start nginx.service;'
+
+      - name: Restart bun
+        run: ssh staging 'sudo systemctl is-active bun.service && sudo systemctl restart bun.service || sudo systemctl start bun.service;'

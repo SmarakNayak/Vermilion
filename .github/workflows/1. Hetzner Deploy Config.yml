@@ -51,6 +51,7 @@ jobs:
                                         "${{format('db_user{0} ', ':')}}${{secrets.MYSQL_USER}}"
                                         "${{format('db_password{0} ', ':')}}${{secrets.MYSQL_PASS}}"
                                         "${{format('magiceden_api_key{0} ', ':')}}${{secrets.MAGICEDEN_KEY}}"
+                                        "${{format('access_token_secret{0} ', ':')}}${{secrets.JWT_ACCESS_TOKEN_SECRET}}"
                                         "${{format('index_runes{0} ', ':')}}true"
                                         "hidden:" > ~/ord.yaml'
       
@@ -63,7 +64,14 @@ jobs:
           ssh staging 'set +o noclobber; ssh-keyscan -t ed25519 github.com > ~/.ssh/known_hosts || echo "Known_hosts already exists. Not adding."; set -o noclobber; '        
       
       - name: Check out the new code from Github
-        run: ssh staging 'git -C Vermilion fetch && git -C Vermilion reset --hard origin/main || git clone git@github.com:SmarakNayak/Vermilion.git' # This pulls if directory exists, otherwise clones
+        run: |
+          ssh staging 'if [ -d "Vermilion" ]; then 
+            git -C Vermilion fetch && 
+            git -C Vermilion checkout ${{ github.ref_name }} && 
+            git -C Vermilion reset --hard origin/${{ github.ref_name }}; 
+          else 
+            git clone -b ${{ github.ref_name }} git@github.com:SmarakNayak/Vermilion.git; 
+          fi'
       
       - name: Setup ssh config
         run: ssh staging 'sudo cp Vermilion/Config/ssh.conf ~/.ssh/config;'
@@ -80,6 +88,11 @@ jobs:
           ssh staging 'sudo cp Vermilion/postgres/pg_hba.conf /etc/postgresql/17/main/pg_hba.conf;'
           #                                 TYPE DB  USER    ADDRESS                          METHOD
           ssh staging 'sudo bash -c "echo \"host all all ${{ vars.ALTERNATE_SERVER_HOST }}/32 scram-sha-256\" >> /etc/postgresql/17/main/pg_hba.conf";'
+
+      - name: Setup chromium sandbox config
+        run: |
+          ssh staging 'sudo cp Vermilion/Config/chrome-dev-builds /etc/apparmor.d/chrome-dev-builds;'
+          ssh staging 'sudo service apparmor reload;'
 
       # Note: '"'"' = escaped single ' - bash implicitly concatenates differently quoted string expressions
       - name: Init postgres server

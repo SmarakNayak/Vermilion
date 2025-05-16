@@ -1,10 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import styled from 'styled-components';
+import PageContainer from '../components/layout/PageContainer';
 import InfiniteScroll from 'react-infinite-scroll-component';
 import Tag from '../components/Tag';
 import CopyTag from '../components/CopyTag';
 import { addCommas, formatAddress } from '../utils/format';
+import theme from '../styles/theme';
+import Spinner from '../components/Spinner';
 
 const Edition = () => {
   let { sha256 } = useParams();
@@ -119,8 +122,6 @@ const Edition = () => {
     setEditions(newEditions);
     setHasMore(newEditions?.length === pageSize);
     setNextPageNo(1);
-
-    console.log('ed', newEditions)
   }
 
   const fetchData = async () => {
@@ -147,7 +148,7 @@ const Edition = () => {
   },[contentType])
   
   return (
-    <MainContainer>
+    <PageContainer>
       <HeaderContainer>
         <MainContentStack>
           <BackButtonContainer>
@@ -177,9 +178,10 @@ const Edition = () => {
               hasMore={hasMore}
               loader={
                 <LoaderContainer>
-                  <p style={{color: '#959595', margin: 0}}>Loading...</p>
+                  <Spinner />
                 </LoaderContainer>
               }
+              scrollThreshold="80%"
             >
               {editions.map((edition, index) => (
                 <UnstyledLink to={'/inscription/' + edition.number}>
@@ -194,23 +196,9 @@ const Edition = () => {
         </GalleryContainer>
         </DivTable>
       </TableContainer>
-    </MainContainer>
+    </PageContainer>
   )
 }
-
-const MainContainer = styled.div`
-  width: calc(100% - 6rem);
-  padding: 1.5rem 3rem 2.5rem 3rem;
-  margin: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
-
-  @media (max-width: 630px) {
-    width: calc(100% - 3rem);
-    padding: 1.5rem 1.5rem 2.5rem 1.5rem;
-  }
-`;
 
 const HeaderContainer = styled.div`
   display: flex;
@@ -252,21 +240,19 @@ const UnstyledLink = styled(Link)`
 `;
 
 const LinkButton = styled.span` 
-  font-family: Relative Trial Medium;
+  font-family: ${theme.typography.fontFamilies.medium};
   font-size: .875rem;
   border: none;
   margin: 0;
   padding: 0;
-  color: #959595;
-  transition: 
-    color 350ms ease,
-    transform 150ms ease;
+  color: ${theme.colors.text.secondary};
+  transition: all 200ms ease;
   transform-origin: center center;
   display: inline-block;
   white-space: nowrap; // Prevents wrapping
 
   &:hover {
-    color: #000000;
+    color: ${theme.colors.text.primary};};
   }
 `;
 
@@ -284,21 +270,14 @@ const GalleryContainer = styled.div`
 `;
 
 const PageText = styled.p`
-    font-family: Relative Trial Bold;
+    font-family: ${theme.typography.fontFamilies.bold};
     font-size: 1.5rem;
     margin: 0;
 `;
 
-const InfoText = styled.p`
-  font-family: Relative Trial Medium;
-  font-size: ${props => props.isLarge ? '1rem' : '.875rem'};
-  color: ${props => props.isPrimary ? '#000000' : '#959595'};
-  margin: 0;
-`;
-
 const Divider = styled.div`
   width: 100%;
-  border-bottom: 1px solid #E9E9E9;
+  border-bottom: 1px solid ${theme.colors.border};
 `;
 
 const FilterButton = styled.button`
@@ -312,14 +291,12 @@ const FilterButton = styled.button`
   justify-content: center;
   cursor: pointer;
   gap: .5rem;
-  background-color: #F5F5F5;
-  transition: 
-    background-color 350ms ease,
-    transform 150ms ease;
+  background-color: ${theme.colors.background.pr};
+  transition: all 200ms ease;
   transform-origin: center center;
 
   &:hover {
-    background-color: #E9E9E9;
+    background-color: ${theme.colors.border};
   }
 
   &:active {
@@ -330,26 +307,15 @@ const FilterButton = styled.button`
 const VisibilityButton = styled(FilterButton)``;
 
 const LoadingText = styled.p`
-  font-family: Relative Trial Medium;
+  font-family: ${theme.typography.fontFamilies.medium};
   font-size: 1rem;
-  color: #959595;
+  color: ${theme.colors.text.secondary};
   text-align: center;
 `;
 
 const StyledInfiniteScroll = styled(InfiniteScroll)`
   overflow: hidden !important;
   width: 100%;
-`
-
-const PageContainer = styled.div`
-  width: 100%;
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  // flex: 1;
-  align-items: start;
-  // justify-content: center;
-  margin: 0;
 `;
 
 const ImageContainer = styled.img`
@@ -376,9 +342,9 @@ const SvgContainer = styled.div`
 const TextContainer = styled.p`
   max-width: 4rem;
   max-height: 4rem;
-  font-family: Relative Trial Medium;
+  font-family: ${theme.typography.fontFamilies.medium};
   font-size: .75rem;
-  color: #000000;
+  color: ${theme.colors.text.primary};
   margin: 0;
   object-fit: contain;
   aspect-ratio: 1/1;
@@ -386,15 +352,15 @@ const TextContainer = styled.p`
   overflow-y: hidden;
   text-wrap: wrap;
   white-space-collapse: preserve;
-  border: 2px solid #F5F5F5;
+  border: 2px solid ${theme.colors.background.primary};
 `
 
 const HtmlContainer = styled.div`
   max-width: 4rem;
   max-height: 4rem;
-  font-family: Relative Trial Medium;
+  font-family: ${theme.typography.fontFamilies.medium};
   font-size: .75rem;
-  color: #000000;
+  color: ${theme.colors.text.primary};
   margin: 0;
   object-fit: contain;
   aspect-ratio: 1/1;
@@ -402,7 +368,7 @@ const HtmlContainer = styled.div`
   overflow-y: hidden;
   text-wrap: wrap;
   white-space-collapse: preserve;
-  border: 2px solid #F5F5F5;
+  border: 2px solid ${theme.colors.background.primary};
 `
 
 const StyledIframe = styled.iframe`
@@ -436,18 +402,16 @@ const InfoButton = styled.button`
   justify-content: center;
   cursor: ${props => props.isButton ? 'pointer' : 'default'};
   gap: .5rem;
-  font-family: Relative Trial Medium;
+  font-family: ${theme.typography.fontFamilies.medium};
   font-size: .875rem;
-  color: #000000;  
+  color: ${theme.colors.text.primary};  
   text-wrap: nowrap;
-  background-color:#F5F5F5;
-  transition: 
-    background-color 350ms ease,
-    transform 150ms ease;
+  background-color:${theme.colors.background.primary};
+  transition: all 200ms ease;
   transform-origin: center center;
 
   &:hover {
-    background-color: #E9E9E9;
+    background-color: ${theme.colors.border};
   }
 
   &:active {
@@ -479,13 +443,11 @@ const DivRow = styled.div`
   padding: ${props => props.header ? '0 1.5rem' : '1rem 1.5rem'};
   background-color: ${props => props.header ? 'transparent' : 'transparent'};
   cursor: ${props => props.header ? 'default' : 'pointer'};
-  transition: 
-    background-color 350ms ease,
-    transform 150ms ease;
+  transition: all 200ms ease;
   transform-origin: center center;
 
   &:hover {
-    background-color: ${props => props.header ? '#transparent' : '#F5F5F5'};
+    background-color: ${props => props.header ? '#transparent' : theme.colors.background.primary};
   }
   &:not(:last-child) {
     margin-bottom: 0.5rem;
@@ -500,9 +462,9 @@ const DivCell = styled.div`
   gap: 1rem;
   flex: 1;
   margin: 0;
-  font-family: 'Relative Trial Medium';
+  font-family: ${theme.typography.fontFamilies.medium};
   font-size: ${props => props.header ? '.875rem' : '1rem'};
-  color: ${props => props.header ? '#959595' : '#000000'};
+  color: ${props => props.header ? theme.colors.text.secondary : theme.colors.text.primary};
   &:nth-child(1) {
     justify-content: flex-start;
   }
@@ -519,8 +481,7 @@ const LoaderContainer = styled.div`
   justify-content: center;
   align-items: center;
   width: 100%;
-  max-width: 
-  max-height:
+  padding-top: 0.5rem;
 `;
 
 

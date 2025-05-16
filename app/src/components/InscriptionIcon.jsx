@@ -1,6 +1,8 @@
 import React, { useEffect, useRef, useState } from 'react';
 import styled from 'styled-components';
 import { BlockIcon, ImageIcon } from './common/Icon';
+import InnerInscriptionContent from './common/InnerInscriptionContent';
+import theme from '../styles/theme';
 
 //no dependancy on metadata endpoint!
 const InscriptionIcon = (props) => {
@@ -8,6 +10,7 @@ const InscriptionIcon = (props) => {
   const [blobUrl, setBlobUrl] = useState(null);
   const [rawContentType, setRawContentType] = useState(null);
   const [contentType, setContentType] = useState(null);
+  const [textContent, setTextContent] = useState(null);
 
   // state for 3d
   const [modelUrl, setModelUrl] = useState(null);
@@ -100,7 +103,7 @@ const InscriptionIcon = (props) => {
     }
 
     fetchContent();
-  },[props.endpoint])
+  },[props.endpoint]);
 
   // render 3d inscriptions
   useEffect(() => {
@@ -119,52 +122,57 @@ const InscriptionIcon = (props) => {
     }
   }, [contentType, modelUrl]);
 
-  return (
-    <IconContainer>
-      {
-        {
-          'image': <ImageContainer src={blobUrl} />,
-          'svg': <ImageContainer src={props.endpoint} scrolling='no' sandbox='allow-scripts allow-same-origin' loading="lazy"/>,
-          'html': <HtmlContainer><StyledIframe src={props.endpoint} scrolling='no' sandbox='allow-scripts allow-same-origin' loading="lazy"></StyledIframe></HtmlContainer>,
-          'text': props.useBlockIconDefault ? <BlockIcon size={'1rem'} color={'#E34234'} /> : <ImageIcon size={'1rem'} color={'#E34234'}></ImageIcon>,
-          'video': <VideoContainer controls loop muted autoplay><source src={blobUrl} type={rawContentType}/></VideoContainer>,
-          'audio': props.useBlockIconDefault ? <BlockIcon size={'1rem'} color={'#E34234'} /> : <ImageIcon size={'1rem'} color={'#E34234'}></ImageIcon>,
-          'pdf': props.useBlockIconDefault ? <BlockIcon size={'1rem'} color={'#E34234'} /> : <ImageIcon size={'1rem'} color={'#E34234'}></ImageIcon>,
-          'model': modelUrl ? (
-            <ModelViewerContainer>
-              <model-viewer
-              ref={modelViewerRef}
-              // camera-controls
-              disable-zoom
-              auto-rotate
-              ar
-              ar-status="not-presenting"
-              interaction-prompt="none"
-              loading="lazy"
-              touch-action="none"
-              src={modelUrl}
-              style={{height: '100%', width: '100%'}}
-              >
-                <div slot="progress-bar" />
-              </model-viewer>
-            </ModelViewerContainer>
-          ) : <TextContainer loading isCentered>Loading 3D model...</TextContainer>,   
-          'unsupported': props.useBlockIconDefault ? <BlockIcon size={'1rem'} color={'#E34234'} /> : <ImageIcon size={'1rem'} color={'#E34234'}></ImageIcon>,
-          'loading': props.useBlockIconDefault ? <BlockIcon size={'1rem'} color={'#E34234'} /> : <ImageIcon size={'1rem'} color={'#E34234'}></ImageIcon>
-        }[contentType]
+  // adjust for recursive svg
+  useEffect(()=> {
+    const updateText = async () => {
+      //1. Update text state variable if text type
+      if(contentType==="text" || contentType==="svg" || contentType==="html") {
+        const text = await binaryContent.text();
+        setTextContent(text);
+        if(contentType==="svg" && text.includes("/content")) {
+          setContentType("svg-recursive")
+        }
       }
+    }
+    updateText();    
+  },[contentType]);
+
+  return (
+    <IconContainer size={props.size}>
+      {contentType === 'loading' || contentType === 'unsupported' ? (
+        props.useBlockIconDefault ? 
+          <BlockIcon size={'1rem'} color={theme.colors.background.verm} /> : 
+          <ImageIcon size={'1rem'} color={theme.colors.background.verm} />
+      ) : (
+        <InnerInscriptionContent 
+          contentType={contentType}
+          blobUrl={blobUrl}
+          number={props.number}
+          metadata={{
+            id: props.id,
+            content_type: rawContentType
+          }}
+          textContent={textContent}
+          modelUrl={modelUrl}
+          serverHTML={false}
+          isIcon={true}
+          useBlockIconDefault={props.useBlockIconDefault}
+          endpoint={props.endpoint}
+        />
+      )}
     </IconContainer>
   )
 }
 
 const IconContainer = styled.div`
-  width: 2.25rem;
-  height: 2.25rem;
+  width: ${props => props.size};
+  height: ${props => props.size};
   border-radius: 0.25rem;
-  background-color: #F5F5F5;
+  background-color: #F6F6F6;
   display: flex;
   align-items: center;
   justify-content: center;
+  overflow: hidden;
 `
 
 const ImageContainer = styled.img`
@@ -219,7 +227,7 @@ const VideoContainer = styled.video`
   height: auto;
   aspect-ratio: 1/1;
   border-radius: 0.25rem;
-`
+`;
 
 const StyledIframe = styled.iframe`
   border: none;

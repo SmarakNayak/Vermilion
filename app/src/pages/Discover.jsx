@@ -3,9 +3,11 @@ import { Link } from 'react-router-dom';
 import styled from 'styled-components';
 import Spinner from '../components/Spinner';
 import SkeletonImage from '../components/SkeletonImage';
+import InnerInscriptionContent from '../components/common/InnerInscriptionContent';
 import { addCommas } from '../utils/format';
 import { copyText } from '../utils/clipboard';
-import { GalleryIcon, LinkIcon, RuneIcon } from '../components/common/Icon';
+import { FireIcon, GalleryIcon, LinkIcon, RuneIcon, SparklesIcon } from '../components/common/Icon';
+import theme from '../styles/theme';
 
 const Discover = () => {
   const [inscriptions, setInscriptions] = useState([]);
@@ -77,6 +79,20 @@ const Discover = () => {
   return (
     <MainContainer>
       <FeedContainer>
+        <LinkContainer>
+          <PageText>Feed</PageText>
+          <VerticalDivider />
+          <ButtonContainer>
+            <TabButton to="/" isActive={false}>
+              <FireIcon size={'1.25rem'} />
+              Trending
+            </TabButton>
+            <TabButton to="/discover" isActive={true}>
+              <SparklesIcon size={'1.25rem'} />
+              Discover
+            </TabButton>
+          </ButtonContainer>
+        </LinkContainer>
         {inscriptions.map((inscription, i, inscriptions) => (
           <React.Fragment key={i}>
             <ContentContainer key={i+1} id={i+1}>
@@ -87,14 +103,14 @@ const Discover = () => {
                   </UnstyledLink>
                   {inscription.spaced_rune && (
                     <RuneTag>
-                      <RuneIcon size={'1rem'} color={'#D23B75'} />
+                      <RuneIcon size={'1rem'} color={theme.colors.background.purp} />
                       {inscription.spaced_rune}
                     </RuneTag>
                   )}
                   {inscription.collection_name && (
                     <UnstyledLink to={'/collection/' + inscription.collection_symbol}>
                       <CollectionTag>
-                        <GalleryIcon size={'1rem'} color={'#E34234'} />
+                        <GalleryIcon size={'1rem'} color={theme.colors.background.verm} />
                         {inscription.collection_name}
                       </CollectionTag>
                     </UnstyledLink>
@@ -102,24 +118,23 @@ const Discover = () => {
                 </TitleContainer>
                 <DetailsContainer>
                   <SocialButton empty onClick={() => copyText('https://vermilion.place/inscription/' + inscription.number)}>
-                    <LinkIcon size={'1.25rem'} color={'#959595'} />
+                    <LinkIcon size={'1.25rem'} color={theme.colors.text.secondary} />
                   </SocialButton>
                 </DetailsContainer>
               </InfoContainer>
               <UnstyledLink to={'/inscription/' + inscription.number}>
                 <InscriptionContainer>
-                  {
-                    {
-                      'image/png': <LoadingImage src={`/api/inscription_number/${inscription.number}`} />,
-                      'image/jpeg': <LoadingImage src={`/api/inscription_number/${inscription.number}`} />,
-                      'image/jpg': <LoadingImage src={`/api/inscription_number/${inscription.number}`} />,
-                      'image/webp': <LoadingImage src={`/api/inscription_number/${inscription.number}`} />,
-                      'image/gif': <LoadingImage src={`/api/inscription_number/${inscription.number}`} />,
-                      'image/avif': <LoadingImage src={`/api/inscription_number/${inscription.number}`} />,
-                      'image/svg+xml': <LoadingImage src={`/api/inscription_number/${inscription.number}`} scrolling='no' sandbox='allow-scripts allow-same-origin'/>,
-                      'loading': <TextContainer>loading...</TextContainer>
-                    }[inscription.content_type]
-                  }
+                  <InnerInscriptionContent
+                    contentType={inscription.content_type === 'loading' ? 'loading' : 'image'}
+                    blobUrl={`/api/inscription_number/${inscription.number}`}
+                    number={inscription.number}
+                    metadata={{
+                      id: inscription.id,
+                      content_type: inscription.content_type,
+                      is_recursive: inscription.is_recursive
+                    }}
+                    useFeedStyles={true}
+                  />
                 </InscriptionContainer>
               </UnstyledLink>
             </ContentContainer>
@@ -152,7 +167,6 @@ const LoadingImage = ({ src, ...props }) => {
   );
 };
 
-// Keep all your existing styled components
 const MainContainer = styled.div`
   width: 100%;
   padding: 0;
@@ -175,7 +189,6 @@ const FeedContainer = styled.div`
   }
 `;
 
-// Add new styled components for loading state
 const LoadingContainer = styled.div`
   width: 100%;
   height: 4rem;
@@ -184,14 +197,79 @@ const LoadingContainer = styled.div`
   justify-content: center;
 `;
 
-const LoadingText = styled.p`
-  font-family: Relative Trial Medium;
-  font-size: 1rem;
-  color: #959595;
+const LinkContainer = styled.div`
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: .75rem;
+  padding-bottom: 1rem;
+`;
+
+const PageText = styled.p`
+  font-family: ${theme.typography.fontFamilies.bold};
+  font-size: 1.5rem;
+  line-height: 2rem;
+  color: ${theme.colors.text.primary};
   margin: 0;
 `;
 
-// Keep all your other existing styled components...
+const VerticalDivider = styled.div`
+  height: 2rem;
+  border-right: 1px solid ${theme.colors.border};
+`;
+
+const ButtonContainer = styled.div`
+  display: flex;
+  flex-direction: row;
+  gap: .25rem;
+`;
+
+const TabButton = styled(Link)`
+  border: none;
+  padding: 0 .75rem;
+  height: 2rem;
+  border-radius: 1rem;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: .25rem;
+  cursor: pointer;
+  font-family: ${theme.typography.fontFamilies.medium};
+  font-size: 1rem;
+  line-height: 1.25rem;
+  color: ${props => props.isActive ? theme.colors.background.verm : theme.colors.text.tertiary}; 
+  background-color: ${props => props.isActive ? theme.colors.background.primary : theme.colors.background.white}; 
+  transition: all 200ms ease;
+  transform-origin: center center;
+  text-decoration: none;
+
+  &:hover {
+    color: ${theme.colors.background.verm};
+    background-color: ${theme.colors.background.primary};
+
+    svg {
+      fill: ${theme.colors.background.verm};
+    }
+  }
+
+  &:active {
+    transform: scale(0.96);
+  }
+
+  svg {
+    fill: ${props => props.isActive ? theme.colors.background.verm : theme.colors.text.tertiary};
+    transition: fill 200ms ease;
+  }
+`;
+
+const LoadingText = styled.p`
+  font-family: ${theme.typography.fontFamilies.medium};
+  font-size: 1rem;
+  color: ${theme.colors.text.secondary};
+  margin: 0;
+`;
+
 const ContentContainer = styled.div`
   width: 100%;
   display: flex;
@@ -199,16 +277,25 @@ const ContentContainer = styled.div`
   gap: .5rem;
   justify-content: center;
   position: relative;
-  background-color: #FFF;
+  background-color: ${theme.colors.background.white};
   padding-bottom: .75rem;
 `;
 
 const InscriptionContainer = styled.div`
-  display: flex;
-  align-items: center;
-  justify-content: center;  
+  // display: flex;
+  // align-items: center;
+  // justify-content: center;  
   width: 32rem;
   max-width: 32rem;
+  height: auto;
+  padding: 0;
+  margin: 0;
+  line-height: 0;
+  font-size: 0;
+  border-radius: .5rem;
+  box-sizing: border-box;
+  border: .0625rem solid ${theme.colors.border};
+  overflow: hidden;
 
   @media (max-width: 544px) {
     width: 100%;
@@ -223,7 +310,7 @@ const ImageContainer = styled.img`
   image-rendering: pixelated;
   cursor: pointer;
   border-radius: .5rem;
-  border: .0625rem solid #E9E9E9;
+  border: .0625rem solid ${theme.colors.border};
 
   @media (max-width: 544px) {
     width: 100%;
@@ -237,7 +324,7 @@ const TextContainer = styled.div`
   max-width: 32rem;
   padding: .75rem 1rem;
   border-radius: .5rem;
-  border: .0625rem solid #E9E9E9;
+  border: .0625rem solid ${theme.colors.border};
   overflow: overlay;
 
   @media (max-width: 544px) {
@@ -253,15 +340,13 @@ const CollectionTag = styled.div`
   gap: .25rem;
   padding: .125rem .375rem;
   border-radius: .5rem;
-  font-family: Relative Trial Medium;
+  font-family: ${theme.typography.fontFamilies.medium};
   font-size: .875rem;
   margin: 0;
-  color: #E34234;
+  color: ${theme.colors.background.verm};
   background-color: #FCECEB;
   cursor: pointer;
-  transition: 
-    background-color 350ms ease,
-    transform 150ms ease;
+  transition: all 200ms ease;
   transform-origin: center center;
 
   &:hover {
@@ -280,15 +365,13 @@ const RuneTag = styled.div`
   gap: .25rem;
   padding: .125rem .375rem;
   border-radius: .5rem;
-  font-family: Relative Trial Medium;
+  font-family: ${theme.typography.fontFamilies.medium};
   font-size: .875rem;
   margin: 0;
-  color: #D23B75;
+  color: ${theme.colors.background.purp};
   background-color: #FAEBF1;
   cursor: pointer;
-  transition: 
-    background-color 350ms ease,
-    transform 150ms ease;
+  transition: all 200ms ease;
   transform-origin: center center;
 
   &:hover {
@@ -334,7 +417,7 @@ const DetailsContainer = styled.div`
 `;
 
 const NumberText = styled.p`
-  font-family: Relative Trial Bold;
+  font-family: ${theme.typography.fontFamilies.medium};
   font-size: 1rem;
   margin: 0;
 `;
@@ -344,9 +427,9 @@ const SocialButton = styled.button`
   min-height: 2.5rem;
   min-width: 2.5rem;
   border-radius: 1.25rem;
-  font-family: Relative Trial Medium;
+  font-family: ${theme.typography.fontFamilies.medium};
   font-size: 1rem;
-  color: #000000;
+  color: ${theme.colors.background.dark};
   border: none;
   padding: ${props => props.empty ? '.375rem' : '.375rem .75rem'};
   margin: 0;
@@ -355,14 +438,12 @@ const SocialButton = styled.button`
   justify-content: center;
   gap: .375rem;
   cursor: pointer;
-  background-color: #FFFFFF;
-  transition: 
-    background-color 350ms ease,
-    transform 150ms ease;
+  background-color: ${theme.colors.background.white};
+  transition: all 200ms ease;
   transform-origin: center center;
 
   &:hover {
-    background-color: #F5F5F5;
+    background-color: ${theme.colors.background.primary};
   }
 
   &:active {
@@ -372,7 +453,7 @@ const SocialButton = styled.button`
 
 const Divider = styled.div`
   width: 100%;
-  border-bottom: 1px solid #E9E9E9;
+  border-bottom: 1px solid ${theme.colors.border};
 `;
 
 const UnstyledLink = styled(Link)`

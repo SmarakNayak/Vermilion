@@ -4,44 +4,39 @@ import styled from 'styled-components';
 import Spinner from '../components/Spinner';
 import SkeletonImage from '../components/SkeletonImage';
 import RecentBoosts from '../components/RecentBoosts';
+import InnerInscriptionContent from '../components/common/InnerInscriptionContent';
 import { addCommas, formatAddress } from '../utils/format';
 import { copyText } from '../utils/clipboard';
-import { BoostIcon, CommentIcon, GalleryIcon, LinkIcon, Person2Icon, RefreshIcon, RuneIcon } from '../components/common/Icon';
-
+import { BoostIcon, CheckIcon, ChevronUpDuoIcon, CommentIcon, CopyIcon, FireIcon, GalleryIcon, LinkIcon, Person2Icon, RefreshIcon, RuneIcon, SparklesIcon, SproutIcon } from '../components/common/Icon';
+import theme from '../styles/theme';
+import CheckoutModal from '../components/modals/CheckoutModal';
+import BoostsModal from '../components/modals/BoostsModal';
+import CommentsModal from '../components/modals/CommentsModal';
 
 const Trending = () => {
   const [inscriptions, setInscriptions] = useState([]);
-  const [moreInscriptions, setMoreInscriptions] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [hasMore, setHasMore] = useState(true);
-  const [activeWallets, setActiveWallets] = useState([]);
+  const [copied, setCopied] = useState(false);
+  const [copiedRowId, setCopiedRowId] = useState(null);
 
-  // placeholder - recent inscriptions and most active wallets 
-  // const mostRecent = [77150702, 74151024, 0];
-  // const activeWallets = [
-  //   {
-  //     "address": "bc1pvkumrkmmr4jgp9u3xg6qjx52wupu5vcp0rh6zfpha2tlhslpf0eqt3c4m0",
-  //     "count": 26
-  //   },
-  //   {
-  //     "address": "bc1p66qckaaw5l8ecars7g7mxcgprk6e2tmhqs2ju95wjz8g0vt6xvlq505twd",
-  //     "count": 17
-  //   },
-  //   {
-  //     "address": "bc1pwc4gv8wdh703jg6c07jqpme6dhvs2zfq6kyarm9nx0dcj2sanzrsp2guex",
-  //     "count": 13
-  //   }
-  // ];
-  
+  const handleCopyClick = (id, content) => {
+    copyText(content);
+    setCopiedRowId(id);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000); // Reset after 2 seconds
+    setTimeout(() => setCopiedRowId(null), 2000); // Reset after 2 seconds
+  };
+
   // Create a single observer ref
   const observerRef = useRef();
   // Create ref for the sentinel element
   const loadMoreRef = useRef();
-
+    
   const fetchInscriptions = async () => {
     try {
       setIsLoading(true);
-      const response = await fetch(`/api/random_inscriptions?n=30`);
+      const response = await fetch(`/api/trending_feed?n=8`);
       const newInscriptions = await response.json();
       
       if (newInscriptions.length === 0) {
@@ -54,29 +49,6 @@ const Trending = () => {
       console.error('Error fetching inscriptions:', error);
     } finally {
       setIsLoading(false);
-    }
-  };
-
-  const fetchActiveWallets = async () => {
-    try {
-      const response = await fetch('/api/boost_leaderboard');
-      const data = await response.json();
-      // Take only the first 3 entries
-      setActiveWallets(data.slice(0, 3));
-    } catch (error) {
-      console.error('Error fetching active wallets:', error);
-    }
-  };  
-
-  const fetchMoreInscriptions = async () => {
-    try {
-      const response = await fetch(`/api/trending_feed?n=20`);
-      const newInscriptions = await response.json();      
-      setMoreInscriptions(newInscriptions);
-    } catch (error) {
-      console.error('Error fetching inscriptions:', error);
-    } finally {
-      console.log('trending', moreInscriptions);
     }
   };
 
@@ -115,264 +87,269 @@ const Trending = () => {
 
   // Initial fetch
   useEffect(() => {
-    // fetchInscriptions();
-    fetchMoreInscriptions();
-    fetchActiveWallets();
+    fetchInscriptions();
   }, []);
+
+  // Manage modal state
+  const [isBoostsModalOpen, setBoostsModalOpen] = useState(false);
+  const [boostsList, setBoostsList] = useState([]);
+  const [isBoostsLoading, setIsBoostsLoading] = useState(false);
+  const [hasMoreBoosts, setHasMoreBoosts] = useState(true);
+  const [boostsPage, setBoostsPage] = useState(0);
+  const [selectedBoostId, setSelectedBoostId] = useState(null);
+  
+  const fetchBoosts = async (boostId) => {
+    if (isBoostsLoading || !hasMoreBoosts) return;
+  
+    try {
+      setIsBoostsLoading(true);
+  
+      const response = await fetch(`/api/inscription_bootlegs/${boostId}?page_size=20&page_number=${boostsPage}`);
+      const data = await response.json();
+  
+      if (Array.isArray(data) && data.length > 0) {
+        setBoostsList((prev) => [...prev, ...data]);
+        setBoostsPage((prev) => prev + 1);
+      } else {
+        setHasMoreBoosts(false);
+      }
+    } catch (error) {
+      console.error('Error fetching boosts:', error);
+    } finally {
+      setIsBoostsLoading(false);
+    }
+  };
+  
+  const toggleBoostsModal = (boostId = null, delegateCount = 0) => {
+    if (!isBoostsModalOpen && boostId) {
+      setSelectedBoostId(boostId);
+      setBoostsList([]); // Reset boosts list
+      setBoostsPage(0); // Reset pagination
+      setHasMoreBoosts(true); // Reset "has more" state
+  
+      if (delegateCount > 0) {
+        // Only fetch boosts if there are any
+        fetchBoosts(boostId);
+      }
+    } else if (isBoostsModalOpen) {
+      setBoostsList([]); // Clear boosts list when closing the modal
+      setBoostsPage(0); // Reset pagination
+    }
+  
+    setBoostsModalOpen((prev) => {
+      const isOpening = !prev;
+      document.body.style.overflow = isOpening ? 'hidden' : 'auto';
+      return isOpening;
+    });
+  };
+
+  const [isCommentsModalOpen, setCommentsModalOpen] = useState(false);
+  const [commentsList, setCommentsList] = useState([]);
+  const [isCommentsLoading, setIsCommentsLoading] = useState(false);
+  const [selectedCommentId, setSelectedCommentId] = useState(null);
+
+  const fetchComments = async (commentId) => {
+    if (isCommentsLoading) return;
+  
+    try {
+      setIsCommentsLoading(true);
+  
+      const response = await fetch(`/api/inscription_comments/${commentId}`);
+      const data = await response.json();
+  
+      if (Array.isArray(data)) {
+        setCommentsList(data);
+      } else {
+        setCommentsList([]); // Handle case where no comments are returned
+      }
+    } catch (error) {
+      console.error('Error fetching comments:', error);
+    } finally {
+      setIsCommentsLoading(false);
+    }
+  };
+
+  const toggleCommentsModal = (commentId = null, commentCount = 0) => {
+    if (!isCommentsModalOpen && commentId) {
+      setSelectedCommentId(commentId);
+      setCommentsList([]); // Reset comments list
+  
+      if (commentCount > 0) {
+        // Only fetch comments if there are any
+        fetchComments(commentId);
+      }
+    }
+  
+    setCommentsModalOpen((prev) => {
+      const isOpening = !prev;
+      document.body.style.overflow = isOpening ? 'hidden' : 'auto';
+      return isOpening;
+    });
+  };
+
+  const [isCheckoutModalOpen, setCheckoutModalOpen] = useState(false);
+  const [selectedDelegateData, setSelectedDelegateData] = useState(null);
+
+  const toggleCheckoutModal = (delegateData = null) => {
+    setSelectedDelegateData(delegateData);
+    setCheckoutModalOpen((prev) => {
+      const isOpening = !prev;
+      document.body.style.overflow = isOpening ? 'hidden' : 'auto';
+      return isOpening;
+    });
+  };
 
   return (
     <MainContainer>
-      <ContentWrapper>
-        {/* Left column */}
-        <SidebarContainer></SidebarContainer>
-
-        {/* Middle column */}
-        <FeedContainer>
-          {moreInscriptions.map((inscription, i, inscriptions) => (
-            <React.Fragment key={i}>
-              <ContentContainer key={i+1} id={i+1}>
-                <InfoContainer>
-                  <TitleContainer>
-                    <UnstyledLink to={'/inscription/' + inscription.inscriptions[0].number}>
-                      <NumberText>#{addCommas(inscription.inscriptions[0].number)}</NumberText>
-                    </UnstyledLink>
-                    {inscription.inscriptions[0].spaced_rune && (
-                      <RuneTag>
-                        <RuneIcon size={'1rem'} color={'#D23B75'} />
+      <FeedContainer>
+        <LinkContainer>
+          <PageText>Feed</PageText>
+          <VerticalDivider />
+          <ButtonContainer>
+            <TabButton to="/trending" isActive={true}>
+              <FireIcon size={'1.25rem'} />
+              Trending
+            </TabButton>
+            <TabButton to="/discover" isActive={false}>
+              <SparklesIcon size={'1.25rem'} />
+              Discover
+            </TabButton>
+          </ButtonContainer>
+        </LinkContainer>
+        {inscriptions.map((inscription, i, inscriptions) => (
+          <React.Fragment key={i}>
+            <ContentContainer id={i+1}>
+              <InfoContainer>
+                <TitleContainer>
+                  <UnstyledLink to={'/inscription/' + inscription.inscriptions[0].number}>
+                    <NumberText>#{addCommas(inscription.inscriptions[0].number)}</NumberText>
+                  </UnstyledLink>
+                  {inscription.inscriptions[0].spaced_rune && (
+                    <Tag>
+                      <RuneIcon size={'1rem'} color={theme.colors.background.purp} />
+                      <TagSpan color={theme.colors.background.purp}>
                         {inscription.inscriptions[0].spaced_rune}
-                      </RuneTag>
-                    )}
-                    {inscription.inscriptions[0].collection_name && (
-                      <UnstyledLink to={'/collection/' + inscription.inscriptions[0].collection_symbol}>
-                        <CollectionTag>
-                          <GalleryIcon size={'1rem'} color={'#E34234'} />
+                      </TagSpan>
+                    </Tag>
+                  )}
+                  {inscription.inscriptions[0].collection_name && (
+                    <UnstyledLink to={'/collection/' + inscription.inscriptions[0].collection_symbol}>
+                      <Tag>
+                        <GalleryIcon size={'1rem'} color={theme.colors.background.verm} />
+                        <TagSpan color={theme.colors.background.verm}>
                           {inscription.inscriptions[0].collection_name}
-                        </CollectionTag>
-                      </UnstyledLink>
-                    )}
-                    {inscription.activity.children_count > 0 && (
-                      <UnstyledLink to={'/children/' + inscription.inscriptions[0].id}>
-                        <ParentTag>
-                          <Person2Icon size={'1rem'} color={'#000000'} />
+                        </TagSpan>
+                      </Tag>
+                    </UnstyledLink>
+                  )}
+                  {inscription.activity.children_count > 0 && (
+                    <UnstyledLink to={'/children/' + inscription.inscriptions[0].id}>
+                      <Tag>
+                        <Person2Icon size={'1rem'} color={theme.colors.text.secondary} />
+                        <TagSpan color={theme.colors.text.secondary}>
                           Parent
-                        </ParentTag>
-                      </UnstyledLink>
-                    )}
-                  </TitleContainer>
-                  <DetailsContainer>
-                    <SocialButton empty onClick={() => copyText('https://vermilion.place/inscription/' + inscription.inscriptions[0].number)}>
-                      <LinkIcon size={'1.25rem'} color={'#959595'} />
-                    </SocialButton>
-                  </DetailsContainer>
-                </InfoContainer>
-                <UnstyledLink to={'/inscription/' + inscription.inscriptions[0].number}>
-                  <InscriptionContainer>
-                    {
-                      {
-                        'image/png': <LoadingImage src={`/api/inscription_number/${inscription.inscriptions[0].number}`} />,
-                        'image/jpeg': <LoadingImage src={`/api/inscription_number/${inscription.inscriptions[0].number}`} />,
-                        'image/jpg': <LoadingImage src={`/api/inscription_number/${inscription.inscriptions[0].number}`} />,
-                        'image/webp': <LoadingImage src={`/api/inscription_number/${inscription.inscriptions[0].number}`} />,
-                        'image/gif': <LoadingImage src={`/api/inscription_number/${inscription.inscriptions[0].number}`} />,
-                        'image/avif': <LoadingImage src={`/api/inscription_number/${inscription.inscriptions[0].number}`} />,
-                        'image/svg+xml': <LoadingImage src={`/api/inscription_number/${inscription.inscriptions[0].number}`} scrolling='no' sandbox='allow-scripts allow-same-origin'/>,
-                        'text/html;charset=utf-8': <LoadingHtml><StyledIframe src={"/content/"+ inscription.inscriptions[0].id}></StyledIframe></LoadingHtml>,
-                        'text/html': <LoadingHtml><StyledIframe src={"/content/"+ inscription.inscriptions[0].id}></StyledIframe></LoadingHtml>,      
-                        'loading': <TextContainer>loading...</TextContainer>
-                      }[inscription.inscriptions[0].content_type]
-                    }
-                  </InscriptionContainer>
-                </UnstyledLink>
-                <ActionContainer>
-                  <SocialContainer>
-                    <SocialButton>
-                      <BoostIcon size={'1.25rem'} color={'#000000'}></BoostIcon>
-                      <SocialText>{inscription.activity.delegate_count}</SocialText>
-                    </SocialButton>
-                    <SocialButton>
-                      <CommentIcon size={'1.25rem'} color={'#000000'}></CommentIcon>
-                      <SocialText>0</SocialText>
-                    </SocialButton>
-                  </SocialContainer>
-                  <BoostContainer>
-                    <BoostButton>
-                      <BoostIcon size={'1.25rem'} color={'#FFFFFF'}></BoostIcon>
-                      Boost
-                    </BoostButton>
-                  </BoostContainer>
-                </ActionContainer>
-              </ContentContainer>
-              {i < moreInscriptions.length - 1 && <Divider />}
-            </React.Fragment>
-          ))}
-          
-          <LoadingContainer ref={loadMoreRef}>
-            {isLoading && <Spinner />}
-          </LoadingContainer>
-        </FeedContainer>
+                        </TagSpan>
+                        <TagSpan color={theme.colors.text.tertiary}>{" • " + addCommas(inscription.activity.children_count)}</TagSpan>
+                      </Tag>
+                    </UnstyledLink>
+                  )}
+                </TitleContainer>
+                <DetailsContainer>
+                  <CopyButton onClick={() => handleCopyClick(i, 'https://vermilion.place/inscription/' + inscription.inscriptions[0].number)} copied={copied}>
+                    {copiedRowId === i ? <CheckIcon size={'1.25rem'} color={theme.colors.background.success} /> : <LinkIcon size={'1.25rem'} />}
+                  </CopyButton>
+                </DetailsContainer>
+              </InfoContainer>
+              <UnstyledLink to={'/inscription/' + inscription.inscriptions[0].number}>
+                <InscriptionContainer>
+                  <InscriptionContentWrapper>
+                    <InnerInscriptionContent
+                      contentType={
+                        inscription.inscriptions[0].content_type === 'loading' ? 'loading' : 
+                        inscription.inscriptions[0].content_type.startsWith('image/') ? 'image' : 'html'
+                      }
+                      blobUrl={`/api/inscription_number/${inscription.inscriptions[0].number}`}
+                      number={inscription.inscriptions[0].number}
+                      metadata={{
+                        id: inscription.inscriptions[0].id,
+                        content_type: inscription.inscriptions[0].content_type,
+                        is_recursive: inscription.inscriptions[0].is_recursive
+                      }}
+                      useFeedStyles={true}
+                    />
+                    <ContentOverlay />
+                  </InscriptionContentWrapper>
+                </InscriptionContainer>
+              </UnstyledLink>
+              <ActionContainer>
+                <SocialContainer>
+                  <SocialButton onClick={() => toggleBoostsModal(inscription.inscriptions[0].id, inscription.activity.delegate_count)}>
+                    <ChevronUpDuoIcon size={'1.25rem'} color={theme.colors.text.primary}></ChevronUpDuoIcon>
+                    {addCommas(inscription.activity.delegate_count)}
+                  </SocialButton>
+                  <SocialButton onClick={() => toggleCommentsModal(inscription.inscriptions[0].id, inscription.activity.comment_count)}>
+                    <CommentIcon size={'1.25rem'} color={theme.colors.text.primary}></CommentIcon>
+                    {addCommas(inscription.activity.comment_count)}
+                  </SocialButton>
+                </SocialContainer>
+                <BoostContainer>
+                <BoostButton onClick={() => toggleCheckoutModal(inscription.inscriptions[0])}>
+                  <ChevronUpDuoIcon size={'1.25rem'} color={theme.colors.background.white}></ChevronUpDuoIcon>
+                    Boost
+                  </BoostButton>
+                </BoostContainer>
+              </ActionContainer>
+              {/* <ActionContainer>
+                <SocialContainer>
+                  <SocialButton>
+                    <BoostIcon size={'1.25rem'} color={theme.colors.text.primary}></BoostIcon>
+                    <SocialText>{inscription.activity.delegate_count}</SocialText>
+                  </SocialButton>
+                  <SocialButton>
+                    <CommentIcon size={'1.25rem'} color={theme.colors.text.primary}></CommentIcon>
+                    <SocialText>0</SocialText>
+                  </SocialButton>
+                </SocialContainer>
+                <BoostContainer>
+                  <BoostButton>
+                    <BoostIcon size={'1.25rem'} color={theme.colors.background.white}></BoostIcon>
+                    Boost
+                  </BoostButton>
+                </BoostContainer>
+              </ActionContainer> */}
+            </ContentContainer>
+            {i < inscriptions.length - 1 && <Divider />}  
+          </React.Fragment>
+        ))}
+        <LoadingContainer ref={loadMoreRef}>
+          {isLoading && <Spinner />}
+        </LoadingContainer>
+      </FeedContainer>
 
-        {/* Right sidebar placeholder to maintain layout */}
-        <SidebarPlaceholder />
-
-        {/* Right column */}
-        <SidebarContainer className="right-fixed">
-          <SectionContainer gapSize={'1rem'}>
-            <SectionTitleWrapper>
-              <SectionTitleText>Introducing Boosts</SectionTitleText>
-            </SectionTitleWrapper>
-            <SectionContainer gapSize={'.75rem'}>
-              <SectionText>
-                Boosts let you collect and amplify inscriptions using delegation.
-              </SectionText>
-              <SectionText>
-                A boost is much more than a like—it’s onchain proof of your taste and timing. Each boost helps surface quality content while building connections between creators and collectors.
-              </SectionText>
-            </SectionContainer>
-
-          </SectionContainer>
-          <Divider />
-          <SectionContainer gapSize={'1rem'}>
-            <SectionTitleWrapper>
-              <SectionTitleText>Recent Activity</SectionTitleText>
-              <RefreshButton>
-                <RefreshIcon size={'1rem'} color={'#959595'}></RefreshIcon>
-                Refresh
-              </RefreshButton>
-            </SectionTitleWrapper>
-            <SectionText>
-              <RecentBoosts />
-            </SectionText>
-          </SectionContainer>
-          <Divider />
-          <SectionContainer gapSize={'1rem'}>
-            <SectionTitleWrapper>
-              <SectionTitleText>Most Active Users</SectionTitleText>
-              <SectionDetailText>Resets in 3d 22h 19m 36s</SectionDetailText>
-            </SectionTitleWrapper>
-            <SectionContainer gapSize={'.75rem'}>
-              {activeWallets.map((inscription, i, inscriptions) => (
-                <ActiveContainer key={i}>
-                  <ElementWrapper gapSize={'.75rem'}>
-                    <RankWrapper>#{i + 1}</RankWrapper>
-                    <ElementWrapper gapSize={'.375rem'}>
-                      <PlaceholderImage />
-                      <UnstyledLink to={'/address/' + inscription.address}>
-                        <AddressText>{formatAddress(inscription.address)}</AddressText>
-                      </UnstyledLink>
-                    </ElementWrapper>
-                  </ElementWrapper>
-                  <SectionDetailText>{inscription.count} boosts</SectionDetailText>
-                </ActiveContainer>
-              ))}
-            </SectionContainer>
-          </SectionContainer>
-          <Divider />
-          <SectionContainer>
-            <UnstyledLink to={'https://x.com/vrmlndotplace'} target='_blank'>
-              <LinkText>
-                X (Twitter)
-              </LinkText>
-            </UnstyledLink>
-          </SectionContainer>
-        </SidebarContainer>
-      </ContentWrapper>
-    </MainContainer>
-  );
-};
-
-// Image component that handles loading state
-const LoadingImage = ({ src, ...props }) => {
-  const [isLoading, setIsLoading] = useState(true);
-
-  return (
-    <>
-      {isLoading && <SkeletonImage />}
-      <ImageContainer 
-        src={src} 
-        onLoad={() => setIsLoading(false)}
-        style={{ display: isLoading ? 'none' : 'block' }}
-        {...props}
+      {/* Boosts Modal */}
+      <BoostsModal
+        boostsList={boostsList}
+        onClose={() => toggleBoostsModal(null)}
+        fetchMoreBoosts={() => fetchBoosts(selectedBoostId)}
+        hasMoreBoosts={hasMoreBoosts}
+        isBoostsLoading={isBoostsLoading}
+        isBoostsModalOpen={isBoostsModalOpen}
       />
-    </>
-  );
-};
 
-const LoadingHtml = ({ children, ...props }) => {
-  const [isLoading, setIsLoading] = useState(true);
-  const iframeRef = useRef(null);
+      {/* Comments Modal */}
+      <CommentsModal
+        commentsList={commentsList}
+        onClose={() => toggleCommentsModal(null)}
+        isCommentsModalOpen={isCommentsModalOpen}
+      />
 
-  useEffect(() => {
-    const iframe = iframeRef.current;
-    if (!iframe || isLoading) return;
-
-    const handleIframeLoad = () => {
-      try {
-        const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
-        
-        const style = iframeDoc.createElement('style');
-        style.textContent = `
-          html, body {
-            width: 100% !important;
-            height: 100% !important;
-            margin: 0 !important;
-            padding: 0 !important;
-            overflow: hidden !important;
-            pointer-events: none !important;
-          }
-          body * {
-            max-width: 100% !important;
-            transform-origin: top left !important;
-            pointer-events: none !important;
-          }
-        `;
-        iframeDoc.head.appendChild(style);
-
-        const scaleContent = () => {
-          const content = iframeDoc.body;
-          if (!content) return;
-
-          const containerWidth = iframe.clientWidth;
-          const containerHeight = iframe.clientHeight;
-          const contentWidth = content.scrollWidth;
-          const contentHeight = content.scrollHeight;
-
-          const scaleX = containerWidth / contentWidth;
-          const scaleY = containerHeight / contentHeight;
-          const scale = Math.min(scaleX, scaleY, 1);
-
-          content.style.transform = `scale(${scale})`;
-        };
-
-        scaleContent();
-
-        const resizeObserver = new ResizeObserver(scaleContent);
-        resizeObserver.observe(iframe);
-
-        return () => resizeObserver.disconnect();
-      } catch (err) {
-        console.warn('Error scaling iframe content:', err);
-      }
-    };
-
-    iframe.addEventListener('load', handleIframeLoad);
-    return () => iframe.removeEventListener('load', handleIframeLoad);
-  }, [isLoading]);
-
-  return (
-    <>
-      {isLoading && <SkeletonImage />}
-      <HtmlContainer style={{ display: isLoading ? 'none' : 'block' }}>
-        <HtmlWrapper>
-          {React.cloneElement(children, {
-            ref: iframeRef,
-            onLoad: () => setIsLoading(false),
-            scrolling: 'no',
-            sandbox: 'allow-scripts allow-same-origin',
-            style: { pointerEvents: 'none' }
-          })}
-        </HtmlWrapper>
-      </HtmlContainer>
-    </>
+      {/* Checkout Modal */}
+      <CheckoutModal
+        onClose={() => toggleCheckoutModal(null)}
+        isCheckoutModalOpen={isCheckoutModalOpen}
+        delegateData={selectedDelegateData || ""}
+      />
+    </MainContainer>
   );
 };
 
@@ -381,63 +358,73 @@ const MainContainer = styled.div`
   padding: 0;
   margin: 0;
   display: flex;
+  flex-direction: column;
+  align-items: center;
 `;
 
-const ContentWrapper = styled.div`
-  width: 100%;
-  max-width: calc(100% - 3rem);
-  padding: 1.5rem 1.5rem 3rem 1.5rem;
-  margin: 0 auto;
+const LinkContainer = styled.div`
   display: flex;
   flex-direction: row;
-  justify-content: space-between;
-  gap: 2rem;
-  position: relative;
-
-  @media (max-width: 1024px) {
-    max-width: calc(100% - 3rem);
-    padding: 1.5rem 1.5rem 3rem 1.5rem;
-    justify-content: center;
-  }
+  align-items: center;
+  gap: .75rem;
+  padding-bottom: 1rem;
 `;
 
-// This maintains the space for the fixed sidebar
-const SidebarPlaceholder = styled.div`
-  width: 20rem;
-  flex-shrink: 0;
-  display: none;
-
-  @media (min-width: 1024px) {
-    display: block;
-  }
+const PageText = styled.p`
+  font-family: ${theme.typography.fontFamilies.bold};
+  font-size: 1.5rem;
+  line-height: 2rem;
+  color: ${theme.colors.text.primary};
+  margin: 0;
 `;
 
-const SidebarContainer = styled.div`
-  width: 20rem;
-  flex-shrink: 0;
-  display: none;
+const VerticalDivider = styled.div`
+  height: 2rem;
+  border-right: 1px solid ${theme.colors.border};
+`;
 
-  @media (min-width: 1024px) {
-    display: flex;
-    flex-direction: column;
-    gap: 2rem;
+const ButtonContainer = styled.div`
+  display: flex;
+  flex-direction: row;
+  gap: .25rem;
+`;
 
-    &.right-fixed {
-      position: fixed;
-      top: 6.5rem; /* Adjust based on your header height */
-      right: max(calc((100% - (100% - 3rem)) / 2 + 1.5rem), 1.5rem);
-      height: calc(100vh - 6.5rem); /* Adjust based on your header height */
-      overflow-y: auto;
-      
-      /* Hide scrollbar for Chrome, Safari and Opera */
-      &::-webkit-scrollbar {
-        display: none;
-      }
-      
-      /* Hide scrollbar for IE, Edge and Firefox */
-      -ms-overflow-style: none;
-      scrollbar-width: none;
+const TabButton = styled(Link)`
+  border: none;
+  padding: 0 .75rem;
+  height: 2rem;
+  border-radius: 1rem;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: .25rem;
+  cursor: pointer;
+  font-family: ${theme.typography.fontFamilies.medium};
+  font-size: 1rem;
+  line-height: 1.25rem;
+  color: ${props => props.isActive ? theme.colors.background.verm : theme.colors.text.tertiary}; 
+  background-color: ${props => props.isActive ? theme.colors.background.primary : theme.colors.background.white}; 
+  transition: all 200ms ease;
+  transform-origin: center center;
+  text-decoration: none;
+
+  &:hover {
+    color: ${theme.colors.background.verm};
+    background-color: ${theme.colors.background.primary};
+
+    svg {
+      fill: ${theme.colors.background.verm};
     }
+  }
+
+  &:active {
+    transform: scale(0.96);
+  }
+
+  svg {
+    fill: ${props => props.isActive ? theme.colors.background.verm : theme.colors.text.tertiary};
+    transition: fill 200ms ease;
   }
 `;
 
@@ -446,12 +433,12 @@ const FeedContainer = styled.div`
   flex-direction: column;
   width: 100%;
   max-width: 32rem;
-  // padding: 1.5rem 1rem 3rem 1rem;
+  padding: 1.5rem 1rem 3rem 1rem;
   gap: 1.5rem;
 
-  // @media (max-width: 560px) {
-  //   max-width: calc(100% - 2rem);
-  // }
+  @media (max-width: 544px) {
+    max-width: calc(100% - 2rem);
+  }
 `;
 
 const LoadingContainer = styled.div`
@@ -463,9 +450,9 @@ const LoadingContainer = styled.div`
 `;
 
 const LoadingText = styled.p`
-  font-family: Relative Trial Medium;
+  font-family: ${theme.typography.fontFamilies.medium};
   font-size: 1rem;
-  color: #959595;
+  color: ${theme.colors.text.secondary};
   margin: 0;
 `;
 
@@ -476,21 +463,45 @@ const ContentContainer = styled.div`
   gap: .5rem;
   justify-content: center;
   position: relative;
-  background-color: #FFF;
+  background-color: ${theme.colors.background.white};
   // padding-bottom: .75rem;
 `;
 
 const InscriptionContainer = styled.div`
-  display: flex;
-  align-items: center;
-  justify-content: center;  
+  // display: flex;
+  // align-items: center;
+  // justify-content: center;  
   width: 32rem;
   max-width: 32rem;
+  height: auto;
+  padding: 0;
+  margin: 0;
+  line-height: 0;
+  font-size: 0;
+  border-radius: .5rem;
+  box-sizing: border-box;
+  border: .0625rem solid ${theme.colors.border};
+  overflow: hidden;
 
-  @media (max-width: 560px) {
+  @media (max-width: 544px) {
     width: 100%;
     max-width: 100%;
   }
+`;
+
+const InscriptionContentWrapper = styled.div`
+  position: relative;
+`;
+
+const ContentOverlay = styled.div`
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 100%;
+  width: 100%;
+  cursor: pointer;
 `;
 
 const ImageContainer = styled.img`
@@ -500,7 +511,7 @@ const ImageContainer = styled.img`
   image-rendering: pixelated;
   cursor: pointer;
   border-radius: .5rem;
-  border: .0625rem solid #E9E9E9;
+  border: .0625rem solid ${theme.colors.border};
 
   @media (max-width: 560px) {
     width: 100%;
@@ -514,7 +525,7 @@ const HtmlContainer = styled.div`
   max-width: 32rem;
   cursor: pointer;
   border-radius: .5rem;
-  border: .0625rem solid #E9E9E9;
+  border: .0625rem solid ${theme.colors.border};
   overflow: hidden;
 
   &:after { /* Add overlay as a pseudo-element */
@@ -554,7 +565,7 @@ const TextContainer = styled.div`
   max-width: 32rem;
   padding: .75rem 1rem;
   border-radius: .5rem;
-  border: .0625rem solid #E9E9E9;
+  border: .0625rem solid ${theme.colors.border};
   overflow: overlay;
 
   @media (max-width: 560px) {
@@ -572,26 +583,30 @@ const StyledIframe = styled.iframe`
   //aspect-ratio: 1/1;
 `;
 
-const CollectionTag = styled.div`
-  display: flex;
+const Tag = styled.div`
+  display: inline-flex;
   flex-direction: row;
   align-items: center;
+  justify-content: center;
   gap: .25rem;
   padding: .125rem .375rem;
-  border-radius: .5rem;
-  font-family: Relative Trial Medium;
+  border-radius: .25rem;
+  font-family: ${theme.typography.fontFamilies.medium};
   font-size: .875rem;
+  line-height: 1.125rem;
   margin: 0;
-  color: #E34234;
-  background-color: #FCECEB;
+  background-color: ${theme.colors.background.primary};
   cursor: pointer;
-  transition: 
-    background-color 350ms ease,
-    transform 150ms ease;
+  transition: all 200ms ease;
   transform-origin: center center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+  width: fit-content;
 
   &:hover {
-    background-color: #FBE3E1;
+    background-color: ${theme.colors.background.secondary};
   }
 
   &:active {
@@ -599,58 +614,18 @@ const CollectionTag = styled.div`
   }
 `;
 
-const ParentTag = styled.div`
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  gap: .25rem;
-  padding: .125rem .375rem;
-  border-radius: .5rem;
-  font-family: Relative Trial Medium;
+const TagSpan = styled.span`
+  font-family: ${theme.typography.fontFamilies.medium};
   font-size: .875rem;
+  line-height: 1.125rem;
+  color: ${props => props.color};
   margin: 0;
-  color: #000000;
-  background-color: #F5F5F5;
-  cursor: pointer;
-  transition: 
-    background-color 350ms ease,
-    transform 150ms ease;
-  transform-origin: center center;
-
-  &:hover {
-    background-color: #E9E9E9;
-  }
-
-  &:active {
-    transform: scale(0.96);
-  }
-`;
-
-const RuneTag = styled.div`
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  gap: .25rem;
-  padding: .125rem .375rem;
-  border-radius: .5rem;
-  font-family: Relative Trial Medium;
-  font-size: .875rem;
-  margin: 0;
-  color: #D23B75;
-  background-color: #FAEBF1;
-  cursor: pointer;
-  transition: 
-    background-color 350ms ease,
-    transform 150ms ease;
-  transform-origin: center center;
-
-  &:hover {
-    background-color: #F8E2EA;
-  }
-
-  &:active {
-    transform: scale(0.96);
-  }
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+  flex: 0 1 auto; 
+  white-space: nowrap;
+  min-width: 0; 
 `;
 
 const InfoContainer = styled.div`
@@ -679,7 +654,6 @@ const DetailsContainer = styled.div`
   flex-direction: row;
   align-items: center;
   justify-content: flex-end;
-  gap: .5rem;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -687,35 +661,41 @@ const DetailsContainer = styled.div`
 `;
 
 const NumberText = styled.p`
-  font-family: Relative Trial Bold;
+  font-family: ${theme.typography.fontFamilies.medium};
   font-size: 1rem;
+  line-height: 1.5rem;
   margin: 0;
 `;
 
-const SocialButton = styled.button`
-  height: 2.5rem;
-  min-height: 2.5rem;
-  min-width: 2.5rem;
-  border-radius: 1.25rem;
-  font-family: Relative Trial Medium;
-  font-size: 1rem;
-  color: #000000;
+const CopyButton = styled.button`
   border: none;
-  padding: ${props => props.empty ? '.375rem' : '.375rem .75rem'};
   margin: 0;
+  padding: 0;
+  height: 2rem;
+  width: 2rem;
+  min-height: 2rem;
+  min-width: 2rem;
   display: flex;
+  flex-direction: row;
   align-items: center;
   justify-content: center;
-  gap: .375rem;
+  gap: .5rem;
+  background-color: ${theme.colors.background.white};
+  border-radius: 1rem;
   cursor: pointer;
-  background-color: #FFFFFF;
-  transition: 
-    background-color 350ms ease,
-    transform 150ms ease;
+  transition: all 200ms ease;
   transform-origin: center center;
 
+  svg {
+    fill: ${theme.colors.text.tertiary};
+    transition: all 200ms ease;
+  }
+
   &:hover {
-    background-color: #F5F5F5;
+    background-color: ${theme.colors.background.primary};
+    svg {
+      fill: ${theme.colors.text.primary};
+    }
   }
 
   &:active {
@@ -737,8 +717,37 @@ const SocialContainer = styled.div`
   gap: .5rem;
 `;
 
+const SocialButton = styled.button`
+  height: 2rem;
+  min-height: 2rem;
+  min-width: 2rem;
+  border-radius: 1rem;
+  font-family: ${theme.typography.fontFamilies.medium};
+  font-size: 1rem;
+  color: ${theme.colors.text.primary};
+  border: none;
+  padding: 0.375rem 0.75rem;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: .375rem;
+  cursor: pointer;
+  background-color: ${theme.colors.background.white};
+  transition: all 200ms ease;
+  transform-origin: center center;
+
+  &:hover {
+    background-color: ${theme.colors.background.primary};
+  }
+
+  &:active {
+    transform: scale(0.96);
+  }
+`;
+
 const SocialText = styled.p`
-  font-family: Relative Trial Bold;
+  font-family: ${theme.typography.fontFamilies.medium};
   font-size: 1rem;
   margin: 0;
 `;
@@ -751,10 +760,11 @@ const BoostContainer = styled.div`
 
 const BoostButton = styled.button`
   height: 2.5rem;
+  min-height: 2.5rem;
   border-radius: 1.25rem;
-  font-family: Relative Trial Bold;
+  font-family: ${theme.typography.fontFamilies.medium};
   font-size: 1rem;
-  color: #FFFFFF;
+  color: ${theme.colors.background.white};
   border: none;
   padding: 1rem;
   margin: 0;
@@ -763,24 +773,22 @@ const BoostButton = styled.button`
   justify-content: center;
   gap: .5rem;
   cursor: pointer;
-  background-color: #000000;
-  transition: 
-    background-color 350ms ease,
-    transform 150ms ease;
+  background-color: ${theme.colors.background.dark};
+  transition: all 200ms ease;
   transform-origin: center center;
 
   &:hover {
-    background-color: #000000;
+    opacity: 0.75;
   }
 
   &:active {
-    transform: scale(0.96);
+    transform: scale(0.98);
   }
 `;
 
 const Divider = styled.div`
   width: 100%;
-  border-bottom: 1px solid #E9E9E9;
+  border-bottom: 1px solid ${theme.colors.border};
 `;
 
 const SectionContainer = styled.div`
@@ -798,31 +806,31 @@ const SectionTitleWrapper = styled.div`
 `;
 
 const SectionTitleText = styled.p`
-  font-family: Relative Trial Bold;
+  font-family: ${theme.typography.fontFamilies.medium};
   font-size: 1rem;
   margin: 0;
 `;
 
 const SectionDetailText = styled.p`
-  font-family: Relative Trial Medium;
+  font-family: ${theme.typography.fontFamilies.medium};
   font-size: .875rem;
-  color: #959595;
+  color: ${theme.colors.text.secondary};
   margin: 0;
 `;
 
 const SectionText = styled.p`
-  font-family: Relative Trial Medium;
+  font-family: ${theme.typography.fontFamilies.medium};
   font-size: .875rem;
-  color: #959595;
+  color: ${theme.colors.text.secondary};
   margin: 0;
 `;
 
 const RefreshButton = styled.button`
   height: 1.375rem;
   border-radius: .5rem;
-  font-family: Relative Trial Medium;
+  font-family: ${theme.typography.fontFamilies.medium};
   font-size: .875rem;
-  color: #959595;
+  color: ${theme.colors.text.secondary};
   border: none;
   padding: .125rem .375rem;
   margin: 0;
@@ -831,14 +839,12 @@ const RefreshButton = styled.button`
   justify-content: center;
   gap: .25rem;
   cursor: pointer;
-  background-color: #FFFFFF;
-  transition: 
-    background-color 350ms ease,
-    transform 150ms ease;
+  background-color: ${theme.colors.background.white};
+  transition: all 200ms ease;
   transform-origin: center center;
 
   &:hover {
-    background-color: #F5F5F5;
+    background-color: ${theme.colors.background.primary};
   }
 
   &:active {
@@ -862,7 +868,7 @@ const ElementWrapper = styled.div`
 
 const RankWrapper = styled.div`
   border-radius: 1rem;
-  font-family: Relative Trial Bold;
+  font-family: ${theme.typography.fontFamilies.medium};
   font-size: .875rem;
   padding: .125rem 0;
   width: 2rem;
@@ -880,19 +886,18 @@ const PlaceholderImage = styled.div`
 `;
 
 const AddressText = styled.p`
-  font-family: Relative Trial Bold;
+  font-family: ${theme.typography.fontFamilies.medium};
   font-size: .875rem;
   margin: 0;
 `;
 
 const LinkText = styled.p`
-  font-family: Relative Trial Medium;
+  font-family: ${theme.typography.fontFamilies.medium};
   font-size: .875rem;
-  color: #959595;
+  color: ${theme.colors.text.secondary};
   margin: 0;
 
-  transition: 
-    color 350ms ease;
+  transition: all 200ms ease;
   transform-origin: center center;
 
   &:hover {
@@ -903,6 +908,8 @@ const LinkText = styled.p`
 const UnstyledLink = styled(Link)`
   color: unset;
   text-decoration: unset;
+  display: inline-block;
+  max-width: 100%;
 `;
 
 export default Trending;

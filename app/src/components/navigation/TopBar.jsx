@@ -1,11 +1,9 @@
 import styled from 'styled-components';
+import { theme } from '../../styles/theme';
 import SearchBar from './SearchBar';
 import NavigationLinks from './NavigationLinks';
 import UserActions from './UserActions';
-import PlaceholderImage from '../../assets/placeholder-brand.png'
-import { Logo } from '../common/Logo';
-import { Logo2 } from '../common/Logo2';
-import theme from '../../styles/theme';
+import Brand from './Brand';
 
 const TopBarContainer = styled.header`
   width: calc(100% - 6rem);
@@ -16,66 +14,32 @@ const TopBarContainer = styled.header`
   position: sticky;
   top: 0;
   gap: 1rem;
-  background-color: ${({theme}) => theme.colors.background.white};
+  background-color: ${theme.colors.background.white};
+  transition: all 200ms ease;
   z-index: 50;
 
-  // @media (max-width: 630px) {
-  //   padding: 1rem;
-  // }
+  @media (max-width: 864px) {
+    width: calc(100% - 2rem);
+    padding: 1rem;
+  }
+
+  @media (max-width: 630px) {
+    gap: 0.5rem;
+    padding: 0.75rem 1rem;
+  }
 `;
 
 const LeftSection = styled.div`
   display: flex;
   align-items: center;
-  gap: 2rem;
-`;
-
-const BrandContainer = styled.div`
-  display: flex;
-  align-items: center;
-  height: 2.5rem;
-  gap: .75rem;
-  cursor: pointer;
-
-  .variable-color-inside {
-    transition: fill 200ms ease-in-out;
-  }
-  
-  &:hover {
-    .variable-color-inside {
-      fill: ${({theme}) => theme.colors.background.aqua};
-    }
-  }
-
-  .variable-color-outside {
-    transition: fill 200ms ease-in-out;
-  }
-  
-  &:hover {
-    .variable-color-outside {
-      fill: ${({theme}) => theme.colors.background.aquaLight};
-    }
-  }
-`;
-
-const BrandText = styled.span`
-  font-family: relative-bold-pro;
-  font-size: 1.375rem;
-  letter-spacing: -.075rem;
-  color: ${({theme}) => `${theme.colors.primary}`};
-  cursor: pointer;
-  margin: 0;
+  gap: 1.5rem;
 `;
 
 const TopBar = () => {
   return (
     <TopBarContainer>
       <LeftSection>
-        <BrandContainer>
-          {/* <Logo size={'2rem'} color={theme.colors.background.secondary} /> */}
-          <Logo2 size={'2.5rem'} colorInside={theme.colors.border} colorOutside={theme.colors.background.primary} />
-          <BrandText>Vermilion</BrandText>
-        </BrandContainer>
+        <Brand />
         <NavigationLinks />
       </LeftSection>
       <SearchBar />

@@ -1,20 +1,25 @@
-import React, { useEffect, useState } from 'react'
-import styled from 'styled-components'
-import { BrowserRouter, Routes, Route, Navigate, useParams } from 'react-router-dom'
-import { Page } from '../components/layout/Page'
-import TopBar from '../components/navigation/TopBar'
-import ExploreBlocks from '../pages/ExploreBlocks'
-import ExploreCollections from '../pages/ExploreCollections'
-import ExploreInscriptions from '../pages/ExploreInscriptions'
-import Block from '../pages/Block'
-import Collection from '../pages/Collection'
-import Inscription from '../pages/Inscription'
-import Discover from '../pages/Discover'
-import Trending from '../pages/Trending'
-import Search from '../pages/Search'
-import NotFound from '../pages/NotFound'
-import Edition from '../pages/Edition'
-
+import React, { useEffect, useState } from 'react';
+import styled from 'styled-components';
+import { BrowserRouter, Routes, Route, Navigate, useParams } from 'react-router-dom';
+import { Page } from '../components/layout/Page';
+import TopBar from '../components/navigation/TopBar';
+import ExploreBlocks from '../pages/ExploreBlocks';
+import ExploreCollections from '../pages/ExploreCollections';
+import ExploreInscriptions from '../pages/ExploreInscriptions';
+import Address from '../pages/Address';
+import Block from '../pages/Block';
+import Sat from '../pages/Sat';
+import SatBlock from '../pages/SatBlock';
+import Collection from '../pages/Collection';
+import Inscription from '../pages/Inscription';
+import Discover from '../pages/Discover';
+import Trending from '../pages/Trending';
+import Search from '../pages/Search';
+import NotFound from '../pages/NotFound';
+import Edition from '../pages/Edition';
+import Children from '../pages/Children';
+import Attributions from '../pages/Attributions';
+import History from '../pages/History';
 
 import { addCommas, formatAddress } from '../utils/format';
 
@@ -60,6 +65,21 @@ const CollectionWithDynamicTitle = () => {
   return <Collection />
 }
 
+// New component for Children
+const ChildrenWithDynamicTitle = () => {
+  const [parentNumbers, setParentNumbers] = useState([]);
+  const { number } = useParams();
+
+  useDocumentTitle(() => {
+    if (parentNumbers.length > 0) {
+      return `Children of ${parentNumbers.map(num => addCommas(num)).join(' • ')}`;
+    }
+    return `Children of ${addCommas(number)}`;
+  });
+
+  return <Children setParentNumbers={setParentNumbers} />;
+};
+
 const PageWrapper = styled(Page)`
   display: flex;
   flex-direction: column;
@@ -74,18 +94,44 @@ const Navigation = () => {
       <PageWrapper>
         <TopBar />
         <Routes>
-          <Route path="/" element={<TitledComponent title="Inscriptions" Component={ExploreInscriptions} />} />
+          <Route path="/" element={<TitledComponent title="Trending" Component={Trending} />} />
           <Route path="/explore/inscriptions" element={<TitledComponent title="Inscriptions" Component={ExploreInscriptions} />} />
           <Route path="/explore/blocks" element={<TitledComponent title="Blocks" Component={ExploreBlocks} />} />
           <Route path="/explore/collections" element={<TitledComponent title="Collections" Component={ExploreCollections} />} />
 
-          
+          <Route 
+            path="/address/:address" 
+            element={
+              <TitledComponent 
+                title={(params) => `Address ${formatAddress(params.address)}`} 
+                Component={Address} 
+              />
+            } 
+          />
           <Route 
             path="/block/:number" 
             element={
               <TitledComponent 
                 title={(params) => `Block ${addCommas(params.number)}`} 
                 Component={Block} 
+              />
+            } 
+          />
+          <Route 
+            path="/sat/:sat" 
+            element={
+              <TitledComponent 
+                title={(params) => `Sat ${addCommas(params.sat)}`}  
+                Component={Sat} 
+              />
+            } 
+          />
+          <Route 
+            path="/sat_block/:number" 
+            element={
+              <TitledComponent 
+                title={(params) => `Sat Creation Block ${addCommas(params.number)}`} 
+                Component={SatBlock} 
               />
             } 
           />
@@ -108,18 +154,27 @@ const Navigation = () => {
             }
           />
           <Route 
-            path="/collection/:symbol" 
+            path="/children/:number" 
+            element={<ChildrenWithDynamicTitle />}
+          />
+          <Route 
+            path="/attributions/:number" 
             element={
               <TitledComponent 
-                title={(params) => `${params.symbol}`}
-                Component={Collection} 
+                title={(params) => `Attributions of ${addCommas(params.number)}`} 
+                Component={Attributions} 
               />
-            } 
+            }
+          />
+          <Route 
+            path="/collection/:symbol" 
+            element={<CollectionWithDynamicTitle />}
           />
           <Route path="/discover" element={<TitledComponent title="Discover" Component={Discover} />} />
-          <Route path="/trending" element={<TitledComponent title="Trending" Component={Trending} />} />
+          {/* <Route path="/trending" element={<TitledComponent title="Trending" Component={Trending} />} /> */}
           <Route path="/search" element={<TitledComponent title="Search" Component={Search} />} />
-          <Route path="/search/:query" element={<TitledComponent title="Search" Component={Search} />} />          
+          <Route path="/search/:query" element={<TitledComponent title="Search" Component={Search} />} />   
+          <Route path="/history" element={<TitledComponent title="Order History" Component={History} />} />       
 
           {/* Add 404 route */}
           <Route path="*" element={<TitledComponent title="404 - Page Not Found" Component={NotFound} />} />

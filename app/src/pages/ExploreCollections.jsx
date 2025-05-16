@@ -1,22 +1,23 @@
 import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
-import ReactGA from 'react-ga';
+const ReactGA = require('react-ga4').default;
 import CollectionsTable from '../components/CollectionsTable';
 import OnChainCollectionsTable from '../components/OnChainCollectionsTable';
-import { InfoCircleIcon } from '../components/common/Icon';
+import { FileUploadIcon, InfoCircleIcon, LockIcon } from '../components/common/Icon';
 import theme from '../styles/theme';
 
 const ExploreCollections = () => {
   const [baseApi, setBaseApi] = useState(null); 
-  const [numberVisibility, setNumberVisibility] = useState(true);
-  const [filterVisibility, setFilterVisibility] = useState(false);
   const [selectedSortOption, setSelectedSortOption] = useState('newest');
   const [selectedFilterOptions, setSelectedFilterOptions] = useState({"Content Type": ["image"], "Satributes": [], "Charms":[]});
   const [activeTab, setActiveTab] = useState('Offchain');
 
   // record event in GA
   useEffect(() => {
-    ReactGA.pageview(window.location.pathname)
+    ReactGA.send({
+      hitType: "pageview",
+      page: location.pathname + location.search
+    });
   }, [])
 
   //Get inscriptions endpoint
@@ -35,30 +36,6 @@ const ExploreCollections = () => {
     setBaseApi(query_string);
   },[selectedSortOption, selectedFilterOptions]);
 
-  //Get collections endpoint
-
-
-  // function to toggle visibility of inscription numbers
-  const toggleNumberVisibility = () => {
-    setNumberVisibility(!numberVisibility);
-  };
-
-  const toggleFilterVisibility = () => {
-    setFilterVisibility(!filterVisibility);
-  };
-  
-  //inscription handlers
-  const handleSortOptionChange = (option) => {
-    setSelectedSortOption(option);
-    // Perform any necessary actions with the selected option
-    // console.log('Selected inscription sort option:', option);
-  };
-
-  const handleFilterOptionsChange = (filterOptions) => {
-    setSelectedFilterOptions(filterOptions);
-    // console.log('Selected filter option:', filterOptions);
-  };
-
     // function to update active tab
     const handleTabClick = (tabName) => {
       setActiveTab(tabName);
@@ -66,29 +43,51 @@ const ExploreCollections = () => {
 
   return (
     <MainContainer>
-      <RowContainer style={{justifyContent: 'space-between'}}>
+      <LinkContainer>
         <PageText>Collections</PageText>
+        <VerticalDivider />
         <ButtonContainer>
           <TabButton 
             onClick={() => handleTabClick('Offchain')}
             isActive={activeTab === 'Offchain'}
-            >
+          >
+            <FileUploadIcon size={'1.25rem'} />
             Offchain
           </TabButton>
           <TabButton 
             onClick={() => handleTabClick('Onchain')}
             isActive={activeTab === 'Onchain'}
-            >
+          >
+            <LockIcon size={'1.25rem'} />
             Onchain
           </TabButton>
         </ButtonContainer>
-      </RowContainer>
+      </LinkContainer>
+      {/* <RowContainer style={{justifyContent: 'space-between'}}>
+        <PageText>Collections</PageText>
+        <ButtonContainer>
+          <TabButton 
+            onClick={() => handleTabClick('Offchain')}
+            isActive={activeTab === 'Offchain'}
+          >
+            <FileUploadIcon size={'1.25rem'} color={activeTab === 'Offchain' ? theme.colors.background.verm : theme.colors.text.tertiary} />
+            Offchain
+          </TabButton>
+          <TabButton 
+            onClick={() => handleTabClick('Onchain')}
+            isActive={activeTab === 'Onchain'}
+          >
+            <LockIcon size={'1.25rem'} color={activeTab === 'Onchain' ? theme.colors.background.verm : theme.colors.text.tertiary} />
+            Onchain
+          </TabButton>
+        </ButtonContainer>
+      </RowContainer> */}
       <Divider />
       {activeTab === 'Offchain' && (
         <ExploreContainer>
           <NoteContainer>
             <IconWrapper>
-              <InfoCircleIcon size={'1rem'} color={theme.colors.text.secondary} />
+              <InfoCircleIcon size={'1.25rem'} color={theme.colors.text.secondary} />
             </IconWrapper>
             <NoteText>
               Collections that use JSON-based provenance, which is centrally controlled and offchain. This table includes both offchain collections and onchain collections as listed on marketplaces.
@@ -101,7 +100,7 @@ const ExploreCollections = () => {
         <ExploreContainer>
           <NoteContainer>
             <IconWrapper>
-              <InfoCircleIcon size={'1rem'} color={theme.colors.text.secondary} />
+              <InfoCircleIcon size={'1.25rem'} color={theme.colors.text.secondary} />
             </IconWrapper>            
             <NoteText>
               Collections that use parent-child provenance, the standard way to immutably record a collection on Bitcoin. Collections are considered separate if not all parents are the same.
@@ -110,9 +109,6 @@ const ExploreCollections = () => {
           <OnChainCollectionsTable />
         </ExploreContainer>
       )}
-      {/* <ExploreContainer>
-        <CollectionsTable/>
-      </ExploreContainer> */}
     </MainContainer>    
   )
 }
@@ -125,10 +121,11 @@ const MainContainer = styled.div`
   flex-direction: column;
   align-items: center;
   gap: 1.5rem;
+  transition: all 200ms ease;
 
   @media (max-width: 864px) {
-    width: calc(100% - 3rem);
-    padding: 1.5rem 1.5rem 2.5rem 1.5rem;
+    width: calc(100% - 2rem);
+    padding: 1.5rem 1rem 2.5rem 1rem;
   }
 `;
 
@@ -140,38 +137,35 @@ const RowContainer = styled.div`
   width: 100%;
 `;
 
-const GalleryContainer = styled.div`
+const LinkContainer = styled.div`
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
+  align-items: center;
   width: 100%;
+  gap: .75rem;
+`;
+
+const VerticalDivider = styled.div`
+  height: 2rem;
+  border-right: 1px solid ${theme.colors.border};
 `;
 
 const PageText = styled.p`
-  font-family: relative-bold-pro;
+  font-family: ${theme.typography.fontFamilies.bold};
   font-size: 1.5rem;
+  line-height: 2rem;
   margin: 0;
-`;
-
-const SectionContainer = styled.div`
-  display: flex;
-  flex-direction: row;
-  flex: 1;
-  gap: 1rem;
-  width: 100%;
-  padding-bottom: 1.5rem;
-  border-bottom: 1px #E9E9E9 solid;
-  // overflow: scroll;
 `;
 
 const Divider = styled.div`
   width: 100%;
-  border-bottom: 1px solid #E9E9E9;
+  border-bottom: 1px solid ${theme.colors.border};
 `;
 
 const ButtonContainer = styled.div`
   display: flex;
   flex-direction: row;
-  gap: .5rem;
+  gap: .25rem;
 `;
 
 const TabButton = styled.button`
@@ -183,16 +177,39 @@ const TabButton = styled.button`
   display: flex;
   align-items: center;
   justify-content: center;
+  gap: .25rem;
   cursor: pointer;
-  font-family: relative-medium-pro;
+  font-family: ${theme.typography.fontFamilies.medium};
   font-size: 1rem;
-  color: ${props => props.isActive ? theme.colors.primary : theme.colors.text.tertiary}; 
-  background-color: ${props => props.isActive ? theme.colors.background.vermPale : theme.colors.background.primary}; 
+  line-height: 1.25rem;
+  color: ${props => props.isActive ? theme.colors.background.verm : theme.colors.text.tertiary}; 
+  background-color: ${props => props.isActive ? theme.colors.background.primary : theme.colors.background.white}; 
   transition: all 200ms ease;
   transform-origin: center center;
+  text-decoration: none;
 
   &:hover {
-    color: ${props => props.isActive ? '#E34234' : '#E34234'};
+    color: ${theme.colors.background.verm};
+    background-color: ${theme.colors.background.primary};
+
+    svg {
+      fill: ${theme.colors.background.verm};
+    }
+  }
+
+  &:active {
+    transform: scale(0.96);
+  }
+
+  svg {
+    fill: ${props => props.isActive ? theme.colors.background.verm : theme.colors.text.tertiary};
+    transition: fill 200ms ease;
+  }
+
+  @media (max-width: 416px) {
+    svg {
+      display: none; /* Hides the icons when the screen width is less than 416px */
+    }
   }
 `;
 
@@ -215,14 +232,14 @@ const NoteContainer = styled.div`
 
 const IconWrapper = styled.div`
   flex-shrink: 0; 
-  width: 16px; 
-  height: 16px;
-  margin-top: 1px;
+  width: 1.25rem; 
+  height: 1.25rem;
 `;
 
 const NoteText = styled.p`
-  font-family: relative-medium-pro;
+  font-family: ${theme.typography.fontFamilies.medium};
   font-size: .875rem;
+  line-height: 1.25rem;
   color: ${theme.colors.text.secondary};
   margin: 0;
   padding: 0;

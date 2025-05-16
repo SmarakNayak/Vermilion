@@ -3,7 +3,7 @@
 // Adds commas as thousand separators to a number
 
 export const addCommas = (num) => {
-  if (num === null) return null;
+  if (num == null) return '0';
   return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
 };
 
@@ -12,7 +12,14 @@ export const addCommas = (num) => {
 // Formats an address to show first and last 5 characters
 
 export const formatAddress = (address) => {
-  if (!address) return 'Address unavailable';
+  if (!address || address === 'Failed to convert script to address: script is not a p2pkh, p2sh or witness program') {
+    return 'Unknown';
+  }
+
+  if (address === 'unbound') {
+    return 'Unbound';
+  }
+
   const firstHalf = address.slice(0, 5);
   const secondHalf = address.slice(-5);
   return `${firstHalf}...${secondHalf}`;
@@ -35,6 +42,19 @@ export const formatSatsString = (sats) => {
   let string = btc.toFixed(btc % 1 !== 0 ? 2 : 0) + " BTC";
   return string;
 };
+
+export const formatSatsStringFull = (sats) => {
+  let btc = sats / Math.pow(10, 8);
+  let string = Number(btc.toFixed(8)) + " BTC";
+  return string;
+};
+
+export const formatSatsToDollars = (sats, price) => {
+  let btc = sats / Math.pow(10, 8);
+  let dollars = btc * price;
+  let string = "$" + dollars.toFixed(2); // Note: changed Number to toFixed to ensure dollar value always has two decimal points
+  return string;
+}
 
 // Formats byte sizes into human readable format (KB, MB, GB, TB)
 
@@ -116,4 +136,30 @@ export const shortenDate = (timestamp) => {
     day: 'numeric', 
     year: 'numeric' 
   });
+};
+
+// Formats timestamp into "time ago" format
+// e.g. "5m", "2h", "1d"
+
+export const calcTimeAgo = (timestamp) => {
+  const now = Math.floor(Date.now() / 1000); // Current time in seconds
+  const diff = now - timestamp; // Difference in seconds
+
+  if (diff < 3600) {
+    // Less than 60 minutes
+    const minutes = Math.floor(diff / 60);
+    return `${minutes}m`;
+  } else if (diff < 86400) {
+    // Between 1 and 23 hours
+    const hours = Math.floor(diff / 3600);
+    return `${hours}h`;
+  } else {
+    // 24 hours or more
+    const days = Math.floor(diff / 86400);
+    return `${days}d`;
+  }
+};
+
+export const capitalizeFirstLetter = (string) => {
+  return string.charAt(0).toUpperCase() + string.slice(1);
 };

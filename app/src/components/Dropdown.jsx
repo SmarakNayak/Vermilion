@@ -1,79 +1,12 @@
 // Dropdown.js
 import React, { useEffect, useState, useRef } from 'react';
 import styled from 'styled-components';
-import { ChevronDownIcon } from './common/Icon';
+import { CheckIcon, ChevronDownIcon, SortIcon } from './common/Icon';
+import theme from '../styles/theme';
 
-const DropdownWrapper = styled.div`
-  position: relative;
-  display: inline-block;
-  //z-index: 1;
-`;
-
-const FilterButton = styled.button`
-  height: 3rem;
-  border-radius: 1.5rem;
-  border: none;
-  padding: .5rem 1rem .5rem 1.375rem;
-  margin: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  gap: .5rem;
-  font-family: Relative Trial Medium;
-  font-size: 1rem;
-  color: #000000;
-  background-color: ${props => props.isActive ? '#E9E9E9' : '#F5F5F5'}; 
-  transition: 
-    background-color 350ms ease,
-    transform 150ms ease;
-  transform-origin: center center;
-
-  &:hover {
-    background-color: #E9E9E9;
-  }
-
-  &:active {
-    transform: scale(0.96);
-  }
-`;
-
-const DropdownMenu = styled.ul`
-  position: absolute;
-  top: 100%;
-  right: 0;
-  background-color: white;
-  border: 1px solid #F5F5F5;
-  box-shadow: 0px 1px 6px 0px rgba(0, 0, 0, 0.09);
-  padding: .5rem;
-  list-style-type: none;
-  margin-top: .5rem;
-  // min-width: 200px;
-  border-radius: .5rem;
-  z-index: 1;
-`;
-
-const DropdownItem = styled.li`
-  padding: .5rem 1rem;
-  cursor: pointer;
-  font-family: Relative Trial Medium;
-  font-size: 1rem;
-  color: #000000;
-  border-radius: .5rem;
-  transition: 
-    background-color 350ms ease,
-    transform 150ms ease;
-  transform-origin: center center;
-  text-wrap: nowrap;
-
-  &:hover {
-    background-color: #F5F5F5;
-  }
-`;
-
-const SortbyDropdown = ({ onOptionSelect }) => {
+const SortbyDropdown = ({ onOptionSelect, initialOption, includeRelevance }) => {
   const [isOpen, setIsOpen] = useState(false);
-  const [selectedOption, setSelectedOption] = useState('newest');
+  const [selectedOption, setSelectedOption] = useState(initialOption);
   const wrapperRef = useRef(null); // Create a ref for the dropdown wrapper
 
 
@@ -106,7 +39,7 @@ const SortbyDropdown = ({ onOptionSelect }) => {
     if (isOpen) setIsOpen(false); // Set isOpen to false on outside click
   });
 
-  const options = [
+  let options = [
     'newest',
     'oldest',
     'newest_sat',
@@ -119,7 +52,13 @@ const SortbyDropdown = ({ onOptionSelect }) => {
     'lowest_fee',
   ];
 
+  // Insert relevance option if needed
+  if (includeRelevance) {
+    options = ['most_relevant', ...options];
+  }
+
   const labels = {
+    most_relevant: 'Relevance',
     newest: 'Newest',
     oldest: 'Oldest',
     newest_sat: 'Newest Sat',
@@ -134,18 +73,32 @@ const SortbyDropdown = ({ onOptionSelect }) => {
 
   return (
     <DropdownWrapper ref={wrapperRef}>
-      <FilterButton isActive={isOpen} onClick={handleToggle}>
-        {labels[selectedOption]}
-        <ChevronDownIcon size={'1rem'} color={'#000000'}></ChevronDownIcon>
-      </FilterButton>
+      <DropdownButton isActive={isOpen} onClick={handleToggle}>
+        <LabelText>{labels[selectedOption]}</LabelText>
+        <ChevronIcon size={'1rem'} color={theme.colors.text.primary} />
+        <MobileIcon>
+          <SortIcon size={'1.25rem'} color={theme.colors.text.primary} />
+        </MobileIcon>
+      </DropdownButton>
       {/* <DropdownButton onClick={handleToggle}>
         {selectedOption}
       </DropdownButton> */}
       {isOpen && (
         <DropdownMenu>
           {options.map((option) => (
-            <DropdownItem key={option} onClick={() => handleOptionSelect(option)}>
-              {labels[option]}
+            <DropdownItem 
+              key={option} 
+              onClick={() => handleOptionSelect(option)}
+            >
+              <span>{labels[option]}</span>
+              {selectedOption === option && (
+                <CheckIconWrapper>
+                  <CheckIcon 
+                    size={'1.25rem'} 
+                    color={'currentColor'} 
+                  />
+                </CheckIconWrapper>
+              )}
             </DropdownItem>
           ))}
         </DropdownMenu>
@@ -153,5 +106,110 @@ const SortbyDropdown = ({ onOptionSelect }) => {
     </DropdownWrapper>
   );
 };
+
+const DropdownWrapper = styled.div`
+  position: relative;
+  display: inline-block;
+`;
+
+const DropdownButton = styled.button`
+  height: 2.75rem;
+  border-radius: 1.5rem;
+  border: none;
+  padding: 0 .875rem 0 1.25rem;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  gap: .5rem;
+  font-family: ${theme.typography.fontFamilies.medium};
+  font-size: 1rem;
+  color: ${theme.colors.text.primary};
+  background-color: ${props => props.isActive ? theme.colors.border : theme.colors.background.primary}; 
+  transition: all 200ms ease;
+  transform-origin: center center;
+  white-space: nowrap;  
+  min-width: fit-content;
+
+  @media (max-width: 480px) {
+    padding: 0 .75rem;
+    min-width: auto;
+    aspect-ratio: 1/1;
+  }
+
+  &:hover {
+    background-color: ${theme.colors.border};
+  }
+
+  &:active {
+    transform: scale(0.96);
+  }
+`;
+
+const LabelText = styled.span`
+  @media (max-width: 480px) {
+    display: none;
+  }
+`;
+
+const ChevronIcon = styled(ChevronDownIcon)`
+  @media (max-width: 480px) {
+    display: none;
+  }
+`;
+
+const MobileIcon = styled.div`
+  display: none;
+  
+  @media (max-width: 480px) {
+    display: flex;
+  }
+`;
+
+const DropdownMenu = styled.ul`
+  position: absolute;
+  top: 100%;
+  right: 0;
+  background-color: white;
+  // border: 1px solid ${theme.colors.border};
+  box-shadow: ${theme.shadows.soft};
+  padding: .25rem;
+  list-style-type: none;
+  margin-top: .5rem;
+  border-radius: ${theme.borderRadius.large};
+  z-index: 1;
+`;
+
+const DropdownItem = styled.li`
+  padding: .5rem 2.5rem .5rem .75rem;
+  cursor: pointer;
+  font-family: ${theme.typography.fontFamilies.medium};
+  font-size: 1rem;
+  color: ${theme.colors.text.secondary};
+  border-radius: ${theme.borderRadius.medium};
+  transition: all 200ms ease;
+  transform-origin: center center;
+  text-wrap: nowrap;
+  position: relative;
+  display: flex;
+  // justify-content: space-between;
+  align-items: center;
+
+  min-width: 6rem;
+
+  &:hover {
+    color: ${theme.colors.text.primary};
+    background-color: ${theme.colors.background.primary};
+  }
+`;
+
+const CheckIconWrapper = styled.div`
+  position: absolute;
+  right: .75rem; /* Fixed position from right */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+`;
 
 export default SortbyDropdown;

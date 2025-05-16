@@ -3,8 +3,14 @@ import { useParams, Link, useNavigate } from "react-router-dom";
 import styled from 'styled-components';
 import Gallery from '../components/Gallery';
 import Stack from '../components/Stack';
-import SearchDropdown from '../components/SearchDropdown';
-import { CrossIcon, EyeIcon, GridIcon, SearchIcon, UploadIcon } from '../components/common/Icon';
+import SortbyDropdown from '../components/Dropdown';
+import InfoText from '../components/common/text/InfoText';
+import PageContainer from '../components/layout/PageContainer';
+import { HorizontalDivider } from '../components/grid/Layout';
+import IconButton from '../components/common/buttons/IconButton';
+import Spinner from '../components/Spinner';
+import { DotGridIcon, EraseIcon, EyeIcon, GridIcon, SearchIcon, UploadIcon } from '../components/common/Icon';
+import theme from '../styles/theme';
 
 const Search = () => {
   let { query } = useParams();
@@ -71,7 +77,7 @@ const Search = () => {
   // Adjusted fetchTextSearch to optionally take a searchTerm and use it
   const fetchTextSearch = async (searchTerm = searchInput) => {
     setIsLoading(true); // Start loading
-    const response = await fetch("/search_api/search/" + searchTerm + "?n=50");
+    const response = await fetch("/search_api/search/" + searchTerm + "?n=48");
     let json = await response.json();
     setInscriptionList(json);
     setIsLoading(false); // End loading
@@ -109,7 +115,7 @@ const Search = () => {
       method: 'POST',
       body: file
     };
-    const response = await fetch('/search_api/search_by_image?n=50', requestOptions)
+    const response = await fetch('/search_api/search_by_image?n=48', requestOptions)
     if (response.status != 200) {
       setIsError(true);
       setErrorMsg(response.statusText);
@@ -157,117 +163,103 @@ const Search = () => {
     console.log('Selected inscription sort option:', option);
   };
 
+  console.log("inscriptionList", inscriptionList);
+
   return (
-    <MainContainer>
-      {/* Stack placed within main container to allow for filter section */}
-      <Stack horizontal={false} center={false} style={{gap: '1.5rem'}}>
-        <RowContainer style={{justifyContent: 'flex-start'}}>
-          <PageText>Search</PageText>
-        </RowContainer>
-        <Divider></Divider>
-        <RowContainer style={{gap: '1rem'}}>
-          <VisibilityButton onClick={toggleNumberVisibility}>
-            <EyeIcon size={'1.25rem'} color={numberVisibility ? '#000000' : '#959595'}></EyeIcon>
-          </VisibilityButton>
-          <GridTypeButton onClick={toggleGridType}>
-            <GridIcon size={'1.25rem'} color={zoomGrid ? '#959595' : '#000000'}></GridIcon>
-          </GridTypeButton>
-          <SearchContainer>
-            <SearchIcon size={'1.25rem'} color={'#959595'}></SearchIcon>
-            <form onSubmit={handleTextSubmit}>
-              <SearchInput 
-                placeholder='Search for inscriptions'
-                type='text'
-                onChange={handleTextChange}
-                onKeyDown={handleKeyPress}
-                value={searchInput}
-                isError={isError}
-              />
-            </form>
-          </SearchContainer>
-          <Stack horizontal={true} style={{gap: '1rem', justifyContent: 'flex-end'}}>
-            <input 
-              type="file" 
-              multiple 
-              accept='image/*' 
-              onChange={onImageChange}
-              style={{ display: 'none' }} // Hide the file input
-              ref={fileInputRef} // Attach the ref
+    <PageContainer>
+      <RowContainer style={{justifyContent: 'flex-start'}}>
+        <PageText>Visual Search</PageText>
+      </RowContainer>
+      <HorizontalDivider></HorizontalDivider>
+      <RowContainer style={{gap: '0.75rem'}}>
+        <IconButton onClick={toggleNumberVisibility}>
+          <EyeIcon size={'1.25rem'} color={numberVisibility ? theme.colors.text.primary : theme.colors.text.secondary}></EyeIcon>
+        </IconButton>
+        <IconButton onClick={toggleGridType}>
+          {zoomGrid ? (
+            <GridIcon size={'1.25rem'} color={theme.colors.text.primary} />
+          ) : (
+            <DotGridIcon size={'1.25rem'} color={theme.colors.text.primary} />
+          )}
+        </IconButton>
+        <SearchContainer>
+          <SearchIcon size={'1.25rem'} color={theme.colors.text.secondary}></SearchIcon>
+          <form onSubmit={handleTextSubmit}>
+            <SearchInput 
+              placeholder='Search for inscriptions'
+              type='text'
+              onChange={handleTextChange}
+              onKeyDown={handleKeyPress}
+              value={searchInput}
+              isError={isError}
             />
-            <FilterButton onClick={handleFileButtonClick}>
-              <UploadIcon size={'1.25rem'} color={'#000000'}></UploadIcon>
-              {/* <UploadText>Upload image</UploadText> */}
-            </FilterButton>
-            <SearchDropdown onOptionSelect={handleSortOptionChange} />
-          </Stack>
+          </form>
+        </SearchContainer>
+        <Stack horizontal={true} style={{gap: '0.75rem', justifyContent: 'flex-end'}}>
+          <input 
+            type="file" 
+            multiple 
+            accept='image/*' 
+            onChange={onImageChange}
+            style={{ display: 'none' }} // Hide the file input
+            ref={fileInputRef} // Attach the ref
+          />
+          <IconButton onClick={handleFileButtonClick}>
+            <UploadIcon size={'1.25rem'} color={theme.colors.text.primary}></UploadIcon>
+          </IconButton>
+          <SortbyDropdown 
+            onOptionSelect={handleSortOptionChange}
+            initialOption={'most_relevant'}
+            includeRelevance={true}
+          />
+        </Stack>
+      </RowContainer>
+
+      {firstLoad && (
+        <Stack horizontal={false} center={true} style={{gap: '1.5rem', width: '100%', marginTop: '1.5rem'}}>
+          <InfoText islarge={true} style={{textAlign: 'center', textWrap: 'wrap'}}>
+            Type something or upload an image to find similar inscriptions. Try with one of these keywords:
+          </InfoText>
+          <RowContainer style={{gap: '0.75rem', flexWrap: 'wrap', maxWidth: '30rem'}}>
+            <SearchButton onClick={() => handleSearchButtonClick('running bitcoin')}>running bitcoin</SearchButton>
+            <SearchButton onClick={() => handleSearchButtonClick('messi')}>messi</SearchButton>
+            <SearchButton onClick={() => handleSearchButtonClick('world peace')}>world peace</SearchButton>
+            <SearchButton onClick={() => handleSearchButtonClick('cordyceps')}>cordyceps</SearchButton>
+            <SearchButton onClick={() => handleSearchButtonClick('free ross')}>free ross</SearchButton>
+          </RowContainer>
+        </Stack>
+      )}
+
+      {isLoading && (
+        <RowContainer style={{justifyContent: 'center', margin: '1.5rem 0'}}>
+          <Spinner />
         </RowContainer>
-        {firstLoad && (
-          <Stack horizontal={false} center={true} style={{gap: '1.5rem', width: '100%', marginTop: '1.5rem'}}>
-            <MessageText>
-              Type something or upload an image to discover similar inscriptions. Try with one of these keywords:
-            </MessageText>
-            <RowContainer style={{gap: '1rem', flexWrap: 'wrap', maxWidth: '30rem'}}>
-              <SearchButton onClick={() => handleSearchButtonClick('running bitcoin')}>running bitcoin</SearchButton>
-              <SearchButton onClick={() => handleSearchButtonClick('messi')}>messi</SearchButton>
-              <SearchButton onClick={() => handleSearchButtonClick('world peace')}>world peace</SearchButton>
-              <SearchButton onClick={() => handleSearchButtonClick('cordyceps')}>cordyceps</SearchButton>
-              <SearchButton onClick={() => handleSearchButtonClick('free ross')}>free ross</SearchButton>
-            </RowContainer>
-          </Stack>
-        )}
-        {isLoading && <p style={{color: '#959595', fontSize: '1rem', padding: '.5rem 0', margin: 0}}>Loading...</p>}
-        {isError && <p style={{color: '#959595', fontSize: '1rem', padding: '.5rem 0', margin: 0}}>{"Error: " + errorMsg}</p>}
-        {/* Add search summary message */}
-        {!isLoading && inscriptionList.length > 0 && (
-          <RowContainer style={{justifyContent: 'flex-start', alignItems: 'center'}}>
-            <Stack horizontal={true} center={true} style={{gap: '.5rem'}}>
-              <SummaryText>Showing {inscriptionList.length} results for</SummaryText>
-              <SearchButton onClick={clearSearch}>
-                <SearchButtonText>
-                  {image ? image.name : lastSearch}
-                </SearchButtonText>
-                <CrossIcon size={'1.25rem'} color={'#000000'} />
-              </SearchButton>
+      )}
+      
+      {isError && (
+        <RowContainer style={{justifyContent: 'center'}}>
+          <ErrorMessage>Error: please try a different search</ErrorMessage>
+        </RowContainer>
+      )}
+      
+      {!isLoading && !isError && inscriptionList.length > 0 && (
+        <>
+          <RowContainer style={{justifyContent: 'flex-start', alignItems: 'center', margin: '0.5rem 0'}}>
+            <Stack horizontal={true} center={true} style={{gap: '.5rem', flexWrap: 'wrap'}}>
+              <SummaryText>{`Showing top results for "${image ? image.name : lastSearch}"`}</SummaryText>
+              <ClearButton onClick={clearSearch}>
+                Clear
+              </ClearButton>
             </Stack>
           </RowContainer>
-        )}
-        <RowContainer>
-          {/* {inscriptionList.length ? (
-            <Gallery inscriptionList={inscriptionList} numberVisibility={numberVisibility} />
-          ) : (
-            <div>results</div>
-          )} */}
-          <Gallery inscriptionList={inscriptionList} numberVisibility={numberVisibility} zoomGrid={zoomGrid} />
-        </RowContainer>
-      </Stack>
-    </MainContainer>
+          <RowContainer>
+            <Gallery inscriptionList={inscriptionList} numberVisibility={numberVisibility} zoomGrid={zoomGrid} />
+          </RowContainer>
+        </>
+      )}
+    </PageContainer>
   )
 }
-  
-const PageContainer = styled.div`
-  width: 100%;
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  // flex: 1;
-  align-items: start;
-  // justify-content: center;
-  margin: 0;
-`;
-
-const MainContainer = styled.div`
-  width: calc(100% - 6rem);
-  padding: 1.5rem 3rem 2.5rem 3rem;
-  margin: 0;
-  display: flex;
-  flex-direction: row;
-  align-items: flex-start;
-
-  @media (max-width: 630px) {
-    width: calc(100% - 3rem);
-    padding: 1.5rem 1.5rem 2.5rem 1.5rem;
-  }
-`;
 
 const RowContainer = styled.div`
   display: flex;
@@ -278,18 +270,19 @@ const RowContainer = styled.div`
 `;
 
 const PageText = styled.p`
-    font-family: Relative Trial Bold;
-    font-size: 1.5rem;
-    margin: 0;
+  font-family: ${theme.typography.fontFamilies.bold};
+  font-size: 1.5rem;
+  line-height: 2rem;
+  margin: 0;
 `;
 
 const SearchContainer = styled.div`
   width: 100%;
-  height: 3rem;
+  height: 2.75rem;
   display: flex;
   flex-direction: row;
   align-items: center;
-  background-color: #F5F5F5;
+  background-color: ${theme.colors.background.primary};
   border: none;  
   border-radius: 1.5rem;
   padding: 0 1rem;
@@ -302,16 +295,15 @@ const SearchInput = styled.input`
   height: auto;
   border: 2px solid transparent;
   border-radius: 1.5rem;
-  transition: all 150ms ease;
+  transition: all 200ms ease;
   background-color: transparent;
   white-space: nowrap;
   text-overflow: ellipsis;
   overflow: hidden;
   margin: 0;
   outline: none;
-  font-family: Relative Trial Medium;
-  font-weight: 500;
-  color: #000000;
+  font-family: ${theme.typography.fontFamilies.medium};
+  color: ${theme.colors.text.secondary};
   font-size: 1rem;
   position: absolute;
   top: 0;
@@ -322,117 +314,35 @@ const SearchInput = styled.input`
   box-sizing: border-box;
 
   &:hover {
-    border: 2px solid #E9E9E9;
+    border: 2px solid ${theme.colors.border};
   }
 
   &:focus {
-    border: 2px solid ${props => props.isError ? '#FF0000' : '#E9E9E9'};
+    border: 2px solid ${props => props.isError ? '#FF0000' : theme.colors.border};
   }
 
-  ::placeholder { /* Chrome, Firefox, Opera, Safari 10.1+ */
-    color: #959595;
+  &::placeholder { /* Chrome, Firefox, Opera, Safari 10.1+ */
+    color: ${theme.colors.text.secondary};
   }
   
-  :-ms-input-placeholder { /* Internet Explorer 10-11 */
-    color: #959595;
+  &:-ms-input-placeholder { /* Internet Explorer 10-11 */
+    color: ${theme.colors.text.secondary};
   }
   
-  ::-ms-input-placeholder { /* Microsoft Edge */
-    color: #959595;
+  &::-ms-input-placeholder { /* Microsoft Edge */
+    color: ${theme.colors.text.secondary};
   }
 `;
 
 const SummaryText = styled.p`
   font-size: 1rem;
-  color: #000000;
+  color: ${theme.colors.text.primary};
   margin: 0;
   flex-shrink: 0;
 `;
 
-const VisibilityButton = styled.button`
-  height: 3rem;
-  width: 3rem;
-  min-height: 3rem;
-  min-width: 3rem;
-  border-radius: 1.5rem;
-  border: none;
-  padding: .5rem;
-  margin: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  background-color: #F5F5F5;
-  transition: 
-    background-color 350ms ease,
-    transform 150ms ease;
-  transform-origin: center center;
-
-  &:hover {
-    background-color: #E9E9E9;
-  }
-
-  &:active {
-    transform: scale(0.96);
-  }
-`;
-
-const GridTypeButton = styled.button`
-  height: 3rem;
-  width: 3rem;
-  min-height: 3rem;
-  min-width: 3rem;
-  border-radius: 1.5rem;
-  border: none;
-  padding: .5rem;
-  margin: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  background-color: #F5F5F5;
-  transition: 
-    background-color 350ms ease,
-    transform 150ms ease;
-  transform-origin: center center;
-
-  &:hover {
-    background-color: #E9E9E9;
-  }
-
-  &:active {
-    transform: scale(0.96);
-  }
-`;
-
-const FilterButton = styled.button`
-  height: 3rem;
-  width: 3rem;
-  border-radius: 1.5rem;
-  border: none;
-  margin: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  gap: .5rem;
-  background-color: #F5F5F5;
-  transition: 
-    background-color 350ms ease,
-    transform 150ms ease;
-  transform-origin: center center;
-
-  &:hover {
-    background-color: #E9E9E9;
-  }
-
-  &:active {
-    transform: scale(0.96);
-  }
-`;
-
 const SearchButton = styled.button`
-  border-radius: .5rem;
+  border-radius: 1.5rem;
   border: none;
   padding: .5rem 1rem;
   margin: 0;
@@ -442,19 +352,18 @@ const SearchButton = styled.button`
   cursor: pointer;
   gap: .5rem;
   white-space: nowrap; 
-  font-family: Relative Trial Medium;
+  font-family: ${theme.typography.fontFamilies.medium};
   font-size: 1rem;
-  color: #000000;
-  background-color: #F5F5F5;
-  transition: 
-    background-color 350ms ease,
-    transform 150ms ease;
+  color: ${theme.colors.text.primary};
+  background-color: ${theme.colors.background.primary};
+  transition: all 200ms ease;
   transform-origin: center center;
   flex-shrink: 1;
   overflow: hidden;
 
   &:hover {
-    background-color: #E9E9E9;
+    background-color: ${theme.colors.background.secondary};
+    color: ${theme.colors.text.primary};
   }
 
   &:active {
@@ -462,47 +371,42 @@ const SearchButton = styled.button`
   };
 `;
 
-const SearchButtonText = styled.span`
-  width: 100%; 
-  overflow: hidden;
-  text-overflow: ellipsis;
-`;
-
-
-const UploadText = styled.p`
-  font-family: Relative Trial Medium;
-  font-size: .875rem;
-  color: #000000;
-
-  @media (max-width: 630px) {
-    display: none;
-  }
-`;
-
-const MessageText = styled.p`
-  font-family: ${props => props.header ? 'Relative Trial Bold' : 'Relative Trial Medium'}; 
-  font-size: ${props => props.header ? '1.125rem' : '1rem'};
-  color: ${props => props.header ? '#000000' : '#959595'};
-  margin: 0;
+const ClearButton = styled.button`
+  border: none;
   padding: 0;
-  text-wrap: wrap;
-  text-align: center;
-`;
-
-const IconWrapper = styled.div`
+  margin: 0;
   display: flex;
-  flex-direction: row;
   align-items: center;
   justify-content: center;
-  height: 3rem;
-  width: 3rem;
-  border-radius: 1.5rem;
-  background-color: #F5F5F5;
+  cursor: pointer;
+  gap: .5rem;
+  white-space: nowrap; 
+  font-family: ${theme.typography.fontFamilies.medium};
+  font-size: 1rem;
+  color: ${theme.colors.text.secondary};
+  background-color: ${theme.colors.background.white};
+  transition: all 200ms ease;
+  transform-origin: center center;
+  flex-shrink: 1;
+  overflow: hidden;
+
+  &:hover {
+    color: ${theme.colors.text.primary};
+  }
+
+  &:active {
+    transform: scale(0.96);
+  };
 `;
 
-const Divider = styled.div`
-  width: 100%;
-  border-bottom: 1px solid #E9E9E9;
+const ErrorMessage = styled.p`
+  color: #FF0000;
+  font-size: 1rem;
+  padding: 0;
+  margin: 0;
+  font-family: ${theme.typography.fontFamilies.medium};
+  text-align: center;
+  text-wrap: wrap;
 `;
 
 export default Search;
