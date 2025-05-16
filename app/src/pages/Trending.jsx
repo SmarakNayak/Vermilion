@@ -7,7 +7,7 @@ import RecentBoosts from '../components/RecentBoosts';
 import InnerInscriptionContent from '../components/common/InnerInscriptionContent';
 import { addCommas, formatAddress } from '../utils/format';
 import { copyText } from '../utils/clipboard';
-import { BoostIcon, CheckIcon, ChevronUpDuoIcon, CommentIcon, CopyIcon, FireIcon, GalleryIcon, LinkIcon, Person2Icon, RefreshIcon, RuneIcon, SparklesIcon, SproutIcon } from '../components/common/Icon';
+import { BoostIcon, CheckIcon, ChevronUpDuoIcon, CommentIcon, CopyIcon, CurrencyIcon, FireIcon, GalleryIcon, LinkIcon, Person2Icon, RefreshIcon, RuneIcon, SparklesIcon, SproutIcon } from '../components/common/Icon';
 import theme from '../styles/theme';
 import CheckoutModal from '../components/modals/CheckoutModal';
 import BoostsModal from '../components/modals/BoostsModal';
@@ -226,7 +226,7 @@ const Trending = () => {
                   </UnstyledLink>
                   {inscription.inscriptions[0].spaced_rune && (
                     <Tag>
-                      <RuneIcon size={'1rem'} color={theme.colors.background.purp} />
+                      <CurrencyIcon size={'1rem'} color={theme.colors.background.purp} />
                       <TagSpan color={theme.colors.background.purp}>
                         {inscription.inscriptions[0].spaced_rune}
                       </TagSpan>
