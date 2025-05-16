@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { use, useEffect, useRef, useState } from 'react';
 import styled, { keyframes } from 'styled-components';
 import { BlockIcon, ImageIcon } from './Icon';
 import theme from '../../styles/theme';
@@ -21,6 +21,13 @@ const InnerInscriptionContent = ({
 
   // Add state to track the actual content type
   const [contentType, setContentType] = useState(initialContentType);
+  const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    if (useFeedStyles) {
+      setIsLoading(true);
+    }
+  }, [useFeedStyles]);
 
   // Add effect to handle recursive SVGs
   useEffect(() => {
@@ -61,19 +68,27 @@ const InnerInscriptionContent = ({
   return useBlockIconDefault ? 
     <BlockIcon size={'1rem'} color={theme.colors.background.verm} /> : 
     <ImageIcon size={'1rem'} color={theme.colors.background.verm} />;
-}
+  }
+
+  
 
   // Render content based on contentType
   switch(contentType) {
 
     // Render image content - use blobUrl for both page/grid and icon
     case 'image':
+
       return (
-        <ImageContainer 
-          src={blobUrl} 
-          alt={`Inscription ${number}`}
-          useFeedStyles={useFeedStyles}
-        />
+        <>
+          {isLoading && <SkeletonContainer />}
+          <ImageContainer 
+            src={blobUrl} 
+            alt={`Inscription ${number}`}
+            onLoad={() => setIsLoading(false)}
+            style={{ display: isLoading ? 'none' : 'block' }}
+            useFeedStyles={useFeedStyles}
+          />
+        </>
       );
       
     // Render SVG content - use number for page/grid and endpoint + isIcon for icon
