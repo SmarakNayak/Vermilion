@@ -133,7 +133,8 @@ jobs:
             set -e
             set -o pipefail
             sudo --login -u postgres psql -d vermilion -c "GRANT ALL ON SCHEMA social TO ${{secrets.MYSQL_USER}}"
-            sudo --login -u postgres psql -d vermilion -c "ALTER ROLE ${{secrets.MYSQL_USER}} REPLICATION, PG_CREATE_SUBSCRIPTION;"
+            sudo --login -u postgres psql -d vermilion -c "ALTER ROLE ${{secrets.MYSQL_USER}} WITH REPLICATION;"
+            sudo --login -u postgres psql -d vermilion -c "GRANT PG_CREATE_SUBSCRIPTION TO ${{secrets.MYSQL_USER}};"
             export PGPASSWORD=${{ secrets.MYSQL_PASS }}
             PUB_EXISTS=$(psql -U ${{ secrets.MYSQL_USER }} -d vermilion -h localhost -t -c "SELECT 1 FROM pg_publication WHERE pubname = 'social_pub_from_${{ needs.Check-Inputs.outputs.PRIMARY_SERVER_COLOR }}';")
             if [ -z "$PUB_EXISTS" ]; then
@@ -157,7 +158,8 @@ jobs:
             set -e
             set -o pipefail
             sudo --login -u postgres psql -d vermilion -c "GRANT ALL ON SCHEMA social TO ${{secrets.MYSQL_USER}}"
-            sudo --login -u postgres psql -d vermilion -c "ALTER ROLE ${{secrets.MYSQL_USER}} REPLICATION, PG_CREATE_SUBSCRIPTION;"
+            sudo --login -u postgres psql -d vermilion -c "ALTER ROLE ${{secrets.MYSQL_USER}} WITH REPLICATION;"
+            sudo --login -u postgres psql -d vermilion -c "GRANT PG_CREATE_SUBSCRIPTION TO ${{secrets.MYSQL_USER}};"
             export PGPASSWORD=${{ secrets.MYSQL_PASS }}
             SUB_EXISTS=$(psql -U ${{ secrets.MYSQL_USER }} -d vermilion -h localhost -t -c "SELECT 1 FROM pg_subscription WHERE subname = 'social_sub_to_${{ needs.Check-Inputs.outputs.PRIMARY_SERVER_COLOR }}';")
             if [ -z "$SUB_EXISTS" ]; then
