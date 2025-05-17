@@ -259,11 +259,12 @@ jobs:
         run: |
           ssh staging '
             export PGPASSWORD=${{ secrets.MYSQL_PASS }}
-            SUB_EXISTS=$(psql -U ${{ secrets.MYSQL_USER }} -d vermilion -h localhost -t -c "SELECT 1 FROM pg_subscription WHERE subname = ''social_sub_to_${{ needs.Check-Inputs.outputs.SECONDARY_SERVER_COLOR }}'';")
+            SUB_EXISTS=$(echo)
+            SUB_EXISTS=$(psql -U ${{ secrets.MYSQL_USER }} -d vermilion -h localhost -t -c "SELECT 1 FROM pg_subscription WHERE subname = '"'"'social_sub_to_${{ needs.Check-Inputs.outputs.SECONDARY_SERVER_COLOR }}'"'"';")
             if [ -z "$SUB_EXISTS" ]; then
               psql -U ${{ secrets.MYSQL_USER }} -d vermilion -h localhost -c "
                 CREATE SUBSCRIPTION social_sub_to_${{ needs.Check-Inputs.outputs.SECONDARY_SERVER_COLOR }}
-                    CONNECTION ''host=${{ vars.ALTERNATE_SERVER_HOST }} port=5432 user=${{ secrets.MYSQL_USER }} dbname=vermilion password=${{ secrets.MYSQL_PASS }}''
+                    CONNECTION '"'"'host=${{ vars.ALTERNATE_SERVER_HOST }} port=5432 user=${{ secrets.MYSQL_USER }} dbname=vermilion password=${{ secrets.MYSQL_PASS }}'"'"'
                     PUBLICATION social_pub_from_${{ needs.Check-Inputs.outputs.SECONDARY_SERVER_COLOR }}
                     WITH (enabled = false);
               "
