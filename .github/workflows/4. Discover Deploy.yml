@@ -1,5 +1,5 @@
 # This is a workflow that deploys a fresh vermilion instance
-name: 4. Hetzner Discover Deploy
+name: 4. Discover Deploy
 
 # Controls when the workflow will run
 on:

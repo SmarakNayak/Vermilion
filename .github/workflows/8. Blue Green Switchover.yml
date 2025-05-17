@@ -1,5 +1,5 @@
 # This is a workflow that promotes one server to primary and demotes the other to secondary
-name: 7. Hetzner Blue Green Switchover
+name: 8. Blue Green Switchover
 
 # Controls when the workflow will run
 on:

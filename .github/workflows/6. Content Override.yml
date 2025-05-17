@@ -1,5 +1,5 @@
 # This is a workflow that adds manual content moderation
-name: 6. Hetzner Content Override
+name: 6. Content Override
 
 # Controls when the workflow will run
 on:

@@ -1,5 +1,5 @@
 # This is a workflow that deploys a fresh vermilion instance
-name: 3. Hetzner Ord Deploy
+name: 3. Ord Deploy
 
 # Controls when the workflow will run
 on:
