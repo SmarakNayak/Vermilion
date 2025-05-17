@@ -1,4 +1,5 @@
-# This is a workflow that promotes one server to primary and demotes the other to secondary
+# This is a workflow that initializes replication from primary to secondary
+# It also sets up replication from secondary to primary but does not start it
 name: 7. Initialize Blue Green replication
 
 # Controls when the workflow will run
@@ -7,11 +8,11 @@ on:
   workflow_dispatch:
     inputs:
       hetzner_primary_server:
-        description: 'Which server to promote? Hetzner_blue or Hetzner_green'
+        description: 'Which server is primary? Hetzner_blue or Hetzner_green'
         required: true
         default: 'Hetzner_'
       hetzner_secondary_server:
-        description: 'Which server to demote? Hetzner_blue or Hetzner_green'
+        description: 'Which server is secondary? Hetzner_blue or Hetzner_green'
         required: true
         default: 'Hetzner_'
 
@@ -65,7 +66,7 @@ jobs:
             if [ -f ~/server_colour ]; then
               COLOUR=$(cat ~/server_colour)
               if [ "$COLOUR" != "${{ needs.Check-Inputs.outputs.PRIMARY_SERVER_COLOR }}" ]; then
-                echo "Error: server_colour does not match provided server colour."
+                echo "Error: ${{ needs.Check-Inputs.outputs.PRIMARY_SERVER_COLOR }} server is currently reporting as $COLOUR"
                 exit 1
               fi
             else
@@ -74,7 +75,7 @@ jobs:
             if [ -f ~/server_status ]; then
               STATE=$(cat ~/server_status)
               if [ "$STATE" != "primary" ]; then
-                echo "Error: server_status does not match provided server status."
+                echo "Error: You are trying to initialize ${{ needs.Check-Inputs.outputs.PRIMARY_SERVER_COLOR }} as primary but it is currently $STATE"
                 exit 1
               fi
             else
@@ -100,7 +101,7 @@ jobs:
             if [ -f ~/server_colour ]; then
               COLOUR=$(cat ~/server_colour)
               if [ "$COLOUR" != "${{ needs.Check-Inputs.outputs.SECONDARY_SERVER_COLOR }}" ]; then
-                echo "Error: server_colour does not match provided server colour."
+                echo "Error: ${{ needs.Check-Inputs.outputs.SECONDARY_SERVER_COLOR }} server is currently reporting as $COLOUR"
                 exit 1
               fi
             else
@@ -109,7 +110,7 @@ jobs:
             if [ -f ~/server_status ]; then
               STATE=$(cat ~/server_status)
               if [ "$STATE" != "secondary" ]; then
-                echo "Error: server_status does not match provided server status."
+                echo "Error: You are trying to initialize ${{ needs.Check-Inputs.outputs.SECONDARY_SERVER_COLOR }} as secondary but it is currently $STATE"
                 exit 1
               fi
             else
