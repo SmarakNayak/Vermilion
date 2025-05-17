@@ -136,7 +136,7 @@ jobs:
             fi
           '
 
-  Initialize-Primary:
+  Initialize-Primary-Pub:
     needs: [Check-Inputs, Check-Primary, Check-Secondary]
     runs-on: ubuntu-latest
     environment: '${{ github.event.inputs.hetzner_primary_server }}'
@@ -180,8 +180,8 @@ jobs:
             EOF
           '
 
-  Initialize-Secondary:
-    needs: [Check-Inputs, Initialize-Primary]
+  Initialize-Secondary-Pub-Sub:
+    needs: [Check-Inputs, Initialize-Primary-Pub]
     runs-on: ubuntu-latest
     environment: '${{ github.event.inputs.hetzner_secondary_server }}'
     steps:
@@ -219,6 +219,60 @@ jobs:
                 CREATE SUBSCRIPTION social_sub_to_${{ needs.Check-Inputs.outputs.PRIMARY_SERVER_COLOR }}
                   CONNECTION 'host=${{ vars.ALTERNATE_SERVER_HOST }} port=5432 user=${{ secrets.MYSQL_USER }} dbname=vermilion'
                   PUBLICATION social_pub_from_${{ needs.Check-Inputs.outputs.PRIMARY_SERVER_COLOR }};
+              END IF;
+              IF NOT EXISTS (
+                SELECT 1
+                  FROM pg_publication
+                WHERE pubname = 'social_pub_from_${{ needs.Check-Inputs.outputs.SECONDARY_SERVER_COLOR }}'
+              ) THEN
+                CREATE PUBLICATION social_pub_from_${{ needs.Check-Inputs.outputs.SECONDARY_SERVER_COLOR }}
+                  FOR TABLE social.test;
+              END IF;
+            END;
+            $$;
+            EOF
+          '
+
+  Initialize-Primary-Disabled-Sub:
+    needs: [Check-Inputs, Initialize-Secondary-Pub-Sub]
+    runs-on: ubuntu-latest
+    environment: '${{ github.event.inputs.hetzner_primary_server }}'
+    steps:
+      - name: Configure SSH
+        run: |
+          mkdir -p ~/.ssh/
+          echo "$SSH_KEY" > ~/.ssh/staging.key
+          chmod 600 ~/.ssh/staging.key
+          cat >>~/.ssh/config <<END
+          Host staging
+            HostName $SSH_HOST
+            User $SSH_USER
+            IdentityFile ~/.ssh/staging.key
+            StrictHostKeyChecking no
+          END
+        env:
+          SSH_USER: ${{ vars.SERVER_USER }}
+          SSH_KEY: ${{ secrets.SERVER_SSH_KEY }}
+          SSH_HOST: ${{ vars.SERVER_HOST }}
+
+      - name: Initialize Primary (disabled) Subscription to Secondary
+        run: |
+          ssh staging '
+            PGPASSWORD=${{ secrets.MYSQL_PASS }} psql \
+              -U ${{ secrets.MYSQL_USER }} \
+              -d vermilion \
+              -h localhost <<'EOF'
+            DO $$
+            BEGIN
+              IF NOT EXISTS (
+                SELECT 1
+                  FROM pg_subscription
+                WHERE subname = 'social_sub_to_${{ needs.Check-Inputs.outputs.SECONDARY_SERVER_COLOR }}'
+              ) THEN
+                CREATE SUBSCRIPTION social_sub_to_${{ needs.Check-Inputs.outputs.SECONDARY_SERVER_COLOR }}
+                  CONNECTION 'host=${{ vars.ALTERNATE_SERVER_HOST }} port=5432 user=${{ secrets.MYSQL_USER }} dbname=vermilion'
+                  PUBLICATION social_pub_from_${{ needs.Check-Inputs.outputs.SECONDARY_SERVER_COLOR }}
+                  WITH (ENABLED = false);
               END IF;
             END;
             $$;
