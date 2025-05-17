@@ -27,16 +27,16 @@ jobs:
       - name: Check Inputs
         id: input-checker
         run: | ## make sure hetzner_primary_server and hetzner_secondary_server are not the same, make sure one of them is Hetzner_blue and the other is Hetzner_green
-          if [ "${{ github.event.inputs.hetzner_primary_server }}" == "${{ github.event.inputs.hetzner_secondary_server }}" ]; then
-            echo "Error: hetzner_primary_server and hetzner_secondary_server cannot be the same."
-            exit 1
-          fi
           if [ "${{ github.event.inputs.hetzner_primary_server }}" != "Hetzner_blue" ] && [ "${{ github.event.inputs.hetzner_primary_server }}" != "Hetzner_green" ]; then
-            echo "Error: heliontzner_primary_server must be Hetzner_blue or Hetzner_green."
+            echo "Error: hetzner_primary_server must be Hetzner_blue or Hetzner_green."
             exit 1
           fi
           if [ "${{ github.event.inputs.hetzner_secondary_server }}" != "Hetzner_blue" ] && [ "${{ github.event.inputs.hetzner_secondary_server }}" != "Hetzner_green" ]; then
             echo "Error: hetzner_secondary_server must be Hetzner_blue or Hetzner_green."
+            exit 1
+          fi
+          if [ "${{ github.event.inputs.hetzner_primary_server }}" == "${{ github.event.inputs.hetzner_secondary_server }}" ]; then
+            echo "Error: hetzner_primary_server and hetzner_secondary_server cannot be the same."
             exit 1
           fi
           if [ "${{ github.event.inputs.hetzner_primary_server }}" == "Hetzner_blue" ]; then
