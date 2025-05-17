@@ -161,9 +161,9 @@ jobs:
       - name: Initialize Primary 
         run: |
           ssh staging '
-            export PGPASSWORD=my_secure_password
+            export PGPASSWORD=${{ secrets.MYSQL_PASS }}
             echo "Checking publication"
-            PUB_EXISTS=$(psql -U vermilion_user -d vermilion -h localhost -t -c "SELECT 1 FROM pg_publication WHERE pubname = 'social_pub_from_blue';" 2>&1)
+            PUB_EXISTS=$(psql -U vermilion_user -d vermilion -h localhost -t -c "SELECT 1 FROM pg_publication WHERE pubname = '"'"'social_pub_from_${{needs.Check-Inputs.outputs.PRIMARY_SERVER_COLOR}}'"'"';" 2>&1)
             if [ $? -ne 0 ]; then
               echo "Error checking publication: $PUB_EXISTS"
               exit 1
@@ -171,7 +171,7 @@ jobs:
             echo "PUB_EXISTS: $PUB_EXISTS"
             if [ -z "$PUB_EXISTS" ]; then
               echo "Creating publication"
-              psql -U vermilion_user -d vermilion -h localhost -c "CREATE PUBLICATION social_pub_from_blue FOR TABLE social.test;" 2>&1 || {
+              psql -U vermilion_user -d vermilion -h localhost -c "CREATE PUBLICATION social_pub_from_${{needs.Check-Inputs.outputs.PRIMARY_SERVER_COLOR}} FOR TABLE social.test;" 2>&1 || {
                 echo "Error creating publication"
                 exit 1
               }
