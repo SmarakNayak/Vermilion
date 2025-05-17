@@ -198,3 +198,4 @@ jobs:
               CONNECTION 'host=${{ vars.ALTERNATE_SERVER_HOST }} port=5432 user=${{ secrets.MYSQL_USER }} dbname=vermilion password=${{ secrets.MYSQL_PASS }}' 
               PUBLICATION social_pub_from_${{ needs.Check-Inputs.outputs.SECONDARY_SERVER_COLOR }} 
               WITH (enabled = false, origin = none, copy_data = false);"
+            fi
