@@ -58,6 +58,7 @@ jobs:
           username: ${{ vars.SERVER_USER }}
           key: ${{ secrets.SERVER_SSH_KEY }}
           port: 22
+          capture_stdout: true
           script: |
             if [ -f ~/server_colour ]; then
               COLOUR=$(cat ~/server_colour)
@@ -90,6 +91,7 @@ jobs:
           username: ${{ vars.SERVER_USER }}
           key: ${{ secrets.SERVER_SSH_KEY }}
           port: 22
+          capture_stdout: true
           script: |
             if [ -f ~/server_colour ]; then
               COLOUR=$(cat ~/server_colour)
@@ -122,6 +124,7 @@ jobs:
           username: ${{ vars.SERVER_USER }}
           key: ${{ secrets.SERVER_SSH_KEY }}
           port: 22
+          capture_stdout: true
           script: |
             export PGPASSWORD=${{ secrets.MYSQL_PASS }}
             PUB_EXISTS=$(psql -U ${{ secrets.MYSQL_USER }} -d vermilion -h localhost -t -c "SELECT 1 FROM pg_publication WHERE pubname = 'social_pub_from_${{ needs.Check-Inputs.outputs.PRIMARY_SERVER_COLOR }}';")
@@ -141,6 +144,7 @@ jobs:
           username: ${{ vars.SERVER_USER }}
           key: ${{ secrets.SERVER_SSH_KEY }}
           port: 22
+          capture_stdout: true
           script: |
             export PGPASSWORD=${{ secrets.MYSQL_PASS }}
             SUB_EXISTS=$(psql -U ${{ secrets.MYSQL_USER }} -d vermilion -h localhost -t -c "SELECT 1 FROM pg_subscription WHERE subname = 'social_sub_to_${{ needs.Check-Inputs.outputs.PRIMARY_SERVER_COLOR }}';")
@@ -164,6 +168,7 @@ jobs:
           username: ${{ vars.SERVER_USER }}
           key: ${{ secrets.SERVER_SSH_KEY }}
           port: 22
+          capture_stdout: true
           script: |
             export PGPASSWORD=${{ secrets.MYSQL_PASS }}
             SUB_EXISTS=$(psql -U ${{ secrets.MYSQL_USER }} -d vermilion -h localhost -t -c "SELECT 1 FROM pg_subscription WHERE subname = 'social_sub_to_${{ needs.Check-Inputs.outputs.SECONDARY_SERVER_COLOR }}';")
