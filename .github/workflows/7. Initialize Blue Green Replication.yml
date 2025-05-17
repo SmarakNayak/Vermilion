@@ -14,7 +14,7 @@ on:
         description: 'Which server to demote? Hetzner_blue or Hetzner_green'
         required: true
         default: 'Hetzner_'
-        
+
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
   Check-Inputs:
@@ -31,7 +31,7 @@ jobs:
             exit 1
           fi
           if [ "${{ github.event.inputs.hetzner_primary_server }}" != "Hetzner_blue" ] && [ "${{ github.event.inputs.hetzner_primary_server }}" != "Hetzner_green" ]; then
-            echo "Error: hetzner_primary_server must be Hetzner_blue or Hetzner_green."
+            echo "Error: heliontzner_primary_server must be Hetzner_blue or Hetzner_green."
             exit 1
           fi
           if [ "${{ github.event.inputs.hetzner_secondary_server }}" != "Hetzner_blue" ] && [ "${{ github.event.inputs.hetzner_secondary_server }}" != "Hetzner_green" ]; then
@@ -51,26 +51,15 @@ jobs:
     runs-on: ubuntu-latest
     environment: '${{ github.event.inputs.hetzner_primary_server }}'
     steps:
-      - name: Configure SSH
-        run: |
-          mkdir -p ~/.ssh/
-          echo "$SSH_KEY" > ~/.ssh/staging.key
-          chmod 600 ~/.ssh/staging.key
-          cat >>~/.ssh/config <<END
-          Host staging
-            HostName $SSH_HOST
-            User $SSH_USER
-            IdentityFile ~/.ssh/staging.key
-            StrictHostKeyChecking no
-          END
-        env:
-          SSH_USER: ${{ vars.SERVER_USER }}
-          SSH_KEY: ${{ secrets.SERVER_SSH_KEY }}
-          SSH_HOST: ${{ vars.SERVER_HOST }}
-
       - name: Check colour and status match
-        run: | ## check to see if ~/server_colour exists, if it does, check to see if the colour matches the server colour
-          ssh staging '
+        uses: appleboy/ssh-action@v1.2.2
+        with:
+          host: ${{ vars.SERVER_HOST }}
+          username: ${{ vars.SERVER_USER }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          port: 22
+          capture_stdout: true
+          script: |
             if [ -f ~/server_colour ]; then
               COLOUR=$(cat ~/server_colour)
               if [ "$COLOUR" != "${{ needs.Check-Inputs.outputs.PRIMARY_SERVER_COLOR }}" ]; then
@@ -89,33 +78,21 @@ jobs:
             else
               echo "primary" > ~/server_status
             fi
-          '
-    
+
   Check-Secondary:
     needs: Check-Inputs
     runs-on: ubuntu-latest
     environment: '${{ github.event.inputs.hetzner_secondary_server }}'
     steps:
-      - name: Configure SSH
-        run: |
-          mkdir -p ~/.ssh/
-          echo "$SSH_KEY" > ~/.ssh/staging.key
-          chmod 600 ~/.ssh/staging.key
-          cat >>~/.ssh/config <<END
-          Host staging
-            HostName $SSH_HOST
-            User $SSH_USER
-            IdentityFile ~/.ssh/staging.key
-            StrictHostKeyChecking no
-          END
-        env:
-          SSH_USER: ${{ vars.SERVER_USER }}
-          SSH_KEY: ${{ secrets.SERVER_SSH_KEY }}
-          SSH_HOST: ${{ vars.SERVER_HOST }}
-
       - name: Check colour and status match
-        run: | ## check to see if ~/server_colour exists, if it does, check to see if the colour matches the server colour
-          ssh staging '
+        uses: appleboy/ssh-action@v1.2.2
+        with:
+          host: ${{ vars.SERVER_HOST }}
+          username: ${{ vars.SERVER_USER }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          port: 22
+          capture_stdout: true
+          script: |
             if [ -f ~/server_colour ]; then
               COLOUR=$(cat ~/server_colour)
               if [ "$COLOUR" != "${{ needs.Check-Inputs.outputs.SECONDARY_SERVER_COLOR }}" ]; then
@@ -134,91 +111,50 @@ jobs:
             else
               echo "secondary" > ~/server_status
             fi
-          '
 
   Initialize-Primary-Pub:
     needs: [Check-Inputs, Check-Primary, Check-Secondary]
     runs-on: ubuntu-latest
     environment: '${{ github.event.inputs.hetzner_primary_server }}'
     steps:
-      - name: Configure SSH
-        run: |
-          mkdir -p ~/.ssh/
-          echo "$SSH_KEY" > ~/.ssh/staging.key
-          chmod 600 ~/.ssh/staging.key
-          cat >>~/.ssh/config <<END
-          Host staging
-            HostName $SSH_HOST
-            User $SSH_USER
-            IdentityFile ~/.ssh/staging.key
-            StrictHostKeyChecking no
-          END
-        env:
-          SSH_USER: ${{ vars.SERVER_USER }}
-          SSH_KEY: ${{ secrets.SERVER_SSH_KEY }}
-          SSH_HOST: ${{ vars.SERVER_HOST }}
-
-      - name: Initialize Primary 
-        run: |
-          ssh staging '
+      - name: Initialize Primary Publication
+        uses: appleboy/ssh-action@v1.2.2
+        with:
+          host: ${{ vars.SERVER_HOST }}
+          username: ${{ vars.SERVER_USER }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          port: 22
+          capture_stdout: true
+          script: |
             export PGPASSWORD=${{ secrets.MYSQL_PASS }}
-            echo "Checking publication"
-            PUB_EXISTS=$(psql -U vermilion_user -d vermilion -h localhost -t -c "SELECT 1 FROM pg_publication WHERE pubname = '"'"'social_pub_from_${{needs.Check-Inputs.outputs.PRIMARY_SERVER_COLOR}}'"'"';" 2>&1)
-            if [ $? -ne 0 ]; then
-              echo "Error checking publication: $PUB_EXISTS"
-              exit 1
-            fi
-            echo "PUB_EXISTS: $PUB_EXISTS"
+            PUB_EXISTS=$(psql -U ${{ secrets.MYSQL_USER }} -d vermilion -h localhost -t -c "SELECT 1 FROM pg_publication WHERE pubname = 'social_pub_from_${{ needs.Check-Inputs.outputs.PRIMARY_SERVER_COLOR }}';")
             if [ -z "$PUB_EXISTS" ]; then
-              echo "Creating publication"
-              psql -U vermilion_user -d vermilion -h localhost -c "CREATE PUBLICATION social_pub_from_${{needs.Check-Inputs.outputs.PRIMARY_SERVER_COLOR}} FOR TABLE social.test;" 2>&1 || {
-                echo "Error creating publication"
-                exit 1
-              }
-              echo "Publication created"
-            else
-              echo "Publication already exists"
+              psql -U ${{ secrets.MYSQL_USER }} -d vermilion -h localhost -c "CREATE PUBLICATION social_pub_from_${{ needs.Check-Inputs.outputs.PRIMARY_SERVER_COLOR }} FOR TABLE social.test;"
             fi
-          '
 
   Initialize-Secondary-Pub-Sub:
     needs: [Check-Inputs, Initialize-Primary-Pub]
     runs-on: ubuntu-latest
     environment: '${{ github.event.inputs.hetzner_secondary_server }}'
     steps:
-      - name: Configure SSH
-        run: |
-          mkdir -p ~/.ssh/
-          echo "$SSH_KEY" > ~/.ssh/staging.key
-          chmod 600 ~/.ssh/staging.key
-          cat >>~/.ssh/config <<END
-          Host staging
-            HostName $SSH_HOST
-            User $SSH_USER
-            IdentityFile ~/.ssh/staging.key
-            StrictHostKeyChecking no
-          END
-        env:
-          SSH_USER: ${{ vars.SERVER_USER }}
-          SSH_KEY: ${{ secrets.SERVER_SSH_KEY }}
-          SSH_HOST: ${{ vars.SERVER_HOST }}
-
-      - name: Initialize Secondary 
-        run: |
-          ssh staging '
+      - name: Initialize Secondary Publication and Subscription
+        uses: appleboy/ssh-action@v1.2.2
+        with:
+          host: ${{ vars.SERVER_HOST }}
+          username: ${{ vars.SERVER_USER }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          port: 22
+          capture_stdout: true
+          script: |
             export PGPASSWORD=${{ secrets.MYSQL_PASS }}
-            SUB_EXISTS=$(psql -U ${{ secrets.MYSQL_USER }} -d vermilion -h localhost -t -c "SELECT 1 FROM pg_subscription WHERE subname = '"'"'social_sub_to_${{ needs.Check-Inputs.outputs.PRIMARY_SERVER_COLOR }}'"'"';")
+            SUB_EXISTS=$(psql -U ${{ secrets.MYSQL_USER }} -d vermilion -h localhost -t -c "SELECT 1 FROM pg_subscription WHERE subname = 'social_sub_to_${{ needs.Check-Inputs.outputs.PRIMARY_SERVER_COLOR }}';")
             if [ -z "$SUB_EXISTS" ]; then
-              psql -U ${{ secrets.MYSQL_USER }} -d vermilion -h localhost -c "
-                CREATE SUBSCRIPTION social_sub_to_${{ needs.Check-Inputs.outputs.PRIMARY_SERVER_COLOR }} 
-                CONNECTION '"'"'host=${{ vars.ALTERNATE_SERVER_HOST }} port=5432 user=${{ secrets.MYSQL_USER }} dbname=vermilion password=${{ secrets.MYSQL_PASS }}'"'"' 
-                PUBLICATION social_pub_from_${{ needs.Check-Inputs.outputs.PRIMARY_SERVER_COLOR }};"
+              psql -U ${{ secrets.MYSQL_USER }} -d vermilion -h localhost -c "CREATE SUBSCRIPTION social_sub_to_${{ needs.Check-Inputs.outputs.PRIMARY_SERVER_COLOR }} CONNECTION 'host=${{ vars.ALTERNATE_SERVER_HOST }} port=5432 user=${{ secrets.MYSQL_USER }} dbname=vermilion password=${{ secrets.MYSQL_PASS }}' PUBLICATION social_pub_from_${{ needs.Check-Inputs.outputs.PRIMARY_SERVER_COLOR }};"
             fi
-            PUB_EXISTS=$(psql -U ${{ secrets.MYSQL_USER }} -d vermilion -h localhost -t -c "SELECT 1 FROM pg_publication WHERE pubname = '"'"'social_pub_from_${{ needs.Check-Inputs.outputs.SECONDARY_SERVER_COLOR }}'"'"';")
+            PUB_EXISTS=$(psql -U ${{ secrets.MYSQL_USER }} -d vermilion -h localhost -t -c "SELECT 1 FROM pg_publication WHERE pubname = 'social_pub_from_${{ needs.Check-Inputs.outputs.SECONDARY_SERVER_COLOR }}';")
             if [ -z "$PUB_EXISTS" ]; then
               psql -U ${{ secrets.MYSQL_USER }} -d vermilion -h localhost -c "CREATE PUBLICATION social_pub_from_${{ needs.Check-Inputs.outputs.SECONDARY_SERVER_COLOR }} FOR TABLE social.test;"
             fi
-          '
 
   Initialize-Primary-Disabled-Sub:
     needs: [Check-Inputs, Initialize-Secondary-Pub-Sub]
@@ -231,10 +167,10 @@ jobs:
           host: ${{ vars.SERVER_HOST }}
           username: ${{ vars.SERVER_USER }}
           key: ${{ secrets.SERVER_SSH_KEY }}
+          port: 22
           capture_stdout: true
           script: |
             export PGPASSWORD=${{ secrets.MYSQL_PASS }}
             SUB_EXISTS=$(psql -U ${{ secrets.MYSQL_USER }} -d vermilion -h localhost -t -c "SELECT 1 FROM pg_subscription WHERE subname = 'social_sub_to_${{ needs.Check-Inputs.outputs.SECONDARY_SERVER_COLOR }}';")
             if [ -z "$SUB_EXISTS" ]; then
               psql -U ${{ secrets.MYSQL_USER }} -d vermilion -h localhost -c "CREATE SUBSCRIPTION social_sub_to_${{ needs.Check-Inputs.outputs.SECONDARY_SERVER_COLOR }} CONNECTION 'host=${{ vars.ALTERNATE_SERVER_HOST }} port=5432 user=${{ secrets.MYSQL_USER }} dbname=vermilion password=${{ secrets.MYSQL_PASS }}' PUBLICATION social_pub_from_${{ needs.Check-Inputs.outputs.SECONDARY_SERVER_COLOR }} WITH (enabled = false, origin = none, copy_data = false);"
-            fi
