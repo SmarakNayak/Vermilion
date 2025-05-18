@@ -154,4 +154,6 @@ jobs:
           port: 22
           capture_stdout: true
           script: |
+            set -e
+            set -o pipefail
             PGPASSWORD=${{secrets.MYSQL_PASS}} psql -U ${{ secrets.MYSQL_USER }} -d vermilion -h localhost -c "ALTER SUBSCRIPTION social_sub_to_${{env.DEMOTE_SERVER_COLOR}} DISABLE;"
