@@ -125,7 +125,7 @@ jobs:
     runs-on: ubuntu-latest
     environment: '${{ github.event.inputs.hetzner_demote_server }}'
     steps:
-      - name: Check demote colour and status match
+      - name: Enable Subscription to Current Secondary
         uses: appleboy/ssh-action@v1.2.2
         with:
           host: ${{ vars.SERVER_HOST }}
@@ -137,15 +137,85 @@ jobs:
             set -e
             set -o pipefail
             PGPASSWORD=${{secrets.MYSQL_PASS}} psql -U ${{ secrets.MYSQL_USER }} -d vermilion -h localhost -c "ALTER SUBSCRIPTION social_sub_to_${{needs.Check-Inputs.outputs.PROMOTE_SERVER_COLOR}} ENABLE;"
+            echo "secondary" > ~/server_status
   
-  ## switch traffic goes here
-  
-  Demote-Primary: ## demoting primary works by disabling sub on current secondary
+  ## switch traffic to promoted server
+  Switch-Traffic:
     needs: [Check-Inputs, Promote-Secondary]
     runs-on: ubuntu-latest
     environment: '${{ github.event.inputs.hetzner_promote_server }}'
     steps:
-      - name: Demote Primary
+      - name: Switch Traffic
+        run: |
+          set -e
+          set -o pipefail
+          # Send Cloudflare API request and capture response
+          RESPONSE=$(curl -s https://api.cloudflare.com/client/v4/zones/${{ secrets.CF_ZONE_ID }}/dns_records/batch \
+            -H "Authorization: Bearer ${{ secrets.CF_TOKEN }}" \
+            -H "Content-Type: application/json" \
+            -d '{
+              "patches": [
+                {"id": "24d5dcb0e89e8292263e8a21cade0012", "content": "${{ vars.SERVER_HOST }}"}
+              ]
+            }')
+          # Check success field with jq
+          SUCCESS=$(echo "$RESPONSE" | jq -r '.success')
+          if [ "$SUCCESS" != "true" ]; then
+            echo "Error: Cloudflare DNS update failed (success: $SUCCESS)"
+            echo "Response: $RESPONSE"
+            exit 1
+          fi
+          # Check for errors array
+          ERRORS=$(echo "$RESPONSE" | jq -r '.errors')
+          if [ "$ERRORS" != "[]" ]; then
+            echo "Error: Cloudflare DNS update returned errors: $ERRORS"
+            echo "Response: $RESPONSE"
+            exit 1
+          fi
+  
+  ## after switching traffic, we need to wait for the demote server to drain before killing the subscription to this server
+  ## we can check this by querying running queries
+  ## can also block writes: sudo --login -u postgres psql -d vermilion -t -c "REVOKE INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA social FROM ${{ secrets.MYSQL_USER }};"
+  ## but probable unnecessary
+  Wait-For-Drain:
+    needs: [Check-Inputs, Promote-Secondary]
+    runs-on: ubuntu-latest
+    environment: '${{ github.event.inputs.hetzner_demote_server }}'
+    steps:
+      - name: Wait for demote server to drain
+        uses: appleboy/ssh-action@v1.2.2
+        with:
+          host: ${{ vars.SERVER_HOST }}
+          username: ${{ vars.SERVER_USER }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          port: 22
+          command_timeout: 300s # Allow up to 5 minutes for draining
+          script: |
+            set -e
+            set -o pipefail
+            MAX_ATTEMPTS=30
+            SLEEP_SECONDS=10
+            ATTEMPT=1
+            while [ $ATTEMPT -le $MAX_ATTEMPTS ]; do
+              ACTIVE_QUERIES=$(sudo --login -u postgres psql -d vermilion -t -c "SELECT COUNT(*) FROM pg_stat_activity WHERE state = 'active' AND query ILIKE '%social.%' AND usename != 'postgres' AND application_name NOT LIKE 'walreceiver' AND pid != pg_backend_pid();" | xargs)
+              if [ "$ACTIVE_QUERIES" -eq 0 ]; then
+                echo "No active queries in social schema on demote server. Draining complete at $(date)" >> ~/switchover_log
+                exit 0
+              fi
+              echo "Attempt $ATTEMPT: $ACTIVE_QUERIES active queries in social schema remain on demote server at $(date)" >> ~/switchover_log
+              sleep $SLEEP_SECONDS
+              ATTEMPT=$((ATTEMPT + 1))
+            done
+            echo "Error: Demote server did not drain after $MAX_ATTEMPTS attempts" >> ~/switchover_log
+            exit 1
+
+
+  Demote-Primary: ## demoting primary works by disabling sub on current secondary (server to promote)
+    needs: [Check-Inputs, Promote-Secondary]
+    runs-on: ubuntu-latest
+    environment: '${{ github.event.inputs.hetzner_promote_server }}'
+    steps:
+      - name: Disable Subscription to Old Primary
         uses: appleboy/ssh-action@v1.2.2
         with:
           host: ${{ vars.SERVER_HOST }}
@@ -156,4 +226,62 @@ jobs:
           script: |
             set -e
             set -o pipefail
+            sleep 60 # Wait a minute to ensure all connections have drained
             PGPASSWORD=${{secrets.MYSQL_PASS}} psql -U ${{ secrets.MYSQL_USER }} -d vermilion -h localhost -c "ALTER SUBSCRIPTION social_sub_to_${{needs.Check-Inputs.outputs.DEMOTE_SERVER_COLOR}} DISABLE;"
+            echo "primary" > ~/server_status
+
+  Rollback-Promote:
+    needs: [Check-Inputs, Promote-Secondary]
+    if: failure() && success('Promote-Secondary')
+    runs-on: ubuntu-latest
+    environment: '${{ github.event.inputs.hetzner_demote_server }}'
+    steps:
+      - name: Rollback-Promote-To-Secondary
+        uses: appleboy/ssh-action@v1.2.2
+        with:
+          host: ${{ vars.SERVER_HOST }}
+          username: ${{ vars.SERVER_USER }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          port: 22
+          capture_stdout: true
+          script: |
+            set -e
+            set -o pipefail
+            PGPASSWORD=${{secrets.MYSQL_PASS}} psql -U ${{ secrets.MYSQL_USER }} -d vermilion -h localhost -c "ALTER SUBSCRIPTION social_sub_to_${{needs.Check-Inputs.outputs.PROMOTE_SERVER_COLOR}} DISABLE;"
+            echo "primary" > ~/server_status
+  
+  Rollback-Switch-Traffic:
+    needs: [Check-Inputs, Switch-Traffic]
+    if: failure() && success('Switch-Traffic')
+    runs-on: ubuntu-latest
+    environment: '${{ github.event.inputs.hetzner_demote_server }}'
+    steps:
+      - name: Rollback-Switch-Traffic
+        run: |
+          set -e
+          set -o pipefail
+          # Send Cloudflare API request and capture response
+          RESPONSE=$(curl -s https://api.cloudflare.com/client/v4/zones/${{ secrets.CF_ZONE_ID }}/dns_records/batch \
+            -H "Authorization: Bearer ${{ secrets.CF_TOKEN }}" \
+            -H "Content-Type: application/json" \
+            -d '{
+              "patches": [
+                {"id": "24d5dcb0e89e8292263e8a21cade0012", "content": "${{ vars.SERVER_HOST }}"}
+              ]
+            }')
+          # Check success field with jq
+          SUCCESS=$(echo "$RESPONSE" | jq -r '.success')
+          if [ "$SUCCESS" != "true" ]; then
+            echo "Error: Cloudflare DNS update failed (success: $SUCCESS)"
+            echo "Response: $RESPONSE"
+            exit 1
+          fi
+          # Check for errors array
+          ERRORS=$(echo "$RESPONSE" | jq -r '.errors')
+          if [ "$ERRORS" != "[]" ]; then
+            echo "Error: Cloudflare DNS update returned errors: $ERRORS"
+            echo "Response: $RESPONSE"
+            exit 1
+          fi
+
+## NOTE: maybe instead of server_status, we need server_subscription_status and server_publication_status - it's a bit more complex but it would be more accurate
