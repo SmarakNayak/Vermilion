@@ -178,7 +178,7 @@ jobs:
   ## can also block writes: sudo --login -u postgres psql -d vermilion -t -c "REVOKE INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA social FROM ${{ secrets.MYSQL_USER }};"
   ## but probable unnecessary
   Wait-For-Drain:
-    needs: [Check-Inputs, Promote-Secondary]
+    needs: [Check-Inputs, Switch-Traffic]
     runs-on: ubuntu-latest
     environment: '${{ github.event.inputs.hetzner_demote_server }}'
     steps:
@@ -211,7 +211,7 @@ jobs:
 
 
   Demote-Primary: ## demoting primary works by disabling sub on current secondary (server to promote)
-    needs: [Check-Inputs, Promote-Secondary]
+    needs: [Check-Inputs, Wait-For-Drain]
     runs-on: ubuntu-latest
     environment: '${{ github.event.inputs.hetzner_promote_server }}'
     steps:
