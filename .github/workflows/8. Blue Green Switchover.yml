@@ -17,32 +17,126 @@ on:
         
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
-  Promote-Secondary: ## promoting secondary works by enabling sub on current primary
+  Check-Inputs:
+    runs-on: ubuntu-latest
+    outputs:
+      promote_server_color: ${{ steps.input-checker.outputs.PROMOTE_SERVER_COLOR }}
+      demote_server_color: ${{ steps.input-checker.outputs.DEMOTE_SERVER_COLOR }}
+    steps:
+      - name: Check Inputs
+        id: input-checker
+        run: | ## make sure hetzner_primary_server and hetzner_secondary_server are not the same, make sure one of them is Hetzner_blue and the other is Hetzner_green
+          if [ "${{ github.event.inputs.hetzner_promote_server }}" != "Hetzner_blue" ] && [ "${{ github.event.inputs.hetzner_promote_server }}" != "Hetzner_green" ]; then
+            echo "Error: hetzner_promote_server must be Hetzner_blue or Hetzner_green."
+            exit 1
+          fi
+          if [ "${{ github.event.inputs.hetzner_demote_server }}" != "Hetzner_blue" ] && [ "${{ github.event.inputs.hetzner_demote_server }}" != "Hetzner_green" ]; then
+            echo "Error: hetzner_demote_server must be Hetzner_blue or Hetzner_green."
+            exit 1
+          fi
+          if [ "${{ github.event.inputs.hetzner_promote_server }}" == "${{ github.event.inputs.hetzner_demote_server }}" ]; then
+            echo "Error: hetzner_promote_server and hetzner_demote_server cannot be the same."
+            exit 1
+          fi
+          if [ "${{ github.event.inputs.hetzner_promote_server }}" == "Hetzner_blue" ]; then
+            echo "PROMOTE_SERVER_COLOR=blue" >> $GITHUB_OUTPUT
+            echo "DEMOTE_SERVER_COLOR=green" >> $GITHUB_OUTPUT
+          else
+            echo "PROMOTE_SERVER_COLOR=green" >> $GITHUB_OUTPUT
+            echo "DEMOTE_SERVER_COLOR=blue" >> $GITHUB_OUTPUT
+          fi
+
+  Check-Promote:
+    needs: Check-Inputs
+    runs-on: ubuntu-latest
+    environment: '${{ github.event.inputs.hetzner_promote_server }}'
+    steps:
+      - name: Check promote colour and status match
+        uses: appleboy/ssh-action@v1.2.2
+        with:
+          host: ${{ vars.SERVER_HOST }}
+          username: ${{ vars.SERVER_USER }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          port: 22
+          capture_stdout: true
+          script: |
+            set -e
+            set -o pipefail
+            if [ -f ~/server_colour ]; then
+              COLOUR=$(cat ~/server_colour)
+              if [ "$COLOUR" != "${{ needs.Check-Inputs.outputs.PROMOTE_SERVER_COLOR }}" ]; then
+                echo "Error: ${{ needs.Check-Inputs.outputs.PROMOTE_SERVER_COLOR }} server is currently reporting as $COLOUR"
+                exit 1
+              fi
+            else
+              echo "Error: ${{ needs.Check-Inputs.outputs.PROMOTE_SERVER_COLOR }} is not reporting a colour"
+              exit 1
+            fi
+            if [ -f ~/server_status ]; then
+              STATE=$(cat ~/server_status)
+              if [ "$STATE" != "secondary" ]; then
+                echo "Error: You are trying to promote ${{ needs.Check-Inputs.outputs.PROMOTE_SERVER_COLOR }} to primary but it is currently $STATE"
+                exit 1
+              fi
+            else
+              echo "Error: ${{ needs.Check-Inputs.outputs.PROMOTE_SERVER_COLOR }} is not reporting a status"
+              exit 1
+            fi
+
+  Check-Demote:
+    needs: Check-Inputs
     runs-on: ubuntu-latest
     environment: '${{ github.event.inputs.hetzner_demote_server }}'
     steps:
-      - name: Configure SSH
-        run: |
-          mkdir -p ~/.ssh/
-          echo "$SSH_KEY" > ~/.ssh/staging.key
-          chmod 600 ~/.ssh/staging.key
-          cat >>~/.ssh/config <<END
-          Host staging
-            HostName $SSH_HOST
-            User $SSH_USER
-            IdentityFile ~/.ssh/staging.key
-            StrictHostKeyChecking no
-          END
-        env:
-          SSH_USER: ${{ vars.SERVER_USER }}
-          SSH_KEY: ${{ secrets.SERVER_SSH_KEY }}
-          SSH_HOST: ${{ vars.SERVER_HOST }}
+      - name: Check demote colour and status match
+        uses: appleboy/ssh-action@v1.2.2
+        with:
+          host: ${{ vars.SERVER_HOST }}
+          username: ${{ vars.SERVER_USER }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          port: 22
+          capture_stdout: true
+          script: |
+            set -e
+            set -o pipefail
+            if [ -f ~/server_colour ]; then
+              COLOUR=$(cat ~/server_colour)
+              if [ "$COLOUR" != "${{ needs.Check-Inputs.outputs.DEMOTE_SERVER_COLOR }}" ]; then
+                echo "Error: ${{ needs.Check-Inputs.outputs.DEMOTE_SERVER_COLOR }} server is currently reporting as $COLOUR"
+                exit 1
+              fi
+            else
+              echo "Error: ${{ needs.Check-Inputs.outputs.DEMOTE_SERVER_COLOR }} is not reporting a colour"
+              exit 1
+            fi
+            if [ -f ~/server_status ]; then
+              STATE=$(cat ~/server_status)
+              if [ "$STATE" != "primary" ]; then
+                echo "Error: You are trying to demote ${{ needs.Check-Inputs.outputs.DEMOTE_SERVER_COLOR }} to secondary but it is currently $STATE"
+                exit 1
+              fi
+            else
+              echo "Error: ${{ needs.Check-Inputs.outputs.DEMOTE_SERVER_COLOR }} is not reporting a status"
+              exit 1
+            fi
 
-      - name: Set secondary server color
-        run: echo "SECONDARY_SERVER_COLOR=$(echo ${{ github.event.inputs.hetzner_promote_server }} | sed 's/Hetzner_//')" >> $GITHUB_ENV
-
-      - name: Promote Secondary 
-        run: ssh staging 'PGPASSWORD=${{secrets.MYSQL_PASS}} psql -U ${{ secrets.MYSQL_USER }} -d vermilion -h localhost -c "ALTER SUBSCRIPTION social_sub_to_${{env.SECONDARY_SERVER_COLOR}} ENABLE;"'
+  Promote-Secondary: ## promoting secondary works by enabling sub on current primary (server to demote)
+    needs: [Check-Inputs, Check-Promote, Check-Demote]
+    runs-on: ubuntu-latest
+    environment: '${{ github.event.inputs.hetzner_demote_server }}'
+    steps:
+      - name: Check demote colour and status match
+        uses: appleboy/ssh-action@v1.2.2
+        with:
+          host: ${{ vars.SERVER_HOST }}
+          username: ${{ vars.SERVER_USER }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          port: 22
+          capture_stdout: true
+          script: |
+            set -e
+            set -o pipefail
+            PGPASSWORD=${{secrets.MYSQL_PASS}} psql -U ${{ secrets.MYSQL_USER }} -d vermilion -h localhost -c "ALTER SUBSCRIPTION social_sub_to_${{needs.Check-Inputs.outputs.PROMOTE_SERVER_COLOR}} ENABLE;"
   
   ## switch traffic goes here
   
@@ -51,28 +145,13 @@ jobs:
     runs-on: ubuntu-latest
     environment: '${{ github.event.inputs.hetzner_promote_server }}'
     steps:
-      - name: Configure SSH
-        run: |
-          mkdir -p ~/.ssh/
-          echo "$SSH_KEY" > ~/.ssh/staging.key
-          chmod 600 ~/.ssh/staging.key
-          cat >>~/.ssh/config <<END
-          Host staging
-            HostName $SSH_HOST
-            User $SSH_USER
-            IdentityFile ~/.ssh/staging.key
-            StrictHostKeyChecking no
-          END
-        env:
-          SSH_USER: ${{ vars.SERVER_USER }}
-          SSH_KEY: ${{ secrets.SERVER_SSH_KEY }}
-          SSH_HOST: ${{ vars.SERVER_HOST }}
-      
-      - name: Set primary server color
-        run: echo "PRIMARY_SERVER_COLOR=$(echo ${{ github.event.inputs.hetzner_demote_server }} | sed 's/Hetzner_//')" >> $GITHUB_ENV
-
-      - name: Demote Primary 
-        run: ssh staging 'PGPASSWORD=${{secrets.MYSQL_PASS}} psql -U ${{ secrets.MYSQL_USER }} -d vermilion -h localhost -c "ALTER SUBSCRIPTION social_sub_to_${{env.PRIMARY_SERVER_COLOR}} DISABLE;"'
-
-
-          
+      - name: Demote Primary
+        uses: appleboy/ssh-action@v1.2.2
+        with:
+          host: ${{ vars.SERVER_HOST }}
+          username: ${{ vars.SERVER_USER }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          port: 22
+          capture_stdout: true
+          script: |
+            PGPASSWORD=${{secrets.MYSQL_PASS}} psql -U ${{ secrets.MYSQL_USER }} -d vermilion -h localhost -c "ALTER SUBSCRIPTION social_sub_to_${{env.DEMOTE_SERVER_COLOR}} DISABLE;"
