@@ -141,7 +141,7 @@ jobs:
   ## switch traffic goes here
   
   Demote-Primary: ## demoting primary works by disabling sub on current secondary
-    needs: Promote-Secondary
+    needs: [Check-Inputs, Promote-Secondary]
     runs-on: ubuntu-latest
     environment: '${{ github.event.inputs.hetzner_promote_server }}'
     steps:
@@ -156,4 +156,4 @@ jobs:
           script: |
             set -e
             set -o pipefail
-            PGPASSWORD=${{secrets.MYSQL_PASS}} psql -U ${{ secrets.MYSQL_USER }} -d vermilion -h localhost -c "ALTER SUBSCRIPTION social_sub_to_${{env.DEMOTE_SERVER_COLOR}} DISABLE;"
+            PGPASSWORD=${{secrets.MYSQL_PASS}} psql -U ${{ secrets.MYSQL_USER }} -d vermilion -h localhost -c "ALTER SUBSCRIPTION social_sub_to_${{needs.Check-Inputs.outputs.DEMOTE_SERVER_COLOR}} DISABLE;"
