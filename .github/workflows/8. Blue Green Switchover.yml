@@ -238,7 +238,7 @@ jobs:
 
   Rollback-Promote:
     needs: [Check-Inputs, Promote-Secondary]
-    if: failure()
+    if: failure() && needs.Promote-Secondary.result == 'success'
     runs-on: ubuntu-latest
     environment: '${{ github.event.inputs.hetzner_demote_server }}'
     steps:
@@ -259,7 +259,7 @@ jobs:
   
   Rollback-Switch-Traffic:
     needs: [Check-Inputs, Switch-Traffic]
-    if: failure()
+    if: failure() && needs.Switch-Traffic.result == 'success'
     runs-on: ubuntu-latest
     environment: '${{ github.event.inputs.hetzner_demote_server }}'
     steps:
