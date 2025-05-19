@@ -78,7 +78,7 @@ jobs:
 
   Reset-Secondary: ## resetting secondary works by deleting all tables in social schema and then re-creating the subscription to the primary server
     needs: [Check-Inputs, Check-Secondary]
-    runs-on: ubuntu-latestsecondary 
+    runs-on: ubuntu-latest
     environment: '${{ github.event.inputs.hetzner_secondary_server }}'
     steps:
       - name: Enable Subscription to Current Secondary
