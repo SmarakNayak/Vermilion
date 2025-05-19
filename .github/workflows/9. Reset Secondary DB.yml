@@ -1,6 +1,10 @@
 # This is a workflow that clears the secondary database and resyncs it to the primary database from scratch.
-# ONLY USE THIS IF YOU KNOW WHAT YOU ARE DOING
-name: 9. Reset Secondary DB (do not take lightly)
+# DANGER: Wipe and Resync Secondary Database
+# This workflow DELETES ALL DATA in the social schema on the secondary database and resyncs it with the primary. Use only in extreme cases (e.g., corrupted secondary database). Ensure:
+# - You have a recent backup.
+# - The target server is confirmed as secondary.
+# - You understand the impact on services.
+name: 9. 🚨 Wipe and Resync Secondary DB 🚨
 
 # Controls when the workflow will run
 on:
@@ -21,7 +25,7 @@ jobs:
       primary_server_color: ${{ steps.input-checker.outputs.PRIMARY_SERVER_COLOR }}
     steps:
       - name: Check Inputs
-        id: input-checker
+        id: input-checkersecondary 
         run: | ## make sure hetzner_primary_server and hetzner_secondary_server are not the same, make sure one of them is Hetzner_blue and the other is Hetzner_green
           if [ "${{ github.event.inputs.hetzner_secondary_server }}" != "Hetzner_blue" ] && [ "${{ github.event.inputs.hetzner_secondary_server }}" != "Hetzner_green" ]; then
             echo "Error: hetzner_promote_server must be Hetzner_blue or Hetzner_green."
@@ -74,7 +78,7 @@ jobs:
 
   Reset-Secondary: ## resetting secondary works by deleting all tables in social schema and then re-creating the subscription to the primary server
     needs: [Check-Inputs, Check-Secondary]
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-latestsecondary 
     environment: '${{ github.event.inputs.hetzner_secondary_server }}'
     steps:
       - name: Enable Subscription to Current Secondary
