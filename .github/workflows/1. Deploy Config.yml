@@ -43,17 +43,15 @@ jobs:
                                          "aws_secret_access_key=${{secrets.S3_SECRET_ACCESS_KEY}}" > ~/.aws/credentials'
 
       - name: Create rclone config file
-        run: |
-          ssh staging 'mkdir -p ~/.config/rclone;'
-          ssh staging 'printf "%s\n" "[r2]"
-                                      "type = s3"
-                                      "provider = Cloudflare"
-                                      "access_key_id = ${{secrets.R2_ACCESS_KEY}}"
-                                      "secret_access_key = ${{secrets.R2_SECRET_ACCESS_KEY}}"
-                                      "region = auto"
-                                      "endpoint = https://${{secrets.CF_ACCOUNT_ID}}.r2.cloudflarestorage.com"
-                                      "bucket_acl = private"
-                                      "no_check_bucket = true" > ~/.config/rclone/rclone.conf'
+        run: ssh staging 'mkdir -p ~/.config/rclone; printf "%s\n" "[r2]"
+                                         "type = s3"
+                                         "provider = Cloudflare"
+                                         "access_key_id = ${{secrets.R2_ACCESS_KEY}}"
+                                         "secret_access_key = ${{secrets.R2_SECRET_ACCESS_KEY}}"
+                                         "region = auto"
+                                         "endpoint = https://${{secrets.CF_ACCOUNT_ID}}.r2.cloudflarestorage.com"
+                                         "bucket_acl = private"
+                                         "no_check_bucket = true" > ~/.config/rclone/rclone.conf'
 
 
       - name: Create Ord config file
