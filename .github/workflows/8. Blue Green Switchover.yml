@@ -215,7 +215,6 @@ jobs:
             echo "Error: Demote server did not drain after $MAX_ATTEMPTS attempts" >> ~/switchover_log
             exit 1
 
-
   Demote-Primary: ## demoting primary works by dropping sub on current secondary (server to promote)
     needs: [Check-Inputs, Wait-For-Drain]
     runs-on: ubuntu-latest
@@ -239,7 +238,7 @@ jobs:
 
   Rollback-Promote:
     needs: [Check-Inputs, Promote-Secondary]
-    if: failure() && success('Promote-Secondary')
+    if: failure()
     runs-on: ubuntu-latest
     environment: '${{ github.event.inputs.hetzner_demote_server }}'
     steps:
@@ -260,7 +259,7 @@ jobs:
   
   Rollback-Switch-Traffic:
     needs: [Check-Inputs, Switch-Traffic]
-    if: failure() && success('Switch-Traffic')
+    if: failure()
     runs-on: ubuntu-latest
     environment: '${{ github.event.inputs.hetzner_demote_server }}'
     steps:

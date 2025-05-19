@@ -1,6 +1,6 @@
 # This is a workflow that initializes replication from primary to secondary
 # It also sets up replication from secondary to primary but does not start it
-name: 7. Initialize Blue Green replication
+name: 7. Initialize Blue Green Replication
 
 # Controls when the workflow will run
 on:
