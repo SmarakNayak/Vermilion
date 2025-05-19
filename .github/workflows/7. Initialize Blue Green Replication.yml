@@ -174,13 +174,17 @@ jobs:
             if [ -z "$PUB_EXISTS" ]; then
               psql -U ${{ secrets.MYSQL_USER }} -d vermilion -h localhost -c "CREATE PUBLICATION social_pub_from_${{ needs.Check-Inputs.outputs.SECONDARY_SERVER_COLOR }} FOR TABLE social.test;"
             fi
-
+  
+  # For this job we initially had a disabled subscription to the secondary server
+  # but when we re enabled it, all changes made on the secondary server were carried over to the primary server
+  # This may lead test writes/deletes to be carried over to the primary server
+  # so instead we drop the subscription and create a new one on promotion
   Initialize-Primary-Disabled-Sub:
     needs: [Check-Inputs, Initialize-Secondary-Pub-Sub]
     runs-on: ubuntu-latest
     environment: '${{ github.event.inputs.hetzner_primary_server }}'
     steps:
-      - name: Initialize Primary (disabled) Subscription to Secondary
+      - name: Initialize Primary (deleted) Subscription to Secondary
         uses: appleboy/ssh-action@v1.2.2
         with:
           host: ${{ vars.SERVER_HOST }}
@@ -192,11 +196,12 @@ jobs:
             set -e
             set -o pipefail
             export PGPASSWORD=${{ secrets.MYSQL_PASS }}
-            SUB_EXISTS=$(psql -U ${{ secrets.MYSQL_USER }} -d vermilion -h localhost -t -c "SELECT 1 FROM pg_subscription WHERE subname = 'social_sub_to_${{ needs.Check-Inputs.outputs.SECONDARY_SERVER_COLOR }}';")
-            if [ -z "$SUB_EXISTS" ]; then
-              psql -U ${{ secrets.MYSQL_USER }} -d vermilion -h localhost -c "
-              CREATE SUBSCRIPTION social_sub_to_${{ needs.Check-Inputs.outputs.SECONDARY_SERVER_COLOR }} 
-              CONNECTION 'host=${{ vars.ALTERNATE_SERVER_HOST }} port=5432 user=${{ secrets.MYSQL_USER }} dbname=vermilion password=${{ secrets.MYSQL_PASS }}' 
-              PUBLICATION social_pub_from_${{ needs.Check-Inputs.outputs.SECONDARY_SERVER_COLOR }} 
-              WITH (enabled = false, origin = none, copy_data = false);"
-            fi
+            psql -U ${{ secrets.MYSQL_USER }} -d vermilion -h localhost -c "DROP SUBSCRIPTION IF EXISTS social_sub_to_${{ needs.Check-Inputs.outputs.SECONDARY_SERVER_COLOR }};"
+            # SUB_EXISTS=$(psql -U ${{ secrets.MYSQL_USER }} -d vermilion -h localhost -t -c "SELECT 1 FROM pg_subscription WHERE subname = 'social_sub_to_${{ needs.Check-Inputs.outputs.SECONDARY_SERVER_COLOR }}';")
+            # if [ -z "$SUB_EXISTS" ]; then
+            #   psql -U ${{ secrets.MYSQL_USER }} -d vermilion -h localhost -c "
+            #   CREATE SUBSCRIPTION social_sub_to_${{ needs.Check-Inputs.outputs.SECONDARY_SERVER_COLOR }} 
+            #   CONNECTION 'host=${{ vars.ALTERNATE_SERVER_HOST }} port=5432 user=${{ secrets.MYSQL_USER }} dbname=vermilion password=${{ secrets.MYSQL_PASS }}' 
+            #   PUBLICATION social_pub_from_${{ needs.Check-Inputs.outputs.SECONDARY_SERVER_COLOR }} 
+            #   WITH (enabled = false, origin = none, copy_data = false);"
+            # fi

@@ -120,7 +120,7 @@ jobs:
               exit 1
             fi
 
-  Promote-Secondary: ## promoting secondary works by enabling sub on current primary (server to demote)
+  Promote-Secondary: ## promoting secondary works by creating sub current primary (server to demote)
     needs: [Check-Inputs, Check-Promote, Check-Demote]
     runs-on: ubuntu-latest
     environment: '${{ github.event.inputs.hetzner_demote_server }}'
@@ -136,7 +136,13 @@ jobs:
           script: |
             set -e
             set -o pipefail
-            PGPASSWORD=${{secrets.MYSQL_PASS}} psql -U ${{ secrets.MYSQL_USER }} -d vermilion -h localhost -c "ALTER SUBSCRIPTION social_sub_to_${{needs.Check-Inputs.outputs.PROMOTE_SERVER_COLOR}} ENABLE;"
+            # PGPASSWORD=${{secrets.MYSQL_PASS}} psql -U ${{ secrets.MYSQL_USER }} -d vermilion -h localhost -c "ALTER SUBSCRIPTION social_sub_to_${{needs.Check-Inputs.outputs.PROMOTE_SERVER_COLOR}} ENABLE;"
+            PGPASSWORD=${{secrets.MYSQL_PASS}} psql -U ${{ secrets.MYSQL_USER }} -d vermilion -h localhost -c "DROP SUBSCRIPTION IF EXISTS social_sub_to_${{needs.Check-Inputs.outputs.PROMOTE_SERVER_COLOR}};"
+            PGPASSWORD=${{secrets.MYSQL_PASS}} psql -U ${{ secrets.MYSQL_USER }} -d vermilion -h localhost -c "
+              CREATE SUBSCRIPTION social_sub_to_${{needs.Check-Inputs.outputs.PROMOTE_SERVER_COLOR}} 
+              CONNECTION 'host=${{ vars.ALTERNATE_HOST }} port=5432 user=${{ secrets.MYSQL_USER }} password=${{ secrets.MYSQL_PASS }} dbname=vermilion' 
+              PUBLICATION social_pub_from_${{needs.Check-Inputs.outputs.PROMOTE_SERVER_COLOR}}
+              WITH (origin = none, copy_data = false);"
             echo "secondary" > ~/server_status
   
   ## switch traffic to promoted server
@@ -210,7 +216,7 @@ jobs:
             exit 1
 
 
-  Demote-Primary: ## demoting primary works by disabling sub on current secondary (server to promote)
+  Demote-Primary: ## demoting primary works by dropping sub on current secondary (server to promote)
     needs: [Check-Inputs, Wait-For-Drain]
     runs-on: ubuntu-latest
     environment: '${{ github.event.inputs.hetzner_promote_server }}'
@@ -227,7 +233,8 @@ jobs:
             set -e
             set -o pipefail
             sleep 60 # Wait a minute to ensure all connections have drained
-            PGPASSWORD=${{secrets.MYSQL_PASS}} psql -U ${{ secrets.MYSQL_USER }} -d vermilion -h localhost -c "ALTER SUBSCRIPTION social_sub_to_${{needs.Check-Inputs.outputs.DEMOTE_SERVER_COLOR}} DISABLE;"
+            PGPASSWORD=${{secrets.MYSQL_PASS}} psql -U ${{ secrets.MYSQL_USER }} -d vermilion -h localhost -c "DROP SUBSCRIPTION IF EXISTS social_sub_to_${{needs.Check-Inputs.outputs.DEMOTE_SERVER_COLOR}};"
+            # PGPASSWORD=${{secrets.MYSQL_PASS}} psql -U ${{ secrets.MYSQL_USER }} -d vermilion -h localhost -c "ALTER SUBSCRIPTION social_sub_to_${{needs.Check-Inputs.outputs.DEMOTE_SERVER_COLOR}} DISABLE;"
             echo "primary" > ~/server_status
 
   Rollback-Promote:
@@ -247,7 +254,8 @@ jobs:
           script: |
             set -e
             set -o pipefail
-            PGPASSWORD=${{secrets.MYSQL_PASS}} psql -U ${{ secrets.MYSQL_USER }} -d vermilion -h localhost -c "ALTER SUBSCRIPTION social_sub_to_${{needs.Check-Inputs.outputs.PROMOTE_SERVER_COLOR}} DISABLE;"
+            # PGPASSWORD=${{secrets.MYSQL_PASS}} psql -U ${{ secrets.MYSQL_USER }} -d vermilion -h localhost -c "ALTER SUBSCRIPTION social_sub_to_${{needs.Check-Inputs.outputs.PROMOTE_SERVER_COLOR}} DISABLE;"
+            PGPASSWORD=${{secrets.MYSQL_PASS}} psql -U ${{ secrets.MYSQL_USER }} -d vermilion -h localhost -c "DROP SUBSCRIPTION IF EXISTS social_sub_to_${{needs.Check-Inputs.outputs.PROMOTE_SERVER_COLOR}};"
             echo "primary" > ~/server_status
   
   Rollback-Switch-Traffic:
