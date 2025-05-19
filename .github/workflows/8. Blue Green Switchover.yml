@@ -140,7 +140,7 @@ jobs:
             PGPASSWORD=${{secrets.MYSQL_PASS}} psql -U ${{ secrets.MYSQL_USER }} -d vermilion -h localhost -c "DROP SUBSCRIPTION IF EXISTS social_sub_to_${{needs.Check-Inputs.outputs.PROMOTE_SERVER_COLOR}};"
             PGPASSWORD=${{secrets.MYSQL_PASS}} psql -U ${{ secrets.MYSQL_USER }} -d vermilion -h localhost -c "
               CREATE SUBSCRIPTION social_sub_to_${{needs.Check-Inputs.outputs.PROMOTE_SERVER_COLOR}} 
-              CONNECTION 'host=${{ vars.ALTERNATE_HOST }} port=5432 user=${{ secrets.MYSQL_USER }} password=${{ secrets.MYSQL_PASS }} dbname=vermilion' 
+              CONNECTION 'host=${{ vars.ALTERNATE_SERVER_HOST }} port=5432 user=${{ secrets.MYSQL_USER }} password=${{ secrets.MYSQL_PASS }} dbname=vermilion' 
               PUBLICATION social_pub_from_${{needs.Check-Inputs.outputs.PROMOTE_SERVER_COLOR}}
               WITH (origin = none, copy_data = false);"
             echo "secondary" > ~/server_status
