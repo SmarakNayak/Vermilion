@@ -1,6 +1,6 @@
 # This is a workflow that clears the secondary database and resyncs it to the primary database from scratch.
 # ONLY USE THIS IF YOU KNOW WHAT YOU ARE DOING
-name: 9. Reset Secondary DB
+name: 9. Reset Secondary DB (do not take lightly)
 
 # Controls when the workflow will run
 on:
@@ -64,7 +64,7 @@ jobs:
             if [ -f ~/server_status ]; then
               STATE=$(cat ~/server_status)
               if [ "$STATE" != "secondary" ]; then
-                echo "Error: You are trying to reset the social schema on ${{ needs.Check-Inputs.outputs.SECONDARY_SERVER_COLOR }}. It needs to be secondary but it is currently $STATE"
+                echo "Error: You are trying to reset the social schema on ${{ needs.Check-Inputs.outputs.SECONDARY_SERVER_COLOR }}. Resetting is only allowed on secondary but it is currently $STATE"
                 exit 1
               fi
             else
