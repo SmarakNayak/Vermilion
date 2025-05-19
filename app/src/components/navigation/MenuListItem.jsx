@@ -10,11 +10,20 @@ const MenuListItem = ({
   icon: IconComponent,
   title,
   subtitle,
-  tag
+  tag,
+  isExternal
 }) => {
+
+  const linkRelatedProps = isExternal
+  ? { href: link, target: '_blank', rel: 'noopener noreferrer' }
+  : { to: link };
+
+  const ComponentToRender = isExternal ? 'a' : Link;
+
   return (
     <StyledMenuItem 
-      to={link} 
+      as={ComponentToRender} 
+      {...linkRelatedProps}  
       onClick={action} 
       $isStandard={isStandard}
     >

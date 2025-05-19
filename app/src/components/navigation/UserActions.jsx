@@ -1,13 +1,15 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom'; 
 import styled from 'styled-components';
-import { ArchiveIcon, BurgerMenuIcon, LogoutIcon, SwitchIcon } from '../common/Icon';
+import { ArchiveIcon, BurgerMenuIcon, DiscordIcon, DotsHorizontalIcon, LogoutIcon, QuestionIcon, SwitchIcon, TwitterIcon } from '../common/Icon';
 import theme from '../../styles/theme';
 import MobileMenu from './MobileMenu';
 import WalletConnectMenu from './WalletConnectMenu';
 import useStore from '../../store/zustand';
 import { formatAddress } from '../../utils';
 import { AvatarCircleIcon } from '../common/Icon/icons/AvatarCircleIcon';
+import Tooltip from '../common/Tooltip';
+import UnstyledLink from '../common/UnstyledLink';
 
 const UserActions = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -55,17 +57,34 @@ const UserActions = () => {
     <>
       <ActionsContainer>
         {!wallet ? (
-          <ConnectButton onClick={openWalletMenu}>Connect</ConnectButton>
+          <>
+            <ConnectButton onClick={openWalletMenu}>Connect</ConnectButton>
+            <ConnectButtonWrapper>
+              <OptionButton>
+                <DotsHorizontalIcon size={"1.25rem"} />
+              </OptionButton>
+              <DropdownContainer className="wallet-dropdown">
+                <DropdownItem href={"https://discord.gg/a5EN38CfjU"} target="_blank" rel="noopener noreferrer">
+                  <QuestionIcon size={"1.25rem"} />
+                  Get Help
+                </DropdownItem>
+                <DropdownItem href={"https://x.com/vrmlndotplace"} target="_blank" rel="noopener noreferrer">
+                  <TwitterIcon size={"1.25rem"} />
+                  X (Twitter)
+                </DropdownItem>
+              </DropdownContainer>
+            </ConnectButtonWrapper>
+          </>
         ) : (
+          <>
+          <AddressButton onClick={handleAddressButtonClick}>
+            <AvatarCircleIcon size={"1.5rem"} color={theme.colors.text.primary} />
+          </AddressButton>
           <ConnectButtonWrapper>
-            <AddressButton onClick={handleAddressButtonClick}>
-              <AvatarCircleIcon size={"1.25rem"} />
-              {formatAddress(wallet.ordinalsAddress)}
-            </AddressButton>
+            <OptionButton>
+              <DotsHorizontalIcon size={"1.25rem"} />
+            </OptionButton>
             <DropdownContainer className="wallet-dropdown">
-              {/* <DropdownItem href={"/address/" + wallet.ordinalsAddress}>
-                View Profile
-              </DropdownItem> */}
               <DropdownItem href={"/history/"}>
                 <ArchiveIcon size={"1.25rem"} />
                 Order History
@@ -78,8 +97,19 @@ const UserActions = () => {
                 <LogoutIcon size={"1.25rem"} />
                 Disconnect
               </DropdownItem>
+              <Divider />
+              <DropdownItem href={"https://discord.gg/a5EN38CfjU"} target="_blank" rel="noopener noreferrer">
+                <QuestionIcon size={"1.25rem"} />
+                Get Help
+              </DropdownItem>
+              <DropdownItem href={"https://x.com/vrmlndotplace"} target="_blank" rel="noopener noreferrer">
+                <TwitterIcon size={"1.25rem"} />
+                X (Twitter)
+              </DropdownItem>
             </DropdownContainer>
+
           </ConnectButtonWrapper>
+          </>
         )}
 
         <MobileMenuButton onClick={toggleMenu}>
@@ -140,12 +170,15 @@ const ConnectButton = styled.button`
 const AddressButton = styled.button`
   display: flex;
   align-items: center;
-  gap: .375rem;
+  justify-content: center;
   height: 2.5rem;
-  padding: 0 1rem;
-  border: none;
-  border-radius: 1.5rem;
-  background-color: ${theme.colors.background.white};
+  min-height: 2.5rem;
+  width: 2.5rem;
+  min-width: 2.5rem;
+  box-sizing: border-box;
+  border: 2px solid transparent;
+  border-radius: 1.25rem;
+  background-color: ${theme.colors.background.primary};
   color: ${theme.colors.text.primary};
   font-family: ${theme.typography.fontFamilies.medium};
   font-size: 1rem;
@@ -153,25 +186,73 @@ const AddressButton = styled.button`
   transition: all 200ms ease;
 
   &:hover {
-    background-color: ${theme.colors.background.primary};
-    color: ${theme.colors.text.primary};
+    border: 2px solid ${theme.colors.border};
+  }
 
+  &:active {
+    transform: scale(0.96);
+  }
+
+  @media (max-width: 864px) {
+    display: none;
+  }
+`;
+
+const OptionButton = styled.button`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 2.5rem;
+  min-height: 2.5rem;
+  width: 2.5rem;
+  min-width: 2.5rem;
+  border: none;
+  border-radius: 1.25rem;
+  background-color: ${theme.colors.background.white};
+  color: ${theme.colors.text.secondary};
+  font-family: ${theme.typography.fontFamilies.medium};
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 200ms ease;
+
+  svg {
+    fill: ${theme.colors.text.secondary};
+    transition: all 200ms ease;
+  }
+
+  &:hover {
+    background-color: ${theme.colors.background.primary};
     svg {
       fill: ${theme.colors.text.primary};
     }
   }
 
   &:active {
-    transform: scale(0.98);
-  }
-
-  svg {
-    fill: ${theme.colors.text.primary};
-    transition: fill 200ms ease;
+    transform: scale(0.96);
   }
 
   @media (max-width: 864px) {
     display: none;
+  }
+`;
+
+
+const ButtonWrapper = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  margin: 0;
+
+  svg {
+    fill: ${theme.colors.text.secondary};
+    transition: all 200ms ease;
+  }
+
+  &:hover {
+    svg {
+      fill: ${theme.colors.text.primary};
+    }
   }
 `;
 
@@ -283,6 +364,24 @@ const DropdownItem = styled.a`
       fill: ${theme.colors.text.primary};
     }
   }
+`;
+
+const Divider = styled.div`
+  width: calc(100% - 0.25rem);
+  height: 1px;
+  background-color: ${theme.colors.border};
+  margin: 0.0625rem 0.125rem;
+`;
+
+const SocialContainer = styled.div`
+  width: 100%;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-end;
+  box-sizing: border-box;
+  gap: 1rem;
+  padding: 0.75rem;
 `;
 
 export default UserActions;

@@ -12,10 +12,12 @@ import {
   GalleryIcon, 
   LoginIcon,
   LogoutIcon,
+  QuestionIcon,
   SparklesIcon,
   ScanIcon,
   SwitchIcon,
   ArchiveIcon,
+  TwitterIcon,
 } from '../common/Icon';
 import { theme } from '../../styles/theme';
 import Brand from './Brand';
@@ -101,16 +103,18 @@ const MobileMenu = ({ isOpen, onClose, onConnectWallet, wallet, onViewProfile, o
 
         <LinkSection>
           {!wallet ? (
-            <MenuListItem 
-              link="#" 
-              action={() => {
-                onClose();
-                onConnectWallet();
-              }} 
-              icon={LoginIcon} 
-              isStandard={true}
-              title="Connect Wallet"
-            />
+            <>
+              <MenuListItem 
+                link="#" 
+                action={() => {
+                  onClose();
+                  onConnectWallet();
+                }} 
+                icon={LoginIcon} 
+                isStandard={true}
+                title="Connect Wallet"
+              />
+            </>
           ) : (
             <>
               <MenuListItem 
@@ -153,6 +157,31 @@ const MobileMenu = ({ isOpen, onClose, onConnectWallet, wallet, onViewProfile, o
               />
             </>
           )}
+        </LinkSection>
+
+        <Divider />
+
+        <LinkSection>
+          <MenuListItem 
+            link="https://discord.gg/a5EN38CfjU" 
+            action={() => {
+              onClose();
+            }} 
+            icon={QuestionIcon} 
+            isExternal={true}
+            isStandard={true}
+            title="Get Help"
+          />
+          <MenuListItem
+            link="https://x.com/vrmlndotplace" 
+            action={() => {
+              onClose();
+            }} 
+            icon={TwitterIcon} 
+            isExternal={true}
+            isStandard={true}
+            title="X (Twitter)"
+          />
         </LinkSection>
       </MenuContent>
     </MenuContainer>
