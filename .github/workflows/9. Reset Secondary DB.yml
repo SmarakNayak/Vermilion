@@ -25,7 +25,7 @@ jobs:
       primary_server_color: ${{ steps.input-checker.outputs.PRIMARY_SERVER_COLOR }}
     steps:
       - name: Check Inputs
-        id: input-checkersecondary 
+        id: input-checker 
         run: | ## make sure hetzner_primary_server and hetzner_secondary_server are not the same, make sure one of them is Hetzner_blue and the other is Hetzner_green
           if [ "${{ github.event.inputs.hetzner_secondary_server }}" != "Hetzner_blue" ] && [ "${{ github.event.inputs.hetzner_secondary_server }}" != "Hetzner_green" ]; then
             echo "Error: hetzner_promote_server must be Hetzner_blue or Hetzner_green."
