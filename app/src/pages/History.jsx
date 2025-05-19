@@ -99,7 +99,7 @@ const History = () => {
         <PageText>Order History</PageText>
         <VerticalDivider />
         <ButtonContainer>
-          <TabButton to="" isActive={false}>
+          <TabButton href={"https://discord.gg/a5EN38CfjU"} target="_blank" rel="noopener noreferrer">
             <QuestionIcon size={'1.25rem'} />
             Get Help
           </TabButton>
@@ -232,7 +232,7 @@ const ButtonContainer = styled.div`
   gap: .25rem;
 `;
 
-const TabButton = styled(Link)`
+const TabButton = styled.a`
   border: none;
   padding: 0 .75rem;
   height: 2rem;
