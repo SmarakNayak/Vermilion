@@ -42,6 +42,18 @@ jobs:
                                          "aws_access_key_id=${{secrets.S3_ACCESS_KEY}}"
                                          "aws_secret_access_key=${{secrets.S3_SECRET_ACCESS_KEY}}" > ~/.aws/credentials'
 
+      - name: Create rclone config file
+        run: ssh staging 'printf "%s\n" "[r2]"
+                                         "type = s3"
+                                         "provider = Cloudflare"
+                                         "access_key_id = ${R2_ACCESS_KEY}"
+                                         "secret_access_key = ${R2_SECRET_ACCESS_KEY}"
+                                         "region = auto"
+                                         "endpoint = https://${{secrets.CF_ACCOUNT_ID}}.r2.cloudflarestorage.com"
+                                         "bucket_acl = private"
+                                         "no_check_bucket = true" > ~/.config/rclone/rclone.conf'
+
+
       - name: Create Ord config file
         run: ssh staging 'printf "%s\n" "${{format('s3_bucket_name{0} ', ':')}}vermilion-ordinals"
                                         "${{format('s3_head_check{0} ', ':')}}true"
@@ -102,3 +114,8 @@ jobs:
           ssh staging 'sudo --login -u postgres psql -d vermilion -c "alter user ${{secrets.MYSQL_USER}} with encrypted password '"'"'${{secrets.MYSQL_PASS}}'"'"'"';
           ssh staging 'sudo --login -u postgres psql -d vermilion -c "grant all privileges on database vermilion to ${{secrets.MYSQL_USER}}"';
           ssh staging 'sudo --login -u postgres psql -d vermilion -c "GRANT ALL ON SCHEMA public TO ${{secrets.MYSQL_USER}}"';
+
+      - name: Setup cronjobs
+        run: |
+          ssh staging 'mkdir -p bin; cp /home/ubuntu/Vermilion/Cronjobs/social_schema_backup.sh /home/ubuntu/bin/social_schema_backup.sh; chmod +x /home/ubuntu/bin/social_schema_backup.sh;'
+          ssh staging 'crontab /home/ubuntu/Vermilion/Cronjobs/Vermilion.cron'
