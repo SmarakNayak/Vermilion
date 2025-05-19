@@ -1,0 +1,110 @@
+# This is a workflow that clears the secondary database and resyncs it to the primary database from scratch.
+# ONLY USE THIS IF YOU KNOW WHAT YOU ARE DOING
+name: 9. Reset Secondary DB
+
+# Controls when the workflow will run
+on:
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+    inputs:
+      hetzner_secondary_server:
+        description: 'Which server is secondary? Hetzner_blue or Hetzner_green'
+        required: true
+        default: 'Hetzner_'
+        
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  Check-Inputs:
+    runs-on: ubuntu-latest
+    outputs:
+      secondary_server_color: ${{ steps.input-checker.outputs.SECONDARY_SERVER_COLOR }}
+      primary_server_color: ${{ steps.input-checker.outputs.PRIMARY_SERVER_COLOR }}
+    steps:
+      - name: Check Inputs
+        id: input-checker
+        run: | ## make sure hetzner_primary_server and hetzner_secondary_server are not the same, make sure one of them is Hetzner_blue and the other is Hetzner_green
+          if [ "${{ github.event.inputs.hetzner_secondary_server }}" != "Hetzner_blue" ] && [ "${{ github.event.inputs.hetzner_secondary_server }}" != "Hetzner_green" ]; then
+            echo "Error: hetzner_promote_server must be Hetzner_blue or Hetzner_green."
+            exit 1
+          fi
+          if [ "${{ github.event.inputs.hetzner_secondary_server }}" == "Hetzner_blue" ]; then
+            echo "SECONDARY_SERVER_COLOR=blue" >> $GITHUB_OUTPUT
+            echo "PRIMARY_SERVER_COLOR=green" >> $GITHUB_OUTPUT
+          else
+            echo "SECONDARY_SERVER_COLOR=green" >> $GITHUB_OUTPUT
+            echo "PRIMARY_SERVER_COLOR=blue" >> $GITHUB_OUTPUT
+          fi
+
+  Check-Secondary:
+    needs: Check-Inputs
+    runs-on: ubuntu-latest
+    environment: '${{ github.event.inputs.hetzner_secondary_server }}'
+    steps:
+      - name: Check colour and secondary status
+        uses: appleboy/ssh-action@v1.2.2
+        with:
+          host: ${{ vars.SERVER_HOST }}
+          username: ${{ vars.SERVER_USER }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          port: 22
+          capture_stdout: true
+          script: |
+            set -e
+            set -o pipefail
+            if [ -f ~/server_colour ]; then
+              COLOUR=$(cat ~/server_colour)
+              if [ "$COLOUR" != "${{ needs.Check-Inputs.outputs.SECONDARY_SERVER_COLOR }}" ]; then
+                echo "Error: ${{ needs.Check-Inputs.outputs.SECONDARY_SERVER_COLOR }} server is currently reporting as $COLOUR"
+                exit 1
+              fi
+            else
+              echo "Error: ${{ needs.Check-Inputs.outputs.SECONDARY_SERVER_COLOR }} is not reporting a colour"
+              exit 1
+            fi
+            if [ -f ~/server_status ]; then
+              STATE=$(cat ~/server_status)
+              if [ "$STATE" != "secondary" ]; then
+                echo "Error: You are trying to reset the social schema on ${{ needs.Check-Inputs.outputs.SECONDARY_SERVER_COLOR }}. It needs to be secondary but it is currently $STATE"
+                exit 1
+              fi
+            else
+              echo "Error: ${{ needs.Check-Inputs.outputs.SECONDARY_SERVER_COLOR }} is not reporting a status"
+              exit 1
+            fi
+
+  Reset-Secondary: ## resetting secondary works by deleting all tables in social schema and then re-creating the subscription to the primary server
+    needs: [Check-Inputs, Check-Secondary]
+    runs-on: ubuntu-latest
+    environment: '${{ github.event.inputs.hetzner_secondary_server }}'
+    steps:
+      - name: Enable Subscription to Current Secondary
+        uses: appleboy/ssh-action@v1.2.2
+        with:
+          host: ${{ vars.SERVER_HOST }}
+          username: ${{ vars.SERVER_USER }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          port: 22
+          capture_stdout: true
+          script: |
+            set -e
+            set -o pipefail
+            PGPASSWORD=${{secrets.MYSQL_PASS}} psql -U ${{ secrets.MYSQL_USER }} -d vermilion -h localhost -c "DROP SUBSCRIPTION IF EXISTS social_sub_to_${{needs.Check-Inputs.outputs.PRIMARY_SERVER_COLOR}};"
+            PGPASSWORD=${{secrets.MYSQL_PASS}} psql -U ${{ secrets.MYSQL_USER }} -d vermilion -h localhost -c "
+              DO $$
+              DECLARE
+                  table_name text;
+              BEGIN
+                  FOR table_name IN 
+                      SELECT t.table_name 
+                      FROM information_schema.tables t
+                      WHERE t.table_schema = 'social' 
+                      AND t.table_type = 'BASE TABLE'
+                  LOOP
+                      EXECUTE 'TRUNCATE TABLE ' || quote_ident(table_name) || ' CASCADE';
+                  END LOOP;
+              END $$;"
+            PGPASSWORD=${{secrets.MYSQL_PASS}} psql -U ${{ secrets.MYSQL_USER }} -d vermilion -h localhost -c "
+              CREATE SUBSCRIPTION social_sub_to_${{needs.Check-Inputs.outputs.PRIMARY_SERVER_COLOR}} 
+              CONNECTION 'host=${{ vars.ALTERNATE_SERVER_HOST }} port=5432 user=${{ secrets.MYSQL_USER }} password=${{ secrets.MYSQL_PASS }} dbname=vermilion' 
+              PUBLICATION social_pub_from_${{needs.Check-Inputs.outputs.PRIMARY_SERVER_COLOR}}
+              WITH (origin = none, copy_data = true);"
