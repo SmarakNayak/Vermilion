@@ -17,7 +17,7 @@ if [ $? -ne 0 ]; then
 fi
 
 # Upload to Cloudflare R2
-rclone copy "$BACKUP_FILE" r2:backups
+rclone copy "$BACKUP_DIR/$BACKUP_FILE" r2:backups
 
 # Check if upload was successful
 if [ $? -ne 0 ]; then
