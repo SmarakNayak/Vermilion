@@ -386,7 +386,7 @@ class XverseWallet extends Wallet {
   
   async signMessage(message, type, address = this.ordinalsAddress) {
     this.windowCheck();
-    if (type && (type !== 'bip322' || type !== 'ecdsa')) throw new Error('Xverse only supports bip322 and ecdsa signing');
+    if (type && (type !== 'bip322' && type !== 'ecdsa')) throw new Error('Xverse only supports bip322 and ecdsa signing');
     if (type === 'bip322') type = 'BIP322';
     if (type === 'ecdsa') type = 'ECDSA';
     const response = await window.XverseProviders.BitcoinProvider.request("signMessage", {
@@ -647,7 +647,7 @@ class MagicEdenWallet extends Wallet {
   }
 
   async signMessage(message, type, address = this.ordinalsAddress) {
-    if (type && (type !== 'bip322' || type !== 'ecdsa')) throw new Error('MagicEden only supports bip322 and ecdsa signing');
+    if (type && (type !== 'bip322' && type !== 'ecdsa')) throw new Error('MagicEden only supports bip322 and ecdsa signing');
     if (type === 'bip322') type = 'BIP322';
     if (type === 'ecdsa') type = 'ECDSA';
     this.windowCheck();
