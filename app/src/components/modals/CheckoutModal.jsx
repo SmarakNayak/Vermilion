@@ -49,7 +49,7 @@ const CheckoutModal = ({ onClose, isCheckoutModalOpen, delegateData }) => {
 
   const [feeRate, setFeeRate] = useState(0);
   const [btcusd, setBtcusd] = useState(0);
-  const [utxos, setUtxos] = useState([]);
+  const [utxos, setUtxos] = useState(null);
   const [inscriptionFee, setInscriptionFee] = useState(0);
   const [totalPlatformFee, setTotalPlatformFee] = useState(0);
   const [totalOwnerFee, setTotalOwnerFee] = useState(0);
@@ -144,7 +144,8 @@ const CheckoutModal = ({ onClose, isCheckoutModalOpen, delegateData }) => {
   }
 
   useEffect(() => {
-    if (isCheckoutModalOpen & feeRate & ownerAddress !== null) {
+    console.log(isCheckoutModalOpen, feeRate, ownerAddress);
+    if (isCheckoutModalOpen & feeRate > 0 & ownerAddress !== null) {
       let quantity = boostQuantity;
       if (quantity < 1) { //early return if 0 (as estiamtion assumes min tx size)
         setInscriptionFee(0);
@@ -163,7 +164,7 @@ const CheckoutModal = ({ onClose, isCheckoutModalOpen, delegateData }) => {
         totalOwnerFee = 0; // no owner fee if address is invalid
       }
       setTotalOwnerFee(totalOwnerFee);
-      if (wallet && utxos.length > 0) {
+      if (wallet && utxos?.length > 0) {
         let revealVsize = getRevealVSize(inscriptions, wallet.ordinalsAddress, network);
         try{          
           let inscriptionFee = estimateInscriptionFee(inscriptions, wallet.paymentAddress, wallet.paymentPublicKey, revealVsize, feeRate, utxos, network, totalPlatformFee, null, totalOwnerFee, null);
@@ -186,7 +187,7 @@ const CheckoutModal = ({ onClose, isCheckoutModalOpen, delegateData }) => {
   
   // wait for data to load before enabling boost button
   useEffect(() => {
-    if (isCheckoutModalOpen, utxos.length > 0 & feeRate > 0 && inscriptionFee > 0 && ownerAddress !== null) {
+    if (isCheckoutModalOpen && utxos !== null && feeRate > 0 && inscriptionFee > 0 && ownerAddress !== null) {
       setCanBoost(true);
     } else {
       setCanBoost(false);
@@ -205,7 +206,7 @@ const CheckoutModal = ({ onClose, isCheckoutModalOpen, delegateData }) => {
         setOverlayWalletConnect(true);
         return;
       }
-      if (!delegateMetadata || feeRate === 0 || !ownerAddress || utxos.length === 0) {
+      if (!delegateMetadata || feeRate === 0 || !ownerAddress || utxos === null) {
         setError("Still loading data, try again in a moment.");
         return;
       }
