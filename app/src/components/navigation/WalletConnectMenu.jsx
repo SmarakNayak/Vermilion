@@ -85,6 +85,7 @@ const WalletConnectMenu = ({ isOpen, onClose }) => {
   // Use Zustand store to manage wallet state - has to be top-level
   const setWallet = useStore(state => state.setWallet);
   const setAuthToken = useStore(state => state.setAuthToken);
+  const network = useStore(state => state.network);
 
   useEffect(() => {
     if (isOpen) {
@@ -159,7 +160,7 @@ const WalletConnectMenu = ({ isOpen, onClose }) => {
     setIsConnecting(true);
     try {
       //1. Connect to the wallet
-      let wallet = await connectWallet(walletType, "signet");
+      let wallet = await connectWallet(walletType, network);
       //2. Fetch sign in message
       const messageResponse = await fetch(`/bun/social/generate_sign_in_message`, {
         method: 'POST',
@@ -207,7 +208,7 @@ const WalletConnectMenu = ({ isOpen, onClose }) => {
         } else {
           // disconnect even if new wallet is connected
           // firing a new signature request with no user interaction is bad UX
-          // let newWallet = await connectWallet(walletType, "signet");
+          // let newWallet = await connectWallet(walletType, network);
           // setWallet(newWallet);
           setWallet(null);
           setAuthToken(null);
