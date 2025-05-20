@@ -70,8 +70,6 @@ const InnerInscriptionContent = ({
     <ImageIcon size={'1rem'} color={theme.colors.background.verm} />;
   }
 
-  
-
   // Render content based on contentType
   switch(contentType) {
 
@@ -103,9 +101,14 @@ const InnerInscriptionContent = ({
         />
       );
       
-    // Render SVG content - use number for page/grid and endpoint + isIcon for icon  
+    // Render SVG content - use number for page, id + serverHTML for grid, and endpoint + isIcon for icon  
     case 'svg-recursive':
-      return (
+      return serverHTML ? (
+        <ImageContainer 
+          src={"/bun/rendered_content/" + metadata?.id}
+          alt={`HTML Inscription ${number}`}
+        />
+      ) : (
         <SvgContainer 
           src={isIcon ? endpoint : `/api/inscription_number/${number}`}
           scrolling="no" 

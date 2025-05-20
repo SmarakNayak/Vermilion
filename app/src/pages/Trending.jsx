@@ -198,6 +198,8 @@ const Trending = () => {
       return isOpening;
     });
   };
+  
+  console.log(inscriptions);
 
   return (
     <MainContainer>
@@ -266,7 +268,7 @@ const Trending = () => {
                     <InnerInscriptionContent
                       contentType={
                         inscription.inscriptions[0].content_type === 'loading' ? 'loading' : 
-                        inscription.inscriptions[0].content_type.startsWith('image/') ? 'image' : 'html'
+                        inscription.inscriptions[0].content_type.startsWith('image/svg') ? 'svg-recursive' : 'image'
                       }
                       blobUrl={`/api/inscription_number/${inscription.inscriptions[0].number}`}
                       number={inscription.inscriptions[0].number}
@@ -275,6 +277,7 @@ const Trending = () => {
                         content_type: inscription.inscriptions[0].content_type,
                         is_recursive: inscription.inscriptions[0].is_recursive
                       }}
+                      serverHTML={true}
                       useFeedStyles={true}
                     />
                     <ContentOverlay />
