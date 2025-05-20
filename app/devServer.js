@@ -75,6 +75,7 @@ async function proxyRequest(req, targetHost, rewrite) {
   // clone incoming headers and add auth
   const headers = new Headers();
   headers.set('Authorization', req.headers.get('Authorization') || '');
+  headers.set('Cookie', req.headers.get('Cookie') || '');
 
   try {
     const response = await fetch(targetUrl, {
