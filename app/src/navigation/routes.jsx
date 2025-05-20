@@ -22,6 +22,7 @@ import Attributions from '../pages/Attributions';
 import History from '../pages/History';
 
 import { addCommas, formatAddress } from '../utils/format';
+import PostHogPageView from '../../PostHogPageView';
 
 const useDocumentTitle = (titleOrFn) => {
   useEffect(() => {
@@ -91,6 +92,7 @@ const PageWrapper = styled(Page)`
 const Navigation = () => {
   return (
     <BrowserRouter>
+      <PostHogPageView />
       <PageWrapper>
         <TopBar />
         <Routes>
