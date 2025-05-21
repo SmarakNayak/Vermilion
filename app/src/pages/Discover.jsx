@@ -2,11 +2,10 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import styled from 'styled-components';
 import Spinner from '../components/Spinner';
-import SkeletonImage from '../components/SkeletonImage';
 import InnerInscriptionContent from '../components/common/InnerInscriptionContent';
 import { addCommas } from '../utils/format';
 import { copyText } from '../utils/clipboard';
-import { BoostIcon, CheckIcon, ChevronUpDuoIcon, CommentIcon, CopyIcon, CurrencyIcon, FireIcon, GalleryIcon, LinkIcon, Person2Icon, RefreshIcon, RuneIcon, SparklesIcon, SproutIcon } from '../components/common/Icon';
+import { CheckIcon, ChevronUpDuoIcon, CommentIcon, CurrencyIcon, FireIcon, GalleryIcon, LinkIcon, Person2Icon, SparklesIcon } from '../components/common/Icon';
 import theme from '../styles/theme';
 import CheckoutModal from '../components/modals/CheckoutModal';
 import BoostsModal from '../components/modals/BoostsModal';
@@ -35,7 +34,7 @@ const Discover = () => {
   const fetchInscriptions = async () => {
     try {
       setIsLoading(true);
-      const response = await fetch(`/api/random_inscriptions?n=30`);
+      const response = await fetch(`/api/discover_feed?n=12`);
       const newInscriptions = await response.json();
       
       if (newInscriptions.length === 0) {
@@ -89,6 +88,115 @@ const Discover = () => {
     fetchInscriptions();
   }, []);
 
+  // Manage modal state
+  const [isBoostsModalOpen, setBoostsModalOpen] = useState(false);
+  const [boostsList, setBoostsList] = useState([]);
+  const [isBoostsLoading, setIsBoostsLoading] = useState(false);
+  const [hasMoreBoosts, setHasMoreBoosts] = useState(true);
+  const [boostsPage, setBoostsPage] = useState(0);
+  const [selectedBoostId, setSelectedBoostId] = useState(null);
+  
+  const fetchBoosts = async (boostId) => {
+    if (isBoostsLoading || !hasMoreBoosts) return;
+  
+    try {
+      setIsBoostsLoading(true);
+  
+      const response = await fetch(`/api/inscription_bootlegs/${boostId}?page_size=20&page_number=${boostsPage}`);
+      const data = await response.json();
+  
+      if (Array.isArray(data) && data.length > 0) {
+        setBoostsList((prev) => [...prev, ...data]);
+        setBoostsPage((prev) => prev + 1);
+      } else {
+        setHasMoreBoosts(false);
+      }
+    } catch (error) {
+      console.error('Error fetching boosts:', error);
+    } finally {
+      setIsBoostsLoading(false);
+    }
+  };
+  
+  const toggleBoostsModal = (boostId = null, delegateCount = 0) => {
+    if (!isBoostsModalOpen && boostId) {
+      setSelectedBoostId(boostId);
+      setBoostsList([]); // Reset boosts list
+      setBoostsPage(0); // Reset pagination
+      setHasMoreBoosts(true); // Reset "has more" state
+  
+      if (delegateCount > 0) {
+        // Only fetch boosts if there are any
+        fetchBoosts(boostId);
+      }
+    } else if (isBoostsModalOpen) {
+      setBoostsList([]); // Clear boosts list when closing the modal
+      setBoostsPage(0); // Reset pagination
+    }
+  
+    setBoostsModalOpen((prev) => {
+      const isOpening = !prev;
+      document.body.style.overflow = isOpening ? 'hidden' : 'auto';
+      return isOpening;
+    });
+  };
+
+  const [isCommentsModalOpen, setCommentsModalOpen] = useState(false);
+  const [commentsList, setCommentsList] = useState([]);
+  const [isCommentsLoading, setIsCommentsLoading] = useState(false);
+  const [selectedCommentId, setSelectedCommentId] = useState(null);
+
+  const fetchComments = async (commentId) => {
+    if (isCommentsLoading) return;
+  
+    try {
+      setIsCommentsLoading(true);
+  
+      const response = await fetch(`/api/inscription_comments/${commentId}`);
+      const data = await response.json();
+  
+      if (Array.isArray(data)) {
+        setCommentsList(data);
+      } else {
+        setCommentsList([]); // Handle case where no comments are returned
+      }
+    } catch (error) {
+      console.error('Error fetching comments:', error);
+    } finally {
+      setIsCommentsLoading(false);
+    }
+  };
+
+  const toggleCommentsModal = (commentId = null, commentCount = 0) => {
+    if (!isCommentsModalOpen && commentId) {
+      setSelectedCommentId(commentId);
+      setCommentsList([]); // Reset comments list
+  
+      if (commentCount > 0) {
+        // Only fetch comments if there are any
+        fetchComments(commentId);
+      }
+    }
+  
+    setCommentsModalOpen((prev) => {
+      const isOpening = !prev;
+      document.body.style.overflow = isOpening ? 'hidden' : 'auto';
+      return isOpening;
+    });
+  };
+
+  const [isCheckoutModalOpen, setCheckoutModalOpen] = useState(false);
+  const [selectedDelegateData, setSelectedDelegateData] = useState(null);
+
+  const toggleCheckoutModal = (delegateData = null) => {
+    setSelectedDelegateData(delegateData);
+    setCheckoutModalOpen((prev) => {
+      const isOpening = !prev;
+      document.body.style.overflow = isOpening ? 'hidden' : 'auto';
+      return isOpening;
+    });
+  };
+
   return (
     <MainContainer>
       <FeedContainer>
@@ -109,58 +217,87 @@ const Discover = () => {
         {inscriptions.map((inscription, i, inscriptions) => (
           <React.Fragment key={i}>
             <ContentContainer id={i+1}>
-              <InfoContainer>
+            <InfoContainer>
                 <TitleContainer>
-                  <UnstyledLink to={'/inscription/' + inscription.number}>
-                    <NumberText>#{addCommas(inscription.number)}</NumberText>
+                  <UnstyledLink to={'/inscription/' + inscription.inscriptions[0].number}>
+                    <NumberText>#{addCommas(inscription.inscriptions[0].number)}</NumberText>
                   </UnstyledLink>
-                  {inscription.spaced_rune && (
+                  {inscription.inscriptions[0].spaced_rune && (
                     <Tag>
                       <CurrencyIcon size={'1rem'} color={theme.colors.background.purp} />
                       <TagSpan color={theme.colors.background.purp}>
-                        {inscription.spaced_rune}
+                        {inscription.inscriptions[0].spaced_rune}
                       </TagSpan>
                     </Tag>
                   )}
-                  {inscription.collection_name && (
-                    <UnstyledLink to={'/collection/' + inscription.collection_symbol}>
+                  {inscription.inscriptions[0].collection_name && (
+                    <UnstyledLink to={'/collection/' + inscription.inscriptions[0].collection_symbol}>
                       <Tag>
                         <GalleryIcon size={'1rem'} color={theme.colors.background.verm} />
                         <TagSpan color={theme.colors.background.verm}>
-                          {inscription.collection_name}
+                          {inscription.inscriptions[0].collection_name}
                         </TagSpan>
                       </Tag>
                     </UnstyledLink>
                   )}
-                  {/* Add parent tag when data is available */}
+                  {inscription.activity.children_count > 0 && (
+                    <UnstyledLink to={'/children/' + inscription.inscriptions[0].id}>
+                      <Tag>
+                        <Person2Icon size={'1rem'} color={theme.colors.text.secondary} />
+                        <TagSpan color={theme.colors.text.secondary}>
+                          Parent
+                        </TagSpan>
+                        <TagSpan color={theme.colors.text.tertiary}>{" • " + addCommas(inscription.activity.children_count)}</TagSpan>
+                      </Tag>
+                    </UnstyledLink>
+                  )}
                 </TitleContainer>
                 <DetailsContainer>
-                  <CopyButton onClick={() => handleCopyClick(i, 'https://vermilion.place/inscription/' + inscription.number)} copied={copied}>
+                  <CopyButton onClick={() => handleCopyClick(i, 'https://vermilion.place/inscription/' + inscription.inscriptions[0].number)} copied={copied}>
                     {copiedRowId === i ? <CheckIcon size={'1.25rem'} color={theme.colors.background.success} /> : <LinkIcon size={'1.25rem'} />}
                   </CopyButton>
-                </DetailsContainer>   
+                </DetailsContainer>
               </InfoContainer>
-              <UnstyledLink to={'/inscription/' + inscription.number}>
+              <UnstyledLink to={'/inscription/' + inscription.inscriptions[0].number}>
                 <InscriptionContainer>
                   <InscriptionContentWrapper>
                     <InnerInscriptionContent
-                      contentType={inscription.content_type === 'loading' ? 'loading' : 'image'}
-                      blobUrl={`/api/inscription_number/${inscription.number}`}
-                      number={inscription.number}
+                      contentType={
+                        inscription.inscriptions[0].content_type === 'loading' ? 'loading' : 
+                        inscription.inscriptions[0].content_type.startsWith('image/svg') ? 'svg-recursive' : 'image'
+                      }
+                      blobUrl={`/api/inscription_number/${inscription.inscriptions[0].number}`}
+                      number={inscription.inscriptions[0].number}
                       metadata={{
-                        id: inscription.id,
-                        content_type: inscription.content_type,
-                        is_recursive: inscription.is_recursive
+                        id: inscription.inscriptions[0].id,
+                        content_type: inscription.inscriptions[0].content_type,
+                        is_recursive: inscription.inscriptions[0].is_recursive
                       }}
+                      serverHTML={true}
                       useFeedStyles={true}
                     />
                     <ContentOverlay />
                   </InscriptionContentWrapper>
                 </InscriptionContainer>
               </UnstyledLink>
-
-              {/* Insert action container */}
-              
+              <ActionContainer>
+                <SocialContainer>
+                  <SocialButton onClick={() => toggleBoostsModal(inscription.inscriptions[0].id, inscription.activity.delegate_count)}>
+                    <ChevronUpDuoIcon size={'1.25rem'} color={theme.colors.text.primary}></ChevronUpDuoIcon>
+                    {addCommas(inscription.activity.delegate_count)}
+                  </SocialButton>
+                  <SocialButton onClick={() => toggleCommentsModal(inscription.inscriptions[0].id, inscription.activity.comment_count)}>
+                    <CommentIcon size={'1.25rem'} color={theme.colors.text.primary}></CommentIcon>
+                    {addCommas(inscription.activity.comment_count)}
+                  </SocialButton>
+                </SocialContainer>
+                <BoostContainer>
+                <BoostButton onClick={() => toggleCheckoutModal(inscription.inscriptions[0])}>
+                  <ChevronUpDuoIcon size={'1.25rem'} color={theme.colors.background.white}></ChevronUpDuoIcon>
+                    Boost
+                  </BoostButton>
+                </BoostContainer>
+              </ActionContainer>
             </ContentContainer>
             {i < inscriptions.length - 1 && <Divider />}
           </React.Fragment>
@@ -171,26 +308,31 @@ const Discover = () => {
         </LoadingContainer>
       </FeedContainer>
 
-      {/* Insert modals */}
+      {/* Boosts Modal */}
+      <BoostsModal
+        boostsList={boostsList}
+        onClose={() => toggleBoostsModal(null)}
+        fetchMoreBoosts={() => fetchBoosts(selectedBoostId)}
+        hasMoreBoosts={hasMoreBoosts}
+        isBoostsLoading={isBoostsLoading}
+        isBoostsModalOpen={isBoostsModalOpen}
+      />
+
+      {/* Comments Modal */}
+      <CommentsModal
+        commentsList={commentsList}
+        onClose={() => toggleCommentsModal(null)}
+        isCommentsModalOpen={isCommentsModalOpen}
+      />
+
+      {/* Checkout Modal */}
+      <CheckoutModal
+        onClose={() => toggleCheckoutModal(null)}
+        isCheckoutModalOpen={isCheckoutModalOpen}
+        delegateData={selectedDelegateData || ""}
+      />
 
     </MainContainer>
-  );
-};
-
-// Image component that handles loading state
-const LoadingImage = ({ src, ...props }) => {
-  const [isLoading, setIsLoading] = useState(true);
-
-  return (
-    <>
-      {isLoading && <SkeletonImage />}
-      <ImageContainer 
-        src={src} 
-        onLoad={() => setIsLoading(false)}
-        style={{ display: isLoading ? 'none' : 'block' }}
-        {...props}
-      />
-    </>
   );
 };
 
@@ -343,85 +485,6 @@ const ContentOverlay = styled.div`
   height: 100%;
   width: 100%;
   cursor: pointer;
-`;
-
-const ImageContainer = styled.img`
-  width: 32rem;
-  height: auto;
-  max-width: 32rem;
-  image-rendering: pixelated;
-  cursor: pointer;
-  border-radius: .5rem;
-  border: .0625rem solid ${theme.colors.border};
-
-  @media (max-width: 560px) {
-    width: 100%;
-    max-width: 100%;
-  }
-`;
-
-const HtmlContainer = styled.div`
-  position: relative; /* Add this */
-  width: 32rem;
-  max-width: 32rem;
-  cursor: pointer;
-  border-radius: .5rem;
-  border: .0625rem solid ${theme.colors.border};
-  overflow: hidden;
-
-  &:after { /* Add overlay as a pseudo-element */
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    z-index: 1;
-  }
-
-  @media (max-width: 544px) {
-    width: 100%;
-    max-width: 100%;
-  }
-`;
-
-const HtmlWrapper = styled.div`
-  position: relative;
-  width: 100%;
-  padding-top: 100%;
-
-  iframe {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    border: none;
-  }
-`;
-
-const TextContainer = styled.div`
-  width: 32rem;
-  height: auto;
-  max-width: 32rem;
-  padding: .75rem 1rem;
-  border-radius: .5rem;
-  border: .0625rem solid ${theme.colors.border};
-  overflow: overlay;
-
-  @media (max-width: 560px) {
-    width: 100%;
-    max-width: 100%;
-  }
-`;
-
-const StyledIframe = styled.iframe`
-  border: none;
-  //flex: 0 100%;
-  //flex-grow: 1;
-  width: 100%;
-  resize: both;
-  //aspect-ratio: 1/1;
 `;
 
 const Tag = styled.div`
@@ -587,12 +650,6 @@ const SocialButton = styled.button`
   }
 `;
 
-const SocialText = styled.p`
-  font-family: ${theme.typography.fontFamilies.medium};
-  font-size: 1rem;
-  margin: 0;
-`;
-
 const BoostContainer = styled.div`
   display: flex;
   flex-direction: row;
@@ -630,120 +687,6 @@ const BoostButton = styled.button`
 const Divider = styled.div`
   width: 100%;
   border-bottom: 1px solid ${theme.colors.border};
-`;
-
-const SectionContainer = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: ${props => props.gapSize};
-`;
-
-const SectionTitleWrapper = styled.div`
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  justify-content: space-between;
-  height: 1.375rem;
-`;
-
-const SectionTitleText = styled.p`
-  font-family: ${theme.typography.fontFamilies.medium};
-  font-size: 1rem;
-  margin: 0;
-`;
-
-const SectionDetailText = styled.p`
-  font-family: ${theme.typography.fontFamilies.medium};
-  font-size: .875rem;
-  color: ${theme.colors.text.secondary};
-  margin: 0;
-`;
-
-const SectionText = styled.p`
-  font-family: ${theme.typography.fontFamilies.medium};
-  font-size: .875rem;
-  color: ${theme.colors.text.secondary};
-  margin: 0;
-`;
-
-const RefreshButton = styled.button`
-  height: 1.375rem;
-  border-radius: .5rem;
-  font-family: ${theme.typography.fontFamilies.medium};
-  font-size: .875rem;
-  color: ${theme.colors.text.secondary};
-  border: none;
-  padding: .125rem .375rem;
-  margin: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: .25rem;
-  cursor: pointer;
-  background-color: ${theme.colors.background.white};
-  transition: all 200ms ease;
-  transform-origin: center center;
-
-  &:hover {
-    background-color: ${theme.colors.background.primary};
-  }
-
-  &:active {
-    transform: scale(0.96);
-  }
-`;
-
-const ActiveContainer = styled.div`
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  justify-content: space-between;
-`;
-
-const ElementWrapper = styled.div`
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  gap: ${props => props.gapSize};
-`;
-
-const RankWrapper = styled.div`
-  border-radius: 1rem;
-  font-family: ${theme.typography.fontFamilies.medium};
-  font-size: .875rem;
-  padding: .125rem 0;
-  width: 2rem;
-  color: #E34234;
-  background-color: #FCECEB;
-  display: flex;
-  justify-content: center;
-`;
-
-const PlaceholderImage = styled.div`
-  height: 2.5rem;
-  width: 2.5rem;
-  background-color: #E8803F;
-  border-radius: 1.25rem;
-`;
-
-const AddressText = styled.p`
-  font-family: ${theme.typography.fontFamilies.medium};
-  font-size: .875rem;
-  margin: 0;
-`;
-
-const LinkText = styled.p`
-  font-family: ${theme.typography.fontFamilies.medium};
-  font-size: .875rem;
-  color: ${theme.colors.text.secondary};
-  margin: 0;
-
-  transition: all 200ms ease;
-  transform-origin: center center;
-
-  &:hover {
-    color: #000000;
-  }
 `;
 
 const UnstyledLink = styled(Link)`

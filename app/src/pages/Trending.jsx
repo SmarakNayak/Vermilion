@@ -2,12 +2,10 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Link } from "react-router-dom";
 import styled from 'styled-components';
 import Spinner from '../components/Spinner';
-import SkeletonImage from '../components/SkeletonImage';
-import RecentBoosts from '../components/RecentBoosts';
 import InnerInscriptionContent from '../components/common/InnerInscriptionContent';
-import { addCommas, formatAddress } from '../utils/format';
+import { addCommas } from '../utils/format';
 import { copyText } from '../utils/clipboard';
-import { BoostIcon, CheckIcon, ChevronUpDuoIcon, CommentIcon, CopyIcon, CurrencyIcon, FireIcon, GalleryIcon, LinkIcon, Person2Icon, RefreshIcon, RuneIcon, SparklesIcon, SproutIcon } from '../components/common/Icon';
+import { CheckIcon, ChevronUpDuoIcon, CommentIcon, CurrencyIcon, FireIcon, GalleryIcon, LinkIcon, Person2Icon, SparklesIcon } from '../components/common/Icon';
 import theme from '../styles/theme';
 import CheckoutModal from '../components/modals/CheckoutModal';
 import BoostsModal from '../components/modals/BoostsModal';
@@ -36,7 +34,7 @@ const Trending = () => {
   const fetchInscriptions = async () => {
     try {
       setIsLoading(true);
-      const response = await fetch(`/api/trending_feed?n=8`);
+      const response = await fetch(`/api/trending_feed?n=12`);
       const newInscriptions = await response.json();
       
       if (newInscriptions.length === 0) {
@@ -505,85 +503,6 @@ const ContentOverlay = styled.div`
   cursor: pointer;
 `;
 
-const ImageContainer = styled.img`
-  width: 32rem;
-  height: auto;
-  max-width: 32rem;
-  image-rendering: pixelated;
-  cursor: pointer;
-  border-radius: .5rem;
-  border: .0625rem solid ${theme.colors.border};
-
-  @media (max-width: 560px) {
-    width: 100%;
-    max-width: 100%;
-  }
-`;
-
-const HtmlContainer = styled.div`
-  position: relative; /* Add this */
-  width: 32rem;
-  max-width: 32rem;
-  cursor: pointer;
-  border-radius: .5rem;
-  border: .0625rem solid ${theme.colors.border};
-  overflow: hidden;
-
-  &:after { /* Add overlay as a pseudo-element */
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    z-index: 1;
-  }
-
-  @media (max-width: 544px) {
-    width: 100%;
-    max-width: 100%;
-  }
-`;
-
-const HtmlWrapper = styled.div`
-  position: relative;
-  width: 100%;
-  padding-top: 100%;
-
-  iframe {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    border: none;
-  }
-`;
-
-const TextContainer = styled.div`
-  width: 32rem;
-  height: auto;
-  max-width: 32rem;
-  padding: .75rem 1rem;
-  border-radius: .5rem;
-  border: .0625rem solid ${theme.colors.border};
-  overflow: overlay;
-
-  @media (max-width: 560px) {
-    width: 100%;
-    max-width: 100%;
-  }
-`;
-
-const StyledIframe = styled.iframe`
-  border: none;
-  //flex: 0 100%;
-  //flex-grow: 1;
-  width: 100%;
-  resize: both;
-  //aspect-ratio: 1/1;
-`;
-
 const Tag = styled.div`
   display: inline-flex;
   flex-direction: row;
@@ -747,12 +666,6 @@ const SocialButton = styled.button`
   }
 `;
 
-const SocialText = styled.p`
-  font-family: ${theme.typography.fontFamilies.medium};
-  font-size: 1rem;
-  margin: 0;
-`;
-
 const BoostContainer = styled.div`
   display: flex;
   flex-direction: row;
@@ -790,120 +703,6 @@ const BoostButton = styled.button`
 const Divider = styled.div`
   width: 100%;
   border-bottom: 1px solid ${theme.colors.border};
-`;
-
-const SectionContainer = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: ${props => props.gapSize};
-`;
-
-const SectionTitleWrapper = styled.div`
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  justify-content: space-between;
-  height: 1.375rem;
-`;
-
-const SectionTitleText = styled.p`
-  font-family: ${theme.typography.fontFamilies.medium};
-  font-size: 1rem;
-  margin: 0;
-`;
-
-const SectionDetailText = styled.p`
-  font-family: ${theme.typography.fontFamilies.medium};
-  font-size: .875rem;
-  color: ${theme.colors.text.secondary};
-  margin: 0;
-`;
-
-const SectionText = styled.p`
-  font-family: ${theme.typography.fontFamilies.medium};
-  font-size: .875rem;
-  color: ${theme.colors.text.secondary};
-  margin: 0;
-`;
-
-const RefreshButton = styled.button`
-  height: 1.375rem;
-  border-radius: .5rem;
-  font-family: ${theme.typography.fontFamilies.medium};
-  font-size: .875rem;
-  color: ${theme.colors.text.secondary};
-  border: none;
-  padding: .125rem .375rem;
-  margin: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: .25rem;
-  cursor: pointer;
-  background-color: ${theme.colors.background.white};
-  transition: all 200ms ease;
-  transform-origin: center center;
-
-  &:hover {
-    background-color: ${theme.colors.background.primary};
-  }
-
-  &:active {
-    transform: scale(0.96);
-  }
-`;
-
-const ActiveContainer = styled.div`
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  justify-content: space-between;
-`;
-
-const ElementWrapper = styled.div`
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  gap: ${props => props.gapSize};
-`;
-
-const RankWrapper = styled.div`
-  border-radius: 1rem;
-  font-family: ${theme.typography.fontFamilies.medium};
-  font-size: .875rem;
-  padding: .125rem 0;
-  width: 2rem;
-  color: #E34234;
-  background-color: #FCECEB;
-  display: flex;
-  justify-content: center;
-`;
-
-const PlaceholderImage = styled.div`
-  height: 2.5rem;
-  width: 2.5rem;
-  background-color: #E8803F;
-  border-radius: 1.25rem;
-`;
-
-const AddressText = styled.p`
-  font-family: ${theme.typography.fontFamilies.medium};
-  font-size: .875rem;
-  margin: 0;
-`;
-
-const LinkText = styled.p`
-  font-family: ${theme.typography.fontFamilies.medium};
-  font-size: .875rem;
-  color: ${theme.colors.text.secondary};
-  margin: 0;
-
-  transition: all 200ms ease;
-  transform-origin: center center;
-
-  &:hover {
-    color: #000000;
-  }
 `;
 
 const UnstyledLink = styled(Link)`
