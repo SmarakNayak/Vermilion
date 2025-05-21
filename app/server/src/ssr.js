@@ -21,8 +21,8 @@ async function addInscriptionPreviewsToHtml({
 
 async function rewriteMetaTagsFromFile({
   title = "Vermilion - Bitcoin Ordinals Explorer",
-  description = "Discover bitcoin. Discover ordinals.",
-  imageUrl = "https://vermilion.place/vermilion.place_twitter_800_418.png",
+  description = "Ordinals explorer and onchain social network",
+  imageUrl = "https://blue.vermilion.place/vermilion.place_twitter_800_418.png",
   siteUrl = "https://vermilion.place",
   filePath = '../dist/index.html'
 } = {}) {
@@ -87,7 +87,7 @@ async function renderInscriptionCard({inscriptionMetadata, host = "vermilion.pla
       <!DOCTYPE html>
       <html lang="en">
         <body style="width: 800px; height: 418px; margin: 0px; padding: 0px;">
-          <div style="width: 800px; height: 418px; padding: 45px; display: flex; justify-content: center; align-items: center; box-sizing: border-box; background-color: lightgrey;">
+          <div style="width: 800px; height: 418px; padding: 45px; display: flex; justify-content: center; align-items: center; box-sizing: border-box; background-color: white;">
             <img src="https://${host}/bun/rendered_content/${inscriptionMetadata.id}" style="max-width: 100%; max-height: 100%;"/>
           </div>
         </body>
@@ -108,7 +108,7 @@ async function renderInscriptionCard({inscriptionMetadata, host = "vermilion.pla
     return buffer;
   } catch (error) {
     console.error('Error rendering inscription card, returning fallback', error);
-    let fallback = Bun.file('../dist/vermilion.place_twitter_800_418.png');
+    let fallback = Bun.file('../dist/blue.vermilion.place_twitter_800_418.png');
     return Buffer.from(await fallback.arrayBuffer());
   }
 }
