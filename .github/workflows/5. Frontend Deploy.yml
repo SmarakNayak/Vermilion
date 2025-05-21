@@ -63,7 +63,7 @@ jobs:
         run: ssh staging 'sudo cp Vermilion/systemd/bun.service /etc/systemd/system/; sudo systemctl daemon-reload;'
 
       - name: Set up static files
-        run: ssh staging 'sudo rm -r /var/www/html/*; sudo cp -r ~/Vermilion/app/dist/. /var/www/html/;'
+        run: ssh staging 'sudo rm -r /var/www/html/*; sudo cp -r ~/Vermilion/app/dist/. /var/www/html/; sudo cp -r ~/Vermilion/app/public/. /var/www/html/;'
       
       - name: Restart nginx
         run: ssh staging 'sudo systemctl is-active nginx.service && sudo systemctl restart nginx.service || sudo systemctl start nginx.service;'
