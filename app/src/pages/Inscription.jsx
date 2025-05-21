@@ -498,10 +498,19 @@ const Inscription = () => {
   // Fetch boosts and comments when metadata is available
   useEffect(() => {
     if (metadata) {
-      fetchBoosts();
-      fetchComments();
+      // Initial fetch for boosts
+      // This will only run when the component mounts or when metadata changes
+      if (boostsPage === 0 && !isBoostsLoading && hasMoreBoosts && boostsList.length === 0) {
+        fetchBoosts();
+      }      
+
+      // Initial fetch for comments
+      // Similarly, this will only run when the component mounts or when metadata changes
+      if (commentsList.length === 0 && commentCountLoading) { 
+        fetchComments();
+      }
     }
-  }, [metadata, fetchBoosts, fetchComments]);
+  }, [metadata, commentCountLoading]); // Includes commentCountLoading to ensure comments are fetched when metadata is available
 
   // Check if comments match the current inscription number
   useEffect(() => {
