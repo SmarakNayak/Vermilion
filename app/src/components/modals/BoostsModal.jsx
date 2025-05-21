@@ -339,6 +339,7 @@ const EmptyStateSubtitle = styled.p`
   line-height: 1.25rem;
   color: ${theme.colors.text.secondary};
   margin: 0;
+  text-align: center;
 `;
 
 export default BoostsModal;
