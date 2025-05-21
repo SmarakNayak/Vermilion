@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import styled from 'styled-components';
+import { usePostHog } from 'posthog-js/react';
 import { ArrowLeftIcon, ChevronRightIcon, CrossIcon, ErrorCircleIcon, WalletIcon } from '../common/Icon';
 import { theme } from '../../styles/theme';
 import { connectWallet, detectWallets } from '../../wallet/wallets';
@@ -64,6 +65,8 @@ const WalletConnectMenu = ({ isOpen, onClose }) => {
   const [error, setError] = useState(null);
   const menuRef = useRef(null);
   const modalContentRef = useRef(); // Ref for the modal content
+
+  const posthog = usePostHog();
 
   useEffect(() => {
     if (isOpen) {
@@ -194,6 +197,10 @@ const WalletConnectMenu = ({ isOpen, onClose }) => {
       if (verificationJson.isValid) {
         setAuthToken(verificationJson.authToken);
         setWallet(wallet);
+        posthog.identify(
+          wallet.ordinalsAddress, 
+          { wallet_type: wallet.walletType }
+        );
       } else {
         throw new Error('Signature verification failed');
       }

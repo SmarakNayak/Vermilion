@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom'; 
+import { usePostHog } from 'posthog-js/react';
 import styled from 'styled-components';
 import { ArchiveIcon, BurgerMenuIcon, DiscordIcon, DotsHorizontalIcon, LogoutIcon, QuestionIcon, SwitchIcon, TwitterIcon } from '../common/Icon';
 import theme from '../../styles/theme';
@@ -16,6 +17,8 @@ const UserActions = () => {
   const [isWalletMenuOpen, setIsWalletMenuOpen] = useState(false);
 
   const navigate = useNavigate(); 
+
+  const posthog = usePostHog();
 
   const wallet = useStore(state => state.wallet);
   const setWallet = useStore(state => state.setWallet);
@@ -38,18 +41,22 @@ const UserActions = () => {
 
   const disconnectWallet = async () => {
     console.log("Disconnecting wallet...");
-    console.log(wallet);
+    // console.log(wallet);
     if (typeof wallet.removeAccountChangeListener === 'function') {
       await wallet.removeAccountChangeListener();
     } else {
       console.log("no account change listener to remove");
     }
     setWallet(null);
+    posthog.reset(true);
   }
 
   const handleAddressButtonClick = () => {
     if (wallet && wallet.ordinalsAddress) {
       navigate(`/address/${wallet.ordinalsAddress}`); 
+      posthog.capture('button_clicked', {
+        button_name: 'Address Button',
+      });
     }
   };
   

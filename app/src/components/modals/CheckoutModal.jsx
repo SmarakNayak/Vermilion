@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { usePostHog } from 'posthog-js/react';
 import styled from 'styled-components';
 import theme from '../../styles/theme';
 // Utils
@@ -55,6 +56,8 @@ const CheckoutModal = ({ onClose, isCheckoutModalOpen, delegateData }) => {
   const [totalOwnerFee, setTotalOwnerFee] = useState(0);
   const [ownerAddress, setOwnerAddress] = useState(null);
   const [canBoost, setCanBoost] = useState(false);
+
+  const posthog = usePostHog();
 
   useEffect(() => {
     if (isCheckoutModalOpen) {
@@ -257,6 +260,13 @@ const CheckoutModal = ({ onClose, isCheckoutModalOpen, delegateData }) => {
       });      
       setSuccess(true);
       setSignStatus(null); // Reset sign status after success
+      posthog.capture('boost_inscribed', {
+        delegate_id: delegateMetadata.id,
+        quantity: boostQuantity,
+        comment: boostComment,
+        commit_tx_id: commitTxid,
+        reveal_tx_id: revealTxid,
+      });
     } catch (error) {
       console.warn("Error boosting inscription:", error);
       setError("Failed to boost: " + error.message);
