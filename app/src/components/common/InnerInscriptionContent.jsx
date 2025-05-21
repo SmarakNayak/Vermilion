@@ -119,22 +119,30 @@ const InnerInscriptionContent = ({
 
     // Render HTML content - use id for page, id + serverHTML for grid, and endpoint + isIcon for icon  
     case 'html':
-      return serverHTML ? (
-        <ImageContainer 
-          src={"/bun/rendered_content/" + metadata?.id}
-          alt={`HTML Inscription ${number}`}
-        />
-      ) : (
-        <HtmlContainer>
-          <StyledIframe 
-            src={isIcon ? endpoint : `/content/${metadata?.id}`} 
-            scrolling="no" 
-            sandbox="allow-scripts" 
-            loading="lazy"
+      if (serverHTML) {
+        return (
+          <ImageContainer 
+            src={"/bun/rendered_content/" + metadata?.id}
+            alt={`HTML Inscription ${number}`}
           />
-        </HtmlContainer>
-      );
-    
+        );
+      } else {
+        // Ensure metadata and metadata.id are available before rendering the iframe
+        if (!metadata || !metadata.id) {
+          return <SkeletonContainer />; 
+        }
+        return (
+          <HtmlContainer>
+            <StyledIframe 
+              src={isIcon ? endpoint : `/content/${metadata.id}`} 
+              scrolling="no" 
+              sandbox="allow-scripts" 
+              loading="lazy"
+            />
+          </HtmlContainer>
+        );
+      }
+      
     // Render text content - use textContent for page/grid (fallback for icon)  
     case 'text':
       return (
