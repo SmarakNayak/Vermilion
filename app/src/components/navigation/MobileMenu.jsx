@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import styled from 'styled-components';
 import { Link } from 'react-router-dom';
 import { 
@@ -24,6 +24,25 @@ import Brand from './Brand';
 import MenuListItem from './MenuListItem';
 
 const MobileMenu = ({ isOpen, onClose, onConnectWallet, wallet, onViewProfile, onSwitchWallet, onDisconnectWallet }) => {
+  const modalContentRef = useRef(); // Ref for the modal content
+
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden'; // Disable page scrolling
+    } else {
+      document.body.style.overflow = 'auto'; // Enable page scrolling
+
+      // Reset scroll position when modal is closed
+      if (modalContentRef.current) {
+        modalContentRef.current.scrollTop = 0;
+      }
+    }
+
+    return () => {
+      document.body.style.overflow = 'auto'; // Cleanup on unmount
+    };
+  }, [isOpen]);
+
   // Close menu when window resizes above mobile breakpoint
   useEffect(() => {
     const handleResize = () => {
@@ -48,7 +67,7 @@ const MobileMenu = ({ isOpen, onClose, onConnectWallet, wallet, onViewProfile, o
         </CloseButton>
       </MenuHeader>
 
-      <MenuContent>
+      <MenuContent ref={modalContentRef}>
         <LinkSection>
           <MenuListItem 
             link="/" 
