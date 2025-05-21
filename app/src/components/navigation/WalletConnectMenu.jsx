@@ -240,15 +240,15 @@ const WalletConnectMenu = ({ isOpen, onClose }) => {
     <MenuContainer ref={menuRef} isOpen={isOpen} onClick={handleMenuClick}>
       <HeaderSection>
         {showOtherWallets ? (
-          <BackButton onClick={goBack}>
+          <Button onClick={goBack}>
             <ArrowLeftIcon size="1.25rem" color={theme.colors.text.secondary} />
-          </BackButton>
+          </Button>
         ) : (
           <HeaderTitle>Connect your wallet</HeaderTitle>
         )}
-        <CloseButton onClick={handleClose}>
+        <Button onClick={handleClose}>
           <CrossIcon size="1.25rem" color={theme.colors.text.secondary} />
-        </CloseButton>
+        </Button>
       </HeaderSection>
       
       <MenuContent ref={modalContentRef}>
@@ -345,40 +345,17 @@ const HeaderTitle = styled.p`
   margin: 0;
 `;
 
-const BackButton = styled.button`
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 2rem;
-  min-width: 2rem;
-  height: 2rem;
-  min-height: 2rem;
+const Button = styled.button`
+  background-color: ${theme.colors.background.white};
   border: none;
   border-radius: 1rem;
-  background-color: ${theme.colors.background.white};
-  cursor: pointer;
-  transition: all 200ms ease;
-
-  &:hover {
-    background-color: ${theme.colors.background.primary};
-  }
-
-  &:active {
-    transform: scale(0.96);
-  }
-`;
-
-const CloseButton = styled.button`
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 2rem;
-  min-width: 2rem;
   height: 2rem;
-  min-height: 2rem;
-  border: none;
-  border-radius: 1rem;
-  background-color: ${theme.colors.background.white};
+  width: 2rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 0;
+  font-size: 1.5rem;
   cursor: pointer;
   transition: all 200ms ease;
 
