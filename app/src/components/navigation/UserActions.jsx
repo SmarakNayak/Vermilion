@@ -40,12 +40,11 @@ const UserActions = () => {
   };
 
   const disconnectWallet = async () => {
-    console.log("Disconnecting wallet...");
-    // console.log(wallet);
+    console.log("Disconnecting wallet..."); // Disconnect function called - visible in console
     if (typeof wallet.removeAccountChangeListener === 'function') {
       await wallet.removeAccountChangeListener();
     } else {
-      console.log("no account change listener to remove");
+      console.log("No account change listener to remove"); // No account change listener - visible in console
     }
     setWallet(null);
     posthog.reset(true);

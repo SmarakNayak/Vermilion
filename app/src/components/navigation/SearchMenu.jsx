@@ -121,7 +121,6 @@ const SearchMenu = ({ isOpen, closeMenu }) => {
       setCollectionData(json['collections'] || []);
       setInscriptionData(json['inscription']);
       setSatData(json['sat']);
-      console.log("Search results:", json); // Debugging
     } catch (error) {
       console.error("Search error:", error);
       

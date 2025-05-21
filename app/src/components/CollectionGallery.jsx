@@ -17,9 +17,8 @@ const CollectionGallery = ({ baseApi, numberVisibility, zoomGrid }) => {
   },[baseApi])
 
   const fetchInital = async () => {
-    console.log("fetch initial data")
     const query_string = baseApi + "&page_size=" + pageSize + "&page_number=0";
-    console.log(query_string);
+    // console.log(query_string); // Query string for debugging - not visible in console
     const response = await fetch(query_string);
     const newInscriptions = await response.json();
 
@@ -29,9 +28,8 @@ const CollectionGallery = ({ baseApi, numberVisibility, zoomGrid }) => {
   }
 
   const fetchData = async () => {
-    console.log("fetch data")
     const query_string = baseApi + "&page_size=" + pageSize + "&page_number=" + nextPageNo;
-    console.log(query_string);
+    // console.log(query_string); // Query string for debugging - not visible in console
     const response = await fetch(query_string);
     const newInscriptions = await response.json();
 

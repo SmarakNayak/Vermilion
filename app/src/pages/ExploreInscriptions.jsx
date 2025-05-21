@@ -30,7 +30,6 @@ const ExploreInscriptions = () => {
   useEffect(() => {
     let query_string = "/api/inscriptions?sort_by=" + selectedSortOption;
     if (selectedFilterOptions["Content Type"] !== undefined && selectedFilterOptions["Content Type"].length > 0) {
-      console.log("hit");
       query_string += "&content_types=" + selectedFilterOptions["Content Type"].toString();
     }
     if (selectedFilterOptions["Satributes"] !== undefined && selectedFilterOptions["Satributes"].length > 0) {
@@ -58,13 +57,10 @@ const ExploreInscriptions = () => {
   //inscription handlers
   const handleSortOptionChange = (option) => {
     setSelectedSortOption(option);
-    // Perform any necessary actions with the selected option
-    console.log('Selected inscription sort option:', option);
   };
 
   const handleFilterOptionsChange = (filterOptions) => {
     setSelectedFilterOptions(filterOptions);
-    console.log('Selected filter option:', filterOptions);
   };
 
   return (

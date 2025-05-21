@@ -290,7 +290,6 @@ const Inscription = () => {
   const isLoading = metadataLoading || addressLoading;
   const dataLoading = editionsLoading || relatedInscriptionsLoading;
   const socialCountLoading = commentCountLoading || boostCountLoading;
-  // console.log("Main loading state:", isLoading, "Data loading state:", dataLoading, "Social count loading state:", socialCountLoading);
 
   // State for managing copy action
   const [copied, setCopied] = useState(false);
@@ -506,8 +505,6 @@ const Inscription = () => {
 
   // Check if comments match the current inscription number
   useEffect(() => {
-    // console.log("Checking comments for number:", number);
-    // console.log("Comments list:", commentsList);
     if (commentsList.length > 0) {
       commentsList.forEach((comment) => {
         if (comment.comment_number == number) {

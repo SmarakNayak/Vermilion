@@ -111,9 +111,8 @@ const Edition = () => {
   },[sha256])
 
   const fetchInital = async () => {
-    console.log("fetch initial data")
     const query_string = "/api/inscription_editions_sha256/" + sha256 + "?page_size=" + pageSize + "&page_number=0";
-    console.log(query_string);
+    // console.log(query_string); // Query string for debugging - not visible in console
     const response = await fetch(query_string);
     const newEditions = await response.json();
 
@@ -125,9 +124,8 @@ const Edition = () => {
   }
 
   const fetchData = async () => {
-    console.log("fetch data")
     const query_string = "/api/inscription_editions_sha256/"+ sha256 + "?page_size=" + pageSize + "&page_number=" + nextPageNo;
-    console.log(query_string);
+    // console.log(query_string); // Query string for debugging - not visible in console
     const response = await fetch(query_string);
     const newEditions = await response.json();
 

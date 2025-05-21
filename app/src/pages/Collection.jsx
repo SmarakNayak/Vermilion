@@ -69,7 +69,6 @@ const Collection = () => {
       setLoading(true);
       const response = await fetch("/api/collection_summary/" + symbol);
       let json = await response.json();
-      console.log(json); // json object with collection data for debugging
       setCollectionSummary(json);
       setLoading(false);
     }
@@ -80,7 +79,6 @@ const Collection = () => {
   useEffect(() => {
     let query_string = "/api/inscriptions_in_collection/" + symbol + "?sort_by=" + selectedSortOption;
     if (selectedFilterOptions["Content Type"] !== undefined && selectedFilterOptions["Content Type"].length > 0) {
-      console.log("hit");
       query_string += "&content_types=" + selectedFilterOptions["Content Type"].toString();
     }
     if (selectedFilterOptions["Satributes"] !== undefined && selectedFilterOptions["Satributes"].length > 0) {
@@ -107,13 +105,10 @@ const Collection = () => {
 
   const handleSortOptionChange = (option) => {
     setSelectedSortOption(option);
-    // Perform any necessary actions with the selected option
-    console.log('Selected inscription sort option:', option);
   };
 
   const handleFilterOptionsChange = (filterOptions) => {
     setSelectedFilterOptions(filterOptions);
-    console.log('Selected filter option:', filterOptions);
   };
 
   const hasSocialLinks = collectionSummary?.twitter || collectionSummary?.discord || collectionSummary?.website;

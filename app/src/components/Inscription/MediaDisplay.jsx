@@ -10,8 +10,7 @@ const MediaDisplay = ({
   modelUrl,
   modelViewerRef
 }) => {
-  // Debug content type and metadata
-  console.log(`MediaDisplay: contentType=${contentType}, number=${number}, metadata.id=${metadata?.id}`);
+  // console.log(`MediaDisplay: contentType=${contentType}, number=${number}, metadata.id=${metadata?.id}`); // Debug content type and metadata - not visible in console
   
   // Early return for loading state
   if (!contentType || contentType === 'loading') {

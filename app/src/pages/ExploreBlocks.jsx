@@ -21,7 +21,6 @@ const ExploreBlocks = () => {
   useEffect(() => {
     let query_string = "/api/inscriptions?sort_by=" + selectedSortOption;
     if (selectedFilterOptions["Content Type"] !== undefined && selectedFilterOptions["Content Type"].length > 0) {
-      // console.log("hit");
       query_string += "&content_types=" + selectedFilterOptions["Content Type"].toString();
     }
     if (selectedFilterOptions["Satributes"] !== undefined && selectedFilterOptions["Satributes"].length > 0) {

@@ -199,8 +199,6 @@ const Trending = () => {
     });
   };
   
-  console.log(inscriptions);
-
   return (
     <MainContainer>
       <FeedContainer>

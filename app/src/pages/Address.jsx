@@ -54,7 +54,6 @@ const Address = () => {
       setInscriptionList([]);
       const response = await fetch("/api/inscriptions_in_address/" + address);
       let json = await response.json();
-      console.log(json); // json object with address data for debugging
       setInscriptionList(json);
       setLoading(false);
     }
@@ -65,7 +64,6 @@ const Address = () => {
   useEffect(() => {
     let query_string = "/api/inscriptions_in_address/" + address + "?sort_by=" + selectedSortOption;
     if (selectedFilterOptions["Content Type"] !== undefined && selectedFilterOptions["Content Type"].length > 0) {
-      console.log("hit");
       query_string += "&content_types=" + selectedFilterOptions["Content Type"].toString();
     }
     if (selectedFilterOptions["Satributes"] !== undefined && selectedFilterOptions["Satributes"].length > 0) {
@@ -92,13 +90,10 @@ const Address = () => {
 
   const handleSortOptionChange = (option) => {
     setSelectedSortOption(option);
-    // Perform any necessary actions with the selected option
-    console.log('Selected inscription sort option:', option);
   };
 
   const handleFilterOptionsChange = (filterOptions) => {
     setSelectedFilterOptions(filterOptions);
-    console.log('Selected filter option:', filterOptions);
   };
 
   return (

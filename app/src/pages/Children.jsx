@@ -124,12 +124,10 @@ const Children = ({ setParentNumbers }) => {
 
   const handleSortOptionChange = (option) => {
     setSelectedSortOption(option);
-    console.log('Selected child sort option:', option);
   };
 
   const handleFilterOptionsChange = (filterOptions) => {
     setSelectedFilterOptions(filterOptions);
-    console.log('Selected filter option:', filterOptions);
   };
 
   return (

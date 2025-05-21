@@ -29,9 +29,8 @@ const OnChainCollectionsTable = () => {
   // https://vermilion.place/api/on_chain_collections?sort_by=most_volume&page_number=0
 
   const fetchInitial = async () => {
-    // console.log("fetch initial data")
     let query_string = "/api/on_chain_collections?sort_by=" + selectedCollectionSortOption + "&page_size=" + pageSize + "&page_number=0";
-    // console.log(query_string);
+    // console.log(query_string); // Query string for debugging - not visible in console
     const response = await fetch(query_string);
     const newBlocks = await response.json();
 
@@ -41,9 +40,8 @@ const OnChainCollectionsTable = () => {
   }
 
   const fetchData = async () => {
-    // console.log("fetch data")
     let query_string = "/api/on_chain_collections?sort_by=" + selectedCollectionSortOption + "&page_size=" + pageSize + "&page_number=" + nextPageNo;
-    // console.log(query_string);
+    // console.log(query_string); // Query string for debugging - not visible in console
     const response = await fetch(query_string);
     const newBlockData = await response.json();
 
@@ -106,7 +104,6 @@ const OnChainCollectionsTable = () => {
   );
 
   const handleImageError = (event) => {
-    // console.log("error image triggered")
     event.target.onError = null;
     event.target.src = `data:image/svg+xml,${BlockIconDefault}`;
     //have to override default size of CollectionIcon

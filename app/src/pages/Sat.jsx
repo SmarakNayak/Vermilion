@@ -50,14 +50,12 @@ const Sat = () => {
       //1. Get inscription numbers
       const response = await fetch("/api/inscriptions_on_sat/" + sat);
       let json = await response.json();
-      console.log(json); // json object with inscription data for debugging
       setInscriptions(json);
     }
     const fetchSatMetadata = async () => {
       setMetadata(null);
       const response = await fetch("/api/sat_metadata/" + sat);
       let json = await response.json();
-      console.log(json); // json object with sat data for debugging
       setMetadata(json);
       setLoading(false);
     }
@@ -94,7 +92,6 @@ const Sat = () => {
       sortedInscriptions = sortedInscriptions.sort((a,b)=>a.genesis_fee-b.genesis_fee);
     }
     setInscriptions(sortedInscriptions);
-    console.log('Selected inscription sort option:', option);
   };
 
   return (

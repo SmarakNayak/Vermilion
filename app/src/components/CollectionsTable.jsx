@@ -27,9 +27,8 @@ const CollectionsTable = () => {
   },[selectedCollectionSortOption])
 
   const fetchInitial = async () => {
-    // console.log("fetch initial data")
     let query_string = "/api/collections?sort_by=" + selectedCollectionSortOption + "&page_size=" + pageSize + "&page_number=0";
-    // console.log(query_string);
+    // console.log(query_string); // Query string for debugging - not visible in console
     const response = await fetch(query_string);
     const newBlocks = await response.json();
 
@@ -39,9 +38,8 @@ const CollectionsTable = () => {
   }
 
   const fetchData = async () => {
-    // console.log("fetch data")
     let query_string = "/api/collections?sort_by=" + selectedCollectionSortOption + "&page_size=" + pageSize + "&page_number=" + nextPageNo;
-    // console.log(query_string);
+    // console.log(query_string); // Query string for debugging - not visible in console
     const response = await fetch(query_string);
     const newBlockData = await response.json();
 

@@ -6,9 +6,8 @@ import GridItemContainer from './GridItemContainer';
 const Gallery = (props) => {
   const [inscriptions, setInscriptions] = useState([]);
 
-  //Update inscriptionList
+  // Update inscriptionList
   useEffect(() => {
-    console.log(props)
     if(props?.inscriptionList===undefined || props.inscriptionList.length<1) {
       setInscriptions([]);
     } else {

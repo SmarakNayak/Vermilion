@@ -24,11 +24,7 @@ const ProvenanceSection = ({
   editionCount
 }) => {
   if (!metadata) return null;
-  // console.log('parents', parentsData);
-  // console.log('children', childrenInscriptions);
-  // console.log('referenced by', referencedByData);
-  // console.log('delegate', delegateData);
-  // console.log('recursive submodules', recursiveSubmodulesData);
+
   return (
     <Container>
       {/* Delegate */}

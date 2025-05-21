@@ -28,15 +28,15 @@ const Search = () => {
 
   useEffect(() => {
     if(query !== undefined && query !== searchInput) {
-      console.log(query);
+      // console.log(query_string); // Query string for debugging - not visible in console
       //path different to search input - start search
       setFirstLoad(false);
-      console.log("path different to search input");
+      // console.log("path different to search input"); // Debugging - not visible in console
       setSearchInput(query);
       submitSearch(query);
     } else {
       //path same as search input - do nothing
-      console.log("path same as search input");
+      // console.log("path same as search input"); // Debugging - not visible in console
     }
   },[query])
 
@@ -160,10 +160,7 @@ const Search = () => {
       inscriptions = inscriptions.sort((a,b)=>a.genesis_fee-b.genesis_fee);
     }
     setInscriptionList(inscriptions);
-    console.log('Selected inscription sort option:', option);
   };
-
-  console.log("inscriptionList", inscriptionList);
 
   return (
     <PageContainer>

@@ -91,7 +91,7 @@ const SweepModal = ({
         }
       }
       // broadcast the sweep transaction and log it
-      console.log('Sweep transaction:', unsignedSweep.__CACHE);
+      console.log('Sweep transaction:', unsignedSweep.__CACHE); // Sweep transaction details - visible in console
       const sweepInfo = {
         sweep_type: boostHistoryRow.inscription_method,
         boost_id: boostHistoryRow.boost_id,
@@ -117,7 +117,7 @@ const SweepModal = ({
         return (Math.abs(curr.fee_rate - feeRate) < Math.abs(prev.fee_rate - feeRate) ? curr : prev);
       });
       let sweepTx = bitcoin.Transaction.fromHex(closestSweep.sweep_tx_hex);
-      console.log('Sweep transaction:', NETWORKS[wallet.network].bitcoinjs);
+      console.log('Sweep transaction:', NETWORKS[wallet.network].bitcoinjs); // Sweep transaction details - visible in console
       let sweepInfo = {
         sweep_type: boostHistoryRow.inscription_method,
         boost_id: closestSweep.boost_id,
@@ -190,7 +190,7 @@ const SweepModal = ({
         setWallet(null);
         setAuthToken(null);
       });
-      console.log('Sweep transaction submitted:', sweepTxId);
+      console.log('Sweep transaction submitted:', sweepTxId); // Sweep transaction ID - visible in console
       setConfirmedSweepTxId(sweepTxId); 
       setSuccess(true);
       setIsSweeping(false);

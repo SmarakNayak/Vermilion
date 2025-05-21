@@ -39,7 +39,7 @@ const History = () => {
     });
     if (!response.ok) {
       if (response.status===401) {
-        console.log('Unauthorized. Please log in again.');
+        console.log('Unauthorized. Please log in again.'); // Unauthorized - visible in console
         setWallet(null);
         setAuthToken(null);
         setIsUnauthorized(true); // Set unauthorized state
@@ -50,7 +50,6 @@ const History = () => {
     }
     setIsUnauthorized(false); // Reset unauthorized state if response is valid
     const data = await response.json();
-    console.log('Boost history:', data);
     data.forEach((row) => {
       row.type = "Boost";
       if (row?.sweep_tx_status === 'pending') {

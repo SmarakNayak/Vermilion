@@ -92,12 +92,10 @@ const Attributions = () => {
 
   const handleSortOptionChange = (option) => {
     setSelectedSortOption(option);
-    console.log('Selected reference sort option:', option);
   };
 
   const handleFilterOptionsChange = (filterOptions) => {
     setSelectedFilterOptions(filterOptions);
-    console.log('Selected filter option:', filterOptions);
   };
 
   return (

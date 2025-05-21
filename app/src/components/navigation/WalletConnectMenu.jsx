@@ -97,7 +97,7 @@ const WalletConnectMenu = ({ isOpen, onClose }) => {
         try {
           const detected = await detectWallets();
           setDetectedWallets(detected);
-          console.log("Detected wallets:", detected);
+          // console.log("Detected wallets:", detected); // Detected wallets - not visible in console
         } catch (error) {
           console.error("Error detecting wallets:", error);
           setDetectedWallets([]);
@@ -205,9 +205,8 @@ const WalletConnectMenu = ({ isOpen, onClose }) => {
         throw new Error('Signature verification failed');
       }
       wallet.setupAccountChangeListener(async (accounts) => {
-        console.log(accounts);
         if (accounts?.disconnected === true) {
-          console.log("Wallet disconnected");
+          console.log("Wallet disconnected"); // Wallet disconnected - visible in console
           setWallet(null);
           setAuthToken(null);
           setIsConnecting(false);

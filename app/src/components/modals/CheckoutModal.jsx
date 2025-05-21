@@ -111,7 +111,7 @@ const CheckoutModal = ({ onClose, isCheckoutModalOpen, delegateData }) => {
 
   useEffect(() => {
     if (isCheckoutModalOpen) {
-      console.log("Fetching owner address...");
+      console.log("Fetching owner address..."); // Fetching owner address - visible in console
       getOwnerAddress(delegateData);
     }
   }, [isCheckoutModalOpen, delegateData]);
@@ -147,7 +147,6 @@ const CheckoutModal = ({ onClose, isCheckoutModalOpen, delegateData }) => {
   }
 
   useEffect(() => {
-    console.log(isCheckoutModalOpen, feeRate, ownerAddress);
     if (isCheckoutModalOpen & feeRate > 0 & ownerAddress !== null) {
       let quantity = boostQuantity;
       if (quantity < 1) { //early return if 0 (as estiamtion assumes min tx size)
@@ -205,7 +204,7 @@ const CheckoutModal = ({ onClose, isCheckoutModalOpen, delegateData }) => {
         return;
       }
       if (!wallet) {
-        console.log("Wallet not connected");
+        console.log("Wallet not connected"); // Wallet is not connected - visible in console
         setOverlayWalletConnect(true);
         return;
       }
@@ -215,7 +214,6 @@ const CheckoutModal = ({ onClose, isCheckoutModalOpen, delegateData }) => {
       }
 
       let inscriptions = getInscriptions(delegateMetadata, boostQuantity);
-      console.log("Inscribing following inscriptions: ", inscriptions);
 
       let platformFeeAddress = platformAddress;
       if (network === 'testnet' || network === 'signet') {
@@ -244,7 +242,7 @@ const CheckoutModal = ({ onClose, isCheckoutModalOpen, delegateData }) => {
           owner_fee: totalOwnerFee
         },
         () => { // log out on unauthorized
-          console.log("Unauthorized, logging out...");
+          console.log("Unauthorized, logging out..."); // Logging out - visible in console
           setWallet(null); // Reset wallet in zustand store
           setAuthToken(null); // Reset auth token in zustand store
         }
