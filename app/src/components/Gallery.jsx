@@ -24,7 +24,7 @@ const Gallery = (props) => {
             collection_symbol={entry.collection_symbol} 
             content_length={entry.content_length}
             id={entry.id} 
-            is_child={entry.parents.length > 0}
+            is_child={entry.parents?.length > 0}
             is_recursive={entry.is_recursive}
             item_name={entry.off_chain_metadata?.name}
             key={entry.number} 
