@@ -657,9 +657,8 @@ class MagicEdenWallet extends Wallet {
       message,
     }
     const request = jsontokens.createUnsecuredToken(payload);
-    const response = await window.magicEden.bitcoin.signMessage(request);
-    if (response.error) throw new Error(response.error.message);
-    return response.result.signature;
+    const signedMessage = await window.magicEden.bitcoin.signMessage(request);
+    return signedMessage;
   }
 
   async setupAccountChangeListener(callback) {
@@ -734,9 +733,10 @@ class PhantomWallet extends Wallet {
   async signMessage(message, type, address = this.ordinalsAddress) {
     this.windowCheck();
     if (type && type !== 'bip322') throw new Error('Phantom only supports bip322 signing');
-    message = new TextEncoder().encode('hello world');
-    const signature =  await window.phantom.bitcoin.signMessage(address, message);
-    return signature;
+    let encoder = new TextEncoder();
+    const response =  await window.phantom.bitcoin.signMessage(address, encoder.encode(message));
+    let signatureBuffer = Buffer.from(response.signature);
+    return signatureBuffer.toString("base64");
   }
 
   async setupAccountChangeListener(callback) {
