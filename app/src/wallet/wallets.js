@@ -295,6 +295,9 @@ class XverseWallet extends Wallet {
 
   async connect(network) {
     this.windowCheck();
+    if (await this.getNetwork() !== NETWORKS[network].xverse) {
+      await this.switchNetwork(network);
+    }
     const response = await window.XverseProviders.BitcoinProvider.request("wallet_connect", {
       addresses: ['payment', 'ordinals'],
       message: 'Connect to Vermilion dot place plz'
@@ -303,10 +306,6 @@ class XverseWallet extends Wallet {
     const accounts = response.result.addresses;
     const payment = accounts.find(a => a.purpose === 'payment');
     const ordinals = accounts.find(a => a.purpose === 'ordinals');
-
-    if (await this.getNetwork() !== NETWORKS[network].xverse) {
-      throw new Error('Connected to wrong network, please switch to ' + network);
-    }
     
     this.network = network;
     this.paymentAddress = payment.address;
@@ -325,7 +324,13 @@ class XverseWallet extends Wallet {
   }
 
   async switchNetwork(network) {
-    throw new Error('Xverse does not support network switching');
+    this.windowCheck();
+    const xverseNetwork = NETWORKS[network].xverse;
+    const res = await window.XverseProviders.BitcoinProvider.request('wallet_changeNetwork', {
+      name: xverseNetwork
+    });
+    if (res.status === 'error') throw new Error(res.error);
+    this.network = network;
   }
 
   async signPsbt(psbt, signingIndexes = null) {
