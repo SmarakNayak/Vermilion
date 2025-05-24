@@ -351,25 +351,20 @@ class XverseWallet extends Wallet {
     this.windowCheck();
     const psbts = psbtArray.map((psbt, i) => ({
       psbtBase64: psbt.toBase64(),
-      inputsToSign: this.getInputsToSignGroupedNameless(psbt, signingIndexesArray[i]),
+      inputsToSign: this.getInputsToSignGrouped(psbt, signingIndexesArray[i]),
       broadcast: false
     }));
-    // let payload = {
-    //   network: { type: NETWORKS[this.network].xverse },
-    //   message: 'Sign these transactions plz',
-    //   psbts
-    // };
-    // let request = jsontokens.createUnsecuredToken(payload);
-    const response = await window.XverseProviders.BitcoinProvider.request("signMultipleTransactions", {
-      payload: {
-        network: { type: NETWORKS[this.network].xverse },
-        message: "Sign these transactions plz",
-        psbts
-      }
-    });
+    let payload = {
+      network: { type: NETWORKS[this.network].xverse },
+      message: 'Sign these transactions plz',
+      psbts
+    };
+    let request = jsontokens.createUnsecuredToken(payload);
+    const response = await window.XverseProviders.BitcoinProvider.signMultipleTransactions(request);
 
     if (response.error){
-      if (response.error.message.includes('is not supported')) {
+      console.log(response);
+      if (response.error.message.includes('is not supported') || response.error.message.includes('Method not found')) {
         console.log('Xverse does not support signing multiple PSBTs at once, falling back to single signPsbt calls');
         let signedPsbts = []
         for (let i = 0; i < psbtArray.length; i++) {
@@ -378,10 +373,10 @@ class XverseWallet extends Wallet {
         }
         return signedPsbts;
       }
-      throw error;
+      throw new Error(response.error.message);
     }
 
-    return response.result.map(r => bitcoin.Psbt.fromBase64(r.psbt).finalizeAllInputs());
+    return response.map(r => bitcoin.Psbt.fromBase64(r.psbtBase64).finalizeAllInputs());
   }
   
   async signMessage(message, type, address = this.ordinalsAddress) {
