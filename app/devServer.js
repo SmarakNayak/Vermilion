@@ -2,6 +2,10 @@ import homepage from "./index.html";
 
 const server = Bun.serve({
   port: 3000,
+  development: {
+    hmr: true,
+    console: true
+  },
   routes: {
     "/*": homepage,
     '/api/*': async req => {
