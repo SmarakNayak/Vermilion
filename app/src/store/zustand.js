@@ -10,7 +10,7 @@ const useStore = create(
     (set) => ({
       wallet : null,
       authToken : null,
-      network: 'mainnet',
+      network: 'signet',
       platformFee: 2500,
       platformAddress: '',
       ownerFee: 2500,
