@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, use } from 'react';
 import styled from 'styled-components';
 import { usePostHog } from 'posthog-js/react';
 import { ArrowLeftIcon, ChevronRightIcon, CrossIcon, ErrorCircleIcon, WalletIcon } from '../common/Icon';
@@ -17,8 +17,8 @@ import phantomLogo from '../../assets/wallets/phantom.png';
 import Spinner from '../Spinner';
 
 const WALLET_PRIORITY = [
-  'unisat',
   'xverse',
+  'unisat',
   'oyl',
   'magiceden',
   'okx',
@@ -26,12 +26,19 @@ const WALLET_PRIORITY = [
   'phantom'
 ];
 
+const MOBILE_WALLETS = [
+  'xverse',
+  'okx',
+  'magiceden',
+  'phantom'
+];
+
 const WALLET_DISPLAY_NAMES = {
   'unisat': 'Unisat',
   'xverse': 'Xverse',
   'oyl': 'Oyl',
-  'magiceden': 'Magic Eden',
   'okx': 'OKX',
+  'magiceden': 'Magic Eden',
   'leather': 'Leather',
   'phantom': 'Phantom'
 };
@@ -63,10 +70,16 @@ const WalletConnectMenu = ({ isOpen, onClose }) => {
   const [connectingWallet, setConnectingWallet] = useState(null);
   const [isConnecting, setIsConnecting] = useState(false);
   const [error, setError] = useState(null);
+  const [isMobile, setIsMobile] = useState(false);
   const menuRef = useRef(null);
   const modalContentRef = useRef(); // Ref for the modal content
 
   const posthog = usePostHog();
+
+  useEffect(() => {
+    const mobileCheck = /iphone|ipad|ipod|ios|android|XiaoMi|MiuiBrowser/i.test(navigator.userAgent);
+    setIsMobile(mobileCheck);
+  }, []);
 
   useEffect(() => {
     if (isOpen) {
@@ -127,7 +140,9 @@ const WalletConnectMenu = ({ isOpen, onClose }) => {
     ].slice(0, 3);
   };
 
-  const walletsToShow = showOtherWallets ? WALLET_PRIORITY : getFirstScreenWallets();
+  const walletsToShow = isMobile
+    ? MOBILE_WALLETS
+    : showOtherWallets ? WALLET_PRIORITY : getFirstScreenWallets();
   
   // Reset showOtherWallets when menu closes
   useEffect(() => {
@@ -235,11 +250,52 @@ const WalletConnectMenu = ({ isOpen, onClose }) => {
   const allWallets = [...primaryWallets, 'magiceden', 'okx', 'leather', 'phantom'];
   
   const wallets = showOtherWallets ? allWallets : primaryWallets;
+
+  const openAppOrLink = (walletType, isMobileDevice) => {
+    const encodedCurrentUrl = encodeURIComponent(window.location.href); // Encode the current URL for deep linking
+
+    if (isMobileDevice) {
+      let deepLink = "";
+      let useIntermediaryLink = false;
+      let intermediaryLink = "";
+
+      // For mobile devices, open the app if installed, otherwise redirect to the wallet's website
+      switch (walletType) {
+        case 'xverse':
+          deepLink = `xverse://browser?url=${encodedCurrentUrl}`;
+          break;
+        case 'okx':
+          const okxUrl = `okx://wallet/dapp/url?dappUrl=${encodedCurrentUrl}`;
+          intermediaryLink = `https://web3.okx.com/download?deeplink=${encodeURIComponent(okxUrl)}`;
+          useIntermediaryLink = true;
+          break;
+        case 'phantom':
+          deepLink = `https://phantom.app/ul/browse/${encodedCurrentUrl}?ref=${encodeURIComponent("https://vermilion.place")}`;
+          break;
+        case 'magiceden':
+          deepLink = `magiceden://browser?url=${encodedCurrentUrl}`;
+          break;
+      } 
+
+      if (useIntermediaryLink) {
+        // Attempt to open the app via deep link
+        window.location.href = intermediaryLink;
+        return; 
+      } else if (deepLink) {
+        // Attempt to open the app via deep link
+        window.location.href = deepLink;
+        return;
+      }
+    }
+
+    // Fallback for non-mobile, or if mobile but deep link did not work
+    window.open(WALLET_LINKS[walletType], '_blank');
+  }
   
   return (
     <MenuContainer ref={menuRef} isOpen={isOpen} onClick={handleMenuClick}>
       <HeaderSection>
-        {showOtherWallets ? (
+        {showOtherWallets && !isMobile ? (
           <Button onClick={goBack}>
             <ArrowLeftIcon size="1.25rem" color={theme.colors.text.secondary} />
           </Button>
@@ -260,7 +316,7 @@ const WalletConnectMenu = ({ isOpen, onClose }) => {
             return (
               <WalletOption key={wallet} onClick={isDetected 
                 ? () => handleWalletConnect(wallet)
-                : () => window.open(WALLET_LINKS[wallet], '_blank')
+                : () => openAppOrLink(wallet, isMobile)
               }>
                 <WalletLogoWrapper>
                   <WalletLogo src={WALLET_LOGOS[wallet]} alt={`${WALLET_DISPLAY_NAMES[wallet]} logo`} />
@@ -279,7 +335,7 @@ const WalletConnectMenu = ({ isOpen, onClose }) => {
           })}
         </WalletOptions>
         
-        {!showOtherWallets && (
+        {!isMobile && !showOtherWallets && (
           <>
             <Divider />
             <OtherWalletsOption onClick={toggleOtherWallets}>
