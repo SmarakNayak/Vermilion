@@ -295,13 +295,17 @@ class XverseWallet extends Wallet {
 
   async connect(network) {
     this.windowCheck();
-    if (await this.getNetwork() !== NETWORKS[network].xverse) {
-      await this.switchNetwork(network);
-    }
-    const response = await window.XverseProviders.BitcoinProvider.request("wallet_connect", {
+    let response = await window.XverseProviders.BitcoinProvider.request("wallet_connect", {
       addresses: ['payment', 'ordinals'],
       message: 'Connect to Vermilion dot place plz'
     });
+    if (await this.getNetwork() !== NETWORKS[network].xverse) { // we do it after the initial connect due to permissions
+      await this.switchNetwork(network);
+      response = await window.XverseProviders.BitcoinProvider.request("wallet_connect", {
+        addresses: ['payment', 'ordinals'],
+        message: 'Connect to Vermilion dot place plz'
+      });
+    }
     if (response.error) throw new Error(response.error.message);
     const accounts = response.result.addresses;
     const payment = accounts.find(a => a.purpose === 'payment');
@@ -319,7 +323,7 @@ class XverseWallet extends Wallet {
   async getNetwork() {
     this.windowCheck();
     const res = await window.XverseProviders.BitcoinProvider.request('wallet_getNetwork', null);
-    if (res.status === 'error') throw new Error(res.error);
+    if (res.error) throw new Error(res.error.message);
     return res.result.bitcoin.name;
   }
 
@@ -329,7 +333,7 @@ class XverseWallet extends Wallet {
     const res = await window.XverseProviders.BitcoinProvider.request('wallet_changeNetwork', {
       name: xverseNetwork
     });
-    if (res.status === 'error') throw new Error(res.error);
+    if (res.error) throw new Error(res.error.message);
     this.network = network;
   }
 
