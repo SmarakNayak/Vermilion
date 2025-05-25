@@ -37,13 +37,14 @@ const DetailsSection = ({ metadata, shortId, prettySize, address, shortAddress, 
       <InfoRow>
         <InfoLabel>Owner</InfoLabel>
         <InfoData>
-          {validAddress ? (
+          {/* {validAddress ? (
             <UnstyledLink to={`/address/${address?.address}`}>
               <LinkText>{shortAddress}</LinkText>
             </UnstyledLink>
           ) : (
             <InfoText ismain>{formatAddress(address.address)}</InfoText>
-          )}
+          )} */}
+          <InfoText ismain>{address}</InfoText>
           {/* <UnstyledLink to={address?.address !== "unbound" ? `/address/${address?.address}` : ""}>
             <LinkText>{address?.address ? formatAddress(address.address) : ""}</LinkText>
           </UnstyledLink> */}

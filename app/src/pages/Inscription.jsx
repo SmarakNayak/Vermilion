@@ -333,7 +333,8 @@ const Inscription = () => {
       setAddressLoading(true);
       const response = await fetch(`/api/inscription_last_transfer_number/${number}`);
       const json = await response.json();
-      setAddress(json);
+      // setAddress(json);
+      setAddress("?"); // temporary to avoid page crashing
       
       if (json.address) {
         const address = json.address;
