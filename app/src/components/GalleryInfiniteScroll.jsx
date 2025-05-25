@@ -61,6 +61,7 @@ const GalleryInfiniteScroll = ({ baseApi, isCollectionPage, numberVisibility, zo
                 collection_symbol={entry.collection_symbol}
                 content_length={entry.content_length}
                 id={entry.id} 
+                is_boost={entry.delegate}
                 is_child={entry.parents.length > 0}
                 is_recursive={entry.is_recursive}
                 isCollectionPage={isCollectionPage}

@@ -127,8 +127,8 @@ const GridItemContainer = (props) => {
   },[contentType]);
 
   const shouldApplySpace = props.isCollectionPage
-  ? (props.numberVisibility && !props.rune && !props.is_child && !props.is_recursive && !(props.content_length > 2000000) && !(props.item_name?.length > 0))
-  : (props.numberVisibility && !props.collection && !props.rune && !props.is_child && !props.is_recursive && !(props.content_length > 2000000));
+  ? (props.numberVisibility && !props.rune && !props.is_boost && !props.is_child && !props.is_recursive && !(props.content_length > 2000000) && !(props.item_name?.length > 0))
+  : (props.numberVisibility && !props.collection && !props.rune && !props.is_boost && !props.is_child && !props.is_recursive && !(props.content_length > 2000000));
   
   return(
   <ItemContainer>
@@ -182,6 +182,12 @@ const GridItemContainer = (props) => {
             <GridTag
               color={theme.colors.text.secondary}
               value={'Child'}
+            />
+          )}
+          {props.is_boost && (
+            <GridTag
+              color={theme.colors.text.secondary}
+              value={'Boost'}
             />
           )}
           {props.is_recursive && (
