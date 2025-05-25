@@ -175,20 +175,23 @@ const Children = ({ setParentNumbers }) => {
                 <MetadataContainer>
                   <BorderedTagSection />
                   <TextContainer>
-                    {Object.entries(inscriptionMetadata?.on_chain_metadata).map(([key, value], index) => {
-                      // Skip entries that are arrays or objects
-                      if (Array.isArray(value) || (typeof value === 'object' && value !== null)) {
-                        return null;
-                      }
-                      
-                      return (
-                        // <Tag key={key} isLarge={true} value={value} category={key} />
-                        <MetadataText key={key}>
-                          {key}
-                          <MetadataValue> {value}</MetadataValue>
-                        </MetadataText>
-                      );
-                    }).filter(Boolean)}
+                    {typeof inscriptionMetadata?.on_chain_metadata === 'string' ? (
+                      <MetadataValue>{inscriptionMetadata.on_chain_metadata}</MetadataValue>
+                    ) : (
+                      Object.entries(inscriptionMetadata?.on_chain_metadata || {}).map(([key, value]) => {
+                        // Skip entries that are arrays or objects
+                        if (Array.isArray(value) || (typeof value === 'object' && value !== null)) {
+                          return null;
+                        }
+                        
+                        return (
+                          <MetadataText key={key}>
+                            {key}
+                            <MetadataValue> {value}</MetadataValue>
+                          </MetadataText>
+                        );
+                      }).filter(Boolean)
+                    )}
                   </TextContainer>
                 </MetadataContainer>
               )}
