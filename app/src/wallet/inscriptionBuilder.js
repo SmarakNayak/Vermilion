@@ -227,7 +227,7 @@ async function getCommitTransaction({
 
   // Now we know how many inputs we need, we can calculate the estimated commit fee
   let inputTypes = new Array(selectedUtxos.length).fill(paymentAddressType);
-  let estimatedCommitFee = Math.ceil(estimateVSize(inputTypes, outputTypes, paymentAddressType) * feeRate);  
+  let estimatedCommitFee = Math.ceil(estimateVSize(inputTypes, outputTypes, paymentAddressType) * feeRate);
   let estimatedInscriptionFee = estimatedCommitFee + commitSendAmount;
 
   const psbt = new bitcoin.Psbt({ network: NETWORKS[network].bitcoinjs });
@@ -357,7 +357,7 @@ function estimateInscriptionFee(inscriptions, paymentAddress, paymentPublicKey, 
   let inputTypes = new Array(selectedUtxos.length).fill(paymentAddressType);
   let estimatedCommitFee2 = estimateVSize(inputTypes, outputTypes, paymentAddressType) * feeRate;  
   console.log("Estimated commit fee: ", estimatedCommitFee, ". estimated commit fee2:", estimatedCommitFee2);
-  if (estimatedCommitFee !== estimatedCommitFee2) {
+  if (estimatedCommitFee !== Math.ceil(estimatedCommitFee2)) {
     throw new error("Estimated commit fee method 1 and 2 do not match: ", estimatedCommitFee, estimatedCommitFee2);
   }
 

@@ -168,8 +168,12 @@ const CheckoutModal = ({ onClose, isCheckoutModalOpen, delegateData }) => {
       setTotalOwnerFee(totalOwnerFee);
       if (wallet && utxos?.length > 0) {
         let revealVsize = getRevealVSize(inscriptions, wallet.ordinalsAddress, network);
-        try{          
-          let inscriptionFee = estimateInscriptionFee(inscriptions, wallet.paymentAddress, wallet.paymentPublicKey, revealVsize, feeRate, utxos, network, totalPlatformFee, null, totalOwnerFee, null);
+        try{
+          let platformFeeAddress = platformAddress;
+          if (network === 'testnet' || network === 'signet') {
+            platformFeeAddress = wallet.paymentAddress; // Refund wallet address for testnet/signet
+          }
+          let inscriptionFee = estimateInscriptionFee(inscriptions, wallet.paymentAddress, wallet.paymentPublicKey, revealVsize, feeRate, utxos, network, totalPlatformFee, platformFeeAddress, totalOwnerFee, ownerAddress);
           setInscriptionFee(inscriptionFee - totalPlatformFee - totalOwnerFee);
         } catch (error) {
           //guess without wallet.
