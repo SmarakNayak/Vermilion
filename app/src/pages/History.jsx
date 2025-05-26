@@ -146,7 +146,7 @@ const History = () => {
                   {row.status}
                 </DataCell>
                 <DataCell>
-                  <StyledLink href={getMempoolTxUrl(row.reveal_tx_id)} target="_blank">
+                  <StyledLink href={getMempoolTxUrl(row.commit_tx_id)} target="_blank">
                     {formatAddress(row.commit_tx_id)}
                   </StyledLink>
                 </DataCell>
