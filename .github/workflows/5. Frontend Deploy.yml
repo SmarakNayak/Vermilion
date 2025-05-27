@@ -55,6 +55,15 @@ jobs:
 
       - name: Build Frontend
         run: ssh staging 'cd Vermilion/app; /home/ubuntu/.bun/bin/bun install; /home/ubuntu/.bun/bin/bun run build;'
+      
+      # node-gyp is needed to build secp256k1
+      # which is needed for bitcoinjs-message
+      # which is needed for bip322-js
+      - name: Install node-gyp
+        run: ssh staging 'bun install -g node-gyp;'
+      
+      - name: Build secp256k1
+        run: ssh staging 'cd Vermilion/app/server/node_modules/bitcoinjs-message/node_modules/secp256k1/; bun run rebuild;'
 
       - name: Setup Bun server
         run: ssh staging 'cd Vermilion/app/server; /home/ubuntu/.bun/bin/bun install;'
