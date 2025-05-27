@@ -232,6 +232,13 @@ const Trending = () => {
     // Default for unknown, undefined, or unhandled types
     return 'unsupported';
   };
+
+  const formatParents = (parents) => {
+    if (!parents) return '';
+    return Array.isArray(parents) ? parents.join(',') : parents;
+  };
+
+  console.log('inscriptions', inscriptions);
   
   return (
     <MainContainer>
@@ -277,7 +284,7 @@ const Trending = () => {
                     </UnstyledLink>
                   )}
                   {inscription.activity.children_count > 0 && (
-                    <UnstyledLink to={'/children/' + inscription.inscriptions[0].id}>
+                    <UnstyledLink to={'/children/' + formatParents(inscription.activity.ids)}>
                       <Tag>
                         <Person2Icon size={'1rem'} color={theme.colors.text.secondary} />
                         <TagSpan color={theme.colors.text.secondary}>
