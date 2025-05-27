@@ -27,6 +27,7 @@ import Spinner from '../Spinner';
 import SuccessModal from './SuccessModal';
 import Tooltip from '../common/Tooltip';
 import { SkeletonElement } from '../Inscription/LoadingSkeleton';
+import { NETWORKS } from '../../wallet/networks';
 
 const CheckoutModal = ({ onClose, isCheckoutModalOpen, delegateData }) => {
   const [boostComment, setBoostComment] = useState(''); 
@@ -132,7 +133,7 @@ const CheckoutModal = ({ onClose, isCheckoutModalOpen, delegateData }) => {
     const response = await fetch(`/api/inscription_last_transfer_number/${delegateMetadata.number}`);
     const json = await response.json();
     let address = json.address;
-    if (isAddressValid(address, network)) {
+    if (isAddressValid(address, NETWORKS[network].bitcoinjs)) {
       setOwnerAddress(address);
     } else {
       setOwnerAddress('invalid');
@@ -183,8 +184,14 @@ const CheckoutModal = ({ onClose, isCheckoutModalOpen, delegateData }) => {
         }
       } else {
         //guess without wallet.
-        //Assumes 2 taproot inputs and 4 taproot outputs (reveal, change, owner, platform), 
-        let revealVsize = getRevealVSize(inscriptions, "tb1p25h2pkfjwpha0zd5t4f3t6k85swjcgujjjwa9vp8kefncx5fg58s4g443c", network);
+        //Assumes 2 taproot inputs and 4 taproot outputs (reveal, change, owner, platform),
+        let dummyAddress;
+        if (network === 'testnet' || network === 'signet') {
+          dummyAddress = 'tb1p25h2pkfjwpha0zd5t4f3t6k85swjcgujjjwa9vp8kefncx5fg58s4g443c'; // Default testnet address
+        } else {
+          dummyAddress = 'bc1pth2ku2rasqw03slnwqk9w5kkml27phyp4wt0j46h7zseqzg0s7cquktctk'; // Default mainnet address
+        }
+        let revealVsize = getRevealVSize(inscriptions, dummyAddress, network);
         let inscriptionFee = guessInscriptionFee(inscriptions, revealVsize, feeRate, totalPlatformFee, totalOwnerFee);
         setInscriptionFee(inscriptionFee - totalPlatformFee - totalOwnerFee);
       }

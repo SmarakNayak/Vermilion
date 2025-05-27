@@ -72,12 +72,12 @@ const useStore = create(
           ...currentState,
         };
 
-        // Rehydrate wallet instance if wallet data exists
-        if (persistedState.wallet) {
+        // Rehydrate wallet instance if wallet data exists and same network
+        if (persistedState.wallet && persistedState.wallet.network === currentState.network) {
           let rehydratedWallet = rehydrateWallet(persistedState.wallet);
           returnedState.wallet = rehydratedWallet;
         }
-        if (persistedState.authToken) {
+        if (persistedState.authToken && persistedState.wallet.network === currentState.network) {
           returnedState.authToken = persistedState.authToken;
         }
 
