@@ -196,6 +196,42 @@ const Trending = () => {
       return isOpening;
     });
   };
+
+  // Helper function to map raw content type to component's expected contentType prop
+  const getContentTypeProp = (rawContentType) => {
+    if (rawContentType === 'loading') {
+      return 'loading';
+    }
+    if (rawContentType) {
+      if (rawContentType.startsWith('image/svg')) {
+        // InnerInscriptionContent will handle the recursive aspect based on metadata.is_recursive
+        return 'svg';
+      }
+      if (rawContentType.startsWith('text/html')) {
+        return 'html';
+      }
+      if (rawContentType.startsWith('application/pdf')) {
+        return 'pdf';
+      }
+      if (rawContentType.startsWith('model/')) {
+        return 'model';
+      }
+      if (rawContentType.startsWith('image/')) { // Must come after image/svg
+        return 'image';
+      }
+      if (rawContentType.startsWith('text/')) { // Must come after text/html
+        return 'text';
+      }
+      if (rawContentType.startsWith('video/')) {
+        return 'video';
+      }
+      if (rawContentType.startsWith('audio/')) {
+        return 'audio';
+      }
+    }
+    // Default for unknown, undefined, or unhandled types
+    return 'unsupported';
+  };
   
   return (
     <MainContainer>
@@ -262,10 +298,7 @@ const Trending = () => {
                 <InscriptionContainer>
                   <InscriptionContentWrapper>
                     <InnerInscriptionContent
-                      contentType={
-                        inscription.inscriptions[0].content_type === 'loading' ? 'loading' : 
-                        inscription.inscriptions[0].content_type.startsWith('image/svg') ? 'svg-recursive' : 'image'
-                      }
+                      contentType={getContentTypeProp(inscription.inscriptions[0].content_type)}
                       blobUrl={`/api/inscription_number/${inscription.inscriptions[0].number}`}
                       number={inscription.inscriptions[0].number}
                       metadata={{
@@ -273,7 +306,7 @@ const Trending = () => {
                         content_type: inscription.inscriptions[0].content_type,
                         is_recursive: inscription.inscriptions[0].is_recursive
                       }}
-                      serverHTML={true}
+                      textContent={inscription.inscriptions[0].text}
                       useFeedStyles={true}
                     />
                     <ContentOverlay />
@@ -298,24 +331,6 @@ const Trending = () => {
                   </BoostButton>
                 </BoostContainer>
               </ActionContainer>
-              {/* <ActionContainer>
-                <SocialContainer>
-                  <SocialButton>
-                    <BoostIcon size={'1.25rem'} color={theme.colors.text.primary}></BoostIcon>
-                    <SocialText>{inscription.activity.delegate_count}</SocialText>
-                  </SocialButton>
-                  <SocialButton>
-                    <CommentIcon size={'1.25rem'} color={theme.colors.text.primary}></CommentIcon>
-                    <SocialText>0</SocialText>
-                  </SocialButton>
-                </SocialContainer>
-                <BoostContainer>
-                  <BoostButton>
-                    <BoostIcon size={'1.25rem'} color={theme.colors.background.white}></BoostIcon>
-                    Boost
-                  </BoostButton>
-                </BoostContainer>
-              </ActionContainer> */}
             </ContentContainer>
             {i < inscriptions.length - 1 && <Divider />}  
           </React.Fragment>

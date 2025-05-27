@@ -103,7 +103,7 @@ const InnerInscriptionContent = ({
       
     // Render SVG content - use number for page, id + serverHTML for grid, and endpoint + isIcon for icon  
     case 'svg-recursive':
-      return serverHTML ? (
+      return (serverHTML || useFeedStyles) ? (
         <ImageContainer 
           src={"/bun/rendered_content/" + metadata?.id}
           alt={`HTML Inscription ${number}`}
@@ -119,7 +119,7 @@ const InnerInscriptionContent = ({
 
     // Render HTML content - use id for page, id + serverHTML for grid, and endpoint + isIcon for icon  
     case 'html':
-      if (serverHTML) {
+      if (serverHTML || useFeedStyles) {
         return (
           <ImageContainer 
             src={"/bun/rendered_content/" + metadata?.id}
@@ -146,7 +146,7 @@ const InnerInscriptionContent = ({
     // Render text content - use textContent for page/grid (fallback for icon)  
     case 'text':
       return (
-        <TextContainer>
+        <TextContainer useFeedStyles={useFeedStyles}>
           <MediaText>{textContent}</MediaText>
         </TextContainer>
       );
@@ -169,7 +169,7 @@ const InnerInscriptionContent = ({
       
     // Render PDF content - not supported message for page/grid (fallback for icon)
     case 'pdf':
-      return <TextContainer>PDF not yet supported</TextContainer>;
+      return <TextContainer useFeedStyles={useFeedStyles}>PDF not yet supported</TextContainer>;
       
     // Render 3D model content - use modelUrl for both page/grid and icon
     case 'model':
@@ -197,7 +197,7 @@ const InnerInscriptionContent = ({
       
     case 'unsupported':
       return (
-        <TextContainer unsupported isCentered>
+        <TextContainer unsupported isCentered useFeedStyles={useFeedStyles}>
           {metadata?.content_type || 'Unknown'} content type not yet supported
         </TextContainer>
       );
@@ -242,7 +242,7 @@ const SvgContainer = styled.iframe`
 const TextContainer = styled.div`
   background-color: ${theme.colors.background.white};
   box-sizing: border-box;
-  padding: .5rem;
+  padding: ${props => props.useFeedStyles ? '0.75rem 0.5rem' : '0.5rem'};
   max-width: 100%;
   max-height: 100%;
   min-width: 100%;
@@ -264,7 +264,7 @@ const TextContainer = styled.div`
   text-wrap: wrap;
 
   @media (max-width: 864px) {
-    border: 2px solid ${theme.colors.border};
+    border: ${props => props.useFeedStyles ? 'none' : '.0625rem solid '} ${theme.colors.border};
   }
 `;
 
