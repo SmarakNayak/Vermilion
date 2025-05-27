@@ -291,6 +291,7 @@ const server = Bun.serve({
       }
     },
     '/social/verify_signature': async req => {
+      console.log('Verifying signature');
       if (req.method !== 'POST') {
         return new Response('Method Not Allowed', { status: 405 });
       }
