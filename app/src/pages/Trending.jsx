@@ -495,8 +495,8 @@ const InscriptionContainer = styled.div`
   height: auto;
   padding: 0;
   margin: 0;
-  line-height: 0;
-  font-size: 0;
+  line-height: 1.25rem;
+  font-size: .875rem;
   border-radius: .5rem;
   box-sizing: border-box;
   border: .0625rem solid ${theme.colors.border};

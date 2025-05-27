@@ -242,7 +242,7 @@ const SvgContainer = styled.iframe`
 const TextContainer = styled.div`
   background-color: ${theme.colors.background.white};
   box-sizing: border-box;
-  padding: ${props => props.useFeedStyles ? '0.75rem 0.5rem' : '0.5rem'};
+  padding: 0.5rem;
   max-width: 100%;
   max-height: 100%;
   min-width: 100%;
@@ -312,6 +312,7 @@ const ModelViewerContainer = styled.div`
 `;
 
 const MediaText = styled.p`
+  width: 100%;
   font-family: ${theme.typography.fontFamilies.medium};
   font-size: .875rem;
   color: ${theme.colors.text.primary};
