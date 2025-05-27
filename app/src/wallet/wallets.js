@@ -599,7 +599,7 @@ class OkxWallet extends Wallet {
 
 class MagicEdenWallet extends Wallet {
   constructor() {
-    super('magiceden', true, true); //assumed, need to check on mainnet
+    super('magiceden', true, false); //assumed, need to check on mainnet
   }
 
   windowCheck() {
@@ -690,7 +690,7 @@ class MagicEdenWallet extends Wallet {
 
 class PhantomWallet extends Wallet {
   constructor() {
-    super('phantom', true, true); //Assumed, need to check on mainnet
+    super('phantom', true, false); //Assumed, need to check on mainnet
   }
 
   windowCheck() {
