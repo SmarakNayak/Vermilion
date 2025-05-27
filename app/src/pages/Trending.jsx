@@ -237,8 +237,6 @@ const Trending = () => {
     if (!parents) return '';
     return Array.isArray(parents) ? parents.join(',') : parents;
   };
-
-  console.log('inscriptions', inscriptions);
   
   return (
     <MainContainer>
