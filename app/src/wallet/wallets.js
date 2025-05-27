@@ -644,7 +644,7 @@ class MagicEdenWallet extends Wallet {
       inputsToSign
     };
     const request = jsontokens.createUnsecuredToken(payload);
-    const response = await window.magicEden.bitcoin.signPsbt(request);
+    const response = await window.magicEden.bitcoin.signTransaction(request);
     if (response.error) throw new Error(response.error.message);
     const signedPsbt = bitcoin.Psbt.fromBase64(response.result.psbt);
     return signedPsbt.finalizeAllInputs();
