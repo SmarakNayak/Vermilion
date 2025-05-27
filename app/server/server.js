@@ -113,21 +113,21 @@ const server = Bun.serve({
             });
             return new Response(errorString, { status: 500 });
           }
-          let revealResponse = await broadcastTx(body.reveal_tx_hex, body.network + '/');
-          if (!revealResponse.ok) {
-            let text = await revealResponse.text();
-            let errorString = `Error broadcasting reveal transaction: ${text}, ${revealResponse.statusText}`;
-            await db.updateBoost(boostId, {
-              broadcast_status: 'failed',
-              broadcast_error: errorString,
-              commit_tx_status: 'failed',
-              reveal_tx_status: 'failed'
-            });
-            return new Response(errorString, { status: 500 });
-          }
+          // let revealResponse = await broadcastTx(body.reveal_tx_hex, body.network + '/');
+          // if (!revealResponse.ok) {
+          //   let text = await revealResponse.text();
+          //   let errorString = `Error broadcasting reveal transaction: ${text}, ${revealResponse.statusText}`;
+          //   await db.updateBoost(boostId, {
+          //     broadcast_status: 'failed',
+          //     broadcast_error: errorString,
+          //     commit_tx_status: 'failed',
+          //     reveal_tx_status: 'failed'
+          //   });
+          //   return new Response(errorString, { status: 500 });
+          // }
           let commitTxId = await commitResponse.text();
-          let revealTxId = await revealResponse.text();
-          //let revealTxId = 'lmao';
+          // let revealTxId = await revealResponse.text();
+          let revealTxId = 'lmao';
           await db.updateBoost(boostId, {
             broadcast_status: 'broadcasted',
             commit_tx_status: 'pending',
