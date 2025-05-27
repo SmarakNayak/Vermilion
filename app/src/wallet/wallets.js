@@ -599,7 +599,7 @@ class OkxWallet extends Wallet {
 
 class MagicEdenWallet extends Wallet {
   constructor() {
-    super('magiceden', true, false); //assumed, need to check on mainnet
+    super('magiceden', false, false); //UserRejectedRequestError: The user rejected the request through the wallet.
   }
 
   windowCheck() {
@@ -646,7 +646,7 @@ class MagicEdenWallet extends Wallet {
     const request = jsontokens.createUnsecuredToken(payload);
     const response = await window.magicEden.bitcoin.signTransaction(request);
     if (response.error) throw new Error(response.error.message);
-    const signedPsbt = bitcoin.Psbt.fromBase64(response.result.psbt);
+    const signedPsbt = bitcoin.Psbt.fromBase64(response.psbtBase64);
     return signedPsbt.finalizeAllInputs();
   }
 
