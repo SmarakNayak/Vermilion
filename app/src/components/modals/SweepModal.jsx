@@ -159,7 +159,7 @@ const SweepModal = ({
       if (['ephemeral_with_wallet_key_path', 'wallet_one_sign', 'wallet_two_sign'].includes(sweepData.sweep_type)) {
         if (!(['okx', 'xverse'].includes(wallet.walletType))) {
           if (wallet.walletType === 'unisat' || wallet.walletType === 'phantom') {
-            throw new Error(`Unisat does not support key-path signing. Please import your wallet into Okx to sweep.`);
+            throw new Error(`${wallet.walletType} does not support key-path signing. Please import your wallet into Okx to sweep.`);
           } else {
             throw new Error(`${wallet.walletType} does not support key-path signing. Please import your wallet into Xverse to sweep.`);
           }
