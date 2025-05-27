@@ -66,7 +66,7 @@ jobs:
         run: ssh staging '/home/ubuntu/.bun/bin/bun install -g node-gyp;'
       
       - name: Build secp256k1
-        run: ssh staging 'cd Vermilion/app/server/node_modules/bitcoinjs-message/node_modules/secp256k1/; /home/ubuntu/.bun/bin/node-gyp rebuild;'
+        run: ssh staging 'export PATH="/home/ubuntu/.nvm/versions/node/v20.4.0/bin:$PATH"; cd Vermilion/app/server/node_modules/bitcoinjs-message/node_modules/secp256k1/; /home/ubuntu/.bun/bin/node-gyp rebuild;'
 
      
       - name: Configure Bun service
