@@ -690,7 +690,7 @@ class MagicEdenWallet extends Wallet {
 
 class PhantomWallet extends Wallet {
   constructor() {
-    super('phantom', true, false); //Assumed, need to check on mainnet
+    super('phantom', false, false); //mandatory-script-verify-flag-failed (Invalid Schnorr signature)
   }
 
   windowCheck() {
