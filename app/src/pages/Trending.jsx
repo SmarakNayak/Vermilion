@@ -155,8 +155,39 @@ const Trending = () => {
       const response = await fetch(`/api/inscription_comments/${commentId}`);
       const data = await response.json();
   
-      if (Array.isArray(data)) {
-        setCommentsList(data);
+      if (Array.isArray(data) && data.length > 0) {
+  
+        // Fetch content for each comment
+        const enrichedComments = await Promise.all(
+          data.map(async (comment) => {
+            try {
+              const contentResponse = await fetch(`/api/comment/${comment.comment_id}`);
+              const contentText = await contentResponse.text(); // Read raw text response
+  
+              let content;
+              try {
+                // Attempt to parse JSON
+                const contentData = JSON.parse(contentText);
+                content = contentData.content;
+              } catch (parseError) {
+                console.warn(`Failed to parse JSON for comment ${comment.comment_id}:`, parseError);
+                content = contentText; // Fallback to raw text
+              }
+  
+              // Ensure "0" is stored as a string
+              if (content === "0" || contentText === "0") {
+                return { ...comment, content: "0" };
+              }
+  
+              return { ...comment, content };
+            } catch (error) {
+              console.error(`Error fetching content for comment ${comment.comment_id}:`, error);
+              return { ...comment, content: null }; // Fallback to null if fetch fails
+            }
+          })
+        );
+  
+        setCommentsList(enrichedComments); // Store enriched comments
       } else {
         setCommentsList([]); // Handle case where no comments are returned
       }
@@ -487,9 +518,9 @@ const ContentContainer = styled.div`
 `;
 
 const InscriptionContainer = styled.div`
-  // display: flex;
-  // align-items: center;
-  // justify-content: center;  
+  display: flex;
+  align-items: center;
+  justify-content: center;  
   width: 32rem;
   max-width: 32rem;
   height: auto;
