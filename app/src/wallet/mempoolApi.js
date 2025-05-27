@@ -204,7 +204,7 @@ async function submitSweep(wallet, authToken, sweepInfo, unauthCallback) {
 const getRecommendedFees = async(network) => {
   let fees = await fetch(`https://mempool.space/${NETWORKS[network].mempool}api/v1/fees/recommended`);
   let feesJson = await fees.json();
-  let fastestFee = feesJson.fastestFee;
+  let fastestFee = feesJson.fastestFee + 1; // add 1 sat/vB to the fastest fee for a little buffer
   return fastestFee;
 }
 
