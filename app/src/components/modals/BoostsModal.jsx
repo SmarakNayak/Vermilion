@@ -50,6 +50,17 @@ const BoostsModal = ({ boostsList, onClose, fetchMoreBoosts, hasMoreBoosts, isBo
     [isBoostsLoading, hasMoreBoosts, fetchMoreBoosts]
   );
 
+  const isAddressValid = (addressString) => {
+    if (!addressString) { // Handle cases where addressString might be null, undefined, or empty
+      return false;
+    }
+    return (
+      addressString !== "unbound" &&
+      addressString !== "Failed to convert script to address: script is not a p2pkh, p2sh or witness program" &&
+      !addressString.includes("script is not a p2pkh")
+    );
+  };  
+
   return (
     <ModalOverlay isOpen={isBoostsModalOpen} onClick={onClose}>
       <ModalContainer isOpen={isBoostsModalOpen} onClick={(e) => e.stopPropagation()}>
@@ -81,29 +92,38 @@ const BoostsModal = ({ boostsList, onClose, fetchMoreBoosts, hasMoreBoosts, isBo
           ) : (
             // Boosts list
             // Renders when there are boosts in the list
-            boostsList.map((boost, index) => (
-              <BoostEntry
-                key={index}
-                ref={index === boostsList.length - 1 ? lastBoostRef : null}
-              >
-                <BoostDetails>
-                  <BoostNumber>{boost.bootleg_edition}</BoostNumber>
-                  <TextLink to={`/inscription/${boost.bootleg_number}`}>
-                    <BoostText>
-                      #{addCommas(boost.bootleg_number)}
-                    </BoostText>
-                  </TextLink>
-                </BoostDetails>
-                <OwnerDetails>
-                  <SupportText>owned by</SupportText>
-                  <TextLink to={`/address/${boost.address}`}>
-                    <BoostText>
-                      {formatAddress(boost.address)}
-                    </BoostText>
-                  </TextLink>
-                </OwnerDetails>
-              </BoostEntry>
-            ))
+            boostsList.map((boost, index) => {
+              const isValidBoostAddress = isAddressValid(boost.address);
+              return (
+                <BoostEntry
+                  key={index}
+                  ref={index === boostsList.length - 1 ? lastBoostRef : null}
+                >
+                  <BoostDetails>
+                    <BoostNumber>{boost.bootleg_edition}</BoostNumber>
+                    <TextLink to={`/inscription/${boost.bootleg_number}`}>
+                      <BoostText islink>
+                        #{addCommas(boost.bootleg_number)}
+                      </BoostText>
+                    </TextLink>
+                  </BoostDetails>
+                  <OwnerDetails>
+                    <SupportText>owned by</SupportText>
+                    {isValidBoostAddress ? (
+                      <TextLink to={`/address/${boost.address}`}>
+                        <BoostText islink>
+                          {formatAddress(boost.address)}
+                        </BoostText>
+                      </TextLink>
+                    ) : (
+                      <BoostText>
+                        {formatAddress(boost.address)}
+                      </BoostText>
+                    )}
+                  </OwnerDetails>
+                </BoostEntry>
+              );
+            })
           )}
           {boostsList.length > 0 && hasMoreBoosts && isBoostsLoading && (
             // Loading spinner when more boosts are being fetched
@@ -269,16 +289,16 @@ const BoostText = styled.p`
   text-overflow: ellipsis;
   line-height: 1.5rem;
   // width: 100%;
-  text-decoration-line: underline;
-  text-decoration-color: transparent;
-  text-decoration-thickness: 2px;
-  text-underline-offset: 2px;
+  text-decoration-line: ${props => props.islink ? 'underline' : 'none'};
+  text-decoration-color: ${props => props.islink ? 'transparent' : 'none'};
+  text-decoration-thickness: ${props => props.islink ? '2px' : 'none'};
+  text-underline-offset: ${props => props.islink ? '2px' : 'none'};
 
   transition: all 200ms ease;
   transform-origin: center center;
 
   &:hover {
-    text-decoration-color: ${theme.colors.text.primary};};
+    text-decoration-color: ${props => props.islink ? theme.colors.text.primary : 'none'};
   }
 `;
 

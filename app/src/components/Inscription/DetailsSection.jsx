@@ -20,7 +20,10 @@ const DetailsSection = ({ metadata, shortId, prettySize, address, shortAddress, 
 
   // Check for address
   const checkAddress = (address) => {
-    if (address && address !== "unbound" && address !== "Failed to convert script to address: script is not a p2pkh, p2sh or witness program") {
+    if (address &&
+        address !== "unbound" &&
+        address !== "Failed to convert script to address: script is not a p2pkh, p2sh or witness program" &&
+        !address.includes("script is not a p2pkh")) { 
       setValidAddress(true);
     } else {
       setValidAddress(false);

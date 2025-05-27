@@ -12,7 +12,7 @@ export const addCommas = (num) => {
 // Formats an address to show first and last 5 characters
 
 export const formatAddress = (address) => {
-  if (!address || address === 'Failed to convert script to address: script is not a p2pkh, p2sh or witness program') {
+  if (!address || address === 'Failed to convert script to address: script is not a p2pkh, p2sh or witness program' || address.includes('script is not a p2pkh')) {
     return 'Unknown';
   }
 
