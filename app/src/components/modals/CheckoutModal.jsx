@@ -100,8 +100,8 @@ const CheckoutModal = ({ onClose, isCheckoutModalOpen, delegateData }) => {
       //overwrite the first inscription with the comment        
       const commentInscription = new InscriptionObject({
         delegate: delegateMetadata.id,
-        contentType: "text/plain",
-        content: Buffer.from(boostComment), // Add comment to the inscription
+        contentType: "text/plain;charset=utf-8",
+        content: Buffer.from(boostComment, "utf-8"), // Add comment to the inscription
         postage: 546, // Minimum sat value
       });
       inscriptions[0] = commentInscription;
