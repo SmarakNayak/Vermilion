@@ -207,8 +207,6 @@ const WalletConnectMenu = ({ isOpen, onClose }) => {
           signatureType: 'bip322',
         })
       });
-      let headers = verificationResponse.headers;
-      throw new Error(`Headers: ${JSON.stringify([...headers.entries()])}, address: ${wallet.ordinalsAddress}, signInMessage: ${signInMessage}, signature: ${signature}, url: ${verificationResponse.url}`);
       const verificationJson = await verificationResponse.json();
       // 5. Set the auth token in Zustand store
       if (verificationJson.isValid) {
