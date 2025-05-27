@@ -85,7 +85,7 @@ const CheckoutModal = ({ onClose, isCheckoutModalOpen, delegateData }) => {
       let feerate = await getRecommendedFees(network);
       setFeeRate(feerate);
       //wait for 5 seconds before fetching again
-      await new Promise(resolve => setTimeout(resolve, 5000));
+      await new Promise(resolve => setTimeout(resolve, 60000));
     }
   }
 
