@@ -80,10 +80,13 @@ const CheckoutModal = ({ onClose, isCheckoutModalOpen, delegateData }) => {
 
   const pollFeesAndPrice = async () => {
     while (isCheckoutModalOpen) {
-      let btcusd = await getCoinBaseBtcPrice();
-      setBtcusd(btcusd);
-      let feerate = await getRecommendedFees(network);
-      setFeeRate(feerate);
+      const btcusdPromise = getCoinBaseBtcPrice().then(setBtcusd).catch(error => 
+        console.warn('Error fetching BTC price:', error)
+      );
+      const feeratePromise = getRecommendedFees(network).then(setFeeRate).catch(error => 
+        console.warn('Error fetching fee rate:', error)
+      );
+      await Promise.all([btcusdPromise, feeratePromise]);
       //wait for 5 seconds before fetching again
       await new Promise(resolve => setTimeout(resolve, 60000));
     }

@@ -202,10 +202,29 @@ async function submitSweep(wallet, authToken, sweepInfo, unauthCallback) {
 
 
 const getRecommendedFees = async(network) => {
-  let fees = await fetch(`https://mempool.space/${NETWORKS[network].mempool}api/v1/fees/recommended`);
-  let feesJson = await fees.json();
-  let fastestFee = feesJson.fastestFee + 1; // add 1 sat/vB to the fastest fee for a little buffer
-  return fastestFee;
+  try {
+    // Create a timeout promise
+    const timeoutPromise = new Promise((_, reject) => 
+      setTimeout(() => reject(new Error('Timeout')), 2000)
+    );
+    
+    // Create the fetch promise
+    const fetchPromise = fetch(`https://mempool.space/${NETWORKS[network].mempool}api/v1/fees/recommended`);
+    
+    // Race between fetch and timeout
+    const fees = await Promise.race([fetchPromise, timeoutPromise]);
+    const feesJson = await fees.json();
+    const fastestFee = feesJson.fastestFee + 1; // add 1 sat/vB to the fastest fee for a little buffer
+    return fastestFee;
+  } catch (error) {
+    // Fallback to Blockstream API
+    console.log('Mempool.space timeout, falling back to Blockstream API');
+    const fallbackFees = await fetch('https://blockstream.info/api/fee-estimates');
+    const fallbackFeesJson = await fallbackFees.json();
+    const oneBlockFee = fallbackFeesJson['1'] + 1; // 1 block confirmation rate + 1 sats
+    console.log('Blockstream fee:', Math.ceil(oneBlockFee));
+    return Math.ceil(oneBlockFee); // Round up to ensure integer
+  }
 }
 
 const getConfirmedCardinalUtxos = async(address, network) => {
@@ -243,12 +262,46 @@ const getTxData = async(txId, network) => {
 }
 
 async function getCoinBaseBtcPrice() {
-  let response = await fetch(`https://api.exchange.coinbase.com/products/BTC-USD/book`);
-  let json = await response.json();
-  let bid = json.bids[0][0];
-  let ask = json.asks[0][0];
-  let price = (parseFloat(bid) + parseFloat(ask)) / 2;
-  return price;
+  try {
+    // Create a timeout promise
+    const timeoutPromise = new Promise((_, reject) => 
+      setTimeout(() => reject(new Error('Timeout')), 2000)
+    );
+    
+    // Create the fetch promise
+    const fetchPromise = fetch(`https://api.exchange.coinbase.com/products/BTC-USD/book`);
+    
+    // Race between fetch and timeout
+    const response = await Promise.race([fetchPromise, timeoutPromise]);
+    const json = await response.json();
+    const bid = json.bids[0][0];
+    const ask = json.asks[0][0];
+    const price = (parseFloat(bid) + parseFloat(ask)) / 2;
+    return price;
+  } catch (error) {
+    // Try Kraken API as fallback
+    console.log('Coinbase timeout, falling back to Kraken API');
+    try {
+      const krakenTimeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Timeout')), 2000)
+      );
+      
+      const krakenFetchPromise = fetch('https://api.kraken.com/0/public/Ticker?pair=XBTUSD');
+      
+      const krakenResponse = await Promise.race([krakenFetchPromise, krakenTimeoutPromise]);
+      const krakenJson = await krakenResponse.json();
+      const krakenPrice = parseFloat(krakenJson.result.XXBTZUSD.c[0]);
+      console.log('Kraken price:', krakenPrice);
+      return krakenPrice;
+    } catch (krakenError) {
+      // Final fallback to Binance
+      console.log('Kraken failed, falling back to Binance API');
+      const binanceResponse = await fetch('https://api.binance.com/api/v3/ticker/price?symbol=BTCUSDT');
+      const binanceJson = await binanceResponse.json();
+      console.log('Binance price:', binanceJson.price);
+      return parseFloat(binanceJson.price);
+    }
+  }
 }
 
 export {
