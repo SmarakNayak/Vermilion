@@ -55,15 +55,15 @@ jobs:
 
 
       - name: Create Ord config file
-        run: ssh staging 'printf "%s\n" "${{format('s3_bucket_name{0} ', ':')}}vermilion-ordinals"
-                                        "${{format('s3_head_check{0} ', ':')}}true"
-                                        "${{format('s3_upload_start_number{0} ', ':')}}1000000000"
-                                        "${{format('db_host{0} ', ':')}}localhost"
+        run: ssh staging 'printf "%s\n" "${{format('db_host{0} ', ':')}}localhost"
                                         "${{format('db_name{0} ', ':')}}vermilion"
                                         "${{format('db_user{0} ', ':')}}${{secrets.MYSQL_USER}}"
                                         "${{format('db_password{0} ', ':')}}${{secrets.MYSQL_PASS}}"
                                         "${{format('magiceden_api_key{0} ', ':')}}${{secrets.MAGICEDEN_KEY}}"
-                                        "${{format('access_token_secret{0} ', ':')}}${{secrets.JWT_ACCESS_TOKEN_SECRET}}"
+                                        "${{format('access_token_secret{0} ', ':')}}${{secrets.JWT_ACCESS_TOKEN_SECRET}}"                                        
+                                        "${{format('index_sats{0} ', ':')}}true"
+                                        "${{format('index_transactions{0} ', ':')}}true"
+                                        "${{format('index_addresses{0} ', ':')}}true"                                        
                                         "${{format('index_runes{0} ', ':')}}true"
                                         "hidden:" > ~/ord.yaml'
       
