@@ -220,6 +220,7 @@ const TextLink = styled(Link)`
   color: unset;
   text-decoration: unset;
   display: block; 
+  max-width: 100%;
 `;
 
 const ItemContainer = styled.div`
@@ -268,7 +269,7 @@ const ItemText = styled.p`
   overflow: hidden;
   text-overflow: ellipsis;
   line-height: 1.375rem;
-  // width: 100%;
+  max-width: 100%;
   text-decoration-line: underline;
   text-decoration-color: transparent;
   text-decoration-thickness: 2px;
