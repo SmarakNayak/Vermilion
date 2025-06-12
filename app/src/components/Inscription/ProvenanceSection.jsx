@@ -153,7 +153,7 @@ const ProvenanceSection = ({
                 </IconWrapper>
               </Tooltip>
             </Stack>
-            <UnstyledLink to={`/references/${number}`}>
+            <UnstyledLink to={`/attributions/${number}`}>
               <LinkText>View all</LinkText>
             </UnstyledLink>
           </SubSectionHeader>
