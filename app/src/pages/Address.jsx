@@ -45,7 +45,7 @@ const Address = () => {
   const [loading, setLoading] = useState(true);
 
   const [selectedSortOption, setSelectedSortOption] = useState('newest');
-  const [selectedFilterOptions, setSelectedFilterOptions] = useState({"Content Type": ["image", "gif", "audio", "video", "html"], "Satributes": [], "Charms":[]});
+  const [selectedFilterOptions, setSelectedFilterOptions] = useState({"Content Type": ["text", "image", "gif", "audio", "video", "html"], "Satributes": [], "Charms":[]});
 
   //1. Get links
   useEffect(() => {
