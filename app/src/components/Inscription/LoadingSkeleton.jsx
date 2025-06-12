@@ -59,6 +59,11 @@ const SkeletonContainer = styled.div`
   width: 100%;
   max-width: 23rem;
   padding: 0 1rem;
+
+  @media (max-width: 864px) {
+    padding: 0; 
+  }
+
 `;
 
 const SkeletonGroup = styled.div`
@@ -74,6 +79,7 @@ const SkeletonElement = styled.div`
   border-radius: ${(props) => props.radius || '0.5rem'};
   height: ${(props) => props.height};
   width: ${(props) => props.width};
+  max-width: 100%;
 `;
 
 export { LoadingSkeleton, CompactLoadingSkeleton, StatsSkeleton, SkeletonElement };
