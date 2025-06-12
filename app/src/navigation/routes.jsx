@@ -17,6 +17,7 @@ import Trending from '../pages/Trending';
 import Search from '../pages/Search';
 import NotFound from '../pages/NotFound';
 import Edition from '../pages/Edition';
+import OnChainCollection from '../pages/OnChainCollection';
 import Children from '../pages/Children';
 import Attributions from '../pages/Attributions';
 import History from '../pages/History';
@@ -73,12 +74,12 @@ const ChildrenWithDynamicTitle = () => {
 
   useDocumentTitle(() => {
     if (parentNumbers.length > 0) {
-      return `Children of ${parentNumbers.map(num => addCommas(num)).join(' • ')}`;
+      return `Collection of ${parentNumbers.map(num => addCommas(num)).join(' • ')}`;
     }
-    return `Children of ${addCommas(number)}`;
+    return `Collection of ${addCommas(number)}`;
   });
 
-  return <Children setParentNumbers={setParentNumbers} />;
+  return <OnChainCollection setParentNumbers={setParentNumbers} />;
 };
 
 const PageWrapper = styled(Page)`
@@ -156,8 +157,17 @@ const Navigation = () => {
             }
           />
           <Route 
-            path="/children/:number" 
+            path="/onchain_collection/:number" 
             element={<ChildrenWithDynamicTitle />}
+          />
+          <Route 
+            path="/children/:number" 
+            element={
+              <TitledComponent 
+                title={(params) => `Children of ${addCommas(params.number)}`} 
+                Component={Children} 
+              />
+            }
           />
           <Route 
             path="/attributions/:number" 

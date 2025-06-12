@@ -118,7 +118,7 @@ const ProvenanceSection = ({
                 </IconWrapper>
               </Tooltip>
             </Stack>
-            <UnstyledLink to={`/children/${metadata.id}`}>
+            <UnstyledLink to={`/children/${number}`}>
               <LinkText>View all</LinkText>
             </UnstyledLink>
           </SubSectionHeader>

@@ -241,7 +241,7 @@ const Discover = () => {
                     </UnstyledLink>
                   )}
                   {inscription.activity.children_count > 0 && (
-                    <UnstyledLink to={'/children/' + inscription.inscriptions[0].id}>
+                    <UnstyledLink to={'/onchain_collection/' + inscription.inscriptions[0].id}>
                       <Tag>
                         <Person2Icon size={'1rem'} color={theme.colors.text.secondary} />
                         <TagSpan color={theme.colors.text.secondary}>

@@ -186,7 +186,7 @@ const OnChainCollectionsTable = () => {
             </IndexCell>
             <DivCell first={true}>
               <DataWrapper first={true}>
-                <CollectionLink to={"/children/" + formatParents(row?.parents)}>
+                <CollectionLink to={"/onchain_collection/" + formatParents(row?.parents)}>
                   <IconWrapper>
                     {row?.range_start && <InscriptionIcon endpoint={"/bun/rendered_content_number/" + row.parent_numbers[0]} useBlockIconDefault={false} size={'2.25rem'} /> }
                     <IconOverlay />

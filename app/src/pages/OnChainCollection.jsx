@@ -38,7 +38,7 @@ import {
 } from '../utils/format';
 import { ChevronRightSmallIcon } from '../components/common/Icon/icons/ChevronRightSmallIcon';
 
-const Children = ({ setParentNumbers }) => {
+const OnChainCollection = ({ setParentNumbers }) => {
   const [baseApi, setBaseApi] = useState(null); 
   let { number } = useParams();
   const [metadata, setMetadata] = useState(null);
@@ -54,13 +54,26 @@ const Children = ({ setParentNumbers }) => {
 
   useEffect(() => {
     const fetchInscriptionData = async () => {
-    try {
+      try {
         setLoading(true);
-        const metadataResponse = await fetch(`/api/inscription_metadata_number/${number}`);
+        const metadataResponse = await fetch(`/api/on_chain_collection_summary/${number}`);
         const metadataJson = await metadataResponse.json();
         setMetadata(metadataJson);
         setLoading(false);
+        
+        // Pass parent numbers up to the parent component
+        if (metadataJson?.parent_numbers) {
+          setParentNumbers(metadataJson.parent_numbers);
+        }
 
+        // Fetch inscription metadata if there is only one parent
+        if (metadataJson?.parent_numbers.length === 1) {
+          const parentId = metadataJson.parent_numbers[0];
+          const inscriptionMetadataResponse = await fetch(`/api/inscription_metadata/${number}`);
+          const inscriptionMetadataJson = await inscriptionMetadataResponse.json();
+          setInscriptionMetadata(inscriptionMetadataJson);
+        }
+        
       } catch (error) {
         console.error("Error fetching inscription data:", error);
       }
@@ -70,7 +83,7 @@ const Children = ({ setParentNumbers }) => {
   }, [number, setParentNumbers]);
 
   useEffect(() => {
-    let query_string = `/api/inscription_children_number/${number}?sort_by=${selectedSortOption}`;
+    let query_string = `/api/inscriptions_in_on_chain_collection/${number}?sort_by=${selectedSortOption}`;
     if (selectedFilterOptions["Content Type"].length > 0) {
       query_string += "&content_types=" + selectedFilterOptions["Content Type"].toString();
     }
@@ -103,35 +116,42 @@ const Children = ({ setParentNumbers }) => {
     setSelectedFilterOptions(filterOptions);
   };
 
-  console.log("Metadata:", metadata);
-  console.log("Inscription Metadata:", inscriptionMetadata);
-
   return (
     <PageContainer>
       {loading ? (
         <GridHeaderSkeleton 
-          pageType={'Children'} 
-          removeInfoText={true} 
+          pageType={'Onchain Collection'} 
           hasDescription={false} 
-          numTags={0}
-          removeTags={true}
+          numTags={5}
         />
       ) : (
         <>
           <HeaderContainer>
             <MainContentStack>
-              <InfoText>Children</InfoText>
+              <InfoText>Onchain Collection</InfoText>
               <DetailsStack>
                 <ImageContainer>
-                  <InscriptionIcon endpoint={"/api/inscription_number/"+number} useBlockIconDefault={false} size={'8rem'} />
+                  {metadata?.parent_numbers?.length === 1 ? (
+                    <InscriptionIcon endpoint={"/api/inscription_number/"+metadata.parent_numbers[0]} useBlockIconDefault={false} size={'8rem'} />
+                  ) : (
+                    <GalleryIcon size={'2rem'} color={theme.colors.background.verm} />
+                  )}
                 </ImageContainer>
                 <Stack gap={'.5rem'}>
-                  <MainText>Children of {addCommas(number)}</MainText>
+                  <MainText>Collection of {metadata?.parent_numbers ? metadata.parent_numbers.map(num => addCommas(num)).join(' • ') : ''}</MainText>
+                  <InfoText>First Inscribed {shortenDate(metadata?.first_inscribed_date)} • Last Inscribed {shortenDate(metadata?.last_inscribed_date)}</InfoText>
                 </Stack>
               </DetailsStack>
             </MainContentStack>
           </HeaderContainer>
-          {(metadata?.on_chain_metadata && Object.keys(metadata.on_chain_metadata).length > 0) && (
+          <RowContainer style={{gap: '.5rem', flexFlow: 'wrap'}}>
+            <Tag isLarge={true} value={metadata?.supply ? addCommas(metadata?.supply) : 0} category={'Supply'} />
+            <Tag isLarge={true} value={metadata?.total_volume ? formatSatsString(metadata.total_volume) : "0 BTC"} category={'Traded Volume'} />
+            <Tag isLarge={true} value={metadata?.range_start ? addCommas(metadata?.range_start) + " to " + addCommas(metadata?.range_end) : ""} category={'Range'} />
+            <Tag isLarge={true} value={metadata?.total_inscription_size ? shortenBytesString(metadata.total_inscription_size) : 0} category={'Total Size'} />
+            <Tag isLarge={true} value={metadata?.total_inscription_fees ? formatSatsString(metadata.total_inscription_fees) : "0 BTC"} category={'Total Fees'} />
+          </RowContainer>
+          {(inscriptionMetadata?.on_chain_metadata && Object.keys(inscriptionMetadata.on_chain_metadata).length > 0) && (
             <RowContainer style={{gap: '.5rem', flexFlow: 'wrap'}}>
               <MetadataButton onClick={() => setMetadataVisibility(!metadataVisibility)}>
                 {metadataVisibility ? <ChevronDownSmallIcon size={'1.25rem'} /> : <ChevronRightSmallIcon size={'1.25rem'} />}
@@ -141,10 +161,10 @@ const Children = ({ setParentNumbers }) => {
                 <MetadataContainer>
                   <BorderedTagSection />
                   <TextContainer>
-                    {typeof metadata?.on_chain_metadata === 'string' ? (
-                      <MetadataValue>{metadata.on_chain_metadata}</MetadataValue>
+                    {typeof inscriptionMetadata?.on_chain_metadata === 'string' ? (
+                      <MetadataValue>{inscriptionMetadata.on_chain_metadata}</MetadataValue>
                     ) : (
-                      Object.entries(metadata?.on_chain_metadata || {}).map(([key, value]) => {
+                      Object.entries(inscriptionMetadata?.on_chain_metadata || {}).map(([key, value]) => {
                         // Skip entries that are arrays or objects
                         if (Array.isArray(value) || (typeof value === 'object' && value !== null)) {
                           return null;
@@ -276,4 +296,4 @@ const MetadataValue = styled.span`
   padding: 0;
 `;
 
-export default Children;
+export default OnChainCollection;
