@@ -9,11 +9,13 @@ body {
 }
 
 body::-moz-selection {
-  background: #F9E8E7;
+  background: #FDEEE8;
+  color: #E94E20;
 }
 
 body::selection {
-  background: #F9E8E7;
+  background: #FDEEE8;
+  color: #E94E20;
 }
 
 code {
