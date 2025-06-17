@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom'; 
 import { usePostHog } from 'posthog-js/react';
 import styled from 'styled-components';
-import { ArchiveIcon, BurgerMenuIcon, DiscordIcon, DotsHorizontalIcon, LogoutIcon, QuestionIcon, SwitchIcon, TwitterIcon } from '../common/Icon';
+import { ArchiveIcon, BurgerMenuIcon, DiscordIcon, DotsHorizontalIcon, LogoutIcon, QuestionIcon, SettingsIcon, SwitchIcon, TwitterIcon } from '../common/Icon';
 import theme from '../../styles/theme';
 import MobileMenu from './MobileMenu';
 import WalletConnectMenu from './WalletConnectMenu';
@@ -94,6 +94,10 @@ const UserActions = () => {
               <DropdownItem href={"/history/"}>
                 <ArchiveIcon size={"1.25rem"} />
                 Order History
+              </DropdownItem>
+              <DropdownItem href={"/settings/profile"}>
+                <SettingsIcon size={"1.25rem"} />
+                Settings
               </DropdownItem>
               <DropdownItem onClick={openWalletMenu}>
                 <SwitchIcon size={"1.25rem"} />

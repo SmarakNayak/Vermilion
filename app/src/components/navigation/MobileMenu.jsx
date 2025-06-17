@@ -18,6 +18,7 @@ import {
   SwitchIcon,
   ArchiveIcon,
   TwitterIcon,
+  SettingsIcon,
 } from '../common/Icon';
 import { theme } from '../../styles/theme';
 import Brand from './Brand';
@@ -153,6 +154,15 @@ const MobileMenu = ({ isOpen, onClose, onConnectWallet, wallet, onViewProfile, o
                 icon={ArchiveIcon}
                 isStandard={true}
                 title="Order History"
+              />
+              <MenuListItem
+                link="/settings/profile"
+                action={() => {
+                  onClose();
+                }}
+                icon={SettingsIcon}
+                isStandard={true}
+                title="Settings"
               />
               <MenuListItem 
                 link="#" 
