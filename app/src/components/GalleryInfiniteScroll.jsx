@@ -4,6 +4,7 @@ import GridItemContainer from './GridItemContainer';
 import InfiniteScroll from 'react-infinite-scroll-component';
 import Spinner from './Spinner';
 import theme from '../styles/theme';
+import { ImageBadgeIcon } from './common/Icon';
 
 const GalleryInfiniteScroll = ({ baseApi, isCollectionPage, numberVisibility, zoomGrid }) => {
   const [inscriptions, setInscriptions] = useState([]);
@@ -41,41 +42,75 @@ const GalleryInfiniteScroll = ({ baseApi, isCollectionPage, numberVisibility, zo
   };
 
   return(
-    <InfiniteScroll
-      dataLength={inscriptions?.length}
-      next={fetchData}
-      hasMore={hasMore}
-      loader={
-        <LoaderContainer numberVisibility={numberVisibility}>
-          <Spinner />
-        </LoaderContainer>
-      }
-      scrollThreshold="80%"
-      style={{ overflow: 'visible' }}
-    >
-      <GridContainer zoomGrid={zoomGrid}>
-        {inscriptions.map(
-            entry => 
-              <GridItemContainer 
-                collection={entry.collection_name} 
-                collection_symbol={entry.collection_symbol}
-                content_length={entry.content_length}
-                id={entry.id} 
-                is_boost={entry.delegate}
-                is_child={entry.parents.length > 0}
-                is_recursive={entry.is_recursive}
-                isCollectionPage={isCollectionPage}
-                item_name={entry.off_chain_metadata?.name}
-                key={entry.number} 
-                number={entry.number} 
-                numberVisibility={numberVisibility} 
-                rune={entry.spaced_rune}
-              />
-        )}
-      </GridContainer>
-    </InfiniteScroll>
+    <>
+      {inscriptions.length === 0 && !hasMore && (
+        <EmptyStateContainer>
+          <ImageBadgeIcon size={'1.5rem'} color={theme.colors.text.secondary} />
+          <h2>No inscriptions found</h2>
+          <p>We could not find any inscriptions that match your search criteria</p>
+        </EmptyStateContainer>
+      )}
+      <InfiniteScroll
+        dataLength={inscriptions?.length}
+        next={fetchData}
+        hasMore={hasMore}
+        loader={
+          <LoaderContainer numberVisibility={numberVisibility}>
+            <Spinner />
+          </LoaderContainer>
+        }
+        scrollThreshold="80%"
+        style={{ overflow: 'visible' }}
+      >
+        <GridContainer zoomGrid={zoomGrid}>
+          {inscriptions.map(
+              entry => 
+                <GridItemContainer 
+                  collection={entry.collection_name} 
+                  collection_symbol={entry.collection_symbol}
+                  content_length={entry.content_length}
+                  id={entry.id} 
+                  is_boost={entry.delegate}
+                  is_child={entry.parents.length > 0}
+                  is_recursive={entry.is_recursive}
+                  isCollectionPage={isCollectionPage}
+                  item_name={entry.off_chain_metadata?.name}
+                  key={entry.number} 
+                  number={entry.number} 
+                  numberVisibility={numberVisibility} 
+                  rune={entry.spaced_rune}
+                />
+          )}
+        </GridContainer>
+      </InfiniteScroll>
+    </>
   )
 }
+
+const EmptyStateContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 1rem;
+  font-family: ${theme.typography.fontFamilies.medium};
+  color: ${theme.colors.text.secondary};
+  text-align: center;
+
+  h2 {
+    margin: 1rem 0;
+    font-family: ${theme.typography.fontFamilies.medium};
+    font-size: 1.25rem;
+    line-height: 1.75rem;
+  }
+
+  p {
+    font-size: 1rem;
+    line-height: 1.5rem;
+    max-width: 16rem;
+    margin: 0;
+  }
+`;
 
 const LoaderContainer = styled.div`
   display: flex;

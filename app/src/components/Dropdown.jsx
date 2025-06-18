@@ -74,10 +74,11 @@ const SortbyDropdown = ({ onOptionSelect, initialOption, includeRelevance }) => 
   return (
     <DropdownWrapper ref={wrapperRef}>
       <DropdownButton isActive={isOpen} onClick={handleToggle}>
-        <LabelText>{labels[selectedOption]}</LabelText>
-        <ChevronIcon size={'1rem'} color={theme.colors.text.primary} />
+        <LabelText>Sort by:</LabelText>
+        <SortText>{labels[selectedOption]}</SortText>
+        <ChevronIcon size={'1rem'} color={theme.colors.text.secondary} />
         <MobileIcon>
-          <SortIcon size={'1.25rem'} color={theme.colors.text.primary} />
+          <SortIcon size={'1.125rem'} color={theme.colors.text.primary} />
         </MobileIcon>
       </DropdownButton>
       {/* <DropdownButton onClick={handleToggle}>
@@ -116,16 +117,17 @@ const DropdownButton = styled.button`
   height: 2.75rem;
   border-radius: 1.5rem;
   border: none;
-  padding: 0 .875rem 0 1.25rem;
+  padding: 0 0.625rem 0 0.875rem;
   margin: 0;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  gap: .5rem;
+  gap: .375rem;
   font-family: ${theme.typography.fontFamilies.medium};
   font-size: 1rem;
-  color: ${theme.colors.text.primary};
+  line-height: 1.5rem;
+  color: ${theme.colors.text.secondary};
   background-color: ${props => props.isActive ? theme.colors.border : theme.colors.background.primary}; 
   transition: all 200ms ease;
   transform-origin: center center;
@@ -143,11 +145,19 @@ const DropdownButton = styled.button`
   }
 
   &:active {
-    transform: scale(0.96);
+    transform: scale(0.98);
   }
 `;
 
 const LabelText = styled.span`
+  color: ${theme.colors.text.secondary};
+  @media (max-width: 630px) {
+    display: none;
+  }
+`;
+
+const SortText = styled.span`
+  color: ${theme.colors.text.primary};
   @media (max-width: 480px) {
     display: none;
   }

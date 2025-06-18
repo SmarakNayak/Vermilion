@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import styled, { keyframes } from 'styled-components';
 import theme from '../styles/theme';
-import { ChevronDownIcon, ChevronUpIcon, CrossIcon } from './common/Icon';
+import { AnimateIcon, AudioIcon, ChevronDownIcon, ChevronUpIcon, CodeBlockIcon, CodeBracketsIcon, CrossIcon, ImageIcon, TextFontIcon, VideoIcon } from './common/Icon';
 
 const MenuContainer = styled.div`
   display: ${props => (props.isOpen ? 'flex' : 'none')};;
@@ -53,6 +53,12 @@ const CategoryContainer = styled.div`
   display: flex;
   flex-direction: column;
   gap: 1rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid ${theme.colors.border};
+
+  &:last-child {
+    border-bottom: none;
+  }
 `;
 
 const CategoryHeader = styled.div`
@@ -62,39 +68,43 @@ const CategoryHeader = styled.div`
   cursor: pointer;
   font-family: ${theme.typography.fontFamilies.bold};
   font-size: 1rem;
-  height: 3rem;
-  padding: 0 1rem;
-  border-radius: 1.5rem;
+  line-height: 1.5rem;
+  height: 2.5rem;
+  // padding: 0 1rem;
+  // border-radius: 1.5rem;
   transition: all 200ms ease;
   transform-origin: center center;
-
-  &:hover {
-    background-color: ${theme.colors.background.primary};
-  }
 `;
 
 const CategoryOptions = styled.div`
   display: ${props => (props.isOpen ? 'flex' : 'none')};
   flex-wrap: wrap;
   gap: .375rem;
-  padding: 0 1rem;
+  padding-bottom: 0.5rem;
 `;
 
 const Option = styled.button`
   display: flex;
   justify-content: flex-start;
   align-items: center;
-  padding: .25rem .5rem;
+  padding: .375rem .875rem;
+  gap: .375rem;
   color: ${props => (props.isSelected ? theme.colors.text.white : theme.colors.text.primary)};
   background-color: ${props => (props.isSelected ? theme.colors.background.dark : theme.colors.background.primary)};
   text-align: left;
   border: none;
   cursor: pointer;
-  border-radius: .25rem;
+  border-radius: 2rem;
   font-family: ${theme.typography.fontFamilies.medium};
-  font-size: .875rem;
+  font-size: 0.875rem;
+  line-height: 1.25rem;
   transition: all 200ms ease;
   transform-origin: center center;
+
+  svg {
+    fill: ${props => (props.isSelected ? theme.colors.text.white : theme.colors.text.primary)};
+    transition: fill 200ms ease;
+  }
 
   &:active {
     transform: scale(0.96);
@@ -133,6 +143,124 @@ const CloseButton = styled.button`
   }
 `;
 
+const contentTypeIcons = {
+  text: <TextFontIcon size={'1.125rem'} />, 
+  image: <ImageIcon size={'1.125rem'} />,
+  gif: <AnimateIcon size={'1.125rem'} />,
+  audio: <AudioIcon size={'1.125rem'} />,
+  video: <VideoIcon size={'1.125rem'} />,
+  html: <CodeBracketsIcon size={'1.125rem'} />,
+  json: <CodeBlockIcon size={'1.125rem'} />,
+};
+
+const contentTypeLabels = {
+  text: "Text",
+  image: "Image",
+  gif: "GIF",
+  audio: "Audio",
+  video: "Video",
+  html: "HTML",
+  json: "JSON",
+};
+
+// const satributeIcons = {
+//   uncommon: <ImageIcon size={'1rem'} />,
+//   rare: <ImageIcon size={'1rem'} />,
+//   epic: <ImageIcon size={'1rem'} />,
+//   legendary: <ImageIcon size={'1rem'} />,
+//   mythic: <ImageIcon size={'1rem'} />,
+//   vintage: <ImageIcon size={'1rem'} />,
+//   nakamoto: <ImageIcon size={'1rem'} />,
+//   firsttransaction: <ImageIcon size={'1rem'} />,
+//   palindrome: <ImageIcon size={'1rem'} />,
+//   pizza: <ImageIcon size={'1rem'} />,
+//   block9: <ImageIcon size={'1rem'} />,
+//   block9_450: <ImageIcon size={'1rem'} />,
+//   block78: <ImageIcon size={'1rem'} />,
+//   alpha: <ImageIcon size={'1rem'} />,
+//   omega: <ImageIcon size={'1rem'} />,
+//   uniform_palinception: <ImageIcon size={'1rem'} />,
+//   perfect_palinception: <ImageIcon size={'1rem'} />,
+//   block286: <ImageIcon size={'1rem'} />,
+//   jpeg: <ImageIcon size={'1rem'} />,
+//   hitman: <ImageIcon size={'1rem'} />,
+//   black_uncommon: <ImageIcon size={'1rem'} />,
+//   black_rare: <ImageIcon size={'1rem'} />,
+//   black_epic: <ImageIcon size={'1rem'} />,
+//   black_legendary: <ImageIcon size={'1rem'} />,
+// };
+
+const satributeLabels = {
+  uncommon: "Uncommon",
+  rare: "Rare",
+  epic: "Epic",
+  legendary: "Legendary",
+  mythic: "Mythic",
+  vintage: "Vintage",
+  nakamoto: "Nakamoto",
+  firsttransaction: "First Transaction",
+  palindrome: "Palindrome",
+  pizza: "Pizza",
+  block9: "Block 9",
+  block9_450: "Block 9 450x",
+  block78: "Block 78",
+  alpha: "Alpha",
+  omega: "Omega",
+  uniform_palinception: "Uniform Palinception",
+  perfect_palinception: "Perfect Palinception",
+  block286: "Block 286",
+  jpeg: "JPEG",
+  hitman: "Hitman",
+  black_uncommon: "Black Uncommon",
+  black_rare: "Black Rare",
+  black_epic: "Black Epic",
+  black_legendary: "Black Legendary",
+};
+
+const charmEmojis = {
+  coin: "🪙",
+  uncommon: "🌱",
+  rare: "🧿",
+  epic: "🪻",
+  legendary: "🌝",
+  cursed: "👹",
+  lost: "🤔",
+  nineball: "9️⃣",
+  reinscription: "♻️",
+  unbound: "🔓",
+  vindicated: "❤️‍🔥",
+};
+
+const charmLabels = {
+  coin: "Coin",
+  uncommon: "Uncommon",
+  rare: "Rare",
+  epic: "Epic",
+  legendary: "Legendary",
+  cursed: "Cursed",
+  lost: "Lost",
+  nineball: "Nineball",
+  reinscription: "Reinscription",
+  unbound: "Unbound",
+  vindicated: "Vindicated",
+};
+
+const OptionRow = styled.div`
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: .375rem;
+`;
+
+const OptionLabel = styled.span`
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+`;
+
+const OptionEmoji = styled.span`
+  font-size: 0.875rem;
+`;
+
 const FilterMenu = ({ isOpen, onClose, onSelectionChange, initialSelection }) => {
   const [expandedCategories, setExpandedCategories] = useState({});
   const [selectedOptions, setSelectedOptions] = useState(initialSelection);
@@ -141,12 +269,14 @@ const FilterMenu = ({ isOpen, onClose, onSelectionChange, initialSelection }) =>
     { name: 'Content Type', options: ["text", "image", "gif", "audio", "video", "html", "json"] },
     { name: 'Charms', options: ["coin", "uncommon", "rare", "epic", "legendary", "cursed", "lost", "nineball", "reinscription", "unbound", "vindicated"] },
     { name: 'Satributes', options: [
-      "vintage", "nakamoto", "firsttransaction", "palindrome", "pizza", "block9", "block9_450", "block78", 
+      "uncommon", "rare", "epic", "legendary", "mythic", "vintage", "nakamoto",
+      "firsttransaction", "palindrome", "pizza", "block9", "block9_450", "block78", 
       "alpha", "omega", "uniform_palinception", "perfect_palinception", "block286", "jpeg", 
-      "uncommon", "rare", "epic", "legendary", "mythic", "hitman",
-      "black_uncommon", "black_rare", "black_epic", "black_legendary" 
+       "hitman", "black_uncommon", "black_rare", "black_epic", "black_legendary"
     ] },
   ];
+
+  // { name: 'Charms', options: ["🪙  Coin", "🌱  Uncommon", "🧿  Rare", "🪻  Epic", "🌝  Legendary", "👹  Cursed", "🤔  Lost", "9️⃣  Nineball", "♻️  Reinscription", "🔓  Unbound", "❤️‍🔥  Vindicated"] },
 
   //open close categories
   const toggleCategory = category => {
@@ -170,8 +300,6 @@ const FilterMenu = ({ isOpen, onClose, onSelectionChange, initialSelection }) =>
     });
   };
 
-  
-
   return (
     <MenuContainer isOpen={isOpen}>
       <MenuHeader>
@@ -193,7 +321,26 @@ const FilterMenu = ({ isOpen, onClose, onSelectionChange, initialSelection }) =>
                 isSelected={selectedOptions[category.name]?.includes(option)}
                 onClick={() => toggleOption(category.name, option)}
               >
-                {option}
+                <OptionRow>
+                  {category.name === "Charms" ? (
+                    <>
+                      <OptionEmoji>{charmEmojis[option]}</OptionEmoji>
+                      <OptionLabel>{charmLabels[option]}</OptionLabel>
+                    </>
+                  ) : category.name === "Content Type" ? (
+                    <>
+                      {contentTypeIcons[option]}
+                      <OptionLabel>{contentTypeLabels[option]}</OptionLabel>
+                    </>
+                  ) : category.name === "Satributes" ? (
+                    <>
+                      {/* {satributeIcons[option]} */}
+                      <OptionLabel>{satributeLabels[option]}</OptionLabel>
+                    </>
+                  ) : (
+                    <OptionLabel>{option}</OptionLabel>
+                  )}
+                </OptionRow>
               </Option>
             ))}
           </CategoryOptions>
