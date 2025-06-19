@@ -1,10 +1,12 @@
 import { parse } from 'yaml';
 import { SQL } from 'bun';
+//import postgres from 'postgres';
 
 const configFile = Bun.file(`${process.env.HOME}/ord.yaml`);
 const config = parse(await configFile.text());
 
 const db = {
+  //bun driver for pg
   sql: new SQL({
     user: config.db_user,
     host: config.db_host,
@@ -12,6 +14,15 @@ const db = {
     password: config.db_password,
     port: 5432,
   }),
+
+  // //pg driver for postgres (array inserts don't work in bun driver)
+  // pgsql: postgres({
+  //   username: config.db_user,
+  //   host: config.db_host,
+  //   database: config.db_name,
+  //   password: config.db_password,
+  //   port: 5432,
+  // }),
 
   async setupDatabase() {
     try {
@@ -124,7 +135,6 @@ const db = {
           user_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
           user_handle VARCHAR(17) NOT NULL UNIQUE,
           user_name VARCHAR(30) NOT NULL,
-          user_addresses VARCHAR(64)[],
           user_picture VARCHAR(80),
           user_bio VARCHAR(280),
           user_twitter VARCHAR(15),
@@ -132,12 +142,30 @@ const db = {
           user_website TEXT,
           user_created_at TIMESTAMP DEFAULT NOW(),
           user_updated_at TIMESTAMP DEFAULT NOW(),
-          CONSTRAINT at_least_one_address CHECK (array_length(user_addresses, 1) >= 1),
           CONSTRAINT valid_handle CHECK (user_handle ~ '^[a-zA-Z0-9_]{2,17}$')
         );
       `;      
       await this.sql`
         CREATE UNIQUE INDEX IF NOT EXISTS unique_handle_case_insensitive ON social.profiles (LOWER(user_handle));
+      `;
+      await this.sql`
+        CREATE TABLE IF NOT EXISTS social.profile_addresses (
+          address VARCHAR(64) PRIMARY KEY,
+          user_id UUID NOT NULL REFERENCES social.profiles(user_id)
+        );
+      `;
+      await this.sql`
+        CREATE OR REPLACE VIEW social.profiles_view AS
+        SELECT 
+            p.*,
+            COALESCE(
+              (SELECT array_agg(pa.address) 
+                FROM social.profile_addresses pa 
+                WHERE pa.user_id = p.user_id
+              ),
+              ARRAY[]::VARCHAR(64)[]
+            ) AS user_addresses
+        FROM social.profiles p;
       `;
     } catch (err) {
       console.error(err);
@@ -367,25 +395,36 @@ const db = {
   },
 
   // Social profile
-  async createProfile(profile) {
+  async createProfile(profile, address) {
     try {
-      const [createdProfile] = await this.sql`INSERT INTO social.profiles ${this.sql(profile)} RETURNING user_id;`;
+      let createdProfile = await this.sql.begin(async tx => {
+        const [insertedProfile] = await tx`INSERT INTO social.profiles ${this.sql(profile)} RETURNING *;`;
+        await tx`INSERT INTO social.profile_addresses (address, user_id) VALUES (${address}, ${insertedProfile.user_id});`;
+        return insertedProfile;
+      });
+      createdProfile.user_addresses = [address]; // Ensure the address is included in the returned profile
       return createdProfile;
     } catch (err) {
       throw new Error('Error creating profile: ' + err.message);
     }
   },
-  async updateProfile(userId, profile) {
+  async updateProfile(address, userId, profile) {
     profile.user_updated_at = new Date().toISOString();
     try {
-      await this.sql`UPDATE social.profiles SET ${this.sql(profile)} WHERE user_id = ${userId}`;
+      const [updatedProfile] = await this.sql`
+        UPDATE social.profiles 
+        SET ${this.sql(profile)} 
+        WHERE user_id IN (SELECT user_id FROM social.profile_addresses WHERE address = ${address} and user_id = ${userId})
+        RETURNING *;
+      `;
+      return updatedProfile;
     } catch (err) {
       throw new Error('Error updating profile: ' + err.message);
     }
   },
   async getProfileById(userId) {
     try {
-      const [profile] = await this.sql`SELECT * FROM social.profiles WHERE user_id = ${userId}`;
+      const [profile] = await this.sql`SELECT * FROM social.profiles_view WHERE user_id = ${userId}`;
       return profile;
     } catch (err) {
       throw new Error('Error fetching profile by ID: ' + err.message);
@@ -393,7 +432,7 @@ const db = {
   },
   async getProfileByHandle(userHandle) {
     try {
-      const [profile] = await this.sql`SELECT * FROM social.profiles WHERE user_handle = ${userHandle}`;
+      const [profile] = await this.sql`SELECT * FROM social.profiles_view WHERE user_handle = ${userHandle}`;
       return profile;
     } catch (err) {
       throw new Error('Error fetching profile by handle: ' + err.message);
@@ -401,7 +440,7 @@ const db = {
   },
   async getProfileByAddress(address) {
     try {
-      const [profile] = await this.sql`SELECT * FROM social.profiles WHERE user_addresses @> ARRAY[${address}]`;
+      const [profile] = await this.sql`SELECT * FROM social.profiles_view WHERE user_addresses @> ARRAY[${address}::character varying]`;
       return profile;
     } catch (err) {
       throw new Error('Error fetching profile by address: ' + err.message);
