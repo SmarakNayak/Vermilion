@@ -133,10 +133,12 @@ const db = {
           user_created_at TIMESTAMP DEFAULT NOW(),
           user_updated_at TIMESTAMP DEFAULT NOW(),
           CONSTRAINT at_least_one_address CHECK (array_length(user_addresses, 1) >= 1),
-          CONSTRAINT valid_handle CHECK (user_handle ~ '^[a-zA-Z0-9_]{2,17}$'),
-          CONSTRAINT unique_handle_case_insensitive UNIQUE (LOWER(user_handle))
+          CONSTRAINT valid_handle CHECK (user_handle ~ '^[a-zA-Z0-9_]{2,17}$')
         );
-      `
+      `;      
+      await this.sql`
+        CREATE UNIQUE INDEX IF NOT EXISTS unique_handle_case_insensitive ON social.profiles (LOWER(user_handle));
+      `;
     } catch (err) {
       console.error(err);
       throw new Error('Error setting up database: ' + err.message);
