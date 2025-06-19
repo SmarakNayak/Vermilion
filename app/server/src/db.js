@@ -119,6 +119,24 @@ const db = {
           accept_language TEXT
         );
       `;
+      await this.sql`
+        CREATE TABLE IF NOT EXISTS social.profiles (
+          user_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+          user_handle VARCHAR(17) NOT NULL UNIQUE,
+          user_name VARCHAR(30) NOT NULL,
+          user_addresses VARCHAR(64)[],
+          user_picture VARCHAR(80),
+          user_bio VARCHAR(280),
+          user_twitter VARCHAR(15),
+          user_discord VARCHAR(37),
+          user_website TEXT,
+          user_created_at TIMESTAMP DEFAULT NOW(),
+          user_updated_at TIMESTAMP DEFAULT NOW(),
+          CONSTRAINT at_least_one_address CHECK (array_length(user_addresses, 1) >= 1),
+          CONSTRAINT valid_handle CHECK (user_handle ~ '^[a-zA-Z0-9_]{2,17}$'),
+          CONSTRAINT unique_handle_case_insensitive UNIQUE (LOWER(user_handle))
+        );
+      `
     } catch (err) {
       console.error(err);
       throw new Error('Error setting up database: ' + err.message);
@@ -343,6 +361,48 @@ const db = {
       await this.sql`UPDATE social.sign_ins SET ${this.sql(signInRecord)} WHERE address = ${address} AND sign_in_message = ${message}`;
     } catch (err) {
       throw new Error('Error updating sign in record: ' + err.message);
+    }
+  },
+
+  // Social profile
+  async createProfile(profile) {
+    try {
+      const [createdProfile] = await this.sql`INSERT INTO social.profiles ${this.sql(profile)} RETURNING user_id;`;
+      return createdProfile;
+    } catch (err) {
+      throw new Error('Error creating profile: ' + err.message);
+    }
+  },
+  async updateProfile(userId, profile) {
+    profile.user_updated_at = new Date().toISOString();
+    try {
+      await this.sql`UPDATE social.profiles SET ${this.sql(profile)} WHERE user_id = ${userId}`;
+    } catch (err) {
+      throw new Error('Error updating profile: ' + err.message);
+    }
+  },
+  async getProfileById(userId) {
+    try {
+      const [profile] = await this.sql`SELECT * FROM social.profiles WHERE user_id = ${userId}`;
+      return profile;
+    } catch (err) {
+      throw new Error('Error fetching profile by ID: ' + err.message);
+    }
+  },
+  async getProfileByHandle(userHandle) {
+    try {
+      const [profile] = await this.sql`SELECT * FROM social.profiles WHERE user_handle = ${userHandle}`;
+      return profile;
+    } catch (err) {
+      throw new Error('Error fetching profile by handle: ' + err.message);
+    }
+  },
+  async getProfileByAddress(address) {
+    try {
+      const [profile] = await this.sql`SELECT * FROM social.profiles WHERE user_addresses @> ARRAY[${address}]`;
+      return profile;
+    } catch (err) {
+      throw new Error('Error fetching profile by address: ' + err.message);
     }
   },
 
