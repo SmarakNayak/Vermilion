@@ -10,86 +10,274 @@ import theme from '../styles/theme';
 import CheckoutModal from '../components/modals/CheckoutModal';
 import BoostsModal from '../components/modals/BoostsModal';
 import CommentsModal from '../components/modals/CommentsModal';
+import useStore from '../store/zustand';
+import type { 
+  CreateProfileRequest, 
+  UpdateProfileRequest, 
+  ProfileResponse 
+} from '../../server/src/types/profile';
 
-const Settings = () => {
-  const [displayName, setDisplayName] = useState('');
-  const [bio, setBio] = useState('');
-  const [website, setWebsite] = useState('');
-  const [twitter, setTwitter] = useState('');
-  const [discord, setDiscord] = useState('');
+const Settings: React.FC = () => {
+  const { wallet, authToken } = useStore();
   
+  const [profile, setProfile] = useState<CreateProfileRequest>({
+    user_handle: '',
+    user_name: '',
+    user_bio: '',
+    user_website: '',
+    user_twitter: '',
+    user_discord: '',
+    user_picture: ''
+  });
+  
+  const [existingProfile, setExistingProfile] = useState<ProfileResponse | null>(null);
+  const [loading, setLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string>('');
+  const [success, setSuccess] = useState<string>('');
+  const [initialLoading, setInitialLoading] = useState<boolean>(true);
+
+  const handleInputChange = (field: keyof CreateProfileRequest, value: string) => {
+    setProfile(prev => ({
+      ...prev,
+      [field]: value
+    }));
+    // Clear any existing error/success messages when user starts typing
+    setError('');
+    setSuccess('');
+  };
+
+  const loadProfile = async (): Promise<void> => {
+    if (!wallet?.ordinalsAddress) {
+      setInitialLoading(false);
+      return;
+    }
+
+    try {
+      const response = await fetch(`/social/get_profile_by_address/${wallet.ordinalsAddress}`);
+      if (response.ok) {
+        const profileData: ProfileResponse = await response.json() as ProfileResponse;
+        setProfile({
+          user_handle: profileData.user_handle || '',
+          user_name: profileData.user_name || '',
+          user_bio: profileData.user_bio || '',
+          user_website: profileData.user_website || '',
+          user_twitter: profileData.user_twitter || '',
+          user_discord: profileData.user_discord || '',
+          user_picture: profileData.user_picture || ''
+        });
+        setExistingProfile(profileData);
+      } else if (response.status === 404) {
+        // Profile doesn't exist yet - this is fine for new users
+        setExistingProfile(null);
+      } else {
+        setError('Failed to load profile');
+      }
+    } catch (err) {
+      console.error('Failed to load profile:', err);
+      setError('Failed to load profile');
+    } finally {
+      setInitialLoading(false);
+    }
+  };
+
+  const handleSubmit = async (): Promise<void> => {
+    if (!wallet?.ordinalsAddress) {
+      setError('Wallet not connected');
+      return;
+    }
+
+    if (!authToken) {
+      setError('Authentication required');
+      return;
+    }
+
+    // Basic validation
+    if (!profile.user_handle.trim()) {
+      setError('User handle is required');
+      return;
+    }
+
+    if (!profile.user_name.trim()) {
+      setError('Display name is required');
+      return;
+    }
+
+    // Validate handle format
+    const handleRegex = /^[a-zA-Z0-9_]{2,17}$/;
+    if (!handleRegex.test(profile.user_handle)) {
+      setError('Handle must be 2-17 characters, letters, numbers, and underscores only');
+      return;
+    }
+
+    setLoading(true);
+    setError('');
+    setSuccess('');
+
+    try {
+      const endpoint = existingProfile 
+        ? `/social/update_profile/${wallet.ordinalsAddress}`
+        : `/social/create_profile/${wallet.ordinalsAddress}`;
+
+      const requestBody: CreateProfileRequest | UpdateProfileRequest = existingProfile 
+        ? { ...profile, user_id: existingProfile.user_id }
+        : profile;
+
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${authToken}`
+        },
+        body: JSON.stringify(requestBody)
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(errorText || `HTTP error! status: ${response.status}`);
+      }
+
+      const result: ProfileResponse = await response.json() as ProfileResponse;
+      setSuccess(existingProfile ? 'Profile updated successfully!' : 'Profile created successfully!');
+      setExistingProfile(result);
+      
+    } catch (err: any) {
+      console.error('Failed to save profile:', err);
+      setError(err.message || 'Failed to save profile');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadProfile();
+  }, [wallet?.ordinalsAddress]);
+  
+  if (initialLoading) {
+    return (
+      <MainContainer>
+        <SettingsContainer>
+          <Spinner isButton={false} />
+        </SettingsContainer>
+      </MainContainer>
+    );
+  }
+
+  if (!wallet) {
+    return (
+      <MainContainer>
+        <SettingsContainer>
+          <PageText>Connect Wallet</PageText>
+          <PlainText>Please connect your wallet to edit your profile.</PlainText>
+        </SettingsContainer>
+      </MainContainer>
+    );
+  }
+
   return (
     <MainContainer>
       <SettingsContainer>
         <PageText>Edit Profile</PageText>
+        
+        {error && (
+          <ErrorMessage>{error}</ErrorMessage>
+        )}
+        
+        {success && (
+          <SuccessMessage>{success}</SuccessMessage>
+        )}
+        
         <SectionContainer>
           <ImageContainer>
             <ProfilePictureContainer>
             </ProfilePictureContainer>
             <ImageButton>
-              <ImageIcon size="1.25rem" />
+              <ImageIcon size="1.25rem" color='red' className={'SettingIcon'} />
               Change Image
             </ImageButton>
           </ImageContainer>
+          
           <InputFieldDiv>
             <InputLabel>
-              <PlainText>Display Name</PlainText>
+              <PlainText>Handle *</PlainText>
+            </InputLabel>
+            <StyledInput
+              placeholder="username (2-17 chars, letters, numbers, _ only)"
+              value={profile.user_handle}
+              onChange={(e) => handleInputChange('user_handle', (e.target as any).value)}
+              disabled={loading}
+            />
+          </InputFieldDiv>
+          
+          <InputFieldDiv>
+            <InputLabel>
+              <PlainText>Display Name *</PlainText>
             </InputLabel>
             <StyledInput
               placeholder="Enter your display name"
-              value={displayName}
-              onChange={(e) => setDisplayName(e.target.value)} // Update displayName
+              value={profile.user_name}
+              onChange={(e) => handleInputChange('user_name', (e.target as any).value)}
+              disabled={loading}
             />
           </InputFieldDiv>
+          
           <InputFieldDiv>
             <InputLabel>
               <PlainText>Bio</PlainText>
             </InputLabel>
             <StyledInput
               placeholder="Tell us about yourself"
-              value={bio}
-              onChange={(e) => setBio(e.target.value)} // Update bio
+              value={profile.user_bio}
+              onChange={(e) => handleInputChange('user_bio', (e.target as any).value)}
+              disabled={loading}
             />
           </InputFieldDiv>
         </SectionContainer>
+        
         <SectionContainer>
           <SectionText>Social Links</SectionText>
+          
           <InputFieldDiv>
             <InputLabel>
               <PlainText>X (Twitter)</PlainText>
             </InputLabel>
             <StyledInput
               placeholder="Enter your X (Twitter) username"
-              value={twitter}
-              onChange={(e) => setTwitter(e.target.value)} // Update twitter
+              value={profile.user_twitter}
+              onChange={(e) => handleInputChange('user_twitter', (e.target as any).value)}
+              disabled={loading}
             />
           </InputFieldDiv>
+          
           <InputFieldDiv>
             <InputLabel>
               <PlainText>Discord</PlainText>
             </InputLabel>
             <StyledInput
               placeholder="Enter your Discord username"
-              value={discord}
-              onChange={(e) => setDiscord(e.target.value)} // Update discord
+              value={profile.user_discord}
+              onChange={(e) => handleInputChange('user_discord', (e.target as any).value)}
+              disabled={loading}
             />
           </InputFieldDiv>
+          
           <InputFieldDiv>
             <InputLabel>
               <PlainText>Website URL</PlainText>
             </InputLabel>
             <StyledInput
               placeholder="https://"
-              value={website}
-              onChange={(e) => setWebsite(e.target.value)} // Update website
+              value={profile.user_website}
+              onChange={(e) => handleInputChange('user_website', (e.target as any).value)}
+              disabled={loading}
             />
           </InputFieldDiv>
         </SectionContainer>
-          <ButtonContainer>
-            <SaveButton>
-              Save changes
-            </SaveButton>
-          </ButtonContainer>
+        
+        <ButtonContainer>
+          <SaveButton onClick={handleSubmit} disabled={loading}>
+            {loading ? <Spinner isButton={true} /> : 'Save changes'}
+          </SaveButton>
+        </ButtonContainer>
       </SettingsContainer>
     </MainContainer>
   );
@@ -206,7 +394,9 @@ const InputLabel = styled.div`
   gap: 0.25rem;
 `;
 
-const StyledInput = styled.input`
+const StyledInput = styled.input.withConfig({
+  shouldForwardProp: (prop) => prop !== 'isError',
+})<{ isError?: boolean }>`
   height: 2.5rem;
   width: 100%;
   max-width: 100%;
@@ -282,13 +472,40 @@ const SaveButton = styled.button`
   transition: all 200ms ease;
   transform-origin: center center;
 
-  &:hover {
+  &:hover:not(:disabled) {
     opacity: 0.75;
   }
 
-  &:active {
+  &:active:not(:disabled) {
     transform: scale(0.98);
   }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+`;
+
+const ErrorMessage = styled.div`
+  background-color: ${theme.colors.text.error}20;
+  color: ${theme.colors.text.error};
+  padding: 0.75rem 1rem;
+  border-radius: 0.5rem;
+  border: 1px solid ${theme.colors.text.error}40;
+  font-family: ${theme.typography.fontFamilies.medium};
+  font-size: 0.875rem;
+  margin-bottom: 1rem;
+`;
+
+const SuccessMessage = styled.div`
+  background-color: #10b98120;
+  color: #10b981;
+  padding: 0.75rem 1rem;
+  border-radius: 0.5rem;
+  border: 1px solid #10b98140;
+  font-family: ${theme.typography.fontFamilies.medium};
+  font-size: 0.875rem;
+  margin-bottom: 1rem;
 `;
 
 const CancelButton = styled.button`
