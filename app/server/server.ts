@@ -4,6 +4,7 @@ import { renderContent, browserPool } from './src/puppeteer';
 import { addInscriptionPreviewsToHtml, renderInscriptionCard } from './src/ssr';
 import { broadcastTx } from './src/mempool';
 import { Authenticator } from './src/authenticator';
+import type { CreateProfileRequest, UpdateProfileRequest, ProfileResponse } from './src/types/profile';
 
 // Configuration - use local address in production or fall back to external URL
 const isProd = process.env.NODE_ENV === 'production';
@@ -14,29 +15,29 @@ const server = Bun.serve({
   routes: {
     '/': new Response('If Bitcoin is to change the culture of money, it needs to be cool. Ordinals was the missing piece. The path to $1m is preordained'),
     // api routes
-    '/rendered_content/:id': async req => {
+    '/rendered_content/:id': async (req: any) => {
       let metadata =  await fetch(apiBaseUrl + "/api/inscription_metadata/" + req.params.id);
-      let metadataJson = await metadata.json();
+      let metadataJson: any = await metadata.json();
       return await getRenderedContentResponse(metadataJson.id, metadataJson.content_type, metadataJson.is_recursive, req.headers);  
     },
-    '/rendered_content_number/:number': async req => {
+    '/rendered_content_number/:number': async (req: any) => {
       let metadata =  await fetch(apiBaseUrl + "/api/inscription_metadata_number/" + req.params.number);
-      let metadataJson = await metadata.json();
+      let metadataJson: any = await metadata.json();
       return await getRenderedContentResponse(metadataJson.id, metadataJson.content_type, metadataJson.is_recursive, req.headers);     
     },
-    '/block_icon/:block': async req => {
+    '/block_icon/:block': async (req: any) => {
       const row = await db.getBlockIcon(req.params.block);
       if (!row) return new Response('No inscriptions found in block', { status: 404 });
       return await getRenderedContentResponse(row.id, row.content_type, row.is_recursive, req.headers);     
     },
-    '/sat_block_icon/:block': async req => {
+    '/sat_block_icon/:block': async (req: any) => {
       const row = await db.getSatBlockIcon(req.params.block);
       if (!row) return new Response('No inscriptions found in block', { status: 404 });
       return await getRenderedContentResponse(row.id, row.content_type, row.is_recursive, req.headers);      
     },
-    '/inscription_card/:id': async req => {
+    '/inscription_card/:id': async (req: any) => {
       let metadata =  await fetch(apiBaseUrl + "/api/inscription_metadata/" + req.params.id);
-      let metadataJson = await metadata.json();
+      let metadataJson: any = await metadata.json();
       let card = await renderInscriptionCard({
         inscriptionMetadata: metadataJson,
         host: 'blue.vermilion.place'
@@ -46,24 +47,24 @@ const server = Bun.serve({
       });
     },
     // ssr routes
-    '/ssr/inscription/:number': async req => {
+    '/ssr/inscription/:number': async (req: any) => {
       let metadata =  await fetch(apiBaseUrl + "/api/inscription_metadata_number/" + req.params.number);
-      let metadataJson = await metadata.json();
+      let metadataJson: any = await metadata.json();
       let hydratedHtml = await addInscriptionPreviewsToHtml({ 
         inscriptionMetadata: metadataJson,
-        host: req.headers.get('host')
+        host: req.headers.get('host') as string,
       });
       return new Response(hydratedHtml, {
         headers: { 'Content-Type': 'text/html' },
       });
     },
     // social routes
-    '/social/boost': async req => {
+    '/social/boost': async (req: any) => {
       if (req.method !== 'POST') {
         return new Response('Method Not Allowed', { status: 405 });
       }
       try {
-        let body = await req.json();
+        let body: any = await req.json();
         const authFail = checkAuthFail(req.headers.get('Authorization'), body.ordinals_address);
         if (authFail) return authFail;
 
@@ -91,7 +92,7 @@ const server = Bun.serve({
             });
             return new Response(errorString, { status: 500 });
           }
-          backups = backups.map(backup => ({
+          backups = backups.map((backup: any) => ({
             ...backup,
             boost_id: boostId,
             ordinals_address: body.ordinals_address,
@@ -158,7 +159,7 @@ const server = Bun.serve({
             return new Response(errorString, { status: 500 });
           }
 
-          const data = await response.json();
+          const data: any = await response.json();
           if (data[0] !== body.commit_tx_id || data[1] !== body.reveal_tx_id) {
             let errorString = `Error: commit/reveal tx IDs do not match. Expected ${body.commit_tx_id} / ${body.reveal_tx_id}, got ${data[0]} / ${data[1]}`;
             console.warn(errorString);
@@ -169,47 +170,57 @@ const server = Bun.serve({
             reveal_tx_status: 'pending'
           });
           return Response.json(data);
-        } 
-      } catch (err) {
+        } else {
+          let errorString = `Error: Unsupported network ${body.network}`;
+          await db.updateBoost(boostId, {
+            broadcast_status: 'failed',
+            broadcast_error: errorString,
+            commit_tx_status: 'failed',
+            reveal_tx_status: 'failed'
+          });
+          return new Response(errorString, { status: 500 });
+        }
+      } catch (err: any) {
         console.error('Error boosting:', err);
         return new Response('Error boosting: ' + err.message, { status: 500 });
       }
+      //return new Response('Unknown error', { status: 500 });
     },
-    '/social/boost_history/:address': async req => { //TODO: not used, remove?
+    '/social/boost_history/:address': async (req: any) => { //TODO: not used, remove?
       try {
         const authFail = checkAuthFail(req.headers.get('Authorization'), req.params.address);
         if (authFail) return authFail;
 
         const boosts = await db.getBoostsForAddress(req.params.address);
         return Response.json(boosts);
-      } catch (err) {
+      } catch (err: any) {
         console.error('Error fetching boost history:', err);
         return new Response('Error fetching boost history: ' + err.message, { status: 500 });
       }
     },
-    '/social/get_stored_sweeps/:boost_id': async req => {
+    '/social/get_stored_sweeps/:boost_id': async (req: any) => {
       try {
         const authorizedAddress = getAuthorizedAddress(req.headers.get('Authorization'));
-        if (authorizedAddress.isValid === false) {
-          return new Response.json(authorizedAddress, {
+        if (authorizedAddress && authorizedAddress.isValid === false) {
+          return Response.json(authorizedAddress, {
             status: 401,
             statusText: 'Unauthorized: ' + authorizedAddress.error,
             headers: { 'Content-Type': 'application/json' }
           });
         }
-        let storedSweeps = await db.getStoredEphemeralSweeps(req.params.boost_id, authorizedAddress.address);
+        let storedSweeps = await db.getStoredEphemeralSweeps(req.params.boost_id, authorizedAddress?.address);
         return Response.json(storedSweeps);
-      } catch (err) {
+      } catch (err: any) {
         console.error('Error fetching stored sweeps:', err);
         return new Response('Error fetching stored sweeps: ' + err.message, { status: 500 });
       }
     },
-    '/social/broadcast_sweep': async req => {
+    '/social/broadcast_sweep': async (req: any) => {
       if (req.method !== 'POST') {
         return new Response('Method Not Allowed', { status: 405 });
       }
       try {
-        let body = await req.json();
+        let body: any = await req.json();
         const authFail = checkAuthFail(req.headers.get('Authorization'), body.ordinals_address);
         if (authFail) return authFail;
 
@@ -246,57 +257,57 @@ const server = Bun.serve({
         });
         return Response.json([ sweepTxId ]);
 
-      } catch (err) {
+      } catch (err: any) {
         console.error('Error broadcasting sweep:', err);
         return new Response('Error broadcasting sweep: ' + err.message, { status: 500 });
       }
     },
-    '/social/sweep_history/:address': async req => { //TODO: not used, remove?
+    '/social/sweep_history/:address': async (req: any) => { //TODO: not used, remove?
       try {
         const authFail = checkAuthFail(req.headers.get('Authorization'), req.params.address);
         if (authFail) return authFail;
         const sweeps = await db.getSweepsForAddress(req.params.address);
         return Response.json(sweeps);
-      } catch (err) {
+      } catch (err: any) {
         console.error('Error fetching sweep history:', err);
         return new Response('Error fetching sweep history: ' + err.message, { status: 500 });
       }
     },
-    '/social/full_boost_history/:address': async req => {
+    '/social/full_boost_history/:address': async (req: any) => {
       try {
         const authFail = checkAuthFail(req.headers.get('Authorization'), req.params.address);
         if (authFail) return authFail;
         const sweeps = await db.getBoostsAndSweepsForAddress(req.params.address);
         return Response.json(sweeps);
-      } catch (err) {
+      } catch (err: any) {
         console.error('Error fetching sweep history:', err);
         return new Response('Error fetching sweep history: ' + err.message, { status: 500 });
       }
     },
-    '/social/generate_sign_in_message': async req => {
+    '/social/generate_sign_in_message': async (req: any) => {
       if (req.method !== 'POST') {
         return new Response('Method Not Allowed', { status: 405 });
       }
       try {
-        let body = await req.json();
+        let body: any = await req.json();
         let address = body.address;
         let walletType = body.walletType;
         let headers = req.headers;
         let authenticator = new Authenticator();
         let signInMessage = await authenticator.GenerateSignInMessage(address, walletType, headers);
         return Response.json({ signInMessage });
-      } catch (err) {
+      } catch (err: any) {
         console.error('Error generating sign in message:', err);
         return new Response('Error generating sign in message: ' + err.message, { status: 500 });
       }
     },
-    '/social/verify_signature': async req => {
+    '/social/verify_signature': async (req: any) => {
       console.log('Verifying signature');
       if (req.method !== 'POST') {
         return new Response('Method Not Allowed', { status: 405 });
       }
       try {
-        let body = await req.json();
+        let body: any = await req.json();
         let address = body.address;
         let message = body.signInMessage;
         let signature = body.signature;
@@ -304,13 +315,13 @@ const server = Bun.serve({
         let authenticator = new Authenticator();
         let response = await authenticator.VerifySignature(address, message, signature, signatureType);
         return Response.json(response);
-      } catch (err) {
+      } catch (err: any) {
         console.error('Error verifying signature:', err);
         return new Response('Error verifying signature: ' + err.message, { status: 500 });
       }
     },
     // social profile routes
-    '/social/create_profile/:address': async req => {
+    '/social/create_profile/:address': async (req: any) => {
       if (req.method !== 'POST') {
         return new Response('Method Not Allowed', { status: 405 });
       }
@@ -318,7 +329,7 @@ const server = Bun.serve({
         const authFail = checkAuthFail(req.headers.get('Authorization'), req.params.address);
         if (authFail) return authFail;
 
-        let body = await req.json();
+        const body = await req.json() as CreateProfileRequest;
         // let [insertRecord] = await db.createProfile({
         //   //user_id: body.user_id, //this is auto-generated by the database
         //   user_handle: body.user_handle,
@@ -330,14 +341,14 @@ const server = Bun.serve({
         //   user_website: body.user_website,
         // });
         // add some validation here
-        let insertRecord = await db.createProfile(body, req.params.address);
-        return Response.json(insertRecord);
-      } catch (err) {
+        const insertRecord = await db.createProfile(body, req.params.address);
+        return Response.json(insertRecord as ProfileResponse);
+      } catch (err: any) {
         console.error('Error creating profile:', err);
         return new Response('Error creating profile: ' + err.message, { status: 500 });
       }
     },
-    '/social/update_profile/:address': async req => {
+    '/social/update_profile/:address': async (req: any) => {
       if (req.method !== 'POST') {
         return new Response('Method Not Allowed', { status: 405 });
       }
@@ -345,7 +356,7 @@ const server = Bun.serve({
         const authFail = checkAuthFail(req.headers.get('Authorization'), req.params.address);
         if (authFail) return authFail;
 
-        let body = await req.json();
+        const body = await req.json() as UpdateProfileRequest;
         // let [updateRecord] = await db.updateProfile({
         //   user_id: body.user_id,
         //   user_handle: body.user_handle,
@@ -357,48 +368,48 @@ const server = Bun.serve({
         //   user_website: body.user_website,
         // });
         // add some validation here
-        let updateRecord = await db.updateProfile(req.params.address, body.user_id, body);
+        const updateRecord = await db.updateProfile(req.params.address, body.user_id, body);
         if (!updateRecord) {
           return new Response('Error updating profile: Valid profile not found', { status: 404 });
         }
-        return Response.json(updateRecord);
-      } catch (err) {
+        return Response.json(updateRecord as ProfileResponse);
+      } catch (err: any) {
         console.error('Error updating profile:', err);
         return new Response('Error updating profile: ' + err.message, { status: 500 });
       }
     },
-    '/social/get_profile_by_id/:user_id': async req => {
+    '/social/get_profile_by_id/:user_id': async (req: any) => {
       try {
         const profile = await db.getProfileById(req.params.user_id);
         if (!profile) {
           return new Response('Profile not found', { status: 404 });
         }
-        return Response.json(profile);
-      } catch (err) {
+        return Response.json(profile as ProfileResponse);
+      } catch (err: any) {
         console.error('Error fetching profile:', err);
         return new Response('Error fetching profile: ' + err.message, { status: 500 });
       }
     },
-    '/social/get_profile_by_address/:address': async req => {
+    '/social/get_profile_by_address/:address': async (req: any) => {
       try {
         const profile = await db.getProfileByAddress(req.params.address);
         if (!profile) {
           return new Response('Profile not found', { status: 404 });
         }
-        return Response.json(profile);
-      } catch (err) {
+        return Response.json(profile as ProfileResponse);
+      } catch (err: any) {
         console.error('Error fetching profile by address:', err);
         return new Response('Error fetching profile by address: ' + err.message, { status: 500 });
       }
     },
-    '/social/get_profile_by_handle/:handle': async req => {
+    '/social/get_profile_by_handle/:handle': async (req: any) => {
       try {
         const profile = await db.getProfileByHandle(req.params.handle);
         if (!profile) {
           return new Response('Profile not found', { status: 404 });
         }
-        return Response.json(profile);
-      } catch (err) {
+        return Response.json(profile as ProfileResponse);
+      } catch (err: any) {
         console.error('Error fetching profile by handle:', err);
         return new Response('Error fetching profile by handle: ' + err.message, { status: 500 });
       }
@@ -410,7 +421,7 @@ const server = Bun.serve({
 await db.setupDatabase();
 bundexer.runBundexer();
 
-async function getRenderedContentResponse(id, content_type, is_recursive, originalHeaders) {
+async function getRenderedContentResponse(id: any, content_type: any, is_recursive: any, originalHeaders: any) {
   if (content_type?.startsWith('text/html') || (content_type?.startsWith('image/svg') && is_recursive)) {
     let row = await db.getRenderedContent(id);
     let ss = row?.content;
@@ -436,7 +447,6 @@ async function getRenderedContentResponse(id, content_type, is_recursive, origin
       upstreamHeaders.set('accept-encoding', originalHeaders.get('accept-encoding'));
     }
     let content = await fetch(apiBaseUrl + "/content/" + id, {
-      decompress: false,
       headers: upstreamHeaders,
     });
     if (!content.ok) return new Response('Content fetch failed', { status: content.status });
@@ -447,7 +457,7 @@ async function getRenderedContentResponse(id, content_type, is_recursive, origin
   }
 }
 
-function checkAuthFail(authHeader, ordinalsAddress) {
+function checkAuthFail(authHeader: any, ordinalsAddress: any) {
   if (!authHeader?.startsWith('Bearer ')) {
     console.log('Unauthorized: No bearer token provided');
     return new Response('Unauthorized: No bearer token provided', { status: 401, statusText: 'Unauthorized' });
@@ -465,7 +475,7 @@ function checkAuthFail(authHeader, ordinalsAddress) {
   }
 }
 
-function getAuthorizedAddress(authHeader) {
+function getAuthorizedAddress(authHeader: any) {
   if (!authHeader?.startsWith('Bearer ')) {
     console.log('Unauthorized: No bearer token provided');
     return null;
