@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "bun --hot devServer.js",
+    "dev:local-social": "bun --hot devServer.js --local-social",
     "build": "bun build.js"
   },
   "dependencies": {

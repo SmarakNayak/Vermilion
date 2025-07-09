@@ -1,0 +1,14 @@
+{
+  "name": "vermilion-app",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "cd client && bun install && bun run dev",
+    "dev:both": "bun install && concurrently \"cd client && bun install && bun run dev:local-social\" \"cd server && bun install && bun run server.ts\" --names \"frontend,server\" --prefix-colors \"cyan,yellow\"",
+    "build": "cd client && bun run build"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}

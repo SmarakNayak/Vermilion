@@ -1,5 +1,8 @@
 import homepage from "./index.html";
 
+const useLocalSocial = process.argv.includes('--local-social');
+const socialTarget = useLocalSocial ? 'http://localhost:1082' : 'https://blue.vermilion.place';
+
 const server = Bun.serve({
   port: 3000,
   development: {
@@ -22,12 +25,10 @@ const server = Bun.serve({
     },
     '/bun/social/*': {
       GET: async req => {
-        //return proxyRequest(req, 'https://blue.vermilion.place');
-        return proxyRequest(req, 'localhost:1082',  '/social/*');
+        return proxyRequest(req, socialTarget, '/social/*');
       },
       POST: async req => {
-        //return proxyRequest(req, 'https://blue.vermilion.place');
-        return proxyRequest(req, 'localhost:1082',  '/social/*');
+        return proxyRequest(req, socialTarget, '/social/*');
       }
     },
     '/r/*': async req => {

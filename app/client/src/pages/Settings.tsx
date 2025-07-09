@@ -15,7 +15,7 @@ import type {
   CreateProfileRequest, 
   UpdateProfileRequest, 
   ProfileResponse 
-} from '../../server/src/types/profile';
+} from '../../../server/src/types/profile';
 
 const Settings: React.FC = () => {
   const { wallet, authToken } = useStore();
