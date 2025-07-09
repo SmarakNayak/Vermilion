@@ -53,7 +53,7 @@ const Settings: React.FC = () => {
     }
 
     try {
-      const response = await fetch(`/social/get_profile_by_address/${wallet.ordinalsAddress}`);
+      const response = await fetch(`/bun/social/get_profile_by_address/${wallet.ordinalsAddress}`);
       if (response.ok) {
         const profileData: ProfileResponse = await response.json() as ProfileResponse;
         setProfile({
@@ -115,8 +115,8 @@ const Settings: React.FC = () => {
 
     try {
       const endpoint = existingProfile 
-        ? `/social/update_profile/${wallet.ordinalsAddress}`
-        : `/social/create_profile/${wallet.ordinalsAddress}`;
+        ? `/bun/social/update_profile/${wallet.ordinalsAddress}`
+        : `/bun/social/create_profile/${wallet.ordinalsAddress}`;
 
       const requestBody: CreateProfileRequest | UpdateProfileRequest = existingProfile 
         ? { ...profile, user_id: existingProfile.user_id }

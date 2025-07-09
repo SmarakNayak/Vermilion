@@ -22,12 +22,12 @@ const server = Bun.serve({
     },
     '/bun/social/*': {
       GET: async req => {
-        return proxyRequest(req, 'https://blue.vermilion.place');
-        //return proxyRequest(req, 'localhost:1082',  '/social/*');
+        //return proxyRequest(req, 'https://blue.vermilion.place');
+        return proxyRequest(req, 'localhost:1082',  '/social/*');
       },
       POST: async req => {
-        return proxyRequest(req, 'https://blue.vermilion.place');
-        //return proxyRequest(req, 'localhost:1082',  '/social/*');
+        //return proxyRequest(req, 'https://blue.vermilion.place');
+        return proxyRequest(req, 'localhost:1082',  '/social/*');
       }
     },
     '/r/*': async req => {
