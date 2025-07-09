@@ -58,3 +58,6 @@ jobs:
 
       - name: Install essential build tools for rust
         run: ssh staging 'sudo apt-get -y install build-essential pkg-config libssl-dev'
+
+      - name: Install puppeteer dependencies
+        run: ssh staging 'sudo apt-get -y install libnss3'
