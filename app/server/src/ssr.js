@@ -3,7 +3,7 @@ import { browserPool } from "./puppeteer";
 async function addInscriptionPreviewsToHtml({
   inscriptionMetadata,
   host = "vermilion.place",
-  filePath = '../dist/index.html'
+  filePath = '../client/dist/index.html'
 }) {
   let hydratedHtml;
   const options = {
@@ -24,7 +24,7 @@ async function rewriteMetaTagsFromFile({
   description = "Ordinals explorer and onchain social network",
   imageUrl = "https://blue.vermilion.place/vermilion.place_twitter_800_418.png",
   siteUrl = "https://vermilion.place",
-  filePath = '../dist/index.html'
+  filePath = '../client/dist/index.html'
 } = {}) {
   try {
     // Read the HTML file using Bun's file API
@@ -108,7 +108,7 @@ async function renderInscriptionCard({inscriptionMetadata, host = "vermilion.pla
     return buffer;
   } catch (error) {
     console.error('Error rendering inscription card, returning fallback', error);
-    let fallback = Bun.file('../dist/blue.vermilion.place_twitter_800_418.png');
+    let fallback = Bun.file('../client/dist/blue.vermilion.place_twitter_800_418.png');
     return Buffer.from(await fallback.arrayBuffer());
   }
 }
