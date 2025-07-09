@@ -51,6 +51,8 @@ const browserPool = {
       this.initializing = false;
     } catch (err) {
       await this.closeAll();
+      this.initialized = false;
+      this.initializing = false;
       throw new Error("Error initializing browser pool", { cause: err });
     }
   },
