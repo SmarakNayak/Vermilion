@@ -152,9 +152,9 @@ async function renderContent(url, retryCount = 0, fullPage = true) {
   // Get a browser from the pool
   const browser = await browserPool.getBrowser();
   let launchTime = performance.now();
-  let page = await browser.newPage();
-  let unindexedResourceFound = false; // Flag for unindexed inscriptions
   try {
+    let page = await browser.newPage();
+    let unindexedResourceFound = false; // Flag for unindexed inscriptions
     const threshold = 0.1; // Similarity threshold
     const interval = 100; // Check every 100 ms
     let activeRequests = 0;
@@ -276,13 +276,16 @@ async function renderContent(url, retryCount = 0, fullPage = true) {
 
   } catch (error) {
     try {        
-      await page.close();
+      if (page) {
+        await page.close();
+      }
       browserPool.releaseBrowser(browser);
     } catch (err) {
       if (err.message.includes('Target.closeTarget timed out')) {
         process.stdout.write('Page close timed out - ');
         await browserPool.killAndReplaceBrowser(browser);
       } else {
+        browserPool.releaseBrowser(browser);
         throw new Error(`Error closing page for: ${url}`, { cause: err });
       }
     }
@@ -335,6 +338,14 @@ async function renderContent(url, retryCount = 0, fullPage = true) {
         return {buffer, renderStatus: "NETWORK_ABORTED"};
       };
       console.log('Network aborted, trying again: ', url);
+      return renderContent(url, retryCount + 1, false);
+
+    } else if (error.message.includes('ProtocolError')) {
+      if (retryCount > 1) {
+        console.log(`Puppeteer Protocol error after 2 retries`);
+        return {buffer, renderStatus: "PROTOCOL_ERROR"};
+      };
+      console.log('Puppeteer Protocol error, trying again: ', url);
       return renderContent(url, retryCount + 1, false);
 
     } else if (error.message.includes('Content not indexed yet')) {
