@@ -149,13 +149,13 @@ async function renderContent(url, retryCount = 0, fullPage = true) {
   let startTime = performance.now();
   let buffer;
   let renderStatus;
-  let page;
   // Get a browser from the pool
   const browser = await browserPool.getBrowser();
   let launchTime = performance.now();
+  let page;
+  let unindexedResourceFound = false; // Flag for unindexed inscriptions
   try {
     page = await browser.newPage();
-    let unindexedResourceFound = false; // Flag for unindexed inscriptions
     const threshold = 0.1; // Similarity threshold
     const interval = 100; // Check every 100 ms
     let activeRequests = 0;
