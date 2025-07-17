@@ -23,6 +23,9 @@
     // Effect-friendly additions
     "exactOptionalPropertyTypes": true,
     "noImplicitReturns": true,
+    "plugins": [
+      { "name": "@effect/language-service" }
+    ],
     
     // Optional: useful for Effect apps
     "noUnusedLocals": true,

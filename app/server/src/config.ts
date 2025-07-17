@@ -27,6 +27,9 @@ const loadConfig = Effect.gen(function* () {
     try: () => parse(configText),
     catch: (error) => new ConfigError({ message: `Failed to parse config file: ${error}`, cause: error }),
   });
-  const config = yield* Schema.decodeUnknown(AppConfigSchema)(rawConfig);
+  const config = yield* Schema.decodeUnknown(AppConfigSchema)(rawConfig)
+    .pipe(
+      Effect.mapError((error) => new ConfigError({ message: `Config does not match schema: ${error}`, cause: error })),
+    );
   return config;
 });

@@ -2,10 +2,9 @@
   "name": "server",
   "private": true,
   "devDependencies": {
+    "typescript": "^5",
+    "@effect/language-service": "^0.27.2",
     "@types/bun": "latest"
-  },
-  "peerDependencies": {
-    "typescript": "^5"
   },
   "dependencies": {
     "@effect/sql-pg": "^0.42.0",
