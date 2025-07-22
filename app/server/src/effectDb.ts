@@ -1,33 +1,43 @@
-import { parse } from "yaml";
 import { PgClient } from "@effect/sql-pg";
-import { Effect, pipe, Redacted } from "effect";
+import { Effect, Layer, Redacted } from "effect";
+import { ConfigService } from "./config";
 
-const configFile = Bun.file(`${process.env.HOME}/ord.yaml`);
-const config = parse(await configFile.text());
+class EffectPostgres extends Effect.Service<EffectPostgres>()("EffectPostgres", {
+  effect: Effect.gen(function* () {
+    const sql = yield* PgClient.PgClient;
+    return {
+      query: (strings: TemplateStringsArray, ...values: any[]) => sql(strings, ...values),
+      getClient: () => sql
+    };
+  })
+}) {};
 
-const EffectDb = PgClient.layer({
-  host: config.db_host,
-  port: 5432,
-  database: config.db_name,
-  username: config.db_user,
-  password: Redacted.make(config.db_password),
-})
+let configLayer = ConfigService.Default;
+let dbLayer = Effect.gen(function* () {
+  const config = yield* ConfigService;
+  return PgClient.layer({
+    host: config.db_host,
+    port: 5432,
+    database: config.db_name,
+    username: config.db_user,
+    password: Redacted.make(config.db_password),
+  });
+}).pipe(
+  Layer.unwrapEffect
+);
+let dbWrapperLayer = EffectPostgres.Default;
+let mainLayer = dbWrapperLayer.pipe(
+  Layer.provide(dbLayer),
+  Layer.provide(configLayer)
+);
 
-const program = (param: string) => Effect.gen(function* () {
-  yield* Effect.log("Starting program with param: " + param);
-  const sql = yield* PgClient.PgClient;
-  yield* Effect.log("SQL Client initialized");
-  const result = yield* sql`SELECT * FROM social.profiles WHERE username = ${param}`;
-  yield* Effect.log("Query executed, result: " + JSON.stringify(result));
+let program = Effect.gen(function* () {
+  const db = yield* EffectPostgres;
+  const result = yield* db.query`SELECT * FROM social.profiles`;
+  yield* Effect.log(`Query result: ${JSON.stringify(result)}`);
   return result;
-});
-
-pipe(
-  program("test"),
-  Effect.provide(EffectDb),
+}).pipe(
+  Effect.provide(mainLayer),
+  Effect.catchAll((error) => Effect.logError(`Database error: ${error}`)),
   Effect.runPromise
-).then(result => {
-  console.log("Program completed successfully:", result);
-}).catch(error => {
-  console.error("Program failed with error:", error);
-});
+);
