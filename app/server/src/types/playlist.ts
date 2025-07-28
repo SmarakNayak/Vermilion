@@ -50,10 +50,7 @@ export type PlaylistInscriptions = Schema.Schema.Type<typeof PlaylistInscription
 export const InsertPlaylistInscriptionsSchema = Schema.Array(
   Schema.Struct({
     playlist_id: Schema.UUID,
-    inscription_id: Schema.String,
-    playlist_position: Schema.optionalWith(Schema.Number, {
-      exact: true,
-    }),
+    inscription_id: Schema.String
   })
 );
 export type InsertPlaylistInscriptions = Schema.Schema.Type<typeof InsertPlaylistInscriptionsSchema>;
