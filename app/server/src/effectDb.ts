@@ -5,9 +5,22 @@ import { Effect, Layer, Redacted } from "effect";
 import { ConfigService } from "./config";
 import { NewPlaylistInfo, UpdatePlaylistInfo, InsertPlaylistInscriptions, UpdatePlaylistInscriptions } from "./types/playlist";
 
+interface UserContext {
+  userId: string;
+  userAddress: string;
+}
+
 class SocialDbService extends Effect.Service<SocialDbService>()("EffectPostgres", {
   effect: Effect.gen(function* () {
     const sql = yield* PgClient.PgClient;
+    
+    const withUserContext = <A, E, R>(userContext: UserContext) => (query: Effect.Effect<A, E, R>) =>
+      sql.withTransaction(Effect.gen(function* () {
+        yield* sql`SELECT set_config('app.current_user_id', ${userContext.userId}, true)`;
+        yield* sql`SELECT set_config('app.current_user_address', ${userContext.userAddress}, true)`;
+        return yield* query;
+      }));
+    
     return {
       query: (strings: TemplateStringsArray, ...values: any[]) => sql(strings, ...values),
       getClient: () => sql,
@@ -71,40 +84,101 @@ class SocialDbService extends Effect.Service<SocialDbService>()("EffectPostgres"
         `.pipe(
           withErrorContext('Error setting up playlist_inscriptions RLS policies')
         );
+        yield* sql`
+          CREATE OR REPLACE FUNCTION get_next_playlist_position(p_playlist_id UUID)
+          RETURNS INTEGER AS $$
+          BEGIN
+            RETURN COALESCE(
+              (SELECT MAX(playlist_position) + 1 
+               FROM social.playlist_inscriptions 
+               WHERE playlist_id = p_playlist_id), 
+              0
+            );
+          END;
+          $$ LANGUAGE plpgsql;
+        `.pipe(
+          withErrorContext("Error creating get_next_playlist_position function")
+        );
       }),
-      createPlaylist: (newPlaylist: NewPlaylistInfo) => Effect.gen(function* () {
+      withUserContext: withUserContext,
+      createPlaylist: (newPlaylist: NewPlaylistInfo, userContext: UserContext) => Effect.gen(function* () {
         let playlist_id = yield* sql`INSERT INTO social.playlist_info ${sql.insert(newPlaylist)} RETURNING playlist_id`.pipe(
+          withUserContext(userContext),
           withErrorContext("Error creating new playlist")
         );
         return playlist_id;
       }),
-      updatePlaylist: (updatePlaylist: UpdatePlaylistInfo) => Effect.gen(function* () {
+      updatePlaylist: (updatePlaylist: UpdatePlaylistInfo, userContext: UserContext) => Effect.gen(function* () {
         const result = yield* sql`
           UPDATE social.playlist_info 
           SET ${sql.update(updatePlaylist)} 
-          WHERE playlist_id = ${updatePlaylist.playlist_id} AND user_id = ${updatePlaylist.user_id}
+          WHERE playlist_id = ${updatePlaylist.playlist_id} AND user_id = ${userContext.userId}
         `.pipe(
-          withErrorContext("Error updating playlist")
+          withUserContext(userContext),
+          withErrorContext("Error updating playlist"),
         );
         return result;
       }),
-      deletePlaylist: (playlistId: string, userId: string) => Effect.gen(function* () {
+      deletePlaylist: (playlistId: string, userContext: UserContext) => Effect.gen(function* () {
         const result = yield* sql`
           DELETE FROM social.playlist_info 
-          WHERE playlist_id = ${playlistId} AND user_id = ${userId}
+          WHERE playlist_id = ${playlistId} AND user_id = ${userContext.userId}
         `.pipe(
+          withUserContext(userContext),
           withErrorContext("Error deleting playlist")
         );
         return result;
       }),
-      insertPlaylistInscriptions: (insertPlaylistInscriptions: InsertPlaylistInscriptions) => Effect.gen(function* () {
-        const result = yield* sql`INSERT INTO social.playlist_inscriptions ${sql.insert(insertPlaylistInscriptions)}`.pipe(
+      insertPlaylistInscriptions: (insertPlaylistInscriptions: InsertPlaylistInscriptions, userContext: UserContext) => Effect.gen(function* () {
+        const inscriptionsWithFunctions = insertPlaylistInscriptions.map(inscription => ({
+          playlist_id: inscription.playlist_id,
+          inscription_id: inscription.inscription_id,
+          playlist_position: sql`get_next_playlist_position(${inscription.playlist_id})`
+        }));
+        
+        const result = yield* sql`
+          INSERT INTO social.playlist_inscriptions ${sql.insert(inscriptionsWithFunctions)}
+          RETURNING *
+        `.pipe(
+          withUserContext(userContext),
           withErrorContext("Error inserting playlist inscriptions")
         );
         return result;
       }),
-      updatePlaylistInscriptions: null,
-      deletePlaylistInscriptions: null,
+      updatePlaylistInscriptions: (playlistId: string, updatePlaylistInscriptions: UpdatePlaylistInscriptions, userContext: UserContext) => Effect.gen(function* () {
+        let inscriptionsToInsert = updatePlaylistInscriptions.map((inscription, index) => ({
+          playlist_id: inscription.playlist_id,
+          inscription_id: inscription.inscription_id,
+          playlist_position: 'playlist_position' in inscription ? inscription.playlist_position : index
+        }));
+        const result = yield* Effect.gen(function* () {
+          // Delete all existing inscriptions for this playlist
+          yield* sql`
+            DELETE FROM social.playlist_inscriptions 
+            WHERE playlist_id = ${playlistId}
+          `;
+          // Insert the new inscriptions
+          const insertResult = yield* sql`
+            INSERT INTO social.playlist_inscriptions ${sql.insert(inscriptionsToInsert)}
+            RETURNING *
+          `;
+          return insertResult;
+        }).pipe(
+          withUserContext(userContext),
+          withErrorContext("Error updating playlist inscriptions")
+        );
+        return result;
+      }),
+      deletePlaylistInscriptions: (playlistId: string, inscriptionIds: string[], userContext: UserContext) => Effect.gen(function* () {
+        const result = yield* sql`
+          DELETE FROM social.playlist_inscriptions 
+          WHERE playlist_id = ${playlistId} AND inscription_id IN (${sql.array(inscriptionIds)})
+        `.pipe(
+          withUserContext(userContext),
+          withErrorContext("Error deleting playlist inscriptions")
+        );
+        return result;
+      })
     };
   })
 }) {};

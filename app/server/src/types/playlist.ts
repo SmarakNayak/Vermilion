@@ -55,13 +55,22 @@ export const InsertPlaylistInscriptionsSchema = Schema.Array(
 );
 export type InsertPlaylistInscriptions = Schema.Schema.Type<typeof InsertPlaylistInscriptionsSchema>;
 
-export const UpdatePlaylistInscriptionsSchema = Schema.Array(
+const UpdatePlaylistInscriptionsWithPositionsSchema = Schema.Array(
   Schema.Struct({
     playlist_id: Schema.UUID,
     inscription_id: Schema.String,
-    playlist_position: Schema.optionalWith(Schema.Number, {
-      exact: true,
-    }),
+    playlist_position: Schema.Number, // Required
   })
+);
+const UpdatePlaylistInscriptionsWithoutPositionsSchema = Schema.Array(
+  Schema.Struct({
+    playlist_id: Schema.UUID,
+    inscription_id: Schema.String,
+    // No playlist_position at all
+  })
+);
+export const UpdatePlaylistInscriptionsSchema = Schema.Union(
+  UpdatePlaylistInscriptionsWithPositionsSchema,
+  UpdatePlaylistInscriptionsWithoutPositionsSchema
 );
 export type UpdatePlaylistInscriptions = Schema.Schema.Type<typeof UpdatePlaylistInscriptionsSchema>;
