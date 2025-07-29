@@ -1,7 +1,7 @@
 
 import { PgClient } from "@effect/sql-pg";
 import { withErrorContext } from "./effectUtils";
-import { Effect, Layer, Redacted } from "effect";
+import { Effect, Layer, Redacted, Logger, LogLevel } from "effect";
 import { ConfigService } from "./config";
 import { NewPlaylistInfo, UpdatePlaylistInfo, InsertPlaylistInscriptions, UpdatePlaylistInscriptions } from "./types/playlist";
 
@@ -39,8 +39,7 @@ class SocialDbService extends Effect.Service<SocialDbService>()("EffectPostgres"
         )`.pipe(
           withErrorContext(`Error creating playlist_info table`)
         );
-        yield* sql`
-          ALTER TABLE social.playlist_info ENABLE ROW LEVEL SECURITY;
+        yield* sql`ALTER TABLE social.playlist_info ENABLE ROW LEVEL SECURITY;
           DROP POLICY IF EXISTS playlist_info_policy_insert ON social.playlist_info;
           CREATE POLICY playlist_info_policy_insert ON social.playlist_info
             FOR INSERT
@@ -67,8 +66,7 @@ class SocialDbService extends Effect.Service<SocialDbService>()("EffectPostgres"
         )`.pipe(
           withErrorContext(`Error creating playlist_inscriptions table`)
         );
-        yield* sql`
-          ALTER TABLE social.playlist_inscriptions ENABLE ROW LEVEL SECURITY;
+        yield* sql`ALTER TABLE social.playlist_inscriptions ENABLE ROW LEVEL SECURITY;
           DROP POLICY IF EXISTS playlist_inscriptions_policy_insert ON social.playlist_inscriptions;
           CREATE POLICY playlist_inscriptions_policy_insert ON social.playlist_inscriptions
             FOR INSERT
@@ -84,8 +82,7 @@ class SocialDbService extends Effect.Service<SocialDbService>()("EffectPostgres"
         `.pipe(
           withErrorContext('Error setting up playlist_inscriptions RLS policies')
         );
-        yield* sql`
-          CREATE OR REPLACE FUNCTION get_next_playlist_position(p_playlist_id UUID)
+        yield* sql`CREATE OR REPLACE FUNCTION get_next_playlist_position(p_playlist_id UUID)
           RETURNS INTEGER AS $$
           BEGIN
             RETURN COALESCE(
@@ -130,20 +127,23 @@ class SocialDbService extends Effect.Service<SocialDbService>()("EffectPostgres"
         return result;
       }),
       insertPlaylistInscriptions: (insertPlaylistInscriptions: InsertPlaylistInscriptions, userContext: UserContext) => Effect.gen(function* () {
-        const inscriptionsWithFunctions = insertPlaylistInscriptions.map(inscription => ({
-          playlist_id: inscription.playlist_id,
-          inscription_id: inscription.inscription_id,
-          playlist_position: sql`get_next_playlist_position(${inscription.playlist_id})`
-        }));
-        
-        const result = yield* sql`
-          INSERT INTO social.playlist_inscriptions ${sql.insert(inscriptionsWithFunctions)}
-          RETURNING *
-        `.pipe(
+        const result = Effect.gen(function* () {
+          yield* sql`CREATE TEMP TABLE temp_playlist_inscriptions ON COMMIT DROP AS TABLE social.playlist_inscriptions WITH NO DATA`;
+          yield* sql`INSERT INTO temp_playlist_inscriptions ${sql.insert(insertPlaylistInscriptions)}`;
+          return yield* sql`
+            INSERT INTO social.playlist_inscriptions (playlist_id, inscription_id, playlist_position)
+            SELECT 
+              playlist_id,
+              inscription_id,
+              get_next_playlist_position(playlist_id)
+            FROM temp_playlist_inscriptions
+            RETURNING *
+          `
+        }).pipe(
           withUserContext(userContext),
-          withErrorContext("Error inserting playlist inscriptions")
+          withErrorContext("Error inserting playlist inscriptions"),
         );
-        return result;
+        return yield* result;
       }),
       updatePlaylistInscriptions: (playlistId: string, updatePlaylistInscriptions: UpdatePlaylistInscriptions, userContext: UserContext) => Effect.gen(function* () {
         let inscriptionsToInsert = updatePlaylistInscriptions.map((inscription, index) => ({
@@ -172,7 +172,7 @@ class SocialDbService extends Effect.Service<SocialDbService>()("EffectPostgres"
       deletePlaylistInscriptions: (playlistId: string, inscriptionIds: string[], userContext: UserContext) => Effect.gen(function* () {
         const result = yield* sql`
           DELETE FROM social.playlist_inscriptions 
-          WHERE playlist_id = ${playlistId} AND inscription_id IN (${sql.array(inscriptionIds)})
+          WHERE playlist_id = ${playlistId} AND inscription_id IN ${sql.in(inscriptionIds)}
         `.pipe(
           withUserContext(userContext),
           withErrorContext("Error deleting playlist inscriptions")
@@ -192,6 +192,12 @@ let dbLayer = Effect.gen(function* () {
     database: config.db_name,
     username: config.db_user,
     password: Redacted.make(config.db_password),
+    debug: (connection, query, params, paramTypes) => {
+      console.log("Database connection:", connection);
+      console.log("SQL Query:", query);
+      console.log("Parameters:", params);
+      console.log("Parameter Types:", paramTypes);
+    }
   });
 }).pipe(
   Layer.unwrapEffect
@@ -199,18 +205,150 @@ let dbLayer = Effect.gen(function* () {
 let dbWrapperLayer = SocialDbService.Default;
 let mainLayer = dbWrapperLayer.pipe(
   Layer.provide(dbLayer),
-  Layer.provide(configLayer)
+  Layer.provide(configLayer),
+  Layer.provide(Logger.pretty)
 );
 
-let program = Effect.gen(function* () {
+// let program = Effect.gen(function* () {
+//   const db = yield* SocialDbService;
+//   let creationResult = yield* db.setupDatabase();
+//   yield* Effect.log(`Database setup result: ${JSON.stringify(creationResult)}`);
+//   const result = yield* db.query`SELECT * FROM social.profiles`;
+//   yield* Effect.log(`Query result: ${JSON.stringify(result)}`);
+//   return result;
+// }).pipe(
+//   Effect.provide(mainLayer),
+//   Effect.catchAll((error) => Effect.logError(`Database error: ${error}`)),
+//   Effect.runPromise
+// );
+
+
+let program2 = Effect.gen(function* () {
   const db = yield* SocialDbService;
+  
+  // Setup database first
   let creationResult = yield* db.setupDatabase();
   yield* Effect.log(`Database setup result: ${JSON.stringify(creationResult)}`);
-  const result = yield* db.query`SELECT * FROM social.profiles`;
-  yield* Effect.log(`Query result: ${JSON.stringify(result)}`);
-  return result;
+
+  // Test user context
+  const userContext = {
+    userId: "550e8400-e29b-41d4-a716-446655440000", // Example UUID
+    userAddress: "bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh"
+  };
+
+  // Test 1: Create a new playlist
+  yield* Effect.log("=== Testing createPlaylist ===");
+  const newPlaylist = {
+    user_id: userContext.userId, // ✅ Add this - required by NewPlaylistInfo schema
+    playlist_name: "My Test Playlist",
+    playlist_description: "A test playlist for development",
+    playlist_inscription_icon: "icon123"
+  };
+  
+  const createdPlaylist = yield* db.createPlaylist(newPlaylist, userContext);
+  const playlistId = createdPlaylist[0]!["playlist_id"] as string; // Non-null assertion
+
+  yield* Effect.log(`Created playlist: ${JSON.stringify(createdPlaylist)}, ID: ${playlistId}`);
+
+  // Test 2: Insert playlist inscriptions
+  yield* Effect.log("=== Testing insertPlaylistInscriptions ===");
+  const inscriptionsToInsert = [
+    { playlist_id: playlistId, inscription_id: "inscription_001" },
+    { playlist_id: playlistId, inscription_id: "inscription_002" },
+    { playlist_id: playlistId, inscription_id: "inscription_003" }
+  ];
+  
+  const insertedInscriptions = yield* db.insertPlaylistInscriptions(inscriptionsToInsert, userContext);
+  yield* Effect.log(`Inserted inscriptions: ${JSON.stringify(insertedInscriptions)}`);
+
+  // Test 3: Update playlist info
+  yield* Effect.log("=== Testing updatePlaylist ===");
+  const playlistUpdate = {
+    playlist_id: playlistId,
+    user_id: userContext.userId, // ✅ Add this - required by UpdatePlaylistInfo schema
+    playlist_name: "Updated Test Playlist",
+    playlist_description: "Updated description"
+  };
+  
+  const updatedPlaylist = yield* db.updatePlaylist(playlistUpdate, userContext);
+  yield* Effect.log(`Updated playlist: ${JSON.stringify(updatedPlaylist)}`);
+
+  // Test 4: Update playlist inscriptions (with positions)
+  yield* Effect.log("=== Testing updatePlaylistInscriptions (with positions) ===");
+  const inscriptionsWithPositions = [
+    { playlist_id: playlistId, inscription_id: "inscription_004", playlist_position: 0 },
+    { playlist_id: playlistId, inscription_id: "inscription_005", playlist_position: 1 },
+    { playlist_id: playlistId, inscription_id: "inscription_001", playlist_position: 2 }
+  ];
+  
+  const updatedInscriptionsWithPos = yield* db.updatePlaylistInscriptions(playlistId, inscriptionsWithPositions, userContext);
+  yield* Effect.log(`Updated inscriptions (with positions): ${JSON.stringify(updatedInscriptionsWithPos)}`);
+
+  // Test 5: Update playlist inscriptions (without positions - should auto-generate)
+  yield* Effect.log("=== Testing updatePlaylistInscriptions (without positions) ===");
+  const inscriptionsWithoutPositions = [
+    { playlist_id: playlistId, inscription_id: "inscription_006" },
+    { playlist_id: playlistId, inscription_id: "inscription_007" },
+    { playlist_id: playlistId, inscription_id: "inscription_008" }
+  ];
+  
+  const updatedInscriptionsWithoutPos = yield* db.updatePlaylistInscriptions(playlistId, inscriptionsWithoutPositions, userContext);
+  yield* Effect.log(`Updated inscriptions (without positions): ${JSON.stringify(updatedInscriptionsWithoutPos)}`);
+
+  // Test 6: Delete specific playlist inscriptions
+  yield* Effect.log("=== Testing deletePlaylistInscriptions ===");
+  const inscriptionIdsToDelete = ["inscription_006", "inscription_007"];
+  
+  const deletedInscriptions = yield* db.deletePlaylistInscriptions(playlistId, inscriptionIdsToDelete, userContext);
+  yield* Effect.log(`Deleted inscriptions: ${JSON.stringify(deletedInscriptions)}`);
+
+  // Test 7: Query remaining inscriptions to verify deletions
+  yield* Effect.log("=== Checking remaining inscriptions ===");
+  const remainingInscriptions = yield* db.query`
+    SELECT * FROM social.playlist_inscriptions 
+    WHERE playlist_id = ${playlistId} 
+    ORDER BY playlist_position
+  `;
+  yield* Effect.log(`Remaining inscriptions: ${JSON.stringify(remainingInscriptions)}`);
+
+  // Test 8: Query playlist info
+  yield* Effect.log("=== Checking playlist info ===");
+  const playlistInfo = yield* db.query`
+    SELECT * FROM social.playlist_info 
+    WHERE playlist_id = ${playlistId}
+  `;
+  yield* Effect.log(`Playlist info: ${JSON.stringify(playlistInfo)}`);
+
+  // Test 9: Delete the entire playlist (should cascade delete inscriptions)
+  yield* Effect.log("=== Testing deletePlaylist ===");
+  const deletedPlaylist = yield* db.deletePlaylist(playlistId, userContext);
+  yield* Effect.log(`Deleted playlist: ${JSON.stringify(deletedPlaylist)}`);
+
+  // Test 10: Verify playlist and inscriptions are gone
+  yield* Effect.log("=== Verifying cleanup ===");
+  const finalPlaylistCheck = yield* db.query`
+    SELECT * FROM social.playlist_info 
+    WHERE playlist_id = ${playlistId}
+  `;
+  const finalInscriptionsCheck = yield* db.query`
+    SELECT * FROM social.playlist_inscriptions 
+    WHERE playlist_id = ${playlistId}
+  `;
+  
+  yield* Effect.log(`Final playlist check (should be empty): ${JSON.stringify(finalPlaylistCheck)}`);
+  yield* Effect.log(`Final inscriptions check (should be empty): ${JSON.stringify(finalInscriptionsCheck)}`);
+
+  yield* Effect.log("=== All playlist tests completed successfully! ===");
+  
+  return {
+    message: "All playlist methods tested successfully",
+    playlistId: playlistId,
+    testsCompleted: 10
+  };
 }).pipe(
   Effect.provide(mainLayer),
+  Effect.catchTag("SqlError", (error) => Effect.logError(`SQL Error: ${error.message} - ${error.cause}`)),
   Effect.catchAll((error) => Effect.logError(`Database error: ${error}`)),
+  Logger.withMinimumLogLevel(LogLevel.Debug),
   Effect.runPromise
 );
