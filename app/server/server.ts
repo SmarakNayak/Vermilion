@@ -478,7 +478,7 @@ function checkAuthFail(authHeader: any, ordinalsAddress: any) {
 function getAuthorizedAddress(authHeader: any) {
   if (!authHeader?.startsWith('Bearer ')) {
     console.log('Unauthorized: No bearer token provided');
-    return null;
+    return { isValid: false, error: 'Unauthorized: No bearer token provided' };
   }
   const token = authHeader.slice(7);
   let authenticator = new Authenticator();
