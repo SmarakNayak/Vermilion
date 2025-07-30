@@ -1,23 +1,52 @@
 
 import { PgClient } from "@effect/sql-pg";
 import { withErrorContext } from "./effectUtils";
-import { Effect, Layer, Redacted, Logger, LogLevel } from "effect";
+import { Effect, Layer, Redacted, Logger, LogLevel, Array, Option, Schema, Data } from "effect";
 import { ConfigService } from "./config";
 import { NewPlaylistInfo, UpdatePlaylistInfo, InsertPlaylistInscriptions, UpdatePlaylistInscriptions } from "./types/playlist";
 
-interface UserContext {
-  userId: string;
+interface AuthorisedUserContext {
+  //userId: string;
   userAddress: string;
 }
 
-class SocialDbService extends Effect.Service<SocialDbService>()("EffectPostgres", {
+class InternalDatabaseError extends Data.TaggedError("InternalDatabaseError")<{
+  readonly message: string;
+  readonly cause: unknown;
+}> {}
+
+export class SocialDbService extends Effect.Service<SocialDbService>()("EffectPostgres", {
   effect: Effect.gen(function* () {
     const sql = yield* PgClient.PgClient;
-    
-    const withUserContext = <A, E, R>(userContext: UserContext) => (query: Effect.Effect<A, E, R>) =>
+
+    const getUserIdFromAddress = (userAddress: string) => Effect.gen(function* () {
+      const result = yield* sql`SELECT user_id FROM social.profiles_view WHERE user_addresses @> ARRAY[${userAddress}::character varying]`;
+      const firstRow = Array.head(result);
+      const userId = yield* Option.match(firstRow, {
+        onNone: () => Effect.succeed(Option.none<string>()),
+        onSome: (row) => Effect.gen(function* () {
+          const validatedRow = yield* Schema.decodeUnknown(Schema.Struct({
+            user_id: Schema.UUID
+          }))(row);
+          return Option.some(validatedRow.user_id);
+        })
+      });
+      return userId;
+    }).pipe(
+      Effect.mapError((error) =>
+        new InternalDatabaseError({ message: `Failed to get user ID from address: ${error.message}`, cause: error })
+      )
+    );
+
+    const withUserContext = <A, E, R>(userContext: AuthorisedUserContext) => (query: Effect.Effect<A, E, R>) =>
       sql.withTransaction(Effect.gen(function* () {
-        yield* sql`SELECT set_config('app.current_user_id', ${userContext.userId}, true)`;
         yield* sql`SELECT set_config('app.current_user_address', ${userContext.userAddress}, true)`;
+        let userId = yield* getUserIdFromAddress(userContext.userAddress);
+        if (Option.isSome(userId)) {
+          yield* sql`SELECT set_config('app.current_user_id', ${userId.value}, true)`;
+        } else {
+          yield* Effect.log(`No user found for address: ${userContext.userAddress}`);
+        }
         return yield* query;
       }));
     
@@ -97,36 +126,37 @@ class SocialDbService extends Effect.Service<SocialDbService>()("EffectPostgres"
           withErrorContext("Error creating get_next_playlist_position function")
         );
       }),
+      getUserIdFromAddress: getUserIdFromAddress,
       withUserContext: withUserContext,
-      createPlaylist: (newPlaylist: NewPlaylistInfo, userContext: UserContext) => Effect.gen(function* () {
+      createPlaylist: (newPlaylist: NewPlaylistInfo, userContext: AuthorisedUserContext) => Effect.gen(function* () {
         let playlist_id = yield* sql`INSERT INTO social.playlist_info ${sql.insert(newPlaylist)} RETURNING playlist_id`.pipe(
           withUserContext(userContext),
           withErrorContext("Error creating new playlist")
         );
         return playlist_id;
       }),
-      updatePlaylist: (updatePlaylist: UpdatePlaylistInfo, userContext: UserContext) => Effect.gen(function* () {
+      updatePlaylist: (updatePlaylist: UpdatePlaylistInfo, userContext: AuthorisedUserContext) => Effect.gen(function* () {
         const result = yield* sql`
           UPDATE social.playlist_info 
           SET ${sql.update(updatePlaylist)} 
-          WHERE playlist_id = ${updatePlaylist.playlist_id} AND user_id = ${userContext.userId}
+          WHERE playlist_id = ${updatePlaylist.playlist_id}
         `.pipe(
           withUserContext(userContext),
           withErrorContext("Error updating playlist"),
         );
         return result;
       }),
-      deletePlaylist: (playlistId: string, userContext: UserContext) => Effect.gen(function* () {
+      deletePlaylist: (playlistId: string, userContext: AuthorisedUserContext) => Effect.gen(function* () {
         const result = yield* sql`
           DELETE FROM social.playlist_info 
-          WHERE playlist_id = ${playlistId} AND user_id = ${userContext.userId}
+          WHERE playlist_id = ${playlistId}
         `.pipe(
           withUserContext(userContext),
           withErrorContext("Error deleting playlist")
         );
         return result;
       }),
-      insertPlaylistInscriptions: (insertPlaylistInscriptions: InsertPlaylistInscriptions, userContext: UserContext) => Effect.gen(function* () {
+      insertPlaylistInscriptions: (insertPlaylistInscriptions: InsertPlaylistInscriptions, userContext: AuthorisedUserContext) => Effect.gen(function* () {
         const result = Effect.gen(function* () {
           yield* sql`CREATE TEMP TABLE temp_playlist_inscriptions ON COMMIT DROP AS TABLE social.playlist_inscriptions WITH NO DATA`;
           yield* sql`INSERT INTO temp_playlist_inscriptions ${sql.insert(insertPlaylistInscriptions)}`;
@@ -145,7 +175,7 @@ class SocialDbService extends Effect.Service<SocialDbService>()("EffectPostgres"
         );
         return yield* result;
       }),
-      updatePlaylistInscriptions: (playlistId: string, updatePlaylistInscriptions: UpdatePlaylistInscriptions, userContext: UserContext) => Effect.gen(function* () {
+      updatePlaylistInscriptions: (playlistId: string, updatePlaylistInscriptions: UpdatePlaylistInscriptions, userContext: AuthorisedUserContext) => Effect.gen(function* () {
         let inscriptionsToInsert = updatePlaylistInscriptions.map((inscription, index) => ({
           playlist_id: inscription.playlist_id,
           inscription_id: inscription.inscription_id,
@@ -169,7 +199,7 @@ class SocialDbService extends Effect.Service<SocialDbService>()("EffectPostgres"
         );
         return result;
       }),
-      deletePlaylistInscriptions: (playlistId: string, inscriptionIds: string[], userContext: UserContext) => Effect.gen(function* () {
+      deletePlaylistInscriptions: (playlistId: string, inscriptionIds: string[], userContext: AuthorisedUserContext) => Effect.gen(function* () {
         const result = yield* sql`
           DELETE FROM social.playlist_inscriptions 
           WHERE playlist_id = ${playlistId} AND inscription_id IN ${sql.in(inscriptionIds)}
