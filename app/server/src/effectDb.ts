@@ -21,16 +21,11 @@ export class SocialDbService extends Effect.Service<SocialDbService>()("EffectPo
 
     const getUserIdFromAddress = (userAddress: string) => Effect.gen(function* () {
       const result = yield* sql`SELECT user_id FROM social.profiles_view WHERE user_addresses @> ARRAY[${userAddress}::character varying]`;
-      const firstRow = Array.head(result);
-      const userId = yield* Option.match(firstRow, {
-        onNone: () => Effect.succeed(Option.none<string>()),
-        onSome: (row) => Effect.gen(function* () {
-          const validatedRow = yield* Schema.decodeUnknown(Schema.Struct({
-            user_id: Schema.UUID
-          }))(row);
-          return Option.some(validatedRow.user_id);
-        })
-      });
+      const parsedResult = yield* Schema.decodeUnknown(Schema.Array(Schema.Struct({ user_id: Schema.UUID })))(result).pipe(
+        withErrorContext("Error parsing user ID from address")
+      );
+      const firstRow = Array.head(parsedResult);
+      const userId = Option.map(firstRow, row => row.user_id);
       return userId;
     }).pipe(
       Effect.mapError((error) =>
@@ -133,7 +128,8 @@ export class SocialDbService extends Effect.Service<SocialDbService>()("EffectPo
           withUserContext(userContext),
           withErrorContext("Error creating new playlist")
         );
-        let parsedRow = yield* Schema.decodeUnknown(Schema.Array(Schema.Struct({ playlist_id: Schema.String })))(row).pipe(
+
+        let parsedRow = yield* Schema.decodeUnknown(Schema.Array(Schema.Struct({ playlist_id: Schema.UUID })))(row).pipe(
           withErrorContext("Error parsing playlist row")
         );
         let firstRow = Array.head(parsedRow);
