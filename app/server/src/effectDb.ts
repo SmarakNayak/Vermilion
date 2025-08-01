@@ -129,12 +129,20 @@ export class SocialDbService extends Effect.Service<SocialDbService>()("EffectPo
       getUserIdFromAddress: getUserIdFromAddress,
       withUserContext: withUserContext,
       createPlaylist: (newPlaylist: NewPlaylistInfo, userContext: AuthorisedUserContext) => Effect.gen(function* () {
-        let playlist_id = yield* sql`INSERT INTO social.playlist_info ${sql.insert(newPlaylist)} RETURNING playlist_id`.pipe(
+        let row = yield* sql`INSERT INTO social.playlist_info ${sql.insert(newPlaylist)} RETURNING playlist_id`.pipe(
           withUserContext(userContext),
           withErrorContext("Error creating new playlist")
         );
-        return playlist_id;
-      }),
+        let parsedRow = yield* Schema.decodeUnknown(Schema.Array(Schema.Struct({ playlist_id: Schema.String })))(row).pipe(
+          withErrorContext("Error parsing playlist row")
+        );
+        let firstRow = Array.head(parsedRow);
+        return yield* firstRow;
+      }).pipe(
+        Effect.mapError((error) =>
+          new InternalDatabaseError({ message: `Failed to create playlist: ${error.message}`, cause: error })
+        )
+      ),
       updatePlaylist: (updatePlaylist: UpdatePlaylistInfo, userContext: AuthorisedUserContext) => Effect.gen(function* () {
         const result = yield* sql`
           UPDATE social.playlist_info 
@@ -214,7 +222,7 @@ export class SocialDbService extends Effect.Service<SocialDbService>()("EffectPo
 }) {};
 
 let configLayer = ConfigService.Default;
-let dbLayer = Effect.gen(function* () {
+export const PostgresLive = Effect.gen(function* () {
   const config = yield* ConfigService;
   return PgClient.layer({
     host: config.db_host,
@@ -234,7 +242,7 @@ let dbLayer = Effect.gen(function* () {
 );
 let dbWrapperLayer = SocialDbService.Default;
 let mainLayer = dbWrapperLayer.pipe(
-  Layer.provide(dbLayer),
+  Layer.provide(PostgresLive),
   Layer.provide(configLayer),
   Layer.provide(Logger.pretty)
 );
@@ -276,7 +284,7 @@ let program2 = Effect.gen(function* () {
   };
   
   const createdPlaylist = yield* db.createPlaylist(newPlaylist, userContext);
-  const playlistId = createdPlaylist[0]!["playlist_id"] as string; // Non-null assertion
+  const playlistId = createdPlaylist.playlist_id;
 
   yield* Effect.log(`Created playlist: ${JSON.stringify(createdPlaylist)}, ID: ${playlistId}`);
 
