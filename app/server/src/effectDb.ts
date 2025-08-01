@@ -29,18 +29,19 @@ export class SocialDbService extends Effect.Service<SocialDbService>()("EffectPo
       return userId;
     }).pipe(
       Effect.mapError((error) =>
-        new InternalDatabaseError({ message: `Failed to get user ID from address: ${error.message}`, cause: error })
+        new InternalDatabaseError({ message: `Failed to get user ID from address: ${error.message}`, cause: error.cause })
       )
     );
 
     const withUserContext = <A, E, R>(userContext: AuthorisedUserContext) => (query: Effect.Effect<A, E, R>) =>
       sql.withTransaction(Effect.gen(function* () {
-        yield* sql`SELECT set_config('app.current_user_address', ${userContext.userAddress}, true)`;
+        yield* sql`SELECT set_config('app.authorized_user_address', ${userContext.userAddress}, true)`;
         let userId = yield* getUserIdFromAddress(userContext.userAddress);
         if (Option.isSome(userId)) {
-          yield* sql`SELECT set_config('app.current_user_id', ${userId.value}, true)`;
+          yield* sql`SELECT set_config('app.authorized_user_id', ${userId.value}, true)`;
         } else {
           yield* Effect.log(`No user found for address: ${userContext.userAddress}`);
+          yield* sql`SELECT set_config('app.authorized_user_id', '00000000-0000-0000-0000-000000000000', true)`;
         }
         return yield* query;
       }));
@@ -64,18 +65,19 @@ export class SocialDbService extends Effect.Service<SocialDbService>()("EffectPo
           withErrorContext(`Error creating playlist_info table`)
         );
         yield* sql`ALTER TABLE social.playlist_info ENABLE ROW LEVEL SECURITY;
+          ALTER TABLE social.playlist_info FORCE ROW LEVEL SECURITY;
           DROP POLICY IF EXISTS playlist_info_policy_insert ON social.playlist_info;
           CREATE POLICY playlist_info_policy_insert ON social.playlist_info
             FOR INSERT
-            WITH CHECK (user_id = current_setting('app.current_user_id')::uuid);
+            WITH CHECK (user_id = current_setting('app.authorized_user_id')::uuid);
           DROP POLICY IF EXISTS playlist_info_policy_update ON social.playlist_info;
           CREATE POLICY playlist_info_policy_update ON social.playlist_info
             FOR UPDATE
-            USING (user_id = current_setting('app.current_user_id')::uuid);
+            USING (user_id = current_setting('app.authorized_user_id')::uuid);
           DROP POLICY IF EXISTS playlist_info_policy_delete ON social.playlist_info;
           CREATE POLICY playlist_info_policy_delete ON social.playlist_info
             FOR DELETE
-            USING (user_id = current_setting('app.current_user_id')::uuid);
+            USING (user_id = current_setting('app.authorized_user_id')::uuid);
         `.pipe(
           withErrorContext(`Error setting up playlist_info RLS policies`)
         );
@@ -91,18 +93,19 @@ export class SocialDbService extends Effect.Service<SocialDbService>()("EffectPo
           withErrorContext(`Error creating playlist_inscriptions table`)
         );
         yield* sql`ALTER TABLE social.playlist_inscriptions ENABLE ROW LEVEL SECURITY;
+          ALTER TABLE social.playlist_inscriptions FORCE ROW LEVEL SECURITY;
           DROP POLICY IF EXISTS playlist_inscriptions_policy_insert ON social.playlist_inscriptions;
           CREATE POLICY playlist_inscriptions_policy_insert ON social.playlist_inscriptions
             FOR INSERT
-            WITH CHECK (playlist_id IN (SELECT playlist_id FROM social.playlist_info WHERE user_id = current_setting('app.current_user_id')::uuid));
+            WITH CHECK (playlist_id IN (SELECT playlist_id FROM social.playlist_info WHERE user_id = current_setting('app.authorized_user_id')::uuid));
           DROP POLICY IF EXISTS playlist_inscriptions_policy_update ON social.playlist_inscriptions;
           CREATE POLICY playlist_inscriptions_policy_update ON social.playlist_inscriptions
             FOR UPDATE
-            USING (playlist_id IN (SELECT playlist_id FROM social.playlist_info WHERE user_id = current_setting('app.current_user_id')::uuid));
+            USING (playlist_id IN (SELECT playlist_id FROM social.playlist_info WHERE user_id = current_setting('app.authorized_user_id')::uuid));
           DROP POLICY IF EXISTS playlist_inscriptions_policy_delete ON social.playlist_inscriptions;
           CREATE POLICY playlist_inscriptions_policy_delete ON social.playlist_inscriptions
             FOR DELETE
-            USING (playlist_id IN (SELECT playlist_id FROM social.playlist_info WHERE user_id = current_setting('app.current_user_id')::uuid));
+            USING (playlist_id IN (SELECT playlist_id FROM social.playlist_info WHERE user_id = current_setting('app.authorized_user_id')::uuid));
         `.pipe(
           withErrorContext('Error setting up playlist_inscriptions RLS policies')
         );
@@ -126,7 +129,7 @@ export class SocialDbService extends Effect.Service<SocialDbService>()("EffectPo
       createPlaylist: (newPlaylist: NewPlaylistInfo, userContext: AuthorisedUserContext) => Effect.gen(function* () {
         let row = yield* sql`INSERT INTO social.playlist_info ${sql.insert(newPlaylist)} RETURNING playlist_id`.pipe(
           withUserContext(userContext),
-          withErrorContext("Error creating new playlist")
+          withErrorContext("Error inserting new playlist")
         );
 
         let parsedRow = yield* Schema.decodeUnknown(Schema.Array(Schema.Struct({ playlist_id: Schema.UUID })))(row).pipe(
@@ -136,7 +139,7 @@ export class SocialDbService extends Effect.Service<SocialDbService>()("EffectPo
         return yield* firstRow;
       }).pipe(
         Effect.mapError((error) =>
-          new InternalDatabaseError({ message: `Failed to create playlist: ${error.message}`, cause: error })
+          new InternalDatabaseError({ message: `Failed to create playlist: ${error.message}`, cause: error.cause })
         )
       ),
       updatePlaylist: (updatePlaylist: UpdatePlaylistInfo, userContext: AuthorisedUserContext) => Effect.gen(function* () {
@@ -227,10 +230,10 @@ export const PostgresLive = Effect.gen(function* () {
     username: config.db_user,
     password: Redacted.make(config.db_password),
     debug: (connection, query, params, paramTypes) => {
-      console.log("Database connection:", connection);
+      //console.log("Database connection:", connection);
       console.log("SQL Query:", query);
       console.log("Parameters:", params);
-      console.log("Parameter Types:", paramTypes);
+      //console.log("Parameter Types:", paramTypes);
     }
   });
 }).pipe(

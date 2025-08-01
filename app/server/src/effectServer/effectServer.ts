@@ -1,10 +1,9 @@
-import { HttpRouter, HttpServer, HttpServerResponse, HttpServerRequest, HttpLayerRouter, HttpApi, HttpApiGroup, HttpApiEndpoint, HttpApiBuilder } from "@effect/platform"
+import { HttpServer, HttpServerResponse, HttpServerRequest, HttpApi, HttpApiGroup, HttpApiEndpoint, HttpApiBuilder, HttpApiSwagger } from "@effect/platform"
 import { BunHttpServer, BunRuntime } from "@effect/platform-bun"
-import { Effect, Layer, Schema, Context } from "effect"
+import { Effect, Layer, Schema } from "effect"
 import { NewPlaylistInfoSchema } from "../types/playlist"
 import { SocialDbService, PostgresLive } from "../effectDb"
 import { ConfigService } from "../config"
-
 
 // 1. Define the Api
 const EffectServerApi = HttpApi.make("EffectServer").add(
@@ -13,6 +12,7 @@ const EffectServerApi = HttpApi.make("EffectServer").add(
       .addSuccess(Schema.Struct(
         {playlist_id: Schema.String}
       ))
+      .setPayload(NewPlaylistInfoSchema)
   ).add(
     HttpApiEndpoint.post("updatePlaylist", `/social/update_playlist/:playlist_id`)
   ).add(
@@ -24,7 +24,7 @@ const EffectServerApi = HttpApi.make("EffectServer").add(
   ).add(
     HttpApiEndpoint.del("deletePlaylistInscriptions", `/social/delete_playlist_inscriptions/:playlist_id`)
   ).add(
-    HttpApiEndpoint.get("test", `/social/test`)
+    HttpApiEndpoint.get("home", `/`)
       .addSuccess(Schema.String)
   )
 )
@@ -43,7 +43,7 @@ const EffectServerLive = HttpApiBuilder.group(EffectServerApi, "playlists", (han
   }))
   .handle("deletePlaylistInscriptions", (req) => Effect.gen(function* () {
   }))
-  .handle("test", testHandler)
+  .handle("home", homeHandler)
 )
 
 let createPlaylistHandler = (req: {readonly request: HttpServerRequest.HttpServerRequest}) =>  Effect.gen(function* () {
@@ -56,14 +56,14 @@ let createPlaylistHandler = (req: {readonly request: HttpServerRequest.HttpServe
   return insertedPlaylist;
 }).pipe(
   Effect.catchTags({
-    "InternalDatabaseError": (error) => HttpServerResponse.text(`Internal database error: ${error.message}`, { status: 500 }),
-    "ParseError": (error) => HttpServerResponse.text(`Request was unable to be parsed: ${error.message}`, { status: 400 }),
-    "RequestError": (error) => HttpServerResponse.text(`Request error: ${error.message}`, { status: 400 }),
+    "InternalDatabaseError": (error) => HttpServerResponse.text(`Internal database error: ${error.message} - ${error.cause}`, { status: 500 }),
+    "ParseError": (error) => HttpServerResponse.text(`Request was unable to be parsed: ${error.message} - ${error.cause}`, { status: 400 }),
+    "RequestError": (error) => HttpServerResponse.text(`Request error: ${error.message} - ${error.cause}`, { status: 400 }),
   })
 );
 
-let testHandler = (req: {readonly request: HttpServerRequest.HttpServerRequest}) => Effect.gen(function* () {
-  return "Test successful!";
+let homeHandler = (req: {readonly request: HttpServerRequest.HttpServerRequest}) => Effect.gen(function* () {
+  return "If Bitcoin is to change the culture of money, it needs to be cool. Ordinals was the missing piece. The path to $1m is preordained";
 })
 
 
@@ -78,7 +78,7 @@ const EffectServerApiLive = HttpApiBuilder.api(EffectServerApi).pipe(
 // Set up the server using BunHttpServer
 const ServerLive = HttpApiBuilder.serve().pipe(
   HttpServer.withLogAddress,
-
+  Layer.provide(HttpApiSwagger.layer()),
   Layer.provide(EffectServerApiLive),
   Layer.provide(
     BunHttpServer.layer({ port: 1083 })
