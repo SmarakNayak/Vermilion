@@ -4,15 +4,18 @@ import { Effect, Layer, Schema } from "effect"
 import { NewPlaylistInfoSchema } from "../types/playlist"
 import { SocialDbService, PostgresLive } from "../effectDb"
 import { ConfigService } from "../config"
+import { Authentication, AuthenticationLive } from "./authMiddleware"
+import { JwtService } from "./jwtService"
 
 // 1. Define the Api
 const EffectServerApi = HttpApi.make("EffectServer").add(
   HttpApiGroup.make("playlists").add(
     HttpApiEndpoint.post("createPlaylist", `/social/create_playlist`)
       .addSuccess(Schema.Struct(
-        {playlist_id: Schema.String}
+        {playlist_id: Schema.UUID}
       ))
       .setPayload(NewPlaylistInfoSchema)
+      .middleware(Authentication)
   ).add(
     HttpApiEndpoint.post("updatePlaylist", `/social/update_playlist/:playlist_id`)
   ).add(
@@ -50,9 +53,7 @@ let createPlaylistHandler = (req: {readonly request: HttpServerRequest.HttpServe
   let body = yield* req.request.json;
   let newPlaylistInfo = yield* Schema.decodeUnknown(NewPlaylistInfoSchema)(body);
   let db = yield* SocialDbService;
-  let insertedPlaylist = yield* db.createPlaylist(newPlaylistInfo, {
-    userAddress: "0x1234567890abcdef"
-  });
+  let insertedPlaylist = yield* db.createPlaylist(newPlaylistInfo);
   return insertedPlaylist;
 }).pipe(
   Effect.catchTags({
@@ -63,13 +64,17 @@ let createPlaylistHandler = (req: {readonly request: HttpServerRequest.HttpServe
 );
 
 let homeHandler = (req: {readonly request: HttpServerRequest.HttpServerRequest}) => Effect.gen(function* () {
-  return "If Bitcoin is to change the culture of money, it needs to be cool. Ordinals was the missing piece. The path to $1m is preordained";
+  return HttpServerResponse.text(
+    "If Bitcoin is to change the culture of money, it needs to be cool. Ordinals was the missing piece. The path to $1m is preordained"
+  );
 })
 
 
 // Provide the implementation for the API
 const EffectServerApiLive = HttpApiBuilder.api(EffectServerApi).pipe(
   Layer.provide(EffectServerLive),
+  Layer.provide(AuthenticationLive),
+  Layer.provide(JwtService.Default),
   Layer.provide(SocialDbService.Default),
   Layer.provide(PostgresLive),
   Layer.provide(ConfigService.Default)
@@ -87,17 +92,3 @@ const ServerLive = HttpApiBuilder.serve().pipe(
 
 // Launch the server
 Layer.launch(ServerLive).pipe(BunRuntime.runMain)
-
-
-
-// // Set up the application server with logging
-// const app = router.pipe(HttpServer.serve(), HttpServer.withLogAddress)
-
-// // Run the application
-// app.pipe(
-//   Layer.provide(
-//     BunHttpServer.layer({ port: 1083 })
-//   ),
-//   Layer.launch,
-//   BunRuntime.runMain
-// );

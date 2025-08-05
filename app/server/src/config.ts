@@ -6,6 +6,7 @@ const AppConfigSchema = Schema.Struct({
   db_name: Schema.String,
   db_user: Schema.String,
   db_password: Schema.String,
+  access_token_secret: Schema.String,
 });
 type AppConfig = Schema.Schema.Type<typeof AppConfigSchema>;
 

@@ -4,11 +4,7 @@ import { withErrorContext } from "./effectUtils";
 import { Effect, Layer, Redacted, Logger, LogLevel, Array, Option, Schema, Data } from "effect";
 import { ConfigService } from "./config";
 import { NewPlaylistInfo, UpdatePlaylistInfo, InsertPlaylistInscriptions, UpdatePlaylistInscriptions } from "./types/playlist";
-
-interface AuthorisedUserContext {
-  //userId: string;
-  userAddress: string;
-}
+import { AuthenticatedUserContext } from "./effectServer/authMiddleware";
 
 class InternalDatabaseError extends Data.TaggedError("InternalDatabaseError")<{
   readonly message: string;
@@ -33,8 +29,9 @@ export class SocialDbService extends Effect.Service<SocialDbService>()("EffectPo
       )
     );
 
-    const withUserContext = <A, E, R>(userContext: AuthorisedUserContext) => (query: Effect.Effect<A, E, R>) =>
+    const withUserContext = <A, E, R>() => (query: Effect.Effect<A, E, R>) =>
       sql.withTransaction(Effect.gen(function* () {
+        const userContext = yield* AuthenticatedUserContext;
         yield* sql`SELECT set_config('app.authorized_user_address', ${userContext.userAddress}, true)`;
         let userId = yield* getUserIdFromAddress(userContext.userAddress);
         if (Option.isSome(userId)) {
@@ -126,9 +123,9 @@ export class SocialDbService extends Effect.Service<SocialDbService>()("EffectPo
       }),
       getUserIdFromAddress: getUserIdFromAddress,
       withUserContext: withUserContext,
-      createPlaylist: (newPlaylist: NewPlaylistInfo, userContext: AuthorisedUserContext) => Effect.gen(function* () {
+      createPlaylist: (newPlaylist: NewPlaylistInfo) => Effect.gen(function* () {
         let row = yield* sql`INSERT INTO social.playlist_info ${sql.insert(newPlaylist)} RETURNING playlist_id`.pipe(
-          withUserContext(userContext),
+          withUserContext(),
           withErrorContext("Error inserting new playlist")
         );
 
@@ -142,28 +139,28 @@ export class SocialDbService extends Effect.Service<SocialDbService>()("EffectPo
           new InternalDatabaseError({ message: `Failed to create playlist: ${error.message}`, cause: error.cause })
         )
       ),
-      updatePlaylist: (updatePlaylist: UpdatePlaylistInfo, userContext: AuthorisedUserContext) => Effect.gen(function* () {
+      updatePlaylist: (updatePlaylist: UpdatePlaylistInfo) => Effect.gen(function* () {
         const result = yield* sql`
           UPDATE social.playlist_info 
           SET ${sql.update(updatePlaylist)} 
           WHERE playlist_id = ${updatePlaylist.playlist_id}
         `.pipe(
-          withUserContext(userContext),
+          withUserContext(),
           withErrorContext("Error updating playlist"),
         );
         return result;
       }),
-      deletePlaylist: (playlistId: string, userContext: AuthorisedUserContext) => Effect.gen(function* () {
+      deletePlaylist: (playlistId: string) => Effect.gen(function* () {
         const result = yield* sql`
           DELETE FROM social.playlist_info 
           WHERE playlist_id = ${playlistId}
         `.pipe(
-          withUserContext(userContext),
+          withUserContext(),
           withErrorContext("Error deleting playlist")
         );
         return result;
       }),
-      insertPlaylistInscriptions: (insertPlaylistInscriptions: InsertPlaylistInscriptions, userContext: AuthorisedUserContext) => Effect.gen(function* () {
+      insertPlaylistInscriptions: (insertPlaylistInscriptions: InsertPlaylistInscriptions) => Effect.gen(function* () {
         const result = Effect.gen(function* () {
           yield* sql`CREATE TEMP TABLE temp_playlist_inscriptions ON COMMIT DROP AS TABLE social.playlist_inscriptions WITH NO DATA`;
           yield* sql`INSERT INTO temp_playlist_inscriptions ${sql.insert(insertPlaylistInscriptions)}`;
@@ -177,12 +174,12 @@ export class SocialDbService extends Effect.Service<SocialDbService>()("EffectPo
             RETURNING *
           `
         }).pipe(
-          withUserContext(userContext),
+          withUserContext(),
           withErrorContext("Error inserting playlist inscriptions"),
         );
         return yield* result;
       }),
-      updatePlaylistInscriptions: (playlistId: string, updatePlaylistInscriptions: UpdatePlaylistInscriptions, userContext: AuthorisedUserContext) => Effect.gen(function* () {
+      updatePlaylistInscriptions: (playlistId: string, updatePlaylistInscriptions: UpdatePlaylistInscriptions) => Effect.gen(function* () {
         let inscriptionsToInsert = updatePlaylistInscriptions.map((inscription, index) => ({
           playlist_id: inscription.playlist_id,
           inscription_id: inscription.inscription_id,
@@ -201,17 +198,17 @@ export class SocialDbService extends Effect.Service<SocialDbService>()("EffectPo
           `;
           return insertResult;
         }).pipe(
-          withUserContext(userContext),
+          withUserContext(),
           withErrorContext("Error updating playlist inscriptions")
         );
         return result;
       }),
-      deletePlaylistInscriptions: (playlistId: string, inscriptionIds: string[], userContext: AuthorisedUserContext) => Effect.gen(function* () {
+      deletePlaylistInscriptions: (playlistId: string, inscriptionIds: string[]) => Effect.gen(function* () {
         const result = yield* sql`
           DELETE FROM social.playlist_inscriptions 
           WHERE playlist_id = ${playlistId} AND inscription_id IN ${sql.in(inscriptionIds)}
         `.pipe(
-          withUserContext(userContext),
+          withUserContext(),
           withErrorContext("Error deleting playlist inscriptions")
         );
         return result;
@@ -246,19 +243,6 @@ let mainLayer = dbWrapperLayer.pipe(
   Layer.provide(Logger.pretty)
 );
 
-// let program = Effect.gen(function* () {
-//   const db = yield* SocialDbService;
-//   let creationResult = yield* db.setupDatabase();
-//   yield* Effect.log(`Database setup result: ${JSON.stringify(creationResult)}`);
-//   const result = yield* db.query`SELECT * FROM social.profiles`;
-//   yield* Effect.log(`Query result: ${JSON.stringify(result)}`);
-//   return result;
-// }).pipe(
-//   Effect.provide(mainLayer),
-//   Effect.catchAll((error) => Effect.logError(`Database error: ${error}`)),
-//   Effect.runPromise
-// );
-
 
 let program2 = Effect.gen(function* () {
   const db = yield* SocialDbService;
@@ -282,7 +266,7 @@ let program2 = Effect.gen(function* () {
     playlist_inscription_icon: "icon123"
   };
   
-  const createdPlaylist = yield* db.createPlaylist(newPlaylist, userContext);
+  const createdPlaylist = yield* db.createPlaylist(newPlaylist);
   const playlistId = createdPlaylist.playlist_id;
 
   yield* Effect.log(`Created playlist: ${JSON.stringify(createdPlaylist)}, ID: ${playlistId}`);
@@ -295,7 +279,7 @@ let program2 = Effect.gen(function* () {
     { playlist_id: playlistId, inscription_id: "inscription_003" }
   ];
   
-  const insertedInscriptions = yield* db.insertPlaylistInscriptions(inscriptionsToInsert, userContext);
+  const insertedInscriptions = yield* db.insertPlaylistInscriptions(inscriptionsToInsert);
   yield* Effect.log(`Inserted inscriptions: ${JSON.stringify(insertedInscriptions)}`);
 
   // Test 3: Update playlist info
@@ -307,7 +291,7 @@ let program2 = Effect.gen(function* () {
     playlist_description: "Updated description"
   };
   
-  const updatedPlaylist = yield* db.updatePlaylist(playlistUpdate, userContext);
+  const updatedPlaylist = yield* db.updatePlaylist(playlistUpdate);
   yield* Effect.log(`Updated playlist: ${JSON.stringify(updatedPlaylist)}`);
 
   // Test 4: Update playlist inscriptions (with positions)
@@ -318,7 +302,7 @@ let program2 = Effect.gen(function* () {
     { playlist_id: playlistId, inscription_id: "inscription_001", playlist_position: 2 }
   ];
   
-  const updatedInscriptionsWithPos = yield* db.updatePlaylistInscriptions(playlistId, inscriptionsWithPositions, userContext);
+  const updatedInscriptionsWithPos = yield* db.updatePlaylistInscriptions(playlistId, inscriptionsWithPositions);
   yield* Effect.log(`Updated inscriptions (with positions): ${JSON.stringify(updatedInscriptionsWithPos)}`);
 
   // Test 5: Update playlist inscriptions (without positions - should auto-generate)
@@ -329,14 +313,14 @@ let program2 = Effect.gen(function* () {
     { playlist_id: playlistId, inscription_id: "inscription_008" }
   ];
   
-  const updatedInscriptionsWithoutPos = yield* db.updatePlaylistInscriptions(playlistId, inscriptionsWithoutPositions, userContext);
+  const updatedInscriptionsWithoutPos = yield* db.updatePlaylistInscriptions(playlistId, inscriptionsWithoutPositions);
   yield* Effect.log(`Updated inscriptions (without positions): ${JSON.stringify(updatedInscriptionsWithoutPos)}`);
 
   // Test 6: Delete specific playlist inscriptions
   yield* Effect.log("=== Testing deletePlaylistInscriptions ===");
   const inscriptionIdsToDelete = ["inscription_006", "inscription_007"];
   
-  const deletedInscriptions = yield* db.deletePlaylistInscriptions(playlistId, inscriptionIdsToDelete, userContext);
+  const deletedInscriptions = yield* db.deletePlaylistInscriptions(playlistId, inscriptionIdsToDelete);
   yield* Effect.log(`Deleted inscriptions: ${JSON.stringify(deletedInscriptions)}`);
 
   // Test 7: Query remaining inscriptions to verify deletions
@@ -358,7 +342,7 @@ let program2 = Effect.gen(function* () {
 
   // Test 9: Delete the entire playlist (should cascade delete inscriptions)
   yield* Effect.log("=== Testing deletePlaylist ===");
-  const deletedPlaylist = yield* db.deletePlaylist(playlistId, userContext);
+  const deletedPlaylist = yield* db.deletePlaylist(playlistId);
   yield* Effect.log(`Deleted playlist: ${JSON.stringify(deletedPlaylist)}`);
 
   // Test 10: Verify playlist and inscriptions are gone
@@ -384,6 +368,10 @@ let program2 = Effect.gen(function* () {
   };
 }).pipe(
   Effect.provide(mainLayer),
+  Effect.provide(Layer.succeed(AuthenticatedUserContext, {
+    userAddress: "bc1pfakeaddress1234567890",
+    //userId: "550e8400-e29b-41d4-a716-446655440000"
+  })),
   Effect.catchTag("SqlError", (error) => Effect.logError(`SQL Error: ${error.message} - ${error.cause}`)),
   Effect.catchAll((error) => Effect.logError(`Database error: ${error}`)),
   Logger.withMinimumLogLevel(LogLevel.Debug),
