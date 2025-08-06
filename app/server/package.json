@@ -1,6 +1,10 @@
 {
   "name": "server",
   "private": true,
+  "scripts": {
+    "test": "bun test",
+    "test:watch": "bun test --watch"
+  },
   "devDependencies": {
     "typescript": "^5",
     "@effect/language-service": "^0.27.2",

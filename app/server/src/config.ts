@@ -34,7 +34,6 @@ export class ConfigService extends Effect.Service<ConfigService>()("ConfigServic
       .pipe(
         Effect.mapError((error) => new YamlConfigError({ message: `Config does not match schema: ${error}`, cause: error })),
       );
-    yield* Effect.log(`Loaded config: ${JSON.stringify(config)}`);
     return config;
   })
 }) {};
