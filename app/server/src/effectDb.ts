@@ -1,14 +1,18 @@
 
 import { PgClient } from "@effect/sql-pg";
+import { SqlSchema, SqlError } from "@effect/sql";
 import { withErrorContext } from "./effectUtils";
 import { Effect, Layer, Redacted, Logger, LogLevel, Array, Option, Schema, Data } from "effect";
 import { ConfigService } from "./config";
 import { NewPlaylistInfo, UpdatePlaylistInfo, InsertPlaylistInscriptions, UpdatePlaylistInscriptions } from "./types/playlist";
 import { AuthenticatedUserContext } from "./effectServer/authMiddleware";
+import { Profile } from "./types/effectProfile";
+import { ParseError } from "effect/ParseResult";
+import { NoSuchElementException } from "effect/Cause";
 
 class InternalDatabaseError extends Data.TaggedError("InternalDatabaseError")<{
   readonly message: string;
-  readonly cause: unknown;
+  readonly cause: SqlError.SqlError | ParseError | NoSuchElementException;
 }> {}
 
 export class SocialDbService extends Effect.Service<SocialDbService>()("EffectPostgres", {
@@ -25,7 +29,7 @@ export class SocialDbService extends Effect.Service<SocialDbService>()("EffectPo
       return userId;
     }).pipe(
       Effect.mapError((error) =>
-        new InternalDatabaseError({ message: `Failed to get user ID from address: ${error.message}`, cause: error.cause })
+        new InternalDatabaseError({ message: `Failed to get user ID from address: ${error.message}`, cause: error })
       )
     );
 
@@ -44,12 +48,51 @@ export class SocialDbService extends Effect.Service<SocialDbService>()("EffectPo
       }));
     
     return {
-      query: (strings: TemplateStringsArray, ...values: any[]) => sql(strings, ...values),
-      getClient: () => sql,
       setupDatabase: () => Effect.gen(function* () {
         yield* sql`CREATE SCHEMA IF NOT EXISTS social`.pipe(
           withErrorContext("Error creating social schema")
         );
+        
+        // Profile tables
+        yield* sql`CREATE TABLE IF NOT EXISTS social.profiles (
+          user_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+          user_handle VARCHAR(17) NOT NULL UNIQUE,
+          user_name VARCHAR(30) NOT NULL,
+          user_picture VARCHAR(80),
+          user_bio VARCHAR(280),
+          user_twitter VARCHAR(15),
+          user_discord VARCHAR(37),
+          user_website TEXT,
+          user_created_at TIMESTAMP DEFAULT NOW(),
+          user_updated_at TIMESTAMP DEFAULT NOW(),
+          CONSTRAINT valid_handle CHECK (user_handle ~ '^[a-zA-Z0-9_]{2,17}$')
+        )`.pipe(
+          withErrorContext("Error creating profiles table")
+        );
+        yield* sql`CREATE UNIQUE INDEX IF NOT EXISTS unique_handle_case_insensitive ON social.profiles (LOWER(user_handle))`.pipe(
+          withErrorContext("Error creating unique handle index")
+        );
+        yield* sql`CREATE TABLE IF NOT EXISTS social.profile_addresses (
+          address VARCHAR(64) PRIMARY KEY,
+          user_id UUID NOT NULL REFERENCES social.profiles(user_id)
+        )`.pipe(
+          withErrorContext("Error creating profile_addresses table")
+        );
+        yield* sql`CREATE OR REPLACE VIEW social.profiles_view AS
+        SELECT 
+            p.*,
+            COALESCE(
+              (SELECT array_agg(pa.address) 
+                FROM social.profile_addresses pa 
+                WHERE pa.user_id = p.user_id
+              ),
+              ARRAY[]::VARCHAR(64)[]
+            ) AS user_addresses
+        FROM social.profiles p`.pipe(
+          withErrorContext("Error creating profiles_view")
+        );
+
+        // Playlist tables
         yield* sql`CREATE TABLE IF NOT EXISTS social.playlist_info (
           playlist_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
           user_id UUID NOT NULL,
@@ -136,7 +179,9 @@ export class SocialDbService extends Effect.Service<SocialDbService>()("EffectPo
         return yield* firstRow;
       }).pipe(
         Effect.mapError((error) =>
-          new InternalDatabaseError({ message: `Failed to create playlist: ${error.message}`, cause: error.cause })
+          error._tag === "InternalDatabaseError" ? 
+            new InternalDatabaseError({message: `Failed to create playlist: ${error.message}`, cause: error.cause}) :
+            new InternalDatabaseError({message: `Failed to create playlist: ${error.message}`, cause: error})
         )
       ),
       updatePlaylist: (updatePlaylist: UpdatePlaylistInfo) => Effect.gen(function* () {
