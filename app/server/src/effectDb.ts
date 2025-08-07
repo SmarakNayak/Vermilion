@@ -2,11 +2,11 @@
 import { PgClient } from "@effect/sql-pg";
 import { SqlSchema, SqlError } from "@effect/sql";
 import { withErrorContext } from "./effectUtils";
-import { Effect, Layer, Redacted, Logger, LogLevel, Array, Option, Schema, Data } from "effect";
+import { Effect, Layer, Redacted, Array, Option, Schema, Data } from "effect";
 import { ConfigService } from "./config";
 import { NewPlaylistInfo, UpdatePlaylistInfo, InsertPlaylistInscriptions, UpdatePlaylistInscriptions } from "./types/playlist";
 import { AuthenticatedUserContext } from "./effectServer/authMiddleware";
-import { Profile } from "./types/effectProfile";
+import { ProfileView, Profile } from "./types/effectProfile";
 import { ParseError } from "effect/ParseResult";
 import { NoSuchElementException } from "effect/Cause";
 
@@ -28,9 +28,7 @@ export class SocialDbService extends Effect.Service<SocialDbService>()("EffectPo
       const userId = Option.map(firstRow, row => row.user_id);
       return userId;
     }).pipe(
-      Effect.mapError((error) =>
-        new InternalDatabaseError({ message: `Failed to get user ID from address: ${error.message}`, cause: error })
-      )
+      withErrorContext("Error getting user ID from address"),
     );
 
     const withUserContext = <A, E, R>() => (query: Effect.Effect<A, E, R>) =>
@@ -179,9 +177,7 @@ export class SocialDbService extends Effect.Service<SocialDbService>()("EffectPo
         return yield* firstRow;
       }).pipe(
         Effect.mapError((error) =>
-          error._tag === "InternalDatabaseError" ? 
-            new InternalDatabaseError({message: `Failed to create playlist: ${error.message}`, cause: error.cause}) :
-            new InternalDatabaseError({message: `Failed to create playlist: ${error.message}`, cause: error})
+          new InternalDatabaseError({message: `Failed to create playlist: ${error.message}`, cause: error})
         )
       ),
       updatePlaylist: (updatePlaylist: UpdatePlaylistInfo) => Effect.gen(function* () {
@@ -257,7 +253,100 @@ export class SocialDbService extends Effect.Service<SocialDbService>()("EffectPo
           withErrorContext("Error deleting playlist inscriptions")
         );
         return result;
-      })
+      }),
+
+      // Profile methods using SQL resolvers inside Effect.gen
+      createProfile: (profile: Schema.Schema.Type<typeof Profile.insert>, address: string) => Effect.gen(function* () {
+        const insertProfileResolver = SqlSchema.single({
+          Request: Profile.insert,
+          Result: Schema.String,
+          execute: (profileInsert) => 
+            sql`Insert INTO social.profiles ${sql.insert(profileInsert)} RETURNING user_id`
+        });
+        const insertAddressResolver = SqlSchema.void({
+          Request: Schema.Struct({
+            address: Schema.String,
+            userId: Schema.UUID
+          }),
+          execute: ({ address, userId }) => 
+            sql`INSERT INTO social.profile_addresses (address, user_id) VALUES (${address}, ${userId})`
+        });
+        const selectProfileResolver = SqlSchema.single({
+          Request: Schema.UUID,
+          Result: Profile.json,
+          execute: (userId) => sql`SELECT * FROM social.profiles_view WHERE user_id = ${userId}`
+        });
+        return yield* Effect.gen(function* () {
+          const userId = yield* insertProfileResolver(profile);
+          yield* insertAddressResolver({ address, userId });
+          const profileView = yield* selectProfileResolver(userId);
+          return profileView;
+        }).pipe(
+          withUserContext()
+        );
+      }).pipe(
+        Effect.mapError((error) => 
+          new InternalDatabaseError({ message: `Failed to create profile: ${error.message}`, cause: error })
+        )
+      ),
+
+      updateProfile: (updateProfile: Schema.Schema.Type<typeof Profile.update>) => Effect.gen(function* () {
+        const updateProfileResolver = SqlSchema.single({
+          Request: Profile.update,
+          Result: Profile.json,
+          execute: (profileUpdate) => 
+            sql`
+              UPDATE social.profiles SET ${sql.update(profileUpdate)} WHERE user_id = ${profileUpdate.user_id};
+              SELECT * FROM social.profiles_view WHERE user_id = ${profileUpdate.user_id};
+            `
+        });
+        return yield* updateProfileResolver(updateProfile).pipe(
+          withUserContext()
+        );
+      }).pipe(
+        Effect.mapError((error) =>
+          new InternalDatabaseError({ message: `Failed to update profile: ${error.message}`, cause: error })
+        )
+      ),
+
+      getProfileById: (userId: string) => Effect.gen(function* () {
+        const getResolver = SqlSchema.findOne({
+          Request: Schema.UUID,
+          Result: Profile.json,
+          execute: (userId) => sql`SELECT * FROM social.profiles_view WHERE user_id = ${userId}`
+        });
+        return yield* getResolver(userId);
+      }).pipe(
+        Effect.mapError((error) =>
+          new InternalDatabaseError({ message: `Failed to get profile by ID: ${error.message}`, cause: error })
+        )
+      ),
+
+      getProfileByHandle: (handle: string) => Effect.gen(function* () {
+        const getResolver = SqlSchema.findOne({
+          Request: Schema.String,
+          Result: Profile.json,
+          execute: (handle) => sql`SELECT * FROM social.profiles_view WHERE user_handle = ${handle}`
+        });
+        return yield* getResolver(handle);
+      }).pipe(
+        Effect.mapError((error) =>
+          new InternalDatabaseError({ message: `Failed to get profile by handle: ${error.message}`, cause: error })
+        )
+      ),
+
+      getProfileByAddress: (address: string) => Effect.gen(function* () {
+        const getResolver = SqlSchema.findOne({
+          Request: Schema.String,
+          Result: Profile.json,
+          execute: (address) => sql`SELECT * FROM social.profiles_view WHERE user_addresses @> ARRAY[${address}::character varying]`
+        });
+        return yield* getResolver(address);
+      }).pipe(
+        Effect.mapError((error) =>
+          new InternalDatabaseError({ message: `Failed to get profile by address: ${error.message}`, cause: error })
+        )
+      )
     };
   })
 }) {};
