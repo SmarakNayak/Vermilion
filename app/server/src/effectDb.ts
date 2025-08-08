@@ -7,20 +7,8 @@ import { ConfigService } from "./config";
 import { NewPlaylistInfo, UpdatePlaylistInfo, InsertPlaylistInscriptions, UpdatePlaylistInscriptions } from "./types/playlist";
 import { AuthenticatedUserContext } from "./effectServer/authMiddleware";
 import { Profile } from "./types/effectProfile";
-import { ParseError } from "effect/ParseResult";
 import { NoSuchElementException } from "effect/Cause";
-
-class InternalDatabaseError extends Data.TaggedError("InternalDatabaseError")<{
-  readonly message: string;
-  readonly cause: unknown;
-  readonly originalError: ParseError | NoSuchElementException | SqlError.SqlError;
-}> {}
-
-class DatabaseParseError extends Data.TaggedError("DatabaseParseError")<{
-  readonly message: string;
-  readonly cause: unknown;
-  readonly originalError: ParseError;
-}> {}
+import { DatabaseDuplicateKeyError, PostgresDuplicateKeySchema } from "./effectDbErrors";
 
 class DatabaseNotFoundError extends Data.TaggedError("DatabaseNotFoundError")<{
   readonly message: string;
@@ -28,7 +16,7 @@ class DatabaseNotFoundError extends Data.TaggedError("DatabaseNotFoundError")<{
   readonly originalError: NoSuchElementException;
 }> {}
 
-class DatabaseDuplicateKeyError extends Data.TaggedError("DatabaseDuplicateKeyError")<{
+class DatabaseSecurityError extends Data.TaggedError("DatabaseSecurityError")<{
   readonly message: string;
   readonly cause: unknown;
   readonly originalError: SqlError.SqlError;
@@ -48,6 +36,7 @@ export class SocialDbService extends Effect.Service<SocialDbService>()("EffectPo
       return userId;
     }).pipe(
       withErrorContext("Error getting user ID from address"),
+      Effect.catchAll((error) => Effect.die(error))
     );
 
     const withUserContext = <A, E, R>() => (query: Effect.Effect<A, E, R>) =>
@@ -195,9 +184,7 @@ export class SocialDbService extends Effect.Service<SocialDbService>()("EffectPo
         let firstRow = Array.head(parsedRow);
         return yield* firstRow;
       }).pipe(
-        Effect.mapError((error) =>
-          new InternalDatabaseError({message: `Failed to create playlist`, cause: error, originalError: error})
-        )
+        Effect.catchAll((error) => Effect.die(error))
       ),
       updatePlaylist: (updatePlaylist: UpdatePlaylistInfo) => Effect.gen(function* () {
         const result = yield* sql`
@@ -306,9 +293,18 @@ export class SocialDbService extends Effect.Service<SocialDbService>()("EffectPo
           withUserContext()
         );
       }).pipe(
-        Effect.mapError((error) => 
-          new InternalDatabaseError({ message: `Failed to create profile: ${error.message}`, cause: error.cause, originalError: error })
-        )
+        Effect.catchTags({
+          "NoSuchElementException" : (error) => Effect.die(error),
+          "ParseError" : (error) => Effect.die(error),
+          "SqlError" : (error) => Effect.gen(function* () {
+            const potentialPostgresError = error.cause;
+            const duplicateKeyResult = Schema.decodeUnknownOption(PostgresDuplicateKeySchema)(potentialPostgresError);
+            if (Option.isSome(duplicateKeyResult)) {
+              return yield* Effect.fail(DatabaseDuplicateKeyError.fromPostgresError(duplicateKeyResult.value));
+            }
+            return yield* Effect.die(error);
+          })
+        })
       ),
 
       updateProfile: (profileUpdate: Schema.Schema.Type<typeof Profile.update>) => Effect.gen(function* () {
@@ -325,9 +321,7 @@ export class SocialDbService extends Effect.Service<SocialDbService>()("EffectPo
           withUserContext()
         );
       }).pipe(
-        Effect.mapError((error) =>
-          new InternalDatabaseError({ message: `Failed to update profile: ${error.message}`, cause: error.cause, originalError: error })
-        )
+        Effect.catchAll((error) => Effect.die(error))
       ),
 
       getProfileById: (userId: string) => Effect.gen(function* () {
@@ -338,9 +332,7 @@ export class SocialDbService extends Effect.Service<SocialDbService>()("EffectPo
         });
         return yield* getResolver(userId);
       }).pipe(
-        Effect.mapError((error) =>
-          new InternalDatabaseError({ message: `Failed to get profile by ID: ${error.message}`, cause: error.cause, originalError: error })
-        )
+        Effect.catchAll((error) => Effect.die(error))
       ),
 
       getProfileByHandle: (handle: string) => Effect.gen(function* () {
@@ -351,9 +343,7 @@ export class SocialDbService extends Effect.Service<SocialDbService>()("EffectPo
         });
         return yield* getResolver(handle);
       }).pipe(
-        Effect.mapError((error) =>
-          new InternalDatabaseError({ message: `Failed to get profile by handle: ${error.message}`, cause: error.cause, originalError: error })
-        )
+        Effect.catchAll((error) => Effect.die(error))
       ),
 
       getProfileByAddress: (address: string) => Effect.gen(function* () {
@@ -364,9 +354,7 @@ export class SocialDbService extends Effect.Service<SocialDbService>()("EffectPo
         });
         return yield* getResolver(address);
       }).pipe(
-        Effect.mapError((error) =>
-          new InternalDatabaseError({ message: `Failed to get profile by address: ${error.message}`, cause: error.cause, originalError: error })
-        )
+        Effect.catchAll((error) => Effect.die(error))
       )
     };
   })

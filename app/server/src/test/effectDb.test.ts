@@ -8,8 +8,10 @@ import { Profile } from "../types/effectProfile";
 // Test-specific UUIDs
 const TEST_USER_ID_1 = "00000000-0000-0000-0000-000000000001";
 const TEST_USER_ID_2 = "00000000-0000-0000-0000-000000000002";
+const TEST_USER_ID_3 = "00000000-0000-0000-0000-000000000003";
 const TEST_USER_ADDRESS_1 = "bc1qtest123456789user1";
 const TEST_USER_ADDRESS_2 = "bc1qtest123456789user2";
+const TEST_USER_ADDRESS_3 = "bc1qtest123456789user3";
 
 // Build the test layer
 const TestLayer = SocialDbService.Default.pipe(
@@ -41,7 +43,7 @@ beforeAll(async () => {
 
 describe("Profile Operations", () => {
   const testProfile: Schema.Schema.Type<typeof Profile.insert> = {
-    user_handle: "testuser2",
+    user_handle: "testuser3",
     user_name: "Test User 1",
     user_picture: Option.some("https://example.com/picture1.jpg"),
     user_bio: Option.some("This is a test bio for user 1."),
@@ -54,9 +56,9 @@ describe("Profile Operations", () => {
     const result = await runTestWithUser(
       Effect.gen(function* () {
         const db = yield* SocialDbService;
-        return yield* db.createProfile(testProfile, TEST_USER_ADDRESS_1);
+        return yield* db.createProfile(testProfile, TEST_USER_ADDRESS_3);
       }),
-      TEST_USER_ADDRESS_1
+      TEST_USER_ADDRESS_2
     );
 
     expect(result).toBeDefined();
