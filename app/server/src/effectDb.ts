@@ -8,18 +8,19 @@ import { NewPlaylistInfo, UpdatePlaylistInfo, InsertPlaylistInscriptions, Update
 import { AuthenticatedUserContext } from "./effectServer/authMiddleware";
 import { Profile } from "./types/effectProfile";
 import { NoSuchElementException } from "effect/Cause";
-import { DatabaseDuplicateKeyError, PostgresDuplicateKeySchema } from "./effectDbErrors";
+import { 
+  DatabaseDuplicateKeyError, 
+  DatabaseInvalidRowError, 
+  DatabaseSecurityError,
+  PostgresDuplicateKeySchema, 
+  PostgresInvalidRowSchema, 
+  PostgresSecuritySchema,
+ } from "./effectDbErrors";
 
 class DatabaseNotFoundError extends Data.TaggedError("DatabaseNotFoundError")<{
   readonly message: string;
   readonly cause: unknown;
   readonly originalError: NoSuchElementException;
-}> {}
-
-class DatabaseSecurityError extends Data.TaggedError("DatabaseSecurityError")<{
-  readonly message: string;
-  readonly cause: unknown;
-  readonly originalError: SqlError.SqlError;
 }> {}
 
 export class SocialDbService extends Effect.Service<SocialDbService>()("EffectPostgres", {
@@ -54,6 +55,7 @@ export class SocialDbService extends Effect.Service<SocialDbService>()("EffectPo
       }));
     
     return {
+      sql,
       setupDatabase: () => Effect.gen(function* () {
         yield* sql`CREATE SCHEMA IF NOT EXISTS social`.pipe(
           withErrorContext("Error creating social schema")
@@ -78,11 +80,51 @@ export class SocialDbService extends Effect.Service<SocialDbService>()("EffectPo
         yield* sql`CREATE UNIQUE INDEX IF NOT EXISTS unique_handle_case_insensitive ON social.profiles (LOWER(user_handle))`.pipe(
           withErrorContext("Error creating unique handle index")
         );
+        yield* sql`ALTER TABLE social.profiles ENABLE ROW LEVEL SECURITY;
+          ALTER TABLE social.profiles FORCE ROW LEVEL SECURITY;
+          DROP POLICY IF EXISTS profiles_policy_select ON social.profiles;
+          CREATE POLICY profiles_policy_select ON social.profiles
+            FOR SELECT
+            USING (true);
+          DROP POLICY IF EXISTS profiles_policy_insert ON social.profiles;
+          CREATE POLICY profiles_policy_insert ON social.profiles
+            FOR INSERT
+            WITH CHECK (true);
+          DROP POLICY IF EXISTS profiles_policy_update ON social.profiles;
+          CREATE POLICY profiles_policy_update ON social.profiles
+            FOR UPDATE
+            USING (user_id = current_setting('app.authorized_user_id')::uuid)
+            WITH CHECK (user_id = current_setting('app.authorized_user_id')::uuid);
+          DROP POLICY IF EXISTS profiles_policy_delete ON social.profiles;
+          CREATE POLICY profiles_policy_delete ON social.profiles
+            FOR DELETE
+            USING (user_id = current_setting('app.authorized_user_id')::uuid);
+        `.pipe(
+          withErrorContext("Error setting up profiles RLS policies")
+        );
+        // separate table for profile addresses because you can't ensure distinctness in an array column
         yield* sql`CREATE TABLE IF NOT EXISTS social.profile_addresses (
           address VARCHAR(64) PRIMARY KEY,
           user_id UUID NOT NULL REFERENCES social.profiles(user_id)
         )`.pipe(
           withErrorContext("Error creating profile_addresses table")
+        );
+        yield* sql`ALTER TABLE social.profile_addresses ENABLE ROW LEVEL SECURITY;
+          ALTER TABLE social.profile_addresses FORCE ROW LEVEL SECURITY;
+          DROP POLICY IF EXISTS profile_addresses_policy_select ON social.profile_addresses;
+          CREATE POLICY profile_addresses_policy_select ON social.profile_addresses
+            FOR SELECT
+            USING (true);
+          DROP POLICY IF EXISTS profile_addresses_policy_insert ON social.profile_addresses;
+          CREATE POLICY profile_addresses_policy_insert ON social.profile_addresses
+            FOR INSERT
+            WITH CHECK (user_id = current_setting('app.authorized_user_id')::uuid and address = current_setting('app.authorized_user_address'));
+          DROP POLICY IF EXISTS profile_addresses_policy_delete ON social.profile_addresses;
+          CREATE POLICY profile_addresses_policy_delete ON social.profile_addresses
+            FOR DELETE
+            USING (user_id = current_setting('app.authorized_user_id')::uuid);
+        `.pipe(
+          withErrorContext("Error setting up profile_addresses RLS policies")
         );
         yield* sql`CREATE OR REPLACE VIEW social.profiles_view AS
         SELECT 
@@ -276,8 +318,12 @@ export class SocialDbService extends Effect.Service<SocialDbService>()("EffectPo
             address: Schema.String,
             userId: Schema.UUID
           }),
+          // Result: Schema.Struct({
+          //   address: Schema.String,
+          //   user_id: Schema.UUID
+          // }),
           execute: ({ address, userId }) => 
-            sql`INSERT INTO social.profile_addresses (address, user_id) VALUES (${address}, ${userId})`
+            sql`INSERT INTO social.profile_addresses (address, user_id) VALUES (${address}, ${userId}) returning *`
         });
         const selectProfileResolver = SqlSchema.single({
           Request: Schema.UUID,
@@ -286,6 +332,7 @@ export class SocialDbService extends Effect.Service<SocialDbService>()("EffectPo
         });
         return yield* Effect.gen(function* () {
           const insert = yield* insertProfileResolver(profileInsert);
+          yield* sql`SELECT set_config('app.authorized_user_id', ${insert.user_id}, true)`;
           yield* insertAddressResolver({ address, userId: insert.user_id });
           const profileView = yield* selectProfileResolver(insert.user_id);
           return profileView;
@@ -302,6 +349,15 @@ export class SocialDbService extends Effect.Service<SocialDbService>()("EffectPo
             if (Option.isSome(duplicateKeyResult)) {
               return yield* Effect.fail(DatabaseDuplicateKeyError.fromPostgresError(duplicateKeyResult.value));
             }
+            const invalidRowResult = Schema.decodeUnknownOption(PostgresInvalidRowSchema)(potentialPostgresError);
+            if (Option.isSome(invalidRowResult)) {
+              return yield* Effect.fail(DatabaseInvalidRowError.fromPostgresError(invalidRowResult.value));
+            }
+            const securityResult = Schema.decodeUnknownOption(PostgresSecuritySchema)(potentialPostgresError);
+            if (Option.isSome(securityResult)) {
+              return yield* Effect.fail(DatabaseSecurityError.fromPostgresError(securityResult.value));
+            }
+            yield* Effect.logError(`---Unhandled Postgres Error---`, { cause: error.cause });
             return yield* Effect.die(error);
           })
         })
@@ -310,14 +366,22 @@ export class SocialDbService extends Effect.Service<SocialDbService>()("EffectPo
       updateProfile: (profileUpdate: Schema.Schema.Type<typeof Profile.update>) => Effect.gen(function* () {
         const updateProfileResolver = SqlSchema.single({
           Request: Profile.update,
-          Result: Profile.json,
-          execute: (profile) => 
-            sql`
-              UPDATE social.profiles SET ${sql.update(profile)} WHERE user_id = ${profile.user_id};
-              SELECT * FROM social.profiles_view WHERE user_id = ${profile.user_id};
-            `
+          Result: Profile.select,
+          execute: (profile) => Effect.gen(function* () {
+            const { user_id, ...fieldsToUpdate } = profile;
+            return yield* sql`UPDATE social.profiles SET ${sql.update(fieldsToUpdate)} WHERE user_id = ${profile.user_id}::uuid returning *;`;
+          })
         });
-        return yield* updateProfileResolver(profileUpdate).pipe(
+        const getProfileResolver = SqlSchema.single({
+          Request: Schema.UUID,
+          Result: Profile.json,
+          execute: (userId) => sql`SELECT * FROM social.profiles_view WHERE user_id = ${userId}`
+        });
+        return yield* Effect.gen(function* () {
+          yield* updateProfileResolver(profileUpdate);
+          const profileView = yield* getProfileResolver(profileUpdate.user_id);
+          return profileView;
+        }).pipe(
           withUserContext()
         );
       }).pipe(
@@ -367,7 +431,8 @@ export const PostgresLive = Effect.gen(function* () {
     port: 5432,
     database: config.db_name,
     username: config.db_user,
-    password: Redacted.make(config.db_password)
+    password: Redacted.make(config.db_password),
+    onnotice(_notice) {},
   });
 }).pipe(
   Layer.unwrapEffect
@@ -381,6 +446,7 @@ export const PostgresTest = Effect.gen(function* () {
     database: config.db_name + "_test",
     username: config.db_user,
     password: Redacted.make(config.db_password),
+    onnotice(_notice) {},
     // debug: (_connection, query, params, _paramTypes) => {
     //   console.log("SQL Query:", query);
     //   console.log("Parameters:", params);
