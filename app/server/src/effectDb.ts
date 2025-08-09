@@ -6,7 +6,7 @@ import { Effect, Layer, Redacted, Array, Option, Schema, Data } from "effect";
 import { ConfigService } from "./config";
 import { NewPlaylistInfo, UpdatePlaylistInfo, InsertPlaylistInscriptions, UpdatePlaylistInscriptions } from "./types/playlist";
 import { AuthenticatedUserContext } from "./effectServer/authMiddleware";
-import { Profile } from "./types/effectProfile";
+import { ProfileTable, ProfileView } from "./types/effectProfile";
 import { NoSuchElementException } from "effect/Cause";
 import { 
   DatabaseDuplicateKeyError, 
@@ -304,9 +304,9 @@ export class SocialDbService extends Effect.Service<SocialDbService>()("EffectPo
       }),
 
       // Profile methods using SQL resolvers inside Effect.gen
-      createProfile: (profileInsert: Schema.Schema.Type<typeof Profile.insert>, address: string) => Effect.gen(function* () {
+      createProfile: (profileInsert: Schema.Schema.Type<typeof ProfileTable.insert>, address: string) => Effect.gen(function* () {
         const insertProfileResolver = SqlSchema.single({
-          Request: Profile.insert,
+          Request: ProfileTable.insert,
           Result: Schema.Struct({
             user_id: Schema.UUID
           }),
@@ -327,7 +327,7 @@ export class SocialDbService extends Effect.Service<SocialDbService>()("EffectPo
         });
         const selectProfileResolver = SqlSchema.single({
           Request: Schema.UUID,
-          Result: Profile.json,
+          Result: ProfileView.select,
           execute: (userId) => sql`SELECT * FROM social.profiles_view WHERE user_id = ${userId}`
         });
         return yield* Effect.gen(function* () {
@@ -363,10 +363,10 @@ export class SocialDbService extends Effect.Service<SocialDbService>()("EffectPo
         })
       ),
 
-      updateProfile: (profileUpdate: Schema.Schema.Type<typeof Profile.update>) => Effect.gen(function* () {
+      updateProfile: (profileUpdate: Schema.Schema.Type<typeof ProfileTable.update>) => Effect.gen(function* () {
         const updateProfileResolver = SqlSchema.single({
-          Request: Profile.update,
-          Result: Profile.select,
+          Request: ProfileTable.update,
+          Result: ProfileTable.select,
           execute: (profile) => Effect.gen(function* () {
             const { user_id, ...fieldsToUpdate } = profile;
             return yield* sql`UPDATE social.profiles SET ${sql.update(fieldsToUpdate)} WHERE user_id = ${profile.user_id}::uuid returning *;`;
@@ -374,7 +374,7 @@ export class SocialDbService extends Effect.Service<SocialDbService>()("EffectPo
         });
         const getProfileResolver = SqlSchema.single({
           Request: Schema.UUID,
-          Result: Profile.json,
+          Result: ProfileView.select,
           execute: (userId) => sql`SELECT * FROM social.profiles_view WHERE user_id = ${userId}`
         });
         return yield* Effect.gen(function* () {
@@ -391,7 +391,7 @@ export class SocialDbService extends Effect.Service<SocialDbService>()("EffectPo
       getProfileById: (userId: string) => Effect.gen(function* () {
         const getResolver = SqlSchema.findOne({
           Request: Schema.UUID,
-          Result: Profile.json,
+          Result: ProfileView.select,
           execute: (userId) => sql`SELECT * FROM social.profiles_view WHERE user_id = ${userId}`
         });
         return yield* getResolver(userId);
@@ -402,7 +402,7 @@ export class SocialDbService extends Effect.Service<SocialDbService>()("EffectPo
       getProfileByHandle: (handle: string) => Effect.gen(function* () {
         const getResolver = SqlSchema.findOne({
           Request: Schema.String,
-          Result: Profile.json,
+          Result: ProfileView.select,
           execute: (handle) => sql`SELECT * FROM social.profiles_view WHERE user_handle = ${handle}`
         });
         return yield* getResolver(handle);
@@ -413,7 +413,7 @@ export class SocialDbService extends Effect.Service<SocialDbService>()("EffectPo
       getProfileByAddress: (address: string) => Effect.gen(function* () {
         const getResolver = SqlSchema.findOne({
           Request: Schema.String,
-          Result: Profile.json,
+          Result: ProfileView.select,
           execute: (address) => sql`SELECT * FROM social.profiles_view WHERE user_addresses @> ARRAY[${address}::character varying]`
         });
         return yield* getResolver(address);

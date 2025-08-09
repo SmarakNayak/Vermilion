@@ -3,7 +3,7 @@ import { Effect, Layer, Logger, Schema, Option } from "effect";
 import { SocialDbService, PostgresTest } from "../effectDb";
 import { ConfigService } from "../config";
 import { AuthenticatedUserContext } from "../effectServer/authMiddleware"
-import { Profile } from "../types/effectProfile";
+import { ProfileTable } from "../types/effectProfile";
 import { withErrorContext } from "../effectUtils";
 import { DatabaseDuplicateKeyError, DatabaseInvalidRowError, DatabaseSecurityError } from "../effectDbErrors";
 
@@ -55,17 +55,17 @@ beforeAll(async () => {
 });
 
 describe("Profile Operations", () => {
-  const testProfile: Schema.Schema.Type<typeof Profile.insert> = {
+  const testProfile: Schema.Schema.Type<typeof ProfileTable.insert> = {
     user_handle: "testuser1",
     user_name: "Test User 1",
     user_picture: Option.some("https://example.com/picture1.jpg"),
     user_bio: Option.some("This is a test bio for user 1."),
     user_twitter: Option.some("@testuser1"),
     user_discord: Option.some("testuser1#1234"),
-    user_website: Option.some("https://example.com"),
+    user_website: Option.none(),
   };
 
-  const testProfile2: Schema.Schema.Type<typeof Profile.insert> = {
+  const testProfile2: Schema.Schema.Type<typeof ProfileTable.insert> = {
     user_handle: "testuser2",
     user_name: "Test User 2",
     user_picture: Option.some("https://example.com/picture2.jpg"),
@@ -75,10 +75,10 @@ describe("Profile Operations", () => {
     user_website: Option.some("https://example2.com"),
   };
 
-  const testProfileBadHandle: Schema.Schema.Type<typeof Profile.insert> = {
+  const testProfileBadHandle: Schema.Schema.Type<typeof ProfileTable.insert> = {
     user_handle: "testu ser3",
     user_name: "Test User 3",
-    user_picture: Option.none(),
+    user_picture: Option.some("nice_picture.jpg"),
     user_bio: Option.none(),
     user_twitter: Option.none(),
     user_discord: Option.none(),
@@ -99,11 +99,14 @@ describe("Profile Operations", () => {
     TEST_USER_ID_1 = result.user_id; // Store the generated ID for future tests
     expect(result.user_handle).toBe(testProfile.user_handle);
     expect(result.user_name).toBe(testProfile.user_name);
-    expect(result.user_picture).toEqual(testProfile.user_picture);
+    expect(result.user_picture).toEqual(testProfile.user_picture as Option.Option<string>);
     expect(result.user_bio).toEqual(testProfile.user_bio);
     expect(result.user_twitter).toEqual(testProfile.user_twitter);
     expect(result.user_discord).toEqual(testProfile.user_discord);
     expect(result.user_website).toEqual(testProfile.user_website);
+    expect(Schema.is(Schema.DateTimeUtcFromDate)(result.user_created_at)).toBe(true);
+    expect(Schema.is(Schema.DateTimeUtcFromDate)(result.user_updated_at)).toBe(true);
+    expect(result.user_addresses).toEqual([TEST_USER_ADDRESS_1]);
   });
 
   it("should not create a second profile with the same address", async () => {
@@ -175,11 +178,11 @@ describe("Profile Operations", () => {
   });
 
   it("should update a profile", async () => {
-    const updatedProfile: Schema.Schema.Type<typeof Profile.update> = {
+    const updatedProfile: Schema.Schema.Type<typeof ProfileTable.update> = {
       user_id: TEST_USER_ID_1,
       user_handle: "updatedtestuser1",
       user_name: "Updated Test User 1",
-      user_picture: Option.some("https://example.com/updated_picture1.jpg"),
+      //user_picture: undefined, // No change
       user_bio: Option.some("This is an updated bio for user 1."),
       user_twitter: Option.some("@updateduser1"),
       user_discord: Option.some("updatedtestuser1#1234"),
@@ -198,11 +201,14 @@ describe("Profile Operations", () => {
     expect(result).toBeDefined();
     expect(result.user_handle).toBe(updatedProfile.user_handle);
     expect(result.user_name).toBe(updatedProfile.user_name);
-    expect(result.user_picture).toEqual(updatedProfile.user_picture);
+    expect(result.user_picture).toEqual(testProfile.user_picture as Option.Option<string>);
     expect(result.user_bio).toEqual(updatedProfile.user_bio);
     expect(result.user_twitter).toEqual(updatedProfile.user_twitter);
     expect(result.user_discord).toEqual(updatedProfile.user_discord);
     expect(result.user_website).toEqual(updatedProfile.user_website);
+    expect(Schema.is(Schema.DateTimeUtcFromDate)(result.user_created_at)).toBe(true);
+    expect(Schema.is(Schema.DateTimeUtcFromDate)(result.user_updated_at)).toBe(true);
+    expect(result.user_updated_at.epochMillis).toBeGreaterThanOrEqual(result.user_created_at.epochMillis);
   });
 
 });
