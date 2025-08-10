@@ -62,7 +62,7 @@ describe("Profile Operations", () => {
     user_bio: Option.some("This is a test bio for user 1."),
     user_twitter: Option.some("@testuser1"),
     user_discord: Option.some("testuser1#1234"),
-    user_website: Option.none(),
+    //user_website: Option.none(), // Website omitted
   };
 
   const testProfile2: Schema.Schema.Type<typeof ProfileTable.insert> = {
@@ -100,10 +100,10 @@ describe("Profile Operations", () => {
     expect(result.user_handle).toBe(testProfile.user_handle);
     expect(result.user_name).toBe(testProfile.user_name);
     expect(result.user_picture).toEqual(testProfile.user_picture as Option.Option<string>);
-    expect(result.user_bio).toEqual(testProfile.user_bio);
-    expect(result.user_twitter).toEqual(testProfile.user_twitter);
-    expect(result.user_discord).toEqual(testProfile.user_discord);
-    expect(result.user_website).toEqual(testProfile.user_website);
+    expect(result.user_bio).toEqual(testProfile.user_bio as Option.Option<string>);
+    expect(result.user_twitter).toEqual(testProfile.user_twitter as Option.Option<string>);
+    expect(result.user_discord).toEqual(testProfile.user_discord as Option.Option<string>);
+    expect(result.user_website).toEqual(Option.none());
     expect(Schema.is(Schema.DateTimeUtcFromDate)(result.user_created_at)).toBe(true);
     expect(Schema.is(Schema.DateTimeUtcFromDate)(result.user_updated_at)).toBe(true);
     expect(result.user_addresses).toEqual([TEST_USER_ADDRESS_1]);
@@ -202,10 +202,10 @@ describe("Profile Operations", () => {
     expect(result.user_handle).toBe(updatedProfile.user_handle);
     expect(result.user_name).toBe(updatedProfile.user_name);
     expect(result.user_picture).toEqual(testProfile.user_picture as Option.Option<string>);
-    expect(result.user_bio).toEqual(updatedProfile.user_bio);
-    expect(result.user_twitter).toEqual(updatedProfile.user_twitter);
-    expect(result.user_discord).toEqual(updatedProfile.user_discord);
-    expect(result.user_website).toEqual(updatedProfile.user_website);
+    expect(result.user_bio).toEqual(updatedProfile.user_bio as Option.Option<string>);
+    expect(result.user_twitter).toEqual(updatedProfile.user_twitter as Option.Option<string>);
+    expect(result.user_discord).toEqual(updatedProfile.user_discord as Option.Option<string>);
+    expect(result.user_website).toEqual(updatedProfile.user_website as Option.Option<string>);
     expect(Schema.is(Schema.DateTimeUtcFromDate)(result.user_created_at)).toBe(true);
     expect(Schema.is(Schema.DateTimeUtcFromDate)(result.user_updated_at)).toBe(true);
     expect(result.user_updated_at.epochMillis).toBeGreaterThanOrEqual(result.user_created_at.epochMillis);

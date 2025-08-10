@@ -1,20 +1,17 @@
 import { Schema, Option } from "effect";
 import { Model } from "@effect/sql";
+import { FieldOptionOmittable } from "./omittable";
 
 // Profile model using @effect/sql Model.Class
 const baseFields = {
   user_id: Model.Generated(Schema.UUID),
   user_handle: Schema.String.pipe(Schema.minLength(2), Schema.maxLength(17)),
   user_name: Schema.String.pipe(Schema.maxLength(30)),
-  user_picture: Model.Field({
-    select: Schema.OptionFromNullOr(Schema.String.pipe(Schema.maxLength(80))),
-    insert: Schema.optionalWith(Schema.OptionFromNullOr(Schema.String.pipe(Schema.maxLength(80))), { exact: true }),
-    update: Schema.optionalWith(Schema.OptionFromNullOr(Schema.String.pipe(Schema.maxLength(80))), { exact: true }),
-  }),
-  user_bio: Model.FieldOption(Schema.String.pipe(Schema.maxLength(280))),
-  user_twitter: Model.FieldOption(Schema.String.pipe(Schema.maxLength(15))),
-  user_discord: Model.FieldOption(Schema.String.pipe(Schema.maxLength(37))),
-  user_website: Model.FieldOption(Schema.String),
+  user_picture: FieldOptionOmittable(Schema.String.pipe(Schema.maxLength(80))),
+  user_bio: FieldOptionOmittable(Schema.String.pipe(Schema.maxLength(280))),
+  user_twitter: FieldOptionOmittable(Schema.String.pipe(Schema.maxLength(15))),
+  user_discord: FieldOptionOmittable(Schema.String.pipe(Schema.maxLength(37))),
+  user_website: FieldOptionOmittable(Schema.String),
   user_created_at: Model.Field({ // Db sets for insert || no need to update
     select: Schema.DateTimeUtcFromDate,
     json: Schema.DateTimeUtcFromDate,
@@ -23,7 +20,7 @@ const baseFields = {
     select: Schema.DateTimeUtcFromDate,
     update: Model.DateTimeFromDateWithNow,
     json: Schema.DateTimeUtcFromDate,
-  })
+  }),
 }
 
 export class ProfileTable extends Model.Class<ProfileTable>("ProfileTable")(baseFields) {}
@@ -35,4 +32,3 @@ export class ProfileView extends Model.Class<ProfileView>("ProfileView")({
     jsonCreate: Schema.Array(Schema.String), // Available in JSON create responses
   })
 }) {}
-
