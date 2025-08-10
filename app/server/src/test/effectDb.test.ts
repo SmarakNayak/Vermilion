@@ -180,8 +180,8 @@ describe("Profile Operations", () => {
   it("should update a profile", async () => {
     const updatedProfile: Schema.Schema.Type<typeof ProfileTable.update> = {
       user_id: TEST_USER_ID_1,
-      user_handle: "updatedtestuser1",
-      user_name: "Updated Test User 1",
+      // user_handle: "updatedtestuser1", // No change
+      // user_name: "Updated Test User 1", // No change
       //user_picture: undefined, // No change
       user_bio: Option.some("This is an updated bio for user 1."),
       user_twitter: Option.some("@updateduser1"),
@@ -199,8 +199,6 @@ describe("Profile Operations", () => {
     );
 
     expect(result).toBeDefined();
-    expect(result.user_handle).toBe(updatedProfile.user_handle);
-    expect(result.user_name).toBe(updatedProfile.user_name);
     expect(result.user_picture).toEqual(testProfile.user_picture as Option.Option<string>);
     expect(result.user_bio).toEqual(updatedProfile.user_bio as Option.Option<string>);
     expect(result.user_twitter).toEqual(updatedProfile.user_twitter as Option.Option<string>);

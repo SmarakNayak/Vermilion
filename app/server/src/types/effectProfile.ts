@@ -1,12 +1,12 @@
 import { Schema, Option } from "effect";
 import { Model } from "@effect/sql";
-import { FieldOptionOmittable } from "./omittable";
+import { FieldOptionOmittable, FieldUpdateOmittable } from "./omittable";
 
 // Profile model using @effect/sql Model.Class
 const baseFields = {
   user_id: Model.Generated(Schema.UUID),
-  user_handle: Schema.String.pipe(Schema.minLength(2), Schema.maxLength(17)),
-  user_name: Schema.String.pipe(Schema.maxLength(30)),
+  user_handle: FieldUpdateOmittable(Schema.String.pipe(Schema.minLength(2), Schema.maxLength(17))),
+  user_name: FieldUpdateOmittable(Schema.String.pipe(Schema.maxLength(30))),
   user_picture: FieldOptionOmittable(Schema.String.pipe(Schema.maxLength(80))),
   user_bio: FieldOptionOmittable(Schema.String.pipe(Schema.maxLength(280))),
   user_twitter: FieldOptionOmittable(Schema.String.pipe(Schema.maxLength(15))),
