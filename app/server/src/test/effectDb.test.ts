@@ -211,4 +211,29 @@ describe("Profile Operations", () => {
     expect(result.user_updated_at.epochMillis).toBeGreaterThanOrEqual(result.user_created_at.epochMillis);
   });
 
+  it("should not update a profile with an unauthorised address", async () => {
+    const updatedProfile: Schema.Schema.Type<typeof ProfileTable.update> = {
+      user_id: TEST_USER_ID_1,
+      user_handle: "unauthorised",
+      user_name: "Unauthorised Update",
+      user_updated_at: undefined
+    };
+
+    const result = await runTestWithUser(
+      Effect.gen(function* () {
+        const db = yield* SocialDbService;
+        return yield* db.updateProfile(updatedProfile);
+      }).pipe(
+        Effect.catchTag("DatabaseSecurityError", (error) => {
+          return Effect.succeed(error);
+        })
+      ),
+      TEST_USER_ADDRESS_2
+    );
+
+    expect(result).toBeDefined();
+    expect(result).toBeInstanceOf(DatabaseSecurityError);
+    expect((result as DatabaseSecurityError).message).toBe("You do not have permission to update this profile");
+  });
+
 });

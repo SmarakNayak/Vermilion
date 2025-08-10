@@ -1,6 +1,6 @@
 
 import { PgClient } from "@effect/sql-pg";
-import { SqlSchema, SqlError } from "@effect/sql";
+import { SqlSchema } from "@effect/sql";
 import { withErrorContext } from "./effectUtils";
 import { Effect, Layer, Redacted, Array, Option, Schema, Data } from "effect";
 import { ConfigService } from "./config";
@@ -8,14 +8,7 @@ import { NewPlaylistInfo, UpdatePlaylistInfo, InsertPlaylistInscriptions, Update
 import { AuthenticatedUserContext } from "./effectServer/authMiddleware";
 import { ProfileTable, ProfileView } from "./types/effectProfile";
 import { NoSuchElementException } from "effect/Cause";
-import { 
-  DatabaseDuplicateKeyError, 
-  DatabaseInvalidRowError, 
-  DatabaseSecurityError,
-  PostgresDuplicateKeySchema, 
-  PostgresInvalidRowSchema, 
-  PostgresSecuritySchema,
- } from "./effectDbErrors";
+import { DatabaseSecurityError, mapPostgresError } from "./effectDbErrors";
 
 class DatabaseNotFoundError extends Data.TaggedError("DatabaseNotFoundError")<{
   readonly message: string;
@@ -343,23 +336,7 @@ export class SocialDbService extends Effect.Service<SocialDbService>()("EffectPo
         Effect.catchTags({
           "NoSuchElementException" : (error) => Effect.die(error),
           "ParseError" : (error) => Effect.die(error),
-          "SqlError" : (error) => Effect.gen(function* () {
-            const potentialPostgresError = error.cause;
-            const duplicateKeyResult = Schema.decodeUnknownOption(PostgresDuplicateKeySchema)(potentialPostgresError);
-            if (Option.isSome(duplicateKeyResult)) {
-              return yield* Effect.fail(DatabaseDuplicateKeyError.fromPostgresError(duplicateKeyResult.value));
-            }
-            const invalidRowResult = Schema.decodeUnknownOption(PostgresInvalidRowSchema)(potentialPostgresError);
-            if (Option.isSome(invalidRowResult)) {
-              return yield* Effect.fail(DatabaseInvalidRowError.fromPostgresError(invalidRowResult.value));
-            }
-            const securityResult = Schema.decodeUnknownOption(PostgresSecuritySchema)(potentialPostgresError);
-            if (Option.isSome(securityResult)) {
-              return yield* Effect.fail(DatabaseSecurityError.fromPostgresError(securityResult.value));
-            }
-            yield* Effect.logError(`---Unhandled Postgres Error---`, { cause: error.cause });
-            return yield* Effect.die(error);
-          })
+          "SqlError" : mapPostgresError
         })
       ),
 
@@ -385,7 +362,11 @@ export class SocialDbService extends Effect.Service<SocialDbService>()("EffectPo
           withUserContext()
         );
       }).pipe(
-        Effect.catchAll((error) => Effect.die(error))
+        Effect.catchTags({
+          "NoSuchElementException": (_error) => Effect.fail(DatabaseSecurityError.fromNoSuchElementException("update this profile")),
+          "ParseError": (error) => Effect.die(error),
+          "SqlError": mapPostgresError,
+        }),
       ),
 
       getProfileById: (userId: string) => Effect.gen(function* () {

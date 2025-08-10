@@ -1,4 +1,5 @@
-import { Data, Schema } from "effect";
+import { Data, Schema, Effect, Option } from "effect";
+import {SqlError} from "@effect/sql";
 
 export const PostgresDuplicateKeySchema = Schema.Struct({
   name: Schema.Literal("PostgresError"),
@@ -103,4 +104,30 @@ export class DatabaseSecurityError extends Data.TaggedError("DatabaseSecurityErr
       code: error.code,
     });
   }
+
+  static fromNoSuchElementException(action: string): DatabaseSecurityError {
+    return new DatabaseSecurityError({
+      message: `You do not have permission to ${action}`,
+      postgresMessage: "NoSuchElementException",
+      code: "42501",
+    });
+  }
 }
+
+export const mapPostgresError = (error: SqlError.SqlError) => Effect.gen(function* () {
+  const potentialPostgresError = error.cause;
+  const duplicateKeyResult = Schema.decodeUnknownOption(PostgresDuplicateKeySchema)(potentialPostgresError);
+  if (Option.isSome(duplicateKeyResult)) {
+    return yield* Effect.fail(DatabaseDuplicateKeyError.fromPostgresError(duplicateKeyResult.value));
+  }
+  const invalidRowResult = Schema.decodeUnknownOption(PostgresInvalidRowSchema)(potentialPostgresError);
+  if (Option.isSome(invalidRowResult)) {
+    return yield* Effect.fail(DatabaseInvalidRowError.fromPostgresError(invalidRowResult.value));
+  }
+  const securityResult = Schema.decodeUnknownOption(PostgresSecuritySchema)(potentialPostgresError);
+  if (Option.isSome(securityResult)) {
+    return yield* Effect.fail(DatabaseSecurityError.fromPostgresError(securityResult.value));
+  }
+  yield* Effect.logError(`---Unhandled Postgres Error---`, { cause: error.cause });
+  return yield* Effect.die(error);
+})
