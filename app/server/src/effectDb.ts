@@ -4,7 +4,7 @@ import { SqlSchema } from "@effect/sql";
 import { withErrorContext } from "./effectUtils";
 import { Effect, Layer, Redacted, Array, Option, Schema, Data } from "effect";
 import { ConfigService } from "./config";
-import { NewPlaylistInfo, UpdatePlaylistInfo, InsertPlaylistInscriptions, UpdatePlaylistInscriptions } from "./types/playlist";
+import { PlaylistTable, InsertPlaylistInscriptions, UpdatePlaylistInscriptions } from "./types/playlist";
 import { AuthenticatedUserContext } from "./effectServer/authMiddleware";
 import { ProfileTable, ProfileView } from "./types/effectProfile";
 import { NoSuchElementException } from "effect/Cause";
@@ -207,35 +207,33 @@ export class SocialDbService extends Effect.Service<SocialDbService>()("EffectPo
       }),
       getUserIdFromAddress: getUserIdFromAddress,
       withUserContext: withUserContext,
-      createPlaylist: (newPlaylist: NewPlaylistInfo) => Effect.gen(function* () {
-        let row = yield* sql`INSERT INTO social.playlist_info ${sql.insert(newPlaylist)} RETURNING playlist_id`.pipe(
-          withUserContext(),
-          withErrorContext("Error inserting new playlist")
-        );
-
-        let parsedRow = yield* Schema.decodeUnknown(Schema.Array(Schema.Struct({ playlist_id: Schema.UUID })))(row).pipe(
-          withErrorContext("Error parsing playlist row")
-        );
-        let firstRow = Array.head(parsedRow);
-        return yield* firstRow;
+      createPlaylist: (newPlaylist: Schema.Schema.Type<typeof PlaylistTable.insert>) => Effect.gen(function* () {
+        const insertPlaylistResolver = SqlSchema.single({
+          Request: PlaylistTable.insert,
+          Result: Schema.Struct({
+            playlist_id: Schema.UUID
+          }),
+          execute: (profile) => 
+            sql`Insert INTO social.playlist_info ${sql.insert(profile)} RETURNING playlist_id`
+        });
+        return yield* insertPlaylistResolver(newPlaylist);
       }).pipe(
         Effect.catchAll((error) => Effect.die(error))
       ),
-      updatePlaylist: (updatePlaylist: UpdatePlaylistInfo) => Effect.gen(function* () {
-        const result = yield* sql`
-          UPDATE social.playlist_info 
-          SET ${sql.update(updatePlaylist)} 
-          WHERE playlist_id = ${updatePlaylist.playlist_id}
-        `.pipe(
-          withUserContext(),
-          withErrorContext("Error updating playlist"),
-        );
-        return result;
+      updatePlaylist: (updatePlaylist: Schema.Schema.Type<typeof PlaylistTable.update>) => Effect.gen(function* () {
+        const updatePlaylistResolver = SqlSchema.single({
+          Request: PlaylistTable.update,
+          Result: PlaylistTable.select,
+          execute: (playlist) => Effect.gen(function* () {
+            const { playlist_id, ...fieldsToUpdate } = playlist;
+            return yield* sql`UPDATE social.playlist_info SET ${sql.update(fieldsToUpdate)} WHERE playlist_id = ${playlist.playlist_id} returning *;`;
+          })
+        });
+        return yield* updatePlaylistResolver(updatePlaylist)
       }),
       deletePlaylist: (playlistId: string) => Effect.gen(function* () {
         const result = yield* sql`
-          DELETE FROM social.playlist_info 
-          WHERE playlist_id = ${playlistId}
+          DELETE FROM social.playlist_info WHERE playlist_id = ${playlistId}
         `.pipe(
           withUserContext(),
           withErrorContext("Error deleting playlist")

@@ -1,42 +1,26 @@
 import { Schema } from "effect";
+import { Model } from "@effect/sql";
+import { FieldOptionOmittable, FieldUpdateOmittable } from "./omittable";
 
-
-// PlaylistInfo Schemas
-export const PlaylistInfoSchema = Schema.Struct({
-  playlist_id: Schema.UUID,
+// Using sql.Model.Class to define the PlaylistInfo tables
+export class PlaylistTable extends Model.Class<PlaylistTable>("PlaylistTable")({
+  playlist_id: Model.Generated(Schema.UUID),
   user_id: Schema.UUID,
-  playlist_name: Schema.String,
-  playlist_inscription_icon: Schema.NullOr(Schema.String),
-  playlist_description: Schema.NullOr(Schema.String),
-  playlist_created_at: Schema.DateTimeUtc,
-  playlist_updated_at: Schema.DateTimeUtc,
-});
-export type PlaylistInfo = Schema.Schema.Type<typeof PlaylistInfoSchema>;
-
-export const NewPlaylistInfoSchema = Schema.Struct({
-  user_id: Schema.UUID,
-  playlist_name: Schema.String,
-  playlist_inscription_icon: Schema.NullOr(Schema.String),
-  playlist_description: Schema.NullOr(Schema.String),
-});
-export type NewPlaylistInfo = Schema.Schema.Type<typeof NewPlaylistInfoSchema>;
-
-export const UpdatePlaylistInfoSchema = Schema.Struct({
-  playlist_id: Schema.UUID,
-  user_id: Schema.UUID,
-  playlist_name: Schema.optionalWith(Schema.String, {
-    exact: true,
+  playlist_name: FieldUpdateOmittable(Schema.String),
+  playlist_inscription_icon: FieldOptionOmittable(Schema.String),
+  playlist_description: FieldOptionOmittable(Schema.String),
+  playlist_created_at: Model.Field({
+    select: Schema.DateTimeUtcFromDate,
+    json: Schema.DateTimeUtcFromDate,
   }),
-  playlist_inscription_icon: Schema.optionalWith(Schema.String, {
-    exact: true,
+  playlist_updated_at: Model.Field({
+    select: Schema.DateTimeUtcFromDate,
+    update: Model.DateTimeFromDateWithNow,
+    json: Schema.DateTimeUtcFromDate,
   }),
-  playlist_description: Schema.optionalWith(Schema.String, {
-    exact: true,
-  }),
-});
-export type UpdatePlaylistInfo = Schema.Schema.Type<typeof UpdatePlaylistInfoSchema>;
+}) {};
 
-// PlaylistInscriptions Schemas
+// Using raw schemas for PlaylistInscriptions Schemas due to complicated array types
 export const PlaylistInscriptionsSchema = Schema.Array(
   Schema.Struct({
     playlist_id: Schema.UUID,
