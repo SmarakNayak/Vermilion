@@ -1,4 +1,4 @@
-import { HttpServer, HttpServerResponse, HttpServerRequest, HttpApi, HttpApiGroup, HttpApiEndpoint, HttpApiBuilder, HttpApiSwagger } from "@effect/platform"
+import { HttpServer, HttpServerResponse, HttpServerRequest, HttpApi, HttpApiGroup, HttpApiEndpoint, HttpApiBuilder, HttpApiSwagger, HttpApiError, HttpApiSchema } from "@effect/platform"
 import { BunHttpServer, BunRuntime } from "@effect/platform-bun"
 import { Effect, Layer, Schema, Logger } from "effect"
 import { PlaylistTable } from "../types/playlist"
@@ -6,18 +6,23 @@ import { SocialDbService, PostgresLive } from "../effectDb"
 import { ConfigService } from "../config"
 import { Authentication, AuthenticationLive, AuthenticationTest } from "./authMiddleware"
 import { JwtService } from "./jwtService"
+import { Conflict, Forbidden, Issue } from "./apiErrors"
 
 // 1. Define the Api
 const EffectServerApi = HttpApi.make("EffectServer").add(
   HttpApiGroup.make("playlists").add(
     HttpApiEndpoint.post("createPlaylist", `/social/create_playlist`)
+      .middleware(Authentication)
+      .setPayload(PlaylistTable.jsonCreate)
       .addSuccess(Schema.Struct(
         {playlist_id: Schema.UUID}
       ))
-      .setPayload(PlaylistTable.jsonCreate)
-      .middleware(Authentication)
+      .addError(Conflict)
+      .addError(Forbidden)
+      .addError(Issue)
   ).add(
     HttpApiEndpoint.post("updatePlaylist", `/social/update_playlist/:playlist_id`)
+      .setPayload(PlaylistTable.jsonUpdate)
   ).add(
     HttpApiEndpoint.del("deletePlaylist", `/social/delete_playlist/:playlist_id`)
   ).add(
@@ -36,6 +41,7 @@ const EffectServerApi = HttpApi.make("EffectServer").add(
 const EffectServerLive = HttpApiBuilder.group(EffectServerApi, "playlists", (handlers) =>
   handlers.handle("createPlaylist", createPlaylistHandler)
   .handle("updatePlaylist", (req) => Effect.gen(function* () {
+    console.log("Received request to update playlist", req);
 
   }))
   .handle("deletePlaylist", (req) => Effect.gen(function* () {
@@ -49,20 +55,19 @@ const EffectServerLive = HttpApiBuilder.group(EffectServerApi, "playlists", (han
   .handle("home", homeHandler)
 )
 
-let createPlaylistHandler = (req: {readonly request: HttpServerRequest.HttpServerRequest}) =>  Effect.gen(function* () {
-  let body = yield* req.request.json;
-  let newPlaylistInfo = yield* Schema.decodeUnknown(PlaylistTable.jsonCreate)(body);
+let createPlaylistHandler = (req: { 
+  readonly request: HttpServerRequest.HttpServerRequest, 
+  readonly payload: typeof PlaylistTable.jsonCreate.Type
+}) => Effect.gen(function* () {
   let db = yield* SocialDbService;
-  let insertedPlaylist = yield* db.createPlaylist(newPlaylistInfo);
+  let insertedPlaylist = yield* db.createPlaylist(req.payload);
   return insertedPlaylist;
 }).pipe(
   Effect.tapError((error) => Effect.logError("Failed to create playlist", error)),
   Effect.catchTags({
-    "RequestError": (error) => HttpServerResponse.text(`Body is not valid json - ${error.message}`, { status: 400 }),
-    "ParseError": (error) => HttpServerResponse.text(`Json body is wrong shape - ${error.message}`, { status: 400 }),
-    "DatabaseDuplicateKeyError": (error) => HttpServerResponse.text(`${error.message}`, { status: 409 }),
-    "DatabaseInvalidRowError": (error) => HttpServerResponse.text(`${error.message}`, { status: 400 }),
-    "DatabaseSecurityError": (error) => HttpServerResponse.text(`${error.message}`, { status: 403 }),
+    "DatabaseDuplicateKeyError": (error) => new Conflict({message: error.message}),
+    "DatabaseInvalidRowError": (error) => new Issue({message: error.message}),
+    "DatabaseSecurityError": (error) => new Forbidden({message: error.message}),
   })
 );
 
@@ -76,7 +81,7 @@ let homeHandler = (req: {readonly request: HttpServerRequest.HttpServerRequest})
 // Provide the implementation for the API
 const EffectServerApiLive = HttpApiBuilder.api(EffectServerApi).pipe(
   Layer.provide(EffectServerLive),
-  Layer.provide(AuthenticationLive),
+  Layer.provide(AuthenticationTest),
   Layer.provide(JwtService.Default),
   Layer.provide(SocialDbService.Default),
   Layer.provide(PostgresLive),

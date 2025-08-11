@@ -39,7 +39,9 @@ export const AuthenticationLive = Layer.effect(
       bearer: (token: Redacted.Redacted<string>) => // <-- Token is passed as parameter
         Effect.gen(function* () {
           const tokenValue = Redacted.value(token) // Extract the actual token value
-          yield* Effect.log(`Received token: ${tokenValue.substring(0, 10)}...`)
+          if (tokenValue === "") {
+            return yield* Effect.fail(new Unauthorized({message: "No Bearer token provided"  }));
+          }
           const payload = yield* jwtService.verifyToken(tokenValue);
           return {
             userAddress: payload.address,
@@ -61,7 +63,7 @@ export const AuthenticationTest = Layer.succeed(
       const tokenValue = Redacted.value(token);
       if (tokenValue === "") {
         return yield* Effect.fail(new Unauthorized({
-          message: "No token provided"
+          message: "No Bearer token provided"
         }));
       }
       yield* Effect.log(`Test token: ${tokenValue}...`);
