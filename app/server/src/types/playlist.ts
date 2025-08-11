@@ -26,7 +26,7 @@ export const PlaylistInscriptionsSchema = Schema.Array(
     playlist_id: Schema.UUID,
     inscription_id: Schema.String,
     playlist_position: Schema.Number,
-    added_at: Schema.DateTimeUtc,
+    added_at: Schema.DateTimeUtcFromDate,
   })
 );
 export type PlaylistInscriptions = Schema.Schema.Type<typeof PlaylistInscriptionsSchema>;

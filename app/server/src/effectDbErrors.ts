@@ -96,6 +96,8 @@ export class DatabaseSecurityError extends Data.TaggedError("DatabaseSecurityErr
     const postgresMessages: Record<string, string> = {
       "new row violates row-level security policy for table \"profile_addresses\"": "You do not have permission to add this address to a profile",
       "new row violates row-level security policy for table \"profiles\"": "You do not have permission to modify this profile",
+      "new row violates row-level security policy for table \"playlist_info\"": "You do not have permission to create this playlist",
+      "new row violates row-level security policy for table \"playlist_inscriptions\"": "You do not have permission to add inscriptions to this playlist",
     };
 
     return new DatabaseSecurityError({

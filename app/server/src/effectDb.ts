@@ -4,11 +4,12 @@ import { SqlSchema } from "@effect/sql";
 import { withErrorContext } from "./effectUtils";
 import { Effect, Layer, Redacted, Array, Option, Schema, Data } from "effect";
 import { ConfigService } from "./config";
-import { PlaylistTable, InsertPlaylistInscriptions, UpdatePlaylistInscriptions } from "./types/playlist";
+import { PlaylistTable, InsertPlaylistInscriptions, UpdatePlaylistInscriptions, PlaylistInscriptionsSchema } from "./types/playlist";
 import { AuthenticatedUserContext } from "./effectServer/authMiddleware";
 import { ProfileTable, ProfileView } from "./types/effectProfile";
 import { NoSuchElementException } from "effect/Cause";
 import { DatabaseSecurityError, mapPostgresError } from "./effectDbErrors";
+import { error } from "effect/Brand";
 
 class DatabaseNotFoundError extends Data.TaggedError("DatabaseNotFoundError")<{
   readonly message: string;
@@ -159,6 +160,10 @@ export class SocialDbService extends Effect.Service<SocialDbService>()("EffectPo
           CREATE POLICY playlist_info_policy_delete ON social.playlist_info
             FOR DELETE
             USING (user_id = current_setting('app.authorized_user_id')::uuid);
+          DROP POLICY IF EXISTS playlist_info_policy_select ON social.playlist_info;
+          CREATE POLICY playlist_info_policy_select ON social.playlist_info
+            FOR SELECT
+            USING (true);
         `.pipe(
           withErrorContext(`Error setting up playlist_info RLS policies`)
         );
@@ -187,6 +192,10 @@ export class SocialDbService extends Effect.Service<SocialDbService>()("EffectPo
           CREATE POLICY playlist_inscriptions_policy_delete ON social.playlist_inscriptions
             FOR DELETE
             USING (playlist_id IN (SELECT playlist_id FROM social.playlist_info WHERE user_id = current_setting('app.authorized_user_id')::uuid));
+          DROP POLICY IF EXISTS playlist_inscriptions_policy_select ON social.playlist_inscriptions;
+          CREATE POLICY playlist_inscriptions_policy_select ON social.playlist_inscriptions
+            FOR SELECT
+            USING (true);
         `.pipe(
           withErrorContext('Error setting up playlist_inscriptions RLS policies')
         );
@@ -207,92 +216,6 @@ export class SocialDbService extends Effect.Service<SocialDbService>()("EffectPo
       }),
       getUserIdFromAddress: getUserIdFromAddress,
       withUserContext: withUserContext,
-      createPlaylist: (newPlaylist: Schema.Schema.Type<typeof PlaylistTable.insert>) => Effect.gen(function* () {
-        const insertPlaylistResolver = SqlSchema.single({
-          Request: PlaylistTable.insert,
-          Result: Schema.Struct({
-            playlist_id: Schema.UUID
-          }),
-          execute: (profile) => 
-            sql`Insert INTO social.playlist_info ${sql.insert(profile)} RETURNING playlist_id`
-        });
-        return yield* insertPlaylistResolver(newPlaylist);
-      }).pipe(
-        Effect.catchAll((error) => Effect.die(error))
-      ),
-      updatePlaylist: (updatePlaylist: Schema.Schema.Type<typeof PlaylistTable.update>) => Effect.gen(function* () {
-        const updatePlaylistResolver = SqlSchema.single({
-          Request: PlaylistTable.update,
-          Result: PlaylistTable.select,
-          execute: (playlist) => Effect.gen(function* () {
-            const { playlist_id, ...fieldsToUpdate } = playlist;
-            return yield* sql`UPDATE social.playlist_info SET ${sql.update(fieldsToUpdate)} WHERE playlist_id = ${playlist.playlist_id} returning *;`;
-          })
-        });
-        return yield* updatePlaylistResolver(updatePlaylist)
-      }),
-      deletePlaylist: (playlistId: string) => Effect.gen(function* () {
-        const result = yield* sql`
-          DELETE FROM social.playlist_info WHERE playlist_id = ${playlistId}
-        `.pipe(
-          withUserContext(),
-          withErrorContext("Error deleting playlist")
-        );
-        return result;
-      }),
-      insertPlaylistInscriptions: (insertPlaylistInscriptions: InsertPlaylistInscriptions) => Effect.gen(function* () {
-        const result = Effect.gen(function* () {
-          yield* sql`CREATE TEMP TABLE temp_playlist_inscriptions ON COMMIT DROP AS TABLE social.playlist_inscriptions WITH NO DATA`;
-          yield* sql`INSERT INTO temp_playlist_inscriptions ${sql.insert(insertPlaylistInscriptions)}`;
-          return yield* sql`
-            INSERT INTO social.playlist_inscriptions (playlist_id, inscription_id, playlist_position)
-            SELECT 
-              playlist_id,
-              inscription_id,
-              get_next_playlist_position(playlist_id)
-            FROM temp_playlist_inscriptions
-            RETURNING *
-          `
-        }).pipe(
-          withUserContext(),
-          withErrorContext("Error inserting playlist inscriptions"),
-        );
-        return yield* result;
-      }),
-      updatePlaylistInscriptions: (playlistId: string, updatePlaylistInscriptions: UpdatePlaylistInscriptions) => Effect.gen(function* () {
-        let inscriptionsToInsert = updatePlaylistInscriptions.map((inscription, index) => ({
-          playlist_id: inscription.playlist_id,
-          inscription_id: inscription.inscription_id,
-          playlist_position: 'playlist_position' in inscription ? inscription.playlist_position : index
-        }));
-        const result = yield* Effect.gen(function* () {
-          // Delete all existing inscriptions for this playlist
-          yield* sql`
-            DELETE FROM social.playlist_inscriptions 
-            WHERE playlist_id = ${playlistId}
-          `;
-          // Insert the new inscriptions
-          const insertResult = yield* sql`
-            INSERT INTO social.playlist_inscriptions ${sql.insert(inscriptionsToInsert)}
-            RETURNING *
-          `;
-          return insertResult;
-        }).pipe(
-          withUserContext(),
-          withErrorContext("Error updating playlist inscriptions")
-        );
-        return result;
-      }),
-      deletePlaylistInscriptions: (playlistId: string, inscriptionIds: string[]) => Effect.gen(function* () {
-        const result = yield* sql`
-          DELETE FROM social.playlist_inscriptions 
-          WHERE playlist_id = ${playlistId} AND inscription_id IN ${sql.in(inscriptionIds)}
-        `.pipe(
-          withUserContext(),
-          withErrorContext("Error deleting playlist inscriptions")
-        );
-        return result;
-      }),
 
       // Profile methods using SQL resolvers inside Effect.gen
       createProfile: (profileInsert: Schema.Schema.Type<typeof ProfileTable.insert>, address: string) => Effect.gen(function* () {
@@ -375,7 +298,10 @@ export class SocialDbService extends Effect.Service<SocialDbService>()("EffectPo
         });
         return yield* getResolver(userId);
       }).pipe(
-        Effect.catchAll((error) => Effect.die(error))
+        Effect.catchTags({
+          ParseError: (e) => Effect.die(e),
+          SqlError: mapPostgresError,
+        })
       ),
 
       getProfileByHandle: (handle: string) => Effect.gen(function* () {
@@ -386,7 +312,10 @@ export class SocialDbService extends Effect.Service<SocialDbService>()("EffectPo
         });
         return yield* getResolver(handle);
       }).pipe(
-        Effect.catchAll((error) => Effect.die(error))
+        Effect.catchTags({
+          ParseError: (e) => Effect.die(e),
+          SqlError: mapPostgresError,
+        })
       ),
 
       getProfileByAddress: (address: string) => Effect.gen(function* () {
@@ -397,8 +326,113 @@ export class SocialDbService extends Effect.Service<SocialDbService>()("EffectPo
         });
         return yield* getResolver(address);
       }).pipe(
-        Effect.catchAll((error) => Effect.die(error))
-      )
+        Effect.catchTags({
+          ParseError: (e) => Effect.die(e),
+          SqlError: mapPostgresError,
+        })
+      ),
+
+      // Playlist methods
+      createPlaylist: (newPlaylist: Schema.Schema.Type<typeof PlaylistTable.insert>) => Effect.gen(function* () {
+        const insertPlaylistResolver = SqlSchema.single({
+          Request: PlaylistTable.insert,
+          Result: PlaylistTable.select,
+          execute: (profile) => 
+            sql`Insert INTO social.playlist_info ${sql.insert(profile)} RETURNING *`
+        });
+        return yield* insertPlaylistResolver(newPlaylist).pipe(
+          withUserContext()
+        );
+      }).pipe(
+        Effect.catchTags({
+          "NoSuchElementException":(error) => Effect.die(error),
+          "ParseError": (error) => Effect.die(error),
+          "SqlError": mapPostgresError,
+        }),
+      ),
+      updatePlaylist: (updatePlaylist: Schema.Schema.Type<typeof PlaylistTable.update>) => Effect.gen(function* () {
+        const updatePlaylistResolver = SqlSchema.single({
+          Request: PlaylistTable.update,
+          Result: PlaylistTable.select,
+          execute: (playlist) => Effect.gen(function* () {
+            const { playlist_id, ...fieldsToUpdate } = playlist;
+            return yield* sql`UPDATE social.playlist_info SET ${sql.update(fieldsToUpdate)} WHERE playlist_id = ${playlist.playlist_id} returning *;`;
+          })
+        });
+        return yield* updatePlaylistResolver(updatePlaylist).pipe(
+          withUserContext()
+        );
+      }).pipe(
+        Effect.catchTags({
+          "NoSuchElementException": (_error) => Effect.fail(DatabaseSecurityError.fromNoSuchElementException("update this playlist")),
+          "ParseError": (error) => Effect.die(error),
+          "SqlError": mapPostgresError,
+        }),
+      ),
+      deletePlaylist: (playlistId: string) => Effect.gen(function* () {
+        const result = yield* sql`
+          DELETE FROM social.playlist_info WHERE playlist_id = ${playlistId}
+        `.pipe(
+          withUserContext(),
+          withErrorContext("Error deleting playlist")
+        );
+        return result;
+      }),
+      insertPlaylistInscriptions: (insertPlaylistInscriptions: InsertPlaylistInscriptions) => Effect.gen(function* () {
+        yield* sql`CREATE TEMP TABLE temp_playlist_inscriptions ON COMMIT DROP AS TABLE social.playlist_inscriptions WITH NO DATA`;
+        yield* sql`INSERT INTO temp_playlist_inscriptions ${sql.insert(insertPlaylistInscriptions)}`;
+        const insertResult = yield* sql`
+          INSERT INTO social.playlist_inscriptions (playlist_id, inscription_id, playlist_position)
+          SELECT 
+            playlist_id,
+            inscription_id,
+            get_next_playlist_position(playlist_id)
+          FROM temp_playlist_inscriptions
+          RETURNING *
+        `
+        return yield* Schema.decodeUnknown(PlaylistInscriptionsSchema)(insertResult);
+      }).pipe(
+        withUserContext(),
+        Effect.catchTags({
+          "ParseError": (error) => Effect.die(error),
+          "SqlError": mapPostgresError,
+        })
+      ),
+      updatePlaylistInscriptions: (playlistId: string, updatePlaylistInscriptions: UpdatePlaylistInscriptions) => Effect.gen(function* () {
+        let inscriptionsToInsert = updatePlaylistInscriptions.map((inscription, index) => ({
+          playlist_id: inscription.playlist_id,
+          inscription_id: inscription.inscription_id,
+          playlist_position: 'playlist_position' in inscription ? inscription.playlist_position : index
+        }));
+        // Delete all existing inscriptions for this playlist
+        yield* sql`
+          DELETE FROM social.playlist_inscriptions 
+          WHERE playlist_id = ${playlistId}
+        `;
+        // Insert the new inscriptions
+        const insertResult = yield* sql`
+          INSERT INTO social.playlist_inscriptions ${sql.insert(inscriptionsToInsert)}
+          RETURNING *
+        `;
+        const parsedResult = yield* Schema.decodeUnknown(PlaylistInscriptionsSchema)(insertResult);
+        return parsedResult;
+      }).pipe(
+        withUserContext(),
+        Effect.catchTags({
+          "ParseError": (error) => Effect.die(error),
+          "SqlError": mapPostgresError,
+        })
+      ),
+      deletePlaylistInscriptions: (playlistId: string, inscriptionIds: string[]) => Effect.gen(function* () {
+        const result = yield* sql`
+          DELETE FROM social.playlist_inscriptions 
+          WHERE playlist_id = ${playlistId} AND inscription_id IN ${sql.in(inscriptionIds)}
+        `.pipe(
+          withUserContext(),
+          withErrorContext("Error deleting playlist inscriptions")
+        );
+        return result;
+      }),
     };
   })
 }) {};
