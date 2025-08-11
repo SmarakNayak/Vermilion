@@ -1,7 +1,7 @@
 import { HttpServer, HttpServerResponse, HttpServerRequest, HttpApi, HttpApiGroup, HttpApiEndpoint, HttpApiBuilder, HttpApiSwagger } from "@effect/platform"
 import { BunHttpServer, BunRuntime } from "@effect/platform-bun"
-import { Effect, Layer, Schema } from "effect"
-import { NewPlaylistInfoSchema } from "../types/playlist"
+import { Effect, Layer, Schema, Logger } from "effect"
+import { PlaylistTable } from "../types/playlist"
 import { SocialDbService, PostgresLive } from "../effectDb"
 import { ConfigService } from "../config"
 import { Authentication, AuthenticationLive } from "./authMiddleware"
@@ -14,7 +14,7 @@ const EffectServerApi = HttpApi.make("EffectServer").add(
       .addSuccess(Schema.Struct(
         {playlist_id: Schema.UUID}
       ))
-      .setPayload(NewPlaylistInfoSchema)
+      .setPayload(PlaylistTable.jsonCreate)
       .middleware(Authentication)
   ).add(
     HttpApiEndpoint.post("updatePlaylist", `/social/update_playlist/:playlist_id`)
@@ -51,15 +51,18 @@ const EffectServerLive = HttpApiBuilder.group(EffectServerApi, "playlists", (han
 
 let createPlaylistHandler = (req: {readonly request: HttpServerRequest.HttpServerRequest}) =>  Effect.gen(function* () {
   let body = yield* req.request.json;
-  let newPlaylistInfo = yield* Schema.decodeUnknown(NewPlaylistInfoSchema)(body);
+  let newPlaylistInfo = yield* Schema.decodeUnknown(PlaylistTable.jsonCreate)(body);
   let db = yield* SocialDbService;
   let insertedPlaylist = yield* db.createPlaylist(newPlaylistInfo);
   return insertedPlaylist;
 }).pipe(
+  Effect.tapError((error) => Effect.logError("Failed to create playlist", error)),
   Effect.catchTags({
-    "InternalDatabaseError": (error) => HttpServerResponse.text(`Internal database error: ${error.message} - ${error.cause}`, { status: 500 }),
-    "ParseError": (error) => HttpServerResponse.text(`Request was unable to be parsed: ${error.message} - ${error.cause}`, { status: 400 }),
-    "RequestError": (error) => HttpServerResponse.text(`Request error: ${error.message} - ${error.cause}`, { status: 400 }),
+    "RequestError": (error) => HttpServerResponse.text(`Body is not valid json - ${error.message}`, { status: 400 }),
+    "ParseError": (error) => HttpServerResponse.text(`Json body is wrong shape - ${error.message}`, { status: 400 }),
+    "DatabaseDuplicateKeyError": (error) => HttpServerResponse.text(`${error.message}`, { status: 409 }),
+    "DatabaseInvalidRowError": (error) => HttpServerResponse.text(`${error.message}`, { status: 400 }),
+    "DatabaseSecurityError": (error) => HttpServerResponse.text(`${error.message}`, { status: 403 }),
   })
 );
 

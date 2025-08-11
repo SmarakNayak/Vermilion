@@ -32,6 +32,11 @@ export class JwtService extends Effect.Service<JwtService>()("JwtService", {
                 message: 'Your authentication token is invalid. Please sign in again.',
                 cause: err
               })
+            } else if (err.name === 'JsonWebTokenError' && err.message === 'jwt must be provided') {
+              return new JwtError({
+                message: 'Please provide a valid JWT token in the Authorization Bearer header.',
+                cause: err
+              })
             } else {
               console.error('Unknown JWT verification error:', err);
               return new JwtError({
