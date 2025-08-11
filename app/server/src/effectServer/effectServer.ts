@@ -4,7 +4,7 @@ import { Effect, Layer, Schema, Logger } from "effect"
 import { PlaylistTable } from "../types/playlist"
 import { SocialDbService, PostgresLive } from "../effectDb"
 import { ConfigService } from "../config"
-import { Authentication, AuthenticationLive } from "./authMiddleware"
+import { Authentication, AuthenticationLive, AuthenticationTest } from "./authMiddleware"
 import { JwtService } from "./jwtService"
 
 // 1. Define the Api

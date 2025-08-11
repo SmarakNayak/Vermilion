@@ -53,3 +53,22 @@ export const AuthenticationLive = Layer.effect(
     }
   })
 )
+
+export const AuthenticationTest = Layer.succeed(
+  Authentication,
+  Authentication.of({
+    bearer: (token: Redacted.Redacted<string>) => Effect.gen(function* () {
+      const tokenValue = Redacted.value(token);
+      if (tokenValue === "") {
+        return yield* Effect.fail(new Unauthorized({
+          message: "No token provided"
+        }));
+      }
+      yield* Effect.log(`Test token: ${tokenValue}...`);
+      return {
+        userAddress: tokenValue, // For testing, we can use the token value as the user address
+        // userId: "test-user-id",
+      };
+    })
+  })
+)
