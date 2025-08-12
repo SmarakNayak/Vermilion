@@ -7,15 +7,7 @@ import { ConfigService } from "./config";
 import { PlaylistTable, InsertPlaylistInscriptions, UpdatePlaylistInscriptions, PlaylistInscriptionsSchema } from "./types/playlist";
 import { AuthenticatedUserContext } from "./effectServer/authMiddleware";
 import { ProfileTable, ProfileView } from "./types/effectProfile";
-import { NoSuchElementException } from "effect/Cause";
-import { DatabaseSecurityError, mapPostgresError } from "./effectDbErrors";
-import { error } from "effect/Brand";
-
-class DatabaseNotFoundError extends Data.TaggedError("DatabaseNotFoundError")<{
-  readonly message: string;
-  readonly cause: unknown;
-  readonly originalError: NoSuchElementException;
-}> {}
+import { DatabaseNotFoundError, mapPostgresInsertError, mapPostgresUpdateError } from "./effectDbErrors";
 
 export class SocialDbService extends Effect.Service<SocialDbService>()("EffectPostgres", {
   effect: Effect.gen(function* () {
@@ -257,7 +249,7 @@ export class SocialDbService extends Effect.Service<SocialDbService>()("EffectPo
         Effect.catchTags({
           "NoSuchElementException" : (error) => Effect.die(error),
           "ParseError" : (error) => Effect.die(error),
-          "SqlError" : mapPostgresError
+          "SqlError" : mapPostgresInsertError
         })
       ),
 
@@ -284,14 +276,33 @@ export class SocialDbService extends Effect.Service<SocialDbService>()("EffectPo
         );
       }).pipe(
         Effect.catchTags({
-          "NoSuchElementException": (_error) => Effect.fail(DatabaseSecurityError.fromNoSuchElementException("update this profile")),
+          "NoSuchElementException": (_error) => Effect.fail(DatabaseNotFoundError.fromNoSuchElementException("profile", "update")),
           "ParseError": (error) => Effect.die(error),
-          "SqlError": mapPostgresError,
+          "SqlError": mapPostgresUpdateError,
+        }),
+      ),
+
+      deleteProfile: (userId: string) => Effect.gen(function* () {
+        let deleteResolver = SqlSchema.single({
+          Request: Schema.UUID,
+          Result: Schema.Struct({
+            user_id: Schema.UUID
+          }),
+          execute: (userId) => sql`DELETE FROM social.profiles WHERE user_id = ${userId} returning user_id`
+        });
+        return yield* deleteResolver(userId).pipe(
+          withUserContext()
+        );
+      }).pipe(
+        Effect.catchTags({
+          "NoSuchElementException": (_error) => Effect.fail(DatabaseNotFoundError.fromNoSuchElementException("profile", "delete")),
+          "ParseError": (error) => Effect.die(error),
+          "SqlError": (error) => Effect.die(error),
         }),
       ),
 
       getProfileById: (userId: string) => Effect.gen(function* () {
-        const getResolver = SqlSchema.findOne({
+        const getResolver = SqlSchema.single({
           Request: Schema.UUID,
           Result: ProfileView.select,
           execute: (userId) => sql`SELECT * FROM social.profiles_view WHERE user_id = ${userId}`
@@ -299,36 +310,39 @@ export class SocialDbService extends Effect.Service<SocialDbService>()("EffectPo
         return yield* getResolver(userId);
       }).pipe(
         Effect.catchTags({
-          ParseError: (e) => Effect.die(e),
-          SqlError: mapPostgresError,
+          "ParseError": (e) => Effect.die(e),
+          "SqlError": (e) => Effect.die(e),
+          "NoSuchElementException": (_e) => Effect.fail(DatabaseNotFoundError.fromNoSuchElementException("profile", "get"))
         })
       ),
 
       getProfileByHandle: (handle: string) => Effect.gen(function* () {
-        const getResolver = SqlSchema.findOne({
+        const getResolver = SqlSchema.single({
           Request: Schema.String,
           Result: ProfileView.select,
           execute: (handle) => sql`SELECT * FROM social.profiles_view WHERE user_handle = ${handle}`
         });
         return yield* getResolver(handle);
       }).pipe(
-        Effect.catchTags({
-          ParseError: (e) => Effect.die(e),
-          SqlError: mapPostgresError,
+      Effect.catchTags({
+          "ParseError": (e) => Effect.die(e),
+          "SqlError": (e) => Effect.die(e),
+          "NoSuchElementException": (_e) => Effect.fail(DatabaseNotFoundError.fromNoSuchElementException("profile", "get"))
         })
       ),
 
       getProfileByAddress: (address: string) => Effect.gen(function* () {
-        const getResolver = SqlSchema.findOne({
+        const getResolver = SqlSchema.single({
           Request: Schema.String,
           Result: ProfileView.select,
           execute: (address) => sql`SELECT * FROM social.profiles_view WHERE user_addresses @> ARRAY[${address}::character varying]`
         });
         return yield* getResolver(address);
       }).pipe(
-        Effect.catchTags({
-          ParseError: (e) => Effect.die(e),
-          SqlError: mapPostgresError,
+      Effect.catchTags({
+          "ParseError": (e) => Effect.die(e),
+          "SqlError": (e) => Effect.die(e),
+          "NoSuchElementException": (_e) => Effect.fail(DatabaseNotFoundError.fromNoSuchElementException("profile", "get"))
         })
       ),
 
@@ -347,7 +361,7 @@ export class SocialDbService extends Effect.Service<SocialDbService>()("EffectPo
         Effect.catchTags({
           "NoSuchElementException":(error) => Effect.die(error),
           "ParseError": (error) => Effect.die(error),
-          "SqlError": mapPostgresError,
+          "SqlError": mapPostgresInsertError,
         }),
       ),
       updatePlaylist: (updatePlaylist: Schema.Schema.Type<typeof PlaylistTable.update>) => Effect.gen(function* () {
@@ -364,20 +378,43 @@ export class SocialDbService extends Effect.Service<SocialDbService>()("EffectPo
         );
       }).pipe(
         Effect.catchTags({
-          "NoSuchElementException": (_error) => Effect.fail(DatabaseSecurityError.fromNoSuchElementException("update this playlist")),
+          "NoSuchElementException": (_error) => Effect.fail(DatabaseNotFoundError.fromNoSuchElementException("playlist", "update")),
           "ParseError": (error) => Effect.die(error),
-          "SqlError": mapPostgresError,
+          "SqlError": mapPostgresUpdateError,
         }),
       ),
       deletePlaylist: (playlistId: string) => Effect.gen(function* () {
-        const result = yield* sql`
-          DELETE FROM social.playlist_info WHERE playlist_id = ${playlistId}
-        `.pipe(
-          withUserContext(),
-          withErrorContext("Error deleting playlist")
+        const deleteResolver = SqlSchema.single({
+          Request: Schema.UUID,
+          Result: Schema.Struct({
+            playlist_id: Schema.UUID
+          }),
+          execute: (playlistId) => sql`DELETE FROM social.playlist_info WHERE playlist_id = ${playlistId} returning playlist_id`
+        });
+        return yield* deleteResolver(playlistId).pipe(
+          withUserContext()
         );
-        return result;
-      }),
+      }).pipe(
+        Effect.catchTags({
+          "NoSuchElementException": (_error) => Effect.fail(DatabaseNotFoundError.fromNoSuchElementException("playlist", "delete")),
+          "ParseError": (error) => Effect.die(error),
+          "SqlError": (error) => Effect.die(error),
+        }),
+      ),
+      getPlaylist: (playlistId: string) => Effect.gen(function* () {
+        const getResolver = SqlSchema.single({
+          Request: Schema.UUID,
+          Result: PlaylistTable.select,
+          execute: (playlistId) => sql`SELECT * FROM social.playlist_info WHERE playlist_id = ${playlistId}`
+        });
+        return yield* getResolver(playlistId);
+      }).pipe(
+        Effect.catchTags({
+          "ParseError": (e) => Effect.die(e),
+          "SqlError": (e) => Effect.die(e),
+          "NoSuchElementException": (_e) => Effect.fail(DatabaseNotFoundError.fromNoSuchElementException("playlist", "get"))
+        })
+      ),
       insertPlaylistInscriptions: (insertPlaylistInscriptions: InsertPlaylistInscriptions) => Effect.gen(function* () {
         yield* sql`CREATE TEMP TABLE temp_playlist_inscriptions ON COMMIT DROP AS TABLE social.playlist_inscriptions WITH NO DATA`;
         yield* sql`INSERT INTO temp_playlist_inscriptions ${sql.insert(insertPlaylistInscriptions)}`;
@@ -395,7 +432,7 @@ export class SocialDbService extends Effect.Service<SocialDbService>()("EffectPo
         withUserContext(),
         Effect.catchTags({
           "ParseError": (error) => Effect.die(error),
-          "SqlError": mapPostgresError,
+          "SqlError": mapPostgresInsertError,
         })
       ),
       updatePlaylistInscriptions: (playlistId: string, updatePlaylistInscriptions: UpdatePlaylistInscriptions) => Effect.gen(function* () {
@@ -405,14 +442,10 @@ export class SocialDbService extends Effect.Service<SocialDbService>()("EffectPo
           playlist_position: 'playlist_position' in inscription ? inscription.playlist_position : index
         }));
         // Delete all existing inscriptions for this playlist
-        yield* sql`
-          DELETE FROM social.playlist_inscriptions 
-          WHERE playlist_id = ${playlistId}
-        `;
+        yield* sql`DELETE FROM social.playlist_inscriptions WHERE playlist_id = ${playlistId}`;
         // Insert the new inscriptions
         const insertResult = yield* sql`
-          INSERT INTO social.playlist_inscriptions ${sql.insert(inscriptionsToInsert)}
-          RETURNING *
+          INSERT INTO social.playlist_inscriptions ${sql.insert(inscriptionsToInsert)} RETURNING *
         `;
         const parsedResult = yield* Schema.decodeUnknown(PlaylistInscriptionsSchema)(insertResult);
         return parsedResult;
@@ -420,19 +453,48 @@ export class SocialDbService extends Effect.Service<SocialDbService>()("EffectPo
         withUserContext(),
         Effect.catchTags({
           "ParseError": (error) => Effect.die(error),
-          "SqlError": mapPostgresError,
+          "SqlError": mapPostgresInsertError,
         })
       ),
       deletePlaylistInscriptions: (playlistId: string, inscriptionIds: string[]) => Effect.gen(function* () {
-        const result = yield* sql`
-          DELETE FROM social.playlist_inscriptions 
-          WHERE playlist_id = ${playlistId} AND inscription_id IN ${sql.in(inscriptionIds)}
-        `.pipe(
-          withUserContext(),
-          withErrorContext("Error deleting playlist inscriptions")
+        const deleteResolver = SqlSchema.findAll({
+          Request: Schema.Array(Schema.String),
+          Result: Schema.Struct({
+            playlist_id: Schema.UUID,
+            inscription_id: Schema.String
+          }),
+          execute: (inscriptionIds) => sql`
+            DELETE FROM social.playlist_inscriptions
+            WHERE playlist_id = ${playlistId} AND inscription_id = ANY(${sql.array(inscriptionIds)})
+            RETURNING *
+          `
+        });
+        const result = yield* deleteResolver(inscriptionIds).pipe(
+          withUserContext()
         );
+        if (result.length === 0) {
+          return yield* Effect.fail(DatabaseNotFoundError.fromNoSuchElementException("playlist inscriptions", "delete"));
+        }
         return result;
-      }),
+      }).pipe(
+        Effect.catchTags({
+          "ParseError": (error) => Effect.die(error),
+          "SqlError": (error) => Effect.die(error),
+        })
+      ),
+      getPlaylistInscriptions: (playlistId: string) => Effect.gen(function* () {
+        const getResolver = SqlSchema.findAll({
+          Request: Schema.UUID,
+          Result: PlaylistInscriptionsSchema,
+          execute: (playlistId) => sql`SELECT * FROM social.playlist_inscriptions WHERE playlist_id = ${playlistId} ORDER BY playlist_position`
+        });
+        return yield* getResolver(playlistId);
+      }).pipe(
+        Effect.catchTags({
+          "ParseError": (e) => Effect.die(e),
+          "SqlError": (e) => Effect.die(e),
+        })
+      )
     };
   })
 }) {};

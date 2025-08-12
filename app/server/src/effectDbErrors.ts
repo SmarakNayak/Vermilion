@@ -116,7 +116,35 @@ export class DatabaseSecurityError extends Data.TaggedError("DatabaseSecurityErr
   }
 }
 
-export const mapPostgresError = (error: SqlError.SqlError) => Effect.gen(function* () {
+export class DatabaseNotFoundError extends Data.TaggedError("DatabaseNotFoundError")<{
+  readonly message: string;
+  readonly object: string;
+  readonly action: 'update' | 'delete' | 'get';
+}> {
+  static fromNoSuchElementException(object: string, action: 'update' | 'delete' | 'get'): DatabaseNotFoundError {
+    if (action === 'update') {
+      return new DatabaseNotFoundError({
+        message: `This ${object} could not be updated. You may not have permission or it may not exist.`,
+        object: object,
+        action
+      });
+    } else if (action === 'delete') {
+      return new DatabaseNotFoundError({
+        message: `This ${object} could not be deleted. You may not have permission or it may have already been removed.`,
+        object: object,
+        action
+      });
+    } else {
+      return new DatabaseNotFoundError({
+        message: `This ${object} could not be found.`,
+        object: object,
+        action
+      });
+    }
+  }
+}
+
+export const mapPostgresInsertError = (error: SqlError.SqlError) => Effect.gen(function* () {
   const potentialPostgresError = error.cause;
   const duplicateKeyResult = Schema.decodeUnknownOption(PostgresDuplicateKeySchema)(potentialPostgresError);
   if (Option.isSome(duplicateKeyResult)) {
@@ -129,6 +157,18 @@ export const mapPostgresError = (error: SqlError.SqlError) => Effect.gen(functio
   const securityResult = Schema.decodeUnknownOption(PostgresSecuritySchema)(potentialPostgresError);
   if (Option.isSome(securityResult)) {
     return yield* Effect.fail(DatabaseSecurityError.fromPostgresError(securityResult.value));
+  }
+  yield* Effect.logError(`---Unhandled Postgres Error---`, { cause: error.cause });
+  return yield* Effect.die(error);
+})
+
+// This function maps Postgres errors that occur during updates, specifically for invalid rows. 
+// Security errors and duplcate key errors do not occur during updates, so they are not handled here.
+export const mapPostgresUpdateError = (error: SqlError.SqlError) => Effect.gen(function* () {
+  const potentialPostgresError = error.cause;
+  const invalidRowResult = Schema.decodeUnknownOption(PostgresInvalidRowSchema)(potentialPostgresError);
+  if (Option.isSome(invalidRowResult)) {
+    return yield* Effect.fail(DatabaseInvalidRowError.fromPostgresError(invalidRowResult.value));
   }
   yield* Effect.logError(`---Unhandled Postgres Error---`, { cause: error.cause });
   return yield* Effect.die(error);

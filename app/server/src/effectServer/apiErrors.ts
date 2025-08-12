@@ -15,7 +15,7 @@ export class Forbidden extends Schema.TaggedError<Forbidden>()(
     message: Schema.String
   },
   HttpApiSchema.annotations({ status: 403, description: "Access denied by security policy" })
-) {}
+) {};
 
 export class Issue extends Schema.TaggedError<Issue>()(
   "Issue",
@@ -23,4 +23,4 @@ export class Issue extends Schema.TaggedError<Issue>()(
     message: Schema.String
   },
   HttpApiSchema.annotations({ status: 400, description: "Request data violates field constraints" })
-) {}
+) {};

@@ -6,12 +6,13 @@ import { AuthenticatedUserContext } from "../effectServer/authMiddleware"
 import { ProfileTable } from "../types/effectProfile";
 import { PlaylistTable, InsertPlaylistInscriptionsSchema, UpdatePlaylistInscriptionsSchema } from "../types/playlist";
 import { withErrorContext } from "../effectUtils";
-import { DatabaseDuplicateKeyError, DatabaseInvalidRowError, DatabaseSecurityError } from "../effectDbErrors";
+import { DatabaseDuplicateKeyError, DatabaseInvalidRowError, DatabaseNotFoundError, DatabaseSecurityError } from "../effectDbErrors";
 
 // Test-specific UUIDs
 let TEST_USER_ID_1 = "00000000-0000-0000-0000-000000000001";
 const TEST_USER_ADDRESS_1 = "address1";
 const TEST_USER_ADDRESS_2 = "address2_no_user";
+let TEST_PLAYLIST_ID = "00000000-0000-0000-0000-000000000001"; // Dummy Id that will be replaced by the actual ID from the test
 
 // Build the test layer
 const TestLayer = SocialDbService.Default.pipe(
@@ -221,7 +222,7 @@ describe("Profile Operations", () => {
         const db = yield* SocialDbService;
         return yield* db.updateProfile(updatedProfile);
       }).pipe(
-        Effect.catchTag("DatabaseSecurityError", (error) => {
+        Effect.catchTag("DatabaseNotFoundError", (error) => {
           return Effect.succeed(error);
         })
       ),
@@ -229,84 +230,121 @@ describe("Profile Operations", () => {
     );
 
     expect(result).toBeDefined();
-    expect(result).toBeInstanceOf(DatabaseSecurityError);
-    expect((result as DatabaseSecurityError).message).toBe("You do not have permission to update this profile");
+    expect(result).toBeInstanceOf(DatabaseNotFoundError);
+    expect((result as DatabaseNotFoundError).message).toBe("This profile could not be updated. You may not have permission or it may not exist.");
   });
 
   it("should get a profile by user ID", async () => {
-    const resultOption = await runTest(
+    const result = await runTest(
       Effect.gen(function* () {
         const db = yield* SocialDbService;
         return yield* db.getProfileById(TEST_USER_ID_1);
       })
     );
-    
-    expect(Option.isSome(resultOption)).toBe(true);
-    if (Option.isSome(resultOption)) {
-      const result = resultOption.value;
-      expect(result).toBeDefined();
-      expect(result.user_id).toBe(TEST_USER_ID_1);
-      expect(result.user_handle).toBe(testProfile.user_handle);
-      expect(result.user_name).toBe(testProfile.user_name);
-      expect(result.user_picture).toEqual(testProfile.user_picture as Option.Option<string>);
-      expect(result.user_bio).toEqual(Option.some("This is an updated bio for user 1."));
-      expect(result.user_twitter).toEqual(Option.some("@updateduser1"));
-      expect(result.user_discord).toEqual(Option.some("updatedtestuser1#1234"));
-      expect(result.user_website).toEqual(Option.some("https://updatedexample.com"));
-    }
+
+    expect(result).toBeDefined();
+    expect(result.user_id).toBe(TEST_USER_ID_1);
+    expect(result.user_handle).toBe(testProfile.user_handle);
+    expect(result.user_name).toBe(testProfile.user_name);
+    expect(result.user_picture).toEqual(testProfile.user_picture as Option.Option<string>);
+    expect(result.user_bio).toEqual(Option.some("This is an updated bio for user 1."));
+    expect(result.user_twitter).toEqual(Option.some("@updateduser1"));
+    expect(result.user_discord).toEqual(Option.some("updatedtestuser1#1234"));
+    expect(result.user_website).toEqual(Option.some("https://updatedexample.com"));
   });
 
   it("should get a profile by user handle", async () => {
-    const resultOption = await runTest(
+    const result = await runTest(
       Effect.gen(function* () {
         const db = yield* SocialDbService;
         return yield* db.getProfileByHandle(testProfile.user_handle);
       })
     );
 
-    expect(Option.isSome(resultOption)).toBe(true);
-    if (Option.isSome(resultOption)) {
-      const result = resultOption.value;
-      expect(result).toBeDefined();
-      expect(result.user_id).toBe(TEST_USER_ID_1);
-      expect(result.user_handle).toBe(testProfile.user_handle);
-      expect(result.user_name).toBe(testProfile.user_name);
-      expect(result.user_picture).toEqual(testProfile.user_picture as Option.Option<string>);
-      expect(result.user_bio).toEqual(Option.some("This is an updated bio for user 1."));
-      expect(result.user_twitter).toEqual(Option.some("@updateduser1"));
-      expect(result.user_discord).toEqual(Option.some("updatedtestuser1#1234"));
-      expect(result.user_website).toEqual(Option.some("https://updatedexample.com"));
-    }
+    expect(result).toBeDefined();
+    expect(result.user_id).toBe(TEST_USER_ID_1);
+    expect(result.user_handle).toBe(testProfile.user_handle);
+    expect(result.user_name).toBe(testProfile.user_name);
+    expect(result.user_picture).toEqual(testProfile.user_picture as Option.Option<string>);
+    expect(result.user_bio).toEqual(Option.some("This is an updated bio for user 1."));
+    expect(result.user_twitter).toEqual(Option.some("@updateduser1"));
+    expect(result.user_discord).toEqual(Option.some("updatedtestuser1#1234"));
+    expect(result.user_website).toEqual(Option.some("https://updatedexample.com"));
+    
   });
 
   it("should get a profile by user address", async () => {
-    const resultOption = await runTest(
+    const result = await runTest(
       Effect.gen(function* () {
         const db = yield* SocialDbService;
         return yield* db.getProfileByAddress(TEST_USER_ADDRESS_1);
       })
     );
 
-    expect(Option.isSome(resultOption)).toBe(true);
-    if (Option.isSome(resultOption)) {
-      const result = resultOption.value;
-      expect(result).toBeDefined();
-      expect(result.user_id).toBe(TEST_USER_ID_1);
-      expect(result.user_handle).toBe(testProfile.user_handle);
-      expect(result.user_name).toBe(testProfile.user_name);
-      expect(result.user_picture).toEqual(testProfile.user_picture as Option.Option<string>);
-      expect(result.user_bio).toEqual(Option.some("This is an updated bio for user 1."));
-      expect(result.user_twitter).toEqual(Option.some("@updateduser1"));
-      expect(result.user_discord).toEqual(Option.some("updatedtestuser1#1234"));
-      expect(result.user_website).toEqual(Option.some("https://updatedexample.com"));
-    }
+    expect(result).toBeDefined();
+    expect(result.user_id).toBe(TEST_USER_ID_1);
+    expect(result.user_handle).toBe(testProfile.user_handle);
+    expect(result.user_name).toBe(testProfile.user_name);
+    expect(result.user_picture).toEqual(testProfile.user_picture as Option.Option<string>);
+    expect(result.user_bio).toEqual(Option.some("This is an updated bio for user 1."));
+    expect(result.user_twitter).toEqual(Option.some("@updateduser1"));
+    expect(result.user_discord).toEqual(Option.some("updatedtestuser1#1234"));
+    expect(result.user_website).toEqual(Option.some("https://updatedexample.com"));
+    
+  });
+
+  it("should not get a profile by non-existent user ID", async () => {
+    const result = await runTest(
+      Effect.gen(function* () {
+        const db = yield* SocialDbService;
+        return yield* db.getProfileById("00000000-0000-0000-0000-000000000999");
+      }).pipe(
+        Effect.catchTag("DatabaseNotFoundError", (error) => {
+          return Effect.succeed(error);
+        })
+      )
+    );
+    expect(result).toBeDefined();
+    expect(result).toBeInstanceOf(DatabaseNotFoundError);
+    expect((result as DatabaseNotFoundError).message).toBe("This profile could not be found.");
+    
+  });
+
+  it("should not get a profile by non-existent user handle", async () => {
+    const result = await runTest(
+      Effect.gen(function* () {
+        const db = yield* SocialDbService;
+        return yield* db.getProfileByHandle("nonexistentuser");
+      }).pipe(
+        Effect.catchTag("DatabaseNotFoundError", (error) => {
+          return Effect.succeed(error);
+        })
+      )
+    );
+    expect(result).toBeDefined();
+    expect(result).toBeInstanceOf(DatabaseNotFoundError);
+    expect((result as DatabaseNotFoundError).message).toBe("This profile could not be found.");
+  });
+
+  it("should not get a profile by non-existent user address", async () => {
+    const result = await runTest(
+      Effect.gen(function* () {
+        const db = yield* SocialDbService;
+        return yield* db.getProfileByAddress("nonexistentaddress");
+      }).pipe(
+        Effect.catchTag("DatabaseNotFoundError", (error) => {
+          return Effect.succeed(error);
+        })
+      )
+    );
+    expect(result).toBeDefined();
+    expect(result).toBeInstanceOf(DatabaseNotFoundError);
+    expect((result as DatabaseNotFoundError).message).toBe("This profile could not be found.");
   });
 
 });
 
 describe("Playlist Operations", () => {
-  let test_playlist_id = "00000000-0000-0000-0000-000000000001"; // Dummy Id that will be replaced by the actual ID from the test
-
   it("should create a playlist", async () => {
     const testPlaylist: Schema.Schema.Type<typeof PlaylistTable.insert> = {
       user_id: TEST_USER_ID_1,
@@ -326,7 +364,7 @@ describe("Playlist Operations", () => {
     expect(result).toBeDefined();
     expect(Schema.is(Schema.UUID)(result.playlist_id)).toBe(true);
     expect(result.user_id).toBe(testPlaylist.user_id);
-    test_playlist_id = result.playlist_id; // Store the generated ID for future tests
+    TEST_PLAYLIST_ID = result.playlist_id; // Store the generated ID for future tests
     expect(result.playlist_name).toBe(testPlaylist.playlist_name);
     expect(result.playlist_inscription_icon).toEqual(testPlaylist.playlist_inscription_icon as Option.Option<string>);
     expect(result.playlist_description).toEqual(Option.none());
@@ -361,7 +399,7 @@ describe("Playlist Operations", () => {
   it("should update a playlist", async () => {
     const updatedPlaylist: Schema.Schema.Type<typeof PlaylistTable.update> = {
       user_id: TEST_USER_ID_1,
-      playlist_id: test_playlist_id, // Use the ID from the previous test
+      playlist_id: TEST_PLAYLIST_ID, // Use the ID from the previous test
       playlist_name: "Updated Test Playlist",
       playlist_inscription_icon: Option.some("https://example.com/updated_playlist_icon.jpg"),
       playlist_description: Option.some("This is an updated description for the test playlist."),
@@ -387,7 +425,7 @@ describe("Playlist Operations", () => {
   it("should not update a playlist with an unauthorised address", async () => {
     const updatedPlaylist: Schema.Schema.Type<typeof PlaylistTable.update> = {
       user_id: TEST_USER_ID_1,
-      playlist_id: test_playlist_id, // Use the ID from the previous test
+      playlist_id: TEST_PLAYLIST_ID, // Use the ID from the previous test
       playlist_name: "Unauthorized Update",
       playlist_inscription_icon: Option.some("https://example.com/unauthorized_update_icon.jpg"),
       playlist_updated_at: undefined
@@ -398,7 +436,7 @@ describe("Playlist Operations", () => {
         const db = yield* SocialDbService;
         return yield* db.updatePlaylist(updatedPlaylist);
       }).pipe(
-        Effect.catchTag("DatabaseSecurityError", (error) => {
+        Effect.catchTag("DatabaseNotFoundError", (error) => {
           return Effect.succeed(error);
         })
       ),
@@ -406,14 +444,47 @@ describe("Playlist Operations", () => {
     );
 
     expect(result).toBeDefined();
-    expect(result).toBeInstanceOf(DatabaseSecurityError);
-    expect((result as DatabaseSecurityError).message).toBe("You do not have permission to update this playlist");
+    expect(result).toBeInstanceOf(DatabaseNotFoundError);
+    expect((result as DatabaseNotFoundError).message).toBe("This playlist could not be updated. You may not have permission or it may not exist.");
+  });
+
+  it("should get a playlist by ID", async () => {
+    const result = await runTest(
+      Effect.gen(function* () {
+        const db = yield* SocialDbService;
+        return yield* db.getPlaylist(TEST_PLAYLIST_ID);
+      })
+    );
+
+    expect(result).toBeDefined();
+    expect(result.playlist_id).toBe(TEST_PLAYLIST_ID);
+    expect(result.user_id).toBe(TEST_USER_ID_1);
+    expect(result.playlist_name).toBe("Updated Test Playlist");
+    expect(result.playlist_inscription_icon).toEqual(Option.some("https://example.com/updated_playlist_icon.jpg"));
+    expect(result.playlist_description).toEqual(Option.some("This is an updated description for the test playlist."));
+  });
+
+  it("should not get a playlist by non-existent ID", async () => {
+    const result = await runTest(
+      Effect.gen(function* () {
+        const db = yield* SocialDbService;
+        return yield* db.getPlaylist("00000000-0000-0000-0000-000000000999");
+      }).pipe(
+        Effect.catchTag("DatabaseNotFoundError", (error) => {
+          return Effect.succeed(error);
+        })
+      )
+    );
+
+    expect(result).toBeDefined();
+    expect(result).toBeInstanceOf(DatabaseNotFoundError);
+    expect((result as DatabaseNotFoundError).message).toBe("This playlist could not be found.");
   });
 
   it("should insert inscriptions into a playlist", async () => {
     const inscriptions: Schema.Schema.Type<typeof InsertPlaylistInscriptionsSchema> = [
-      { playlist_id: test_playlist_id, inscription_id: "inscription1" },
-      { playlist_id: test_playlist_id, inscription_id: "inscription2" }
+      { playlist_id: TEST_PLAYLIST_ID, inscription_id: "inscription1" },
+      { playlist_id: TEST_PLAYLIST_ID, inscription_id: "inscription2" }
     ];
 
     const result = await runTestWithUser(
@@ -435,8 +506,8 @@ describe("Playlist Operations", () => {
 
   it("should not insert inscriptions into a playlist with an unauthorised address", async () => {
     const inscriptions: Schema.Schema.Type<typeof InsertPlaylistInscriptionsSchema> = [
-      { playlist_id: test_playlist_id, inscription_id: "unauthorizedInscription1" },
-      { playlist_id: test_playlist_id, inscription_id: "unauthorizedInscription2" }
+      { playlist_id: TEST_PLAYLIST_ID, inscription_id: "unauthorizedInscription1" },
+      { playlist_id: TEST_PLAYLIST_ID, inscription_id: "unauthorizedInscription2" }
     ];
 
     const result = await runTestWithUser(
@@ -458,14 +529,14 @@ describe("Playlist Operations", () => {
 
   it("should update inscriptions in a playlist with positions", async () => {
     const updateInscriptions: Schema.Schema.Type<typeof UpdatePlaylistInscriptionsSchema> = [
-      { playlist_id: test_playlist_id, inscription_id: "updated_inscription1", playlist_position: 1 },
-      { playlist_id: test_playlist_id, inscription_id: "updated_inscription2", playlist_position: 0 }
+      { playlist_id: TEST_PLAYLIST_ID, inscription_id: "updated_inscription1", playlist_position: 1 },
+      { playlist_id: TEST_PLAYLIST_ID, inscription_id: "updated_inscription2", playlist_position: 0 }
     ];
 
     const result = await runTestWithUser(
       Effect.gen(function* () {
         const db = yield* SocialDbService;
-        return yield* db.updatePlaylistInscriptions(test_playlist_id, updateInscriptions);
+        return yield* db.updatePlaylistInscriptions(TEST_PLAYLIST_ID, updateInscriptions);
       }),
       TEST_USER_ADDRESS_1
     );
@@ -480,14 +551,14 @@ describe("Playlist Operations", () => {
 
   it("should update inscriptions in a playlist without positions", async () => {
     const updateInscriptions: Schema.Schema.Type<typeof UpdatePlaylistInscriptionsSchema> = [
-      { playlist_id: test_playlist_id, inscription_id: "updated_inscription1" },
-      { playlist_id: test_playlist_id, inscription_id: "updated_inscription2" }
+      { playlist_id: TEST_PLAYLIST_ID, inscription_id: "updated_inscription1" },
+      { playlist_id: TEST_PLAYLIST_ID, inscription_id: "updated_inscription2" }
     ];
 
     const result = await runTestWithUser(
       Effect.gen(function* () {
         const db = yield* SocialDbService;
-        return yield* db.updatePlaylistInscriptions(test_playlist_id, updateInscriptions);
+        return yield* db.updatePlaylistInscriptions(TEST_PLAYLIST_ID, updateInscriptions);
       }),
       TEST_USER_ADDRESS_1
     );
@@ -502,14 +573,14 @@ describe("Playlist Operations", () => {
 
   it("should not update inscriptions in a playlist with an unauthorised address", async () => {
     const updateInscriptions: Schema.Schema.Type<typeof UpdatePlaylistInscriptionsSchema> = [
-      { playlist_id: test_playlist_id, inscription_id: "unauthorized_inscription1", playlist_position: 0 },
-      { playlist_id: test_playlist_id, inscription_id: "unauthorized_inscription2", playlist_position: 1 }
+      { playlist_id: TEST_PLAYLIST_ID, inscription_id: "unauthorized_inscription1", playlist_position: 0 },
+      { playlist_id: TEST_PLAYLIST_ID, inscription_id: "unauthorized_inscription2", playlist_position: 1 }
     ];
 
     const result = await runTestWithUser(
       Effect.gen(function* () {
         const db = yield* SocialDbService;
-        return yield* db.updatePlaylistInscriptions(test_playlist_id, updateInscriptions);
+        return yield* db.updatePlaylistInscriptions(TEST_PLAYLIST_ID, updateInscriptions);
       }).pipe(
         Effect.catchTag("DatabaseSecurityError", (error) => {
           return Effect.succeed(error);
@@ -523,4 +594,55 @@ describe("Playlist Operations", () => {
     expect((result as DatabaseSecurityError).message).toBe("You do not have permission to add inscriptions to this playlist");
   });
 
+});
+
+
+describe("Cleanup Operations", () => {
+  it("should delete inscriptions from a playlist", async () => {
+    const inscriptionIds = ["inscription1", "inscription2"];
+
+    const result = await runTestWithUser(
+      Effect.gen(function* () {
+        const db = yield* SocialDbService;
+        return yield* db.deletePlaylistInscriptions(TEST_PLAYLIST_ID, inscriptionIds);
+      }),
+      TEST_USER_ADDRESS_1
+    );
+
+    expect(result).toBeDefined();
+    expect(result.length).toBe(2);
+    expect(result[0]?.inscription_id).toEqual("inscription1");
+    expect(result[1]?.inscription_id).toEqual("inscription2");
+  })
+
+  it("should not delete a profile with an unauthorised address", async () => {
+    const result = await runTestWithUser(
+      Effect.gen(function* () {
+        const db = yield* SocialDbService;
+        return yield* db.deleteProfile(TEST_USER_ID_1);
+      }).pipe(
+        Effect.catchTag("DatabaseNotFoundError", (error) => {
+          return Effect.succeed(error);
+        })
+      ),
+      TEST_USER_ADDRESS_2
+    );
+
+    expect(result).toBeDefined();
+    expect(result).toBeInstanceOf(DatabaseNotFoundError);
+    expect((result as DatabaseNotFoundError).message).toBe("This profile could not be deleted. You may not have permission or it may have already been removed.");
+  });
+
+  it("should delete a profile", async () => {
+    const result = await runTestWithUser(
+      Effect.gen(function* () {
+        const db = yield* SocialDbService;
+        return yield* db.deleteProfile(TEST_USER_ID_1);
+      }),
+      TEST_USER_ADDRESS_1
+    );
+
+    expect(result).toBeDefined();
+    expect(result.user_id).toBe(TEST_USER_ID_1);
+  });
 });
