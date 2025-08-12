@@ -10,13 +10,13 @@ export class PlaylistTable extends Model.Class<PlaylistTable>("PlaylistTable")({
   playlist_inscription_icon: FieldOptionOmittable(Schema.String),
   playlist_description: FieldOptionOmittable(Schema.String),
   playlist_created_at: Model.Field({
-    select: Schema.DateTimeUtcFromDate,
-    json: Schema.DateTimeUtcFromDate,
+    select: Schema.DateTimeUtc,
+    json: Schema.DateTimeUtc,
   }),
   playlist_updated_at: Model.Field({
-    select: Schema.DateTimeUtcFromDate,
-    update: Model.DateTimeFromDateWithNow,
-    json: Schema.DateTimeUtcFromDate,
+    select: Schema.DateTimeUtc,
+    update: Model.DateTimeWithNow,
+    json: Schema.DateTimeUtc,
   }),
 }) {};
 
@@ -26,7 +26,7 @@ export const PlaylistInscriptionsSchema = Schema.Array(
     playlist_id: Schema.UUID,
     inscription_id: Schema.String,
     playlist_position: Schema.Number,
-    added_at: Schema.DateTimeUtcFromDate,
+    added_at: Schema.DateTimeUtc,
   })
 );
 export type PlaylistInscriptions = Schema.Schema.Type<typeof PlaylistInscriptionsSchema>;

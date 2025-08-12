@@ -1,4 +1,4 @@
-import { expect, beforeAll, afterEach, describe, it, afterAll } from "bun:test";
+import { expect, beforeAll, describe, it } from "bun:test";
 import { Effect, Layer, Logger, Schema, Option } from "effect";
 import { SocialDbService, PostgresTest } from "../effectDb";
 import { ConfigService } from "../config";
@@ -611,8 +611,21 @@ describe("Playlist Operations", () => {
     expect(result[1]?.playlist_position).toEqual(1);
   });
 
-});
+  it("should return an empty array for an empty playlist", async () => {
+    const emptyPlaylistId = "00000000-0000-0000-0000-000000000002"; // Dummy ID for an empty playlist
+    const result = await runTestWithUser(
+      Effect.gen(function* () {
+        const db = yield* SocialDbService;
+        return yield* db.getPlaylistInscriptions(emptyPlaylistId);
+      }),
+      TEST_USER_ADDRESS_1
+    );
 
+    expect(result).toBeDefined();
+    expect(result.length).toBe(0);
+  });
+
+});
 
 describe("Cleanup Operations", () => {
   it("should not delete inscriptions from a playlist with an unauthorised address", async () => {

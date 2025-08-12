@@ -57,8 +57,8 @@ export class SocialDbService extends Effect.Service<SocialDbService>()("EffectPo
           user_twitter VARCHAR(15),
           user_discord VARCHAR(37),
           user_website TEXT,
-          user_created_at TIMESTAMP DEFAULT NOW(),
-          user_updated_at TIMESTAMP DEFAULT NOW(),
+          user_created_at TIMESTAMPTZ DEFAULT NOW(),
+          user_updated_at TIMESTAMPTZ DEFAULT NOW(),
           CONSTRAINT valid_handle CHECK (user_handle ~ '^[a-zA-Z0-9_]{2,17}$')
         )`.pipe(
           withErrorContext("Error creating profiles table")
@@ -456,7 +456,7 @@ export class SocialDbService extends Effect.Service<SocialDbService>()("EffectPo
           "SqlError": mapPostgresInsertError,
         })
       ),
-      deletePlaylistInscriptions: (playlistId: string, inscriptionIds: string[]) => Effect.gen(function* () {
+      deletePlaylistInscriptions: (playlistId: string, inscriptionIds: readonly string[]) => Effect.gen(function* () {
         const deleteResolver = SqlSchema.findAll({
           Request: Schema.Array(Schema.String),
           Result: Schema.Struct({
@@ -508,6 +508,14 @@ export const PostgresLive = Effect.gen(function* () {
     database: config.db_name,
     username: config.db_user,
     password: Redacted.make(config.db_password),
+    types: {
+      date: {
+        to: 1184, // TIMESTAMPTZ OID
+        from: [1082, 1114, 1184], // DATE, TIMESTAMP, TIMESTAMPTZ OIDs
+        serialize: (x: string) => x,
+        parse: (x: string) => x // Return string instead of Date
+      }
+    },
     onnotice(_notice) {},
   });
 }).pipe(
@@ -522,6 +530,14 @@ export const PostgresTest = Effect.gen(function* () {
     database: config.db_name + "_test",
     username: config.db_user,
     password: Redacted.make(config.db_password),
+    types: {
+      date: {
+        to: 1184, // TIMESTAMPTZ OID
+        from: [1082, 1114, 1184], // DATE, TIMESTAMP, TIMESTAMPTZ OIDs
+        serialize: (x: string) => x,
+        parse: (x: string) => x // Return string instead of Date
+      }
+    },
     onnotice(_notice) {},
     // debug: (_connection, query, params, _paramTypes) => {
     //   console.log("SQL Query:", query);

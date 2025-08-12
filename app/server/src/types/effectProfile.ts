@@ -1,4 +1,4 @@
-import { Schema, Option } from "effect";
+import { Schema } from "effect";
 import { Model } from "@effect/sql";
 import { FieldOptionOmittable, FieldUpdateOmittable } from "./omittable";
 
@@ -13,13 +13,13 @@ const baseFields = {
   user_discord: FieldOptionOmittable(Schema.String.pipe(Schema.maxLength(37))),
   user_website: FieldOptionOmittable(Schema.String),
   user_created_at: Model.Field({ // Db sets for insert || no need to update
-    select: Schema.DateTimeUtcFromDate,
-    json: Schema.DateTimeUtcFromDate,
+    select: Schema.DateTimeUtc,
+    json: Schema.DateTimeUtc,
   }),
   user_updated_at: Model.Field({ // Db sets for insert || app autosets for update
-    select: Schema.DateTimeUtcFromDate,
-    update: Model.DateTimeFromDateWithNow,
-    json: Schema.DateTimeUtcFromDate,
+    select: Schema.DateTimeUtc,
+    update: Model.DateTimeWithNow,
+    json: Schema.DateTimeUtc,
   }),
 }
 

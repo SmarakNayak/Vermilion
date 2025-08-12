@@ -24,3 +24,11 @@ export class Issue extends Schema.TaggedError<Issue>()(
   },
   HttpApiSchema.annotations({ status: 400, description: "Request data violates field constraints" })
 ) {};
+
+export class NotFound extends Schema.TaggedError<NotFound>()(
+  "NotFound",
+  {
+    message: Schema.String
+  },
+  HttpApiSchema.annotations({ status: 404, description: "Requested data was not found or denied by security policy" })
+) {};
