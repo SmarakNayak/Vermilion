@@ -594,12 +594,47 @@ describe("Playlist Operations", () => {
     expect((result as DatabaseSecurityError).message).toBe("You do not have permission to add inscriptions to this playlist");
   });
 
+  it("should get inscriptions from a playlist", async () => {
+    const result = await runTestWithUser(
+      Effect.gen(function* () {
+        const db = yield* SocialDbService;
+        return yield* db.getPlaylistInscriptions(TEST_PLAYLIST_ID);
+      }),
+      TEST_USER_ADDRESS_1
+    );
+
+    expect(result).toBeDefined();
+    expect(result.length).toBe(2);
+    expect(result[0]?.inscription_id).toEqual("updated_inscription1");
+    expect(result[0]?.playlist_position).toEqual(0);
+    expect(result[1]?.inscription_id).toEqual("updated_inscription2");
+    expect(result[1]?.playlist_position).toEqual(1);
+  });
+
 });
 
 
 describe("Cleanup Operations", () => {
+  it("should not delete inscriptions from a playlist with an unauthorised address", async () => {
+    const inscriptionIds = ["updated_inscription1", "updated_inscription2"];
+    const result = await runTestWithUser(
+      Effect.gen(function* () {
+        const db = yield* SocialDbService;
+        return yield* db.deletePlaylistInscriptions(TEST_PLAYLIST_ID, inscriptionIds);
+      }).pipe(
+        Effect.catchTag("DatabaseNotFoundError", (error) => {
+          return Effect.succeed(error);
+        })
+      ),
+      TEST_USER_ADDRESS_2
+    );
+    expect(result).toBeDefined();
+    expect(result).toBeInstanceOf(DatabaseNotFoundError);
+    expect((result as DatabaseNotFoundError).message).toBe("The inscriptions in this playlist could not be deleted. You may not have permission or they may have already been removed.");
+  });
+
   it("should delete inscriptions from a playlist", async () => {
-    const inscriptionIds = ["inscription1", "inscription2"];
+    const inscriptionIds = ["updated_inscription1", "updated_inscription2"];
 
     const result = await runTestWithUser(
       Effect.gen(function* () {
@@ -611,9 +646,40 @@ describe("Cleanup Operations", () => {
 
     expect(result).toBeDefined();
     expect(result.length).toBe(2);
-    expect(result[0]?.inscription_id).toEqual("inscription1");
-    expect(result[1]?.inscription_id).toEqual("inscription2");
+    expect(result[0]?.inscription_id).toEqual("updated_inscription1");
+    expect(result[1]?.inscription_id).toEqual("updated_inscription2");
   })
+
+  it("should not delete a playlist with an unauthorised address", async () => {
+    const result = await runTestWithUser(
+      Effect.gen(function* () {
+        const db = yield* SocialDbService;
+        return yield* db.deletePlaylist(TEST_PLAYLIST_ID);
+      }).pipe(
+        Effect.catchTag("DatabaseNotFoundError", (error) => {
+          return Effect.succeed(error);
+        })
+      ),
+      TEST_USER_ADDRESS_2
+    );
+
+    expect(result).toBeDefined();
+    expect(result).toBeInstanceOf(DatabaseNotFoundError);
+    expect((result as DatabaseNotFoundError).message).toBe("This playlist could not be deleted. You may not have permission or it may have already been removed.");
+  });
+
+  it("should delete a playlist", async () => {
+    const result = await runTestWithUser(
+      Effect.gen(function* () {
+        const db = yield* SocialDbService;
+        return yield* db.deletePlaylist(TEST_PLAYLIST_ID);
+      }),
+      TEST_USER_ADDRESS_1
+    );
+
+    expect(result).toBeDefined();
+    expect(result.playlist_id).toBe(TEST_PLAYLIST_ID);
+  });
 
   it("should not delete a profile with an unauthorised address", async () => {
     const result = await runTestWithUser(

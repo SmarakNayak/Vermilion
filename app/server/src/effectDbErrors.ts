@@ -142,6 +142,13 @@ export class DatabaseNotFoundError extends Data.TaggedError("DatabaseNotFoundErr
       });
     }
   }
+  static manuallyCreate(message: string, object: string, action: 'update' | 'delete' | 'get'): DatabaseNotFoundError {
+    return new DatabaseNotFoundError({
+      message,
+      object,
+      action
+    });
+  }
 }
 
 export const mapPostgresInsertError = (error: SqlError.SqlError) => Effect.gen(function* () {

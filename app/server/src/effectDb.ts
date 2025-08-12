@@ -34,7 +34,7 @@ export class SocialDbService extends Effect.Service<SocialDbService>()("EffectPo
         if (Option.isSome(userId)) {
           yield* sql`SELECT set_config('app.authorized_user_id', ${userId.value}, true)`;
         } else {
-          yield* Effect.log(`No user found for address: ${userContext.userAddress}`);
+          yield* Effect.logDebug(`No user found for address: ${userContext.userAddress}`);
           yield* sql`SELECT set_config('app.authorized_user_id', '00000000-0000-0000-0000-000000000000', true)`;
         }
         return yield* query;
@@ -91,7 +91,7 @@ export class SocialDbService extends Effect.Service<SocialDbService>()("EffectPo
         // separate table for profile addresses because you can't ensure distinctness in an array column
         yield* sql`CREATE TABLE IF NOT EXISTS social.profile_addresses (
           address VARCHAR(64) PRIMARY KEY,
-          user_id UUID NOT NULL REFERENCES social.profiles(user_id)
+          user_id UUID NOT NULL REFERENCES social.profiles(user_id) ON DELETE CASCADE
         )`.pipe(
           withErrorContext("Error creating profile_addresses table")
         );
@@ -465,7 +465,7 @@ export class SocialDbService extends Effect.Service<SocialDbService>()("EffectPo
           }),
           execute: (inscriptionIds) => sql`
             DELETE FROM social.playlist_inscriptions
-            WHERE playlist_id = ${playlistId} AND inscription_id = ANY(${sql.array(inscriptionIds)})
+            WHERE playlist_id = ${playlistId} AND inscription_id IN ${sql.in(inscriptionIds)}
             RETURNING *
           `
         });
@@ -473,7 +473,11 @@ export class SocialDbService extends Effect.Service<SocialDbService>()("EffectPo
           withUserContext()
         );
         if (result.length === 0) {
-          return yield* Effect.fail(DatabaseNotFoundError.fromNoSuchElementException("playlist inscriptions", "delete"));
+          return yield* Effect.fail(DatabaseNotFoundError.manuallyCreate(
+            "The inscriptions in this playlist could not be deleted. You may not have permission or they may have already been removed.", 
+            "playlist_inscriptions", 
+            "delete"
+          ));
         }
         return result;
       }).pipe(
@@ -483,12 +487,9 @@ export class SocialDbService extends Effect.Service<SocialDbService>()("EffectPo
         })
       ),
       getPlaylistInscriptions: (playlistId: string) => Effect.gen(function* () {
-        const getResolver = SqlSchema.findAll({
-          Request: Schema.UUID,
-          Result: PlaylistInscriptionsSchema,
-          execute: (playlistId) => sql`SELECT * FROM social.playlist_inscriptions WHERE playlist_id = ${playlistId} ORDER BY playlist_position`
-        });
-        return yield* getResolver(playlistId);
+        let result = yield* sql`SELECT * FROM social.playlist_inscriptions WHERE playlist_id = ${playlistId} ORDER BY playlist_position`
+        const parsedResult = yield* Schema.decodeUnknown(PlaylistInscriptionsSchema)(result);
+        return parsedResult
       }).pipe(
         Effect.catchTags({
           "ParseError": (e) => Effect.die(e),
