@@ -2,7 +2,7 @@
 import { PgClient } from "@effect/sql-pg";
 import { SqlSchema } from "@effect/sql";
 import { withErrorContext } from "./effectUtils";
-import { Effect, Layer, Redacted, Array, Option, Schema, Data } from "effect";
+import { Effect, Layer, Redacted, Array, Option, Schema, identity } from "effect";
 import { ConfigService } from "./config";
 import { PlaylistTable, InsertPlaylistInscriptions, UpdatePlaylistInscriptions, PlaylistInscriptionsSchema } from "./types/playlist";
 import { AuthenticatedUserContext } from "./effectServer/authMiddleware";
@@ -508,13 +508,42 @@ export const PostgresLive = Effect.gen(function* () {
     database: config.db_name,
     username: config.db_user,
     password: Redacted.make(config.db_password),
+    // - 114: JSON (return as string instead of parsed object)
+    // - 1082: DATE
+    // - 1114: TIMESTAMP WITHOUT TIME ZONE
+    // - 1184: TIMESTAMP WITH TIME ZONE
+    // - 3802: JSONB (return as string instead of parsed object)
     types: {
-      date: {
-        to: 1184, // TIMESTAMPTZ OID
-        from: [1082, 1114, 1184], // DATE, TIMESTAMP, TIMESTAMPTZ OIDs
-        serialize: (x: string) => x,
-        parse: (x: string) => x // Return string instead of Date
-      }
+      114: {
+        to: 25,
+        from: [114],
+        parse: identity,
+        serialize: identity,
+      },
+      1082: {
+        to: 25,
+        from: [1082],
+        parse: identity,
+        serialize: identity,
+      },
+      1114: {
+        to: 25,
+        from: [1114],
+        parse: identity,
+        serialize: identity,
+      },
+      1184: {
+        to: 25,
+        from: [1184],
+        parse: identity,
+        serialize: identity,
+      },
+      3802: {
+        to: 25,
+        from: [3802],
+        parse: identity,
+        serialize: identity,
+      },
     },
     onnotice(_notice) {},
   });
@@ -531,12 +560,36 @@ export const PostgresTest = Effect.gen(function* () {
     username: config.db_user,
     password: Redacted.make(config.db_password),
     types: {
-      date: {
-        to: 1184, // TIMESTAMPTZ OID
-        from: [1082, 1114, 1184], // DATE, TIMESTAMP, TIMESTAMPTZ OIDs
-        serialize: (x: string) => x,
-        parse: (x: string) => x // Return string instead of Date
-      }
+      114: {
+        to: 25,
+        from: [114],
+        parse: identity,
+        serialize: identity,
+      },
+      1082: {
+        to: 25,
+        from: [1082],
+        parse: identity,
+        serialize: identity,
+      },
+      1114: {
+        to: 25,
+        from: [1114],
+        parse: identity,
+        serialize: identity,
+      },
+      1184: {
+        to: 25,
+        from: [1184],
+        parse: identity,
+        serialize: identity,
+      },
+      3802: {
+        to: 25,
+        from: [3802],
+        parse: identity,
+        serialize: identity,
+      },
     },
     onnotice(_notice) {},
     // debug: (_connection, query, params, _paramTypes) => {
