@@ -10,7 +10,7 @@ export class AuthenticatedUserContext extends Context.Tag("AuthenticatedUserCont
   }
 >() {}
 
-class Unauthorized extends Schema.TaggedError<Unauthorized>()(
+export class Unauthorized extends Schema.TaggedError<Unauthorized>()(
   "Unauthorized",
   {
     message: Schema.String

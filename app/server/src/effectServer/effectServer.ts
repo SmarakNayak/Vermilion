@@ -1,8 +1,8 @@
-import { HttpServer, HttpServerResponse, HttpServerRequest, HttpApi, HttpApiGroup, HttpApiEndpoint, HttpApiBuilder, HttpApiSwagger, HttpApiError, HttpApiSchema, OpenApi } from "@effect/platform"
+import { HttpServer, HttpServerResponse, HttpServerRequest, HttpApi, HttpApiGroup, HttpApiEndpoint, HttpApiBuilder, HttpApiSwagger } from "@effect/platform"
 import { BunHttpServer, BunRuntime } from "@effect/platform-bun"
-import { Effect, Layer, Schema } from "effect"
+import { Effect, Layer, Logger, Schema } from "effect"
 import { PlaylistTable, InsertPlaylistInscriptionsSchema, PlaylistInscriptionsSchema, UpdatePlaylistInscriptionsSchema } from "../types/playlist"
-import { SocialDbService, PostgresLive } from "../effectDb"
+import { SocialDbService, PostgresLive, PostgresTest } from "../effectDb"
 import { ConfigService } from "../config"
 import { AuthenticatedUserContext, Authentication, AuthenticationLive, AuthenticationTest } from "./authMiddleware"
 import { JwtService } from "./jwtService"
@@ -10,7 +10,7 @@ import { Conflict, Forbidden, Issue, NotFound } from "./apiErrors"
 import { ProfileTable, ProfileView } from "../types/effectProfile"
 
 // 1. Define the Api
-const EffectServerApi = HttpApi.make("EffectServer").add(
+export const EffectServerApi = HttpApi.make("EffectServer").add(
   HttpApiGroup.make("profiles")
   .add(
     HttpApiEndpoint.post("createProfile", `/social/create_profile`)
@@ -137,14 +137,14 @@ const ProfileGroup = HttpApiBuilder.group(EffectServerApi, "profiles", (handlers
     .handle("getProfileByAddress", getProfileByAddressHandler)
     .handle("getProfileByHandle", getProfileByHandleHandler)
 )
-const EffectServerLive = Layer.merge(
+export const EffectServerLive = Layer.merge(
   PlaylistsGroup,
   ProfileGroup,
 )
 
 
 
-const homeHandler = (req: {readonly request: HttpServerRequest.HttpServerRequest}) => Effect.gen(function* () {
+const homeHandler = (_req: {readonly request: HttpServerRequest.HttpServerRequest}) => Effect.gen(function* () {
   return HttpServerResponse.text(
     "If Bitcoin is to change the culture of money, it needs to be cool. Ordinals was the missing piece. The path to $1m is preordained"
   );
@@ -365,7 +365,7 @@ const getProfileByHandleHandler = (req: {
 // Provide the implementation for the API
 const EffectServerApiLive = HttpApiBuilder.api(EffectServerApi).pipe(
   Layer.provide(EffectServerLive),
-  Layer.provide(AuthenticationTest),
+  Layer.provide(AuthenticationLive),
   Layer.provide(JwtService.Default),
   Layer.provide(SocialDbService.Default),
   Layer.provide(PostgresLive),
@@ -383,5 +383,26 @@ const ServerLive = HttpApiBuilder.serve().pipe(
   )
 )
 
+//Test layer for development
+export const ServerTest = HttpApiBuilder.serve().pipe(
+  //server stuff
+  HttpServer.withLogAddress,
+  Layer.provide(HttpApiSwagger.layer()),
+  Layer.provide(HttpApiBuilder.middlewareOpenApi()),
+  Layer.provide(
+    BunHttpServer.layer({ port: 1083 })
+  ),
+  //api stuff
+  Layer.provide(HttpApiBuilder.api(EffectServerApi)),
+  Layer.provide(EffectServerLive),
+  Layer.provide(AuthenticationTest),
+  Layer.provide(JwtService.Default),
+  Layer.provide(SocialDbService.Default),
+  Layer.provide(PostgresTest),
+  Layer.provide(ConfigService.Default),
+  Layer.provide(Logger.pretty)
+)
+
+
 // Launch the server
-Layer.launch(ServerLive).pipe(BunRuntime.runMain)
+//Layer.launch(ServerLive).pipe(BunRuntime.runMain)
