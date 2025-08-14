@@ -255,7 +255,7 @@ it("should get profile by ID", async () => {
     const apiClient = yield* authenticatedClientEffect;
     return yield* apiClient.profiles.createProfile({
       payload: {
-        user_handle: "getbyiduser",
+        user_handle: "getbyid",
         user_name: "Get By ID User",
         user_picture: Option.some("https://example.com/pic.jpg"),
         user_bio: Option.some("Test bio"),
@@ -277,7 +277,7 @@ it("should get profile by ID", async () => {
   
   expect(getResponse).toBeDefined();
   expect(getResponse.user_id).toBe(createResponse.user_id);
-  expect(getResponse.user_handle).toBe("getbyiduser");
+  expect(getResponse.user_handle).toBe("getbyid");
   expect(getResponse.user_name).toBe("Get By ID User");
 });
 
@@ -306,7 +306,7 @@ it("should get profile by address", async () => {
     const apiClient = yield* authenticatedClientEffect;
     return yield* apiClient.profiles.createProfile({
       payload: {
-        user_handle: "getbyaddressuser",
+        user_handle: "getbyaddr",
         user_name: "Get By Address User",
         user_picture: Option.none(),
         user_bio: Option.none(),
@@ -327,7 +327,7 @@ it("should get profile by address", async () => {
   }));
   
   expect(getResponse).toBeDefined();
-  expect(getResponse.user_handle).toBe("getbyaddressuser");
+  expect(getResponse.user_handle).toBe("getbyaddr");
   expect(getResponse.user_addresses).toContain(testAddress);
 });
 
@@ -340,7 +340,7 @@ it("should get profile by handle", async () => {
     const apiClient = yield* authenticatedClientEffect;
     return yield* apiClient.profiles.createProfile({
       payload: {
-        user_handle: "getbyhandleuser",
+        user_handle: "getbyhandle",
         user_name: "Get By Handle User",
         user_picture: Option.none(),
         user_bio: Option.none(),
@@ -356,12 +356,12 @@ it("should get profile by handle", async () => {
   const getResponse = await runTest(Effect.gen(function* () {
     const apiClient = yield* unauthenticatedClientEffect; // No auth required for GET
     return yield* apiClient.profiles.getProfileByHandle({
-      urlParams: { user_handle: "getbyhandleuser" }
+      urlParams: { user_handle: "getbyhandle" }
     });
   }));
   
   expect(getResponse).toBeDefined();
-  expect(getResponse.user_handle).toBe("getbyhandleuser");
+  expect(getResponse.user_handle).toBe("getbyhandle");
   expect(getResponse.user_addresses).toContain(testAddress);
 });
 
@@ -374,7 +374,7 @@ it("should create playlist with valid authentication", async () => {
     const apiClient = yield* authenticatedClientEffect;
     return yield* apiClient.profiles.createProfile({
       payload: {
-        user_handle: "playlistuser",
+        user_handle: "playlist",
         user_name: "Playlist User",
         user_picture: Option.none(),
         user_bio: Option.none(),
@@ -434,7 +434,7 @@ it("should get playlist by ID", async () => {
     const apiClient = yield* authenticatedClientEffect;
     return yield* apiClient.profiles.createProfile({
       payload: {
-        user_handle: "getplaylistuser",
+        user_handle: "getpl",
         user_name: "Get Playlist User",
         user_picture: Option.none(),
         user_bio: Option.none(),
@@ -469,4 +469,339 @@ it("should get playlist by ID", async () => {
   expect(getResponse).toBeDefined();
   expect(getResponse.playlist_id).toBe(playlistResponse.playlist_id);
   expect(getResponse.playlist_name).toBe("Get Test Playlist");
+});
+
+it("should update playlist with valid authentication", async () => {
+  const testAddress = "test_user_address_update_playlist";
+  const authenticatedClientEffect = makeAuthenticatedClient(testAddress);
+  
+  // First create a profile and playlist
+  const profileResponse = await runTest(Effect.gen(function* () {
+    const apiClient = yield* authenticatedClientEffect;
+    return yield* apiClient.profiles.createProfile({
+      payload: {
+        user_handle: "updatepl",
+        user_name: "Update Playlist User",
+        user_picture: Option.none(),
+        user_bio: Option.none(),
+        user_twitter: Option.none(),
+        user_discord: Option.none(),
+        user_website: Option.none(),
+        user_addresses: [testAddress]
+      }
+    });
+  }));
+  
+  const playlistResponse = await runTest(Effect.gen(function* () {
+    const apiClient = yield* authenticatedClientEffect;
+    return yield* apiClient.playlists.createPlaylist({
+      payload: {
+        user_id: profileResponse.user_id,
+        playlist_name: "Original Playlist Name",
+        playlist_inscription_icon: Option.none(),
+        playlist_description: Option.some("Original description")
+      }
+    });
+  }));
+  
+  // Then update the playlist
+  const updateResponse = await runTest(Effect.gen(function* () {
+    const apiClient = yield* authenticatedClientEffect;
+    return yield* apiClient.playlists.updatePlaylist({
+      urlParams: { playlist_id: playlistResponse.playlist_id },
+      payload: {
+        user_id: profileResponse.user_id,
+        playlist_name: "Updated Playlist Name",
+        playlist_description: Option.some("Updated description")
+      }
+    });
+  }));
+  
+  expect(updateResponse).toBeDefined();
+  expect(updateResponse.playlist_id).toBe(playlistResponse.playlist_id);
+  expect(updateResponse.playlist_name).toBe("Updated Playlist Name");
+  expect(updateResponse.playlist_description).toEqual(Option.some("Updated description"));
+});
+
+it("should delete playlist with valid authentication", async () => {
+  const testAddress = "test_user_address_delete_playlist";
+  const authenticatedClientEffect = makeAuthenticatedClient(testAddress);
+  
+  // First create a profile and playlist
+  const profileResponse = await runTest(Effect.gen(function* () {
+    const apiClient = yield* authenticatedClientEffect;
+    return yield* apiClient.profiles.createProfile({
+      payload: {
+        user_handle: "deletepl",
+        user_name: "Delete Playlist User",
+        user_picture: Option.none(),
+        user_bio: Option.none(),
+        user_twitter: Option.none(),
+        user_discord: Option.none(),
+        user_website: Option.none(),
+        user_addresses: [testAddress]
+      }
+    });
+  }));
+  
+  const playlistResponse = await runTest(Effect.gen(function* () {
+    const apiClient = yield* authenticatedClientEffect;
+    return yield* apiClient.playlists.createPlaylist({
+      payload: {
+        user_id: profileResponse.user_id,
+        playlist_name: "Playlist To Delete",
+        playlist_inscription_icon: Option.none(),
+        playlist_description: Option.none()
+      }
+    });
+  }));
+  
+  // Then delete the playlist
+  const deleteResponse = await runTest(Effect.gen(function* () {
+    const apiClient = yield* authenticatedClientEffect;
+    return yield* apiClient.playlists.deletePlaylist({
+      urlParams: { playlist_id: playlistResponse.playlist_id }
+    });
+  }));
+  
+  expect(deleteResponse).toBeDefined();
+  expect(deleteResponse).toBe(`Playlist ${playlistResponse.playlist_id} deleted successfully`);
+});
+
+it("should insert playlist inscriptions with valid authentication", async () => {
+  const testAddress = "test_user_address_insert_inscriptions";
+  const authenticatedClientEffect = makeAuthenticatedClient(testAddress);
+  
+  // First create a profile and playlist
+  const profileResponse = await runTest(Effect.gen(function* () {
+    const apiClient = yield* authenticatedClientEffect;
+    return yield* apiClient.profiles.createProfile({
+      payload: {
+        user_handle: "inscript",
+        user_name: "Inscriptions User",
+        user_picture: Option.none(),
+        user_bio: Option.none(),
+        user_twitter: Option.none(),
+        user_discord: Option.none(),
+        user_website: Option.none(),
+        user_addresses: [testAddress]
+      }
+    });
+  }));
+  
+  const playlistResponse = await runTest(Effect.gen(function* () {
+    const apiClient = yield* authenticatedClientEffect;
+    return yield* apiClient.playlists.createPlaylist({
+      payload: {
+        user_id: profileResponse.user_id,
+        playlist_name: "Inscriptions Playlist",
+        playlist_inscription_icon: Option.none(),
+        playlist_description: Option.none()
+      }
+    });
+  }));
+  
+  // Insert inscriptions
+  const insertResponse = await runTest(Effect.gen(function* () {
+    const apiClient = yield* authenticatedClientEffect;
+    return yield* apiClient.playlists.insertPlaylistInscriptions({
+      payload: [
+        { playlist_id: playlistResponse.playlist_id, inscription_id: "inscription_1" },
+        { playlist_id: playlistResponse.playlist_id, inscription_id: "inscription_2" }
+      ]
+    });
+  }));
+  
+  expect(insertResponse).toBeDefined();
+  expect(insertResponse.length).toBe(2);
+  expect(insertResponse[0]?.inscription_id).toBe("inscription_1");
+  expect(insertResponse[1]?.inscription_id).toBe("inscription_2");
+});
+
+it("should update playlist inscriptions with valid authentication", async () => {
+  const testAddress = "test_user_address_update_inscriptions";
+  const authenticatedClientEffect = makeAuthenticatedClient(testAddress);
+  
+  // First create a profile and playlist
+  const profileResponse = await runTest(Effect.gen(function* () {
+    const apiClient = yield* authenticatedClientEffect;
+    return yield* apiClient.profiles.createProfile({
+      payload: {
+        user_handle: "updateinsc",
+        user_name: "Update Inscriptions User",
+        user_picture: Option.none(),
+        user_bio: Option.none(),
+        user_twitter: Option.none(),
+        user_discord: Option.none(),
+        user_website: Option.none(),
+        user_addresses: [testAddress]
+      }
+    });
+  }));
+  
+  const playlistResponse = await runTest(Effect.gen(function* () {
+    const apiClient = yield* authenticatedClientEffect;
+    return yield* apiClient.playlists.createPlaylist({
+      payload: {
+        user_id: profileResponse.user_id,
+        playlist_name: "Update Inscriptions Playlist",
+        playlist_inscription_icon: Option.none(),
+        playlist_description: Option.none()
+      }
+    });
+  }));
+  
+  // Insert initial inscriptions
+  await runTest(Effect.gen(function* () {
+    const apiClient = yield* authenticatedClientEffect;
+    return yield* apiClient.playlists.insertPlaylistInscriptions({
+      payload: [
+        { playlist_id: playlistResponse.playlist_id, inscription_id: "old_inscription_1" },
+        { playlist_id: playlistResponse.playlist_id, inscription_id: "old_inscription_2" }
+      ]
+    });
+  }));
+  
+  // Update inscriptions
+  const updateResponse = await runTest(Effect.gen(function* () {
+    const apiClient = yield* authenticatedClientEffect;
+    return yield* apiClient.playlists.updatePlaylistInscriptions({
+      urlParams: { playlist_id: playlistResponse.playlist_id },
+      payload: [
+        { playlist_id: playlistResponse.playlist_id, inscription_id: "new_inscription_1", playlist_position: 0 },
+        { playlist_id: playlistResponse.playlist_id, inscription_id: "new_inscription_2", playlist_position: 1 }
+      ]
+    });
+  }));
+  
+  expect(updateResponse).toBeDefined();
+  expect(updateResponse.length).toBe(2);
+  expect(updateResponse[0]?.inscription_id).toBe("new_inscription_1");
+  expect(updateResponse[1]?.inscription_id).toBe("new_inscription_2");
+});
+
+it("should get playlist inscriptions", async () => {
+  const testAddress = "test_user_address_get_inscriptions";
+  const authenticatedClientEffect = makeAuthenticatedClient(testAddress);
+  
+  // First create a profile and playlist
+  const profileResponse = await runTest(Effect.gen(function* () {
+    const apiClient = yield* authenticatedClientEffect;
+    return yield* apiClient.profiles.createProfile({
+      payload: {
+        user_handle: "getinsc",
+        user_name: "Get Inscriptions User",
+        user_picture: Option.none(),
+        user_bio: Option.none(),
+        user_twitter: Option.none(),
+        user_discord: Option.none(),
+        user_website: Option.none(),
+        user_addresses: [testAddress]
+      }
+    });
+  }));
+  
+  const playlistResponse = await runTest(Effect.gen(function* () {
+    const apiClient = yield* authenticatedClientEffect;
+    return yield* apiClient.playlists.createPlaylist({
+      payload: {
+        user_id: profileResponse.user_id,
+        playlist_name: "Get Inscriptions Playlist",
+        playlist_inscription_icon: Option.none(),
+        playlist_description: Option.none()
+      }
+    });
+  }));
+  
+  // Insert inscriptions
+  await runTest(Effect.gen(function* () {
+    const apiClient = yield* authenticatedClientEffect;
+    return yield* apiClient.playlists.insertPlaylistInscriptions({
+      payload: [
+        { playlist_id: playlistResponse.playlist_id, inscription_id: "get_inscription_1" },
+        { playlist_id: playlistResponse.playlist_id, inscription_id: "get_inscription_2" }
+      ]
+    });
+  }));
+  
+  // Get inscriptions
+  const getResponse = await runTest(Effect.gen(function* () {
+    const apiClient = yield* unauthenticatedClientEffect; // No auth required for GET
+    return yield* apiClient.playlists.getPlaylistInscriptions({
+      urlParams: { playlist_id: playlistResponse.playlist_id }
+    });
+  }));
+  
+  expect(getResponse).toBeDefined();
+  expect(getResponse.length).toBe(2);
+  expect(getResponse[0]?.inscription_id).toBe("get_inscription_1");
+  expect(getResponse[1]?.inscription_id).toBe("get_inscription_2");
+});
+
+it("should delete playlist inscriptions with valid authentication", async () => {
+  const testAddress = "test_user_address_delete_inscriptions";
+  const authenticatedClientEffect = makeAuthenticatedClient(testAddress);
+  
+  // First create a profile and playlist
+  const profileResponse = await runTest(Effect.gen(function* () {
+    const apiClient = yield* authenticatedClientEffect;
+    return yield* apiClient.profiles.createProfile({
+      payload: {
+        user_handle: "deleteinsc",
+        user_name: "Delete Inscriptions User",
+        user_picture: Option.none(),
+        user_bio: Option.none(),
+        user_twitter: Option.none(),
+        user_discord: Option.none(),
+        user_website: Option.none(),
+        user_addresses: [testAddress]
+      }
+    });
+  }));
+  
+  const playlistResponse = await runTest(Effect.gen(function* () {
+    const apiClient = yield* authenticatedClientEffect;
+    return yield* apiClient.playlists.createPlaylist({
+      payload: {
+        user_id: profileResponse.user_id,
+        playlist_name: "Delete Inscriptions Playlist",
+        playlist_inscription_icon: Option.none(),
+        playlist_description: Option.none()
+      }
+    });
+  }));
+  
+  // Insert inscriptions
+  await runTest(Effect.gen(function* () {
+    const apiClient = yield* authenticatedClientEffect;
+    return yield* apiClient.playlists.insertPlaylistInscriptions({
+      payload: [
+        { playlist_id: playlistResponse.playlist_id, inscription_id: "delete_inscription_1" },
+        { playlist_id: playlistResponse.playlist_id, inscription_id: "delete_inscription_2" }
+      ]
+    });
+  }));
+  
+  // Delete inscriptions
+  const deleteResponse = await runTest(Effect.gen(function* () {
+    const apiClient = yield* authenticatedClientEffect;
+    return yield* apiClient.playlists.deletePlaylistInscriptions({
+      urlParams: { playlist_id: playlistResponse.playlist_id },
+      payload: ["delete_inscription_1", "delete_inscription_2"]
+    });
+  }));
+  
+  expect(deleteResponse).toBeDefined();
+  expect(deleteResponse).toBe(`2 inscriptions deleted successfully from playlist ${playlistResponse.playlist_id}`);
+});
+
+it("should test home endpoint", async () => {
+  const response = await runTest(Effect.gen(function* () {
+    const apiClient = yield* unauthenticatedClientEffect;
+    return yield* apiClient.playlists.home({});
+  }));
+  
+  expect(response).toBeDefined();
+  expect(typeof response).toBe("string");
+  expect(response).toContain("Bitcoin");
 });
