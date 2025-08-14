@@ -1,4 +1,4 @@
-import { expect, it, beforeAll } from "bun:test";
+import { expect, it, beforeAll, describe } from "bun:test";
 import { Effect, Layer, Option } from "effect";
 import { HttpApiClient, FetchHttpClient, HttpClient, HttpClientRequest } from '@effect/platform';
 import { EffectServerApi, ServerTest } from "../effectServer/effectServer";
@@ -6,7 +6,7 @@ import { PostgresTest, SocialDbService } from "../effectDb";
 import { ConfigService } from "../config";
 import { Unauthorized } from "../effectServer/authMiddleware";
 import { ParseError } from "effect/ParseResult";
-import { NotFound } from "../effectServer/apiErrors";
+import { NotFound, Issue, Conflict, Forbidden } from "../effectServer/apiErrors";
 
 let dbLayer = SocialDbService.Default.pipe(
   Layer.provide(PostgresTest),
@@ -804,4 +804,390 @@ it("should test home endpoint", async () => {
   expect(response).toBeDefined();
   expect(typeof response).toBe("string");
   expect(response).toContain("Bitcoin");
+});
+
+// ============================================================================
+// FAILURE CASE TESTS
+// ============================================================================
+
+describe("Authentication Failure Tests", () => {
+  it("should fail to update playlist without authentication", async () => {
+    const result = await runTest(Effect.gen(function* () {
+      const apiClient = yield* unauthenticatedClientEffect;
+      return yield* apiClient.playlists.updatePlaylist({
+        urlParams: { playlist_id: "00000000-0000-0000-0000-000000000001" },
+        payload: {
+          user_id: "00000000-0000-0000-0000-000000000010",
+          playlist_name: "Unauthorized Update"
+        }
+      }).pipe(
+        Effect.catchTag("Unauthorized", (error) => {
+          return Effect.succeed(error);
+        })
+      );
+    }));
+    
+    expect(result).toBeDefined();
+    expect(result).toBeInstanceOf(Unauthorized);
+    expect((result as Unauthorized).message).toContain("No Bearer token provided");
+  });
+
+  it("should fail to delete playlist without authentication", async () => {
+    const result = await runTest(Effect.gen(function* () {
+      const apiClient = yield* unauthenticatedClientEffect;
+      return yield* apiClient.playlists.deletePlaylist({
+        urlParams: { playlist_id: "00000000-0000-0000-0000-000000000001" }
+      }).pipe(
+        Effect.catchTag("Unauthorized", (error) => {
+          return Effect.succeed(error);
+        })
+      );
+    }));
+    
+    expect(result).toBeDefined();
+    expect(result).toBeInstanceOf(Unauthorized);
+  });
+
+  it("should fail to insert playlist inscriptions without authentication", async () => {
+    const result = await runTest(Effect.gen(function* () {
+      const apiClient = yield* unauthenticatedClientEffect;
+      return yield* apiClient.playlists.insertPlaylistInscriptions({
+        payload: [
+          { playlist_id: "00000000-0000-0000-0000-000000000001", inscription_id: "test" }
+        ]
+      }).pipe(
+        Effect.catchTag("Unauthorized", (error) => {
+          return Effect.succeed(error);
+        })
+      );
+    }));
+    
+    expect(result).toBeDefined();
+    expect(result).toBeInstanceOf(Unauthorized);
+  });
+});
+
+describe("Validation Error Tests", () => {
+  it("should fail to create profile with invalid handle length", async () => {
+    const testAddress = "test_invalid_handle";
+    const authenticatedClientEffect = makeAuthenticatedClient(testAddress);
+    
+    const result = await runTest(Effect.gen(function* () {
+      const apiClient = yield* authenticatedClientEffect;
+      return yield* apiClient.profiles.createProfile({
+        payload: {
+          user_handle: "a", // Too short (minimum 2 chars)
+          user_name: "Invalid User",
+          user_picture: Option.none(),
+          user_bio: Option.none(),
+          user_twitter: Option.none(),
+          user_discord: Option.none(),
+          user_website: Option.none(),
+          user_addresses: [testAddress]
+        }
+      }).pipe(
+        Effect.catchTag("ParseError", (error) => {
+          return Effect.succeed(error);
+        })
+      );
+    }));
+    
+    expect(result).toBeDefined();
+    expect(result).toBeInstanceOf(ParseError);
+  });
+
+  it("should fail to create profile with handle too long", async () => {
+    const testAddress = "test_long_handle";
+    const authenticatedClientEffect = makeAuthenticatedClient(testAddress);
+    
+    const result = await runTest(Effect.gen(function* () {
+      const apiClient = yield* authenticatedClientEffect;
+      return yield* apiClient.profiles.createProfile({
+        payload: {
+          user_handle: "thishandleistoolongtobevalid", // Too long (max 17 chars)
+          user_name: "Invalid User",
+          user_picture: Option.none(),
+          user_bio: Option.none(),
+          user_twitter: Option.none(),
+          user_discord: Option.none(),
+          user_website: Option.none(),
+          user_addresses: [testAddress]
+        }
+      }).pipe(
+        Effect.catchTag("ParseError", (error) => {
+          return Effect.succeed(error);
+        })
+      );
+    }));
+    
+    expect(result).toBeDefined();
+    expect(result).toBeInstanceOf(ParseError);
+  });
+
+  it("should fail to create playlist with invalid UUID", async () => {
+    const testAddress = "test_invalid_uuid";
+    const authenticatedClientEffect = makeAuthenticatedClient(testAddress);
+    
+    const result = await runTest(Effect.gen(function* () {
+      const apiClient = yield* authenticatedClientEffect;
+      return yield* apiClient.playlists.createPlaylist({
+        payload: {
+          user_id: "invalid-uuid-format", // Invalid UUID
+          playlist_name: "Test Playlist",
+          playlist_inscription_icon: Option.none(),
+          playlist_description: Option.none()
+        }
+      }).pipe(
+        Effect.catchTag("ParseError", (error) => {
+          return Effect.succeed(error);
+        })
+      );
+    }));
+    
+    expect(result).toBeDefined();
+    expect(result).toBeInstanceOf(ParseError);
+  });
+});
+
+describe("Not Found Error Tests", () => {
+  it("should fail to update non-existent profile", async () => {
+    const testAddress = "test_nonexistent_profile";
+    const authenticatedClientEffect = makeAuthenticatedClient(testAddress);
+    
+    const result = await runTest(Effect.gen(function* () {
+      const apiClient = yield* authenticatedClientEffect;
+      return yield* apiClient.profiles.updateProfile({
+        urlParams: { user_id: "00000000-0000-0000-0000-000000000999" },
+        payload: {
+          user_bio: Option.some("Updated bio")
+        }
+      }).pipe(
+        Effect.catchTag("NotFound", (error) => {
+          return Effect.succeed(error);
+        })
+      );
+    }));
+    
+    expect(result).toBeDefined();
+    expect(result).toBeInstanceOf(NotFound);
+  });
+
+  it("should fail to get non-existent playlist", async () => {
+    const result = await runTest(Effect.gen(function* () {
+      const apiClient = yield* unauthenticatedClientEffect;
+      return yield* apiClient.playlists.getPlaylist({
+        urlParams: { playlist_id: "00000000-0000-0000-0000-000000000999" }
+      }).pipe(
+        Effect.catchTag("NotFound", (error) => {
+          return Effect.succeed(error);
+        })
+      );
+    }));
+    
+    expect(result).toBeDefined();
+    expect(result).toBeInstanceOf(NotFound);
+  });
+
+  it("should fail to delete non-existent profile", async () => {
+    const testAddress = "test_delete_nonexistent";
+    const authenticatedClientEffect = makeAuthenticatedClient(testAddress);
+    
+    const result = await runTest(Effect.gen(function* () {
+      const apiClient = yield* authenticatedClientEffect;
+      return yield* apiClient.profiles.deleteProfile({
+        urlParams: { user_id: "00000000-0000-0000-0000-000000000999" }
+      }).pipe(
+        Effect.catchTag("NotFound", (error) => {
+          return Effect.succeed(error);
+        })
+      );
+    }));
+    
+    expect(result).toBeDefined();
+    expect(result).toBeInstanceOf(NotFound);
+  });
+});
+
+describe("Authorization Error Tests", () => {
+  it("should fail to update another user's profile", async () => {
+    const userAddress1 = "test_user_1_auth";
+    const userAddress2 = "test_user_2_auth";
+    const authenticatedClient1 = makeAuthenticatedClient(userAddress1);
+    const authenticatedClient2 = makeAuthenticatedClient(userAddress2);
+    
+    // Create profile with user 1
+    const profileResponse = await runTest(Effect.gen(function* () {
+      const apiClient = yield* authenticatedClient1;
+      return yield* apiClient.profiles.createProfile({
+        payload: {
+          user_handle: "authuser1",
+          user_name: "Auth User 1",
+          user_picture: Option.none(),
+          user_bio: Option.none(),
+          user_twitter: Option.none(),
+          user_discord: Option.none(),
+          user_website: Option.none(),
+          user_addresses: [userAddress1]
+        }
+      });
+    }));
+    
+    // Try to update with user 2 (should fail)
+    const result = await runTest(Effect.gen(function* () {
+      const apiClient = yield* authenticatedClient2;
+      return yield* apiClient.profiles.updateProfile({
+        urlParams: { user_id: profileResponse.user_id },
+        payload: {
+          user_bio: Option.some("Unauthorized update")
+        }
+      }).pipe(
+        Effect.catchTag("NotFound", (error) => {
+          return Effect.succeed(error);
+        })
+      );
+    }));
+    
+    expect(result).toBeDefined();
+    expect(result).toBeInstanceOf(NotFound);
+  });
+
+  it("should fail to create playlist for another user", async () => {
+    const userAddress1 = "test_playlist_user1";
+    const userAddress2 = "test_playlist_user2";
+    const authenticatedClient1 = makeAuthenticatedClient(userAddress1);
+    const authenticatedClient2 = makeAuthenticatedClient(userAddress2);
+    
+    // Create profile with user 1
+    const profileResponse = await runTest(Effect.gen(function* () {
+      const apiClient = yield* authenticatedClient1;
+      return yield* apiClient.profiles.createProfile({
+        payload: {
+          user_handle: "pluser1",
+          user_name: "Playlist User 1",
+          user_picture: Option.none(),
+          user_bio: Option.none(),
+          user_twitter: Option.none(),
+          user_discord: Option.none(),
+          user_website: Option.none(),
+          user_addresses: [userAddress1]
+        }
+      });
+    }));
+    
+    // Try to create playlist for user 1's profile using user 2's auth (should fail)
+    const result = await runTest(Effect.gen(function* () {
+      const apiClient = yield* authenticatedClient2;
+      return yield* apiClient.playlists.createPlaylist({
+        payload: {
+          user_id: profileResponse.user_id,
+          playlist_name: "Unauthorized Playlist",
+          playlist_inscription_icon: Option.none(),
+          playlist_description: Option.none()
+        }
+      }).pipe(
+        Effect.catchTag("Forbidden", (error) => {
+          return Effect.succeed(error);
+        })
+      );
+    }));
+    
+    expect(result).toBeDefined();
+    expect(result).toBeInstanceOf(Forbidden);
+  });
+});
+
+describe("Conflict Error Tests", () => {
+  it("should fail to create profile with duplicate handle", async () => {
+    const userAddress1 = "test_conflict_user1";
+    const userAddress2 = "test_conflict_user2";
+    const authenticatedClient1 = makeAuthenticatedClient(userAddress1);
+    const authenticatedClient2 = makeAuthenticatedClient(userAddress2);
+    
+    // Create first profile
+    await runTest(Effect.gen(function* () {
+      const apiClient = yield* authenticatedClient1;
+      return yield* apiClient.profiles.createProfile({
+        payload: {
+          user_handle: "conflictuser",
+          user_name: "Conflict User 1",
+          user_picture: Option.none(),
+          user_bio: Option.none(),
+          user_twitter: Option.none(),
+          user_discord: Option.none(),
+          user_website: Option.none(),
+          user_addresses: [userAddress1]
+        }
+      });
+    }));
+    
+    // Try to create second profile with same handle (should fail)
+    const result = await runTest(Effect.gen(function* () {
+      const apiClient = yield* authenticatedClient2;
+      return yield* apiClient.profiles.createProfile({
+        payload: {
+          user_handle: "conflictuser", // Same handle
+          user_name: "Conflict User 2",
+          user_picture: Option.none(),
+          user_bio: Option.none(),
+          user_twitter: Option.none(),
+          user_discord: Option.none(),
+          user_website: Option.none(),
+          user_addresses: [userAddress2]
+        }
+      }).pipe(
+        Effect.catchTag("Conflict", (error) => {
+          return Effect.succeed(error);
+        })
+      );
+    }));
+    
+    expect(result).toBeDefined();
+    expect(result).toBeInstanceOf(Conflict);
+  });
+
+  it("should fail to create second profile with same address", async () => {
+    const userAddress = "test_same_address";
+    const authenticatedClient = makeAuthenticatedClient(userAddress);
+    
+    // Create first profile
+    await runTest(Effect.gen(function* () {
+      const apiClient = yield* authenticatedClient;
+      return yield* apiClient.profiles.createProfile({
+        payload: {
+          user_handle: "firstuser",
+          user_name: "First User",
+          user_picture: Option.none(),
+          user_bio: Option.none(),
+          user_twitter: Option.none(),
+          user_discord: Option.none(),
+          user_website: Option.none(),
+          user_addresses: [userAddress]
+        }
+      });
+    }));
+    
+    // Try to create second profile with same address (should fail)
+    const result = await runTest(Effect.gen(function* () {
+      const apiClient = yield* authenticatedClient;
+      return yield* apiClient.profiles.createProfile({
+        payload: {
+          user_handle: "seconduser",
+          user_name: "Second User",
+          user_picture: Option.none(),
+          user_bio: Option.none(),
+          user_twitter: Option.none(),
+          user_discord: Option.none(),
+          user_website: Option.none(),
+          user_addresses: [userAddress] // Same address
+        }
+      }).pipe(
+        Effect.catchTag("Conflict", (error) => {
+          return Effect.succeed(error);
+        })
+      );
+    }));
+    
+    expect(result).toBeDefined();
+    expect(result).toBeInstanceOf(Conflict);
+  });
 });
