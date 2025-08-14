@@ -6,6 +6,7 @@ import { PostgresTest, SocialDbService } from "../effectDb";
 import { ConfigService } from "../config";
 import { Unauthorized } from "../effectServer/authMiddleware";
 import { ParseError } from "effect/ParseResult";
+import { NotFound } from "../effectServer/apiErrors";
 
 let dbLayer = SocialDbService.Default.pipe(
   Layer.provide(PostgresTest),
@@ -194,4 +195,278 @@ it("should fail to update profile without authentication", async () => {
   expect(result).toBeDefined();
   expect(result).toBeInstanceOf(Unauthorized);
   expect((result as Unauthorized).message).toContain("No Bearer token provided");
+});
+
+it("should delete profile with valid authentication", async () => {
+  const testAddress = "test_user_address_delete";
+  const authenticatedClientEffect = makeAuthenticatedClient(testAddress);
+  
+  // First create a profile
+  const createResponse = await runTest(Effect.gen(function* () {
+    const apiClient = yield* authenticatedClientEffect;
+    return yield* apiClient.profiles.createProfile({
+      payload: {
+        user_handle: "deleteuser",
+        user_name: "Delete User",
+        user_picture: Option.none(),
+        user_bio: Option.none(),
+        user_twitter: Option.none(),
+        user_discord: Option.none(),
+        user_website: Option.none(),
+        user_addresses: [testAddress]
+      }
+    });
+  }));
+  
+  // Then delete the profile
+  const deleteResponse = await runTest(Effect.gen(function* () {
+    const apiClient = yield* authenticatedClientEffect;
+    return yield* apiClient.profiles.deleteProfile({
+      urlParams: { user_id: createResponse.user_id }
+    });
+  }));
+  expect(deleteResponse).toBeDefined();
+  expect(deleteResponse).toBe(`Profile ${createResponse.user_id} deleted successfully`);
+});
+
+it("should fail to delete profile without authentication", async () => {
+  const result = await runTest(Effect.gen(function* () {
+    const apiClient = yield* unauthenticatedClientEffect;
+    return yield* apiClient.profiles.deleteProfile({
+      urlParams: { user_id: "00000000-0000-0000-0000-000000000001" }
+    }).pipe(
+      Effect.catchTag("Unauthorized", (error) => {
+        return Effect.succeed(error);
+      })
+    );
+  }));
+  
+  expect(result).toBeDefined();
+  expect(result).toBeInstanceOf(Unauthorized);
+  expect((result as Unauthorized).message).toContain("No Bearer token provided");
+});
+
+it("should get profile by ID", async () => {
+  const testAddress = "test_user_address_get_by_id";
+  const authenticatedClientEffect = makeAuthenticatedClient(testAddress);
+  
+  // First create a profile
+  const createResponse = await runTest(Effect.gen(function* () {
+    const apiClient = yield* authenticatedClientEffect;
+    return yield* apiClient.profiles.createProfile({
+      payload: {
+        user_handle: "getbyiduser",
+        user_name: "Get By ID User",
+        user_picture: Option.some("https://example.com/pic.jpg"),
+        user_bio: Option.some("Test bio"),
+        user_twitter: Option.none(),
+        user_discord: Option.none(),
+        user_website: Option.none(),
+        user_addresses: [testAddress]
+      }
+    });
+  }));
+  
+  // Then get the profile by ID
+  const getResponse = await runTest(Effect.gen(function* () {
+    const apiClient = yield* unauthenticatedClientEffect; // No auth required for GET
+    return yield* apiClient.profiles.getProfileById({
+      urlParams: { user_id: createResponse.user_id }
+    });
+  }));
+  
+  expect(getResponse).toBeDefined();
+  expect(getResponse.user_id).toBe(createResponse.user_id);
+  expect(getResponse.user_handle).toBe("getbyiduser");
+  expect(getResponse.user_name).toBe("Get By ID User");
+});
+
+it("should fail to get profile by non-existent ID", async () => {
+  const result = await runTest(Effect.gen(function* () {
+    const apiClient = yield* unauthenticatedClientEffect;
+    return yield* apiClient.profiles.getProfileById({
+      urlParams: { user_id: "00000000-0000-0000-0000-000000000999" }
+    }).pipe(
+      Effect.catchTag("NotFound", (error) => {
+        return Effect.succeed(error);
+      })
+    );
+  }));
+  
+  expect(result).toBeDefined();
+  expect(result).toBeInstanceOf(NotFound);
+});
+
+it("should get profile by address", async () => {
+  const testAddress = "test_user_address_get_by_address";
+  const authenticatedClientEffect = makeAuthenticatedClient(testAddress);
+  
+  // First create a profile
+  await runTest(Effect.gen(function* () {
+    const apiClient = yield* authenticatedClientEffect;
+    return yield* apiClient.profiles.createProfile({
+      payload: {
+        user_handle: "getbyaddressuser",
+        user_name: "Get By Address User",
+        user_picture: Option.none(),
+        user_bio: Option.none(),
+        user_twitter: Option.none(),
+        user_discord: Option.none(),
+        user_website: Option.none(),
+        user_addresses: [testAddress]
+      }
+    });
+  }));
+  
+  // Then get the profile by address
+  const getResponse = await runTest(Effect.gen(function* () {
+    const apiClient = yield* unauthenticatedClientEffect; // No auth required for GET
+    return yield* apiClient.profiles.getProfileByAddress({
+      urlParams: { user_address: testAddress }
+    });
+  }));
+  
+  expect(getResponse).toBeDefined();
+  expect(getResponse.user_handle).toBe("getbyaddressuser");
+  expect(getResponse.user_addresses).toContain(testAddress);
+});
+
+it("should get profile by handle", async () => {
+  const testAddress = "test_user_address_get_by_handle";
+  const authenticatedClientEffect = makeAuthenticatedClient(testAddress);
+  
+  // First create a profile
+  await runTest(Effect.gen(function* () {
+    const apiClient = yield* authenticatedClientEffect;
+    return yield* apiClient.profiles.createProfile({
+      payload: {
+        user_handle: "getbyhandleuser",
+        user_name: "Get By Handle User",
+        user_picture: Option.none(),
+        user_bio: Option.none(),
+        user_twitter: Option.none(),
+        user_discord: Option.none(),
+        user_website: Option.none(),
+        user_addresses: [testAddress]
+      }
+    });
+  }));
+  
+  // Then get the profile by handle
+  const getResponse = await runTest(Effect.gen(function* () {
+    const apiClient = yield* unauthenticatedClientEffect; // No auth required for GET
+    return yield* apiClient.profiles.getProfileByHandle({
+      urlParams: { user_handle: "getbyhandleuser" }
+    });
+  }));
+  
+  expect(getResponse).toBeDefined();
+  expect(getResponse.user_handle).toBe("getbyhandleuser");
+  expect(getResponse.user_addresses).toContain(testAddress);
+});
+
+it("should create playlist with valid authentication", async () => {
+  const testAddress = "test_user_address_playlist";
+  const authenticatedClientEffect = makeAuthenticatedClient(testAddress);
+  
+  // First create a profile
+  const profileResponse = await runTest(Effect.gen(function* () {
+    const apiClient = yield* authenticatedClientEffect;
+    return yield* apiClient.profiles.createProfile({
+      payload: {
+        user_handle: "playlistuser",
+        user_name: "Playlist User",
+        user_picture: Option.none(),
+        user_bio: Option.none(),
+        user_twitter: Option.none(),
+        user_discord: Option.none(),
+        user_website: Option.none(),
+        user_addresses: [testAddress]
+      }
+    });
+  }));
+  
+  // Then create a playlist
+  const playlistResponse = await runTest(Effect.gen(function* () {
+    const apiClient = yield* authenticatedClientEffect;
+    return yield* apiClient.playlists.createPlaylist({
+      payload: {
+        user_id: profileResponse.user_id,
+        playlist_name: "Test Playlist",
+        playlist_inscription_icon: Option.some("icon_inscription_id"),
+        playlist_description: Option.some("Test playlist description")
+      }
+    });
+  }));
+  
+  expect(playlistResponse).toBeDefined();
+  expect(playlistResponse.playlist_id).toBeDefined();
+});
+
+it("should fail to create playlist without authentication", async () => {
+  const result = await runTest(Effect.gen(function* () {
+    const apiClient = yield* unauthenticatedClientEffect;
+    return yield* apiClient.playlists.createPlaylist({
+      payload: {
+        user_id: "00000000-0000-0000-0000-000000000001",
+        playlist_name: "Unauthorized Playlist",
+        playlist_inscription_icon: Option.none(),
+        playlist_description: Option.none()
+      }
+    }).pipe(
+      Effect.catchTag("Unauthorized", (error) => {
+        return Effect.succeed(error);
+      })
+    );
+  }));
+  
+  expect(result).toBeDefined();
+  expect(result).toBeInstanceOf(Unauthorized);
+  expect((result as Unauthorized).message).toContain("No Bearer token provided");
+});
+
+it("should get playlist by ID", async () => {
+  const testAddress = "test_user_address_get_playlist";
+  const authenticatedClientEffect = makeAuthenticatedClient(testAddress);
+  
+  // First create a profile and playlist
+  const profileResponse = await runTest(Effect.gen(function* () {
+    const apiClient = yield* authenticatedClientEffect;
+    return yield* apiClient.profiles.createProfile({
+      payload: {
+        user_handle: "getplaylistuser",
+        user_name: "Get Playlist User",
+        user_picture: Option.none(),
+        user_bio: Option.none(),
+        user_twitter: Option.none(),
+        user_discord: Option.none(),
+        user_website: Option.none(),
+        user_addresses: [testAddress]
+      }
+    });
+  }));
+  
+  const playlistResponse = await runTest(Effect.gen(function* () {
+    const apiClient = yield* authenticatedClientEffect;
+    return yield* apiClient.playlists.createPlaylist({
+      payload: {
+        user_id: profileResponse.user_id,
+        playlist_name: "Get Test Playlist",
+        playlist_inscription_icon: Option.none(),
+        playlist_description: Option.some("Description for get test")
+      }
+    });
+  }));
+  
+  // Then get the playlist
+  const getResponse = await runTest(Effect.gen(function* () {
+    const apiClient = yield* unauthenticatedClientEffect; // No auth required for GET
+    return yield* apiClient.playlists.getPlaylist({
+      urlParams: { playlist_id: playlistResponse.playlist_id }
+    });
+  }));
+  
+  expect(getResponse).toBeDefined();
+  expect(getResponse.playlist_id).toBe(playlistResponse.playlist_id);
+  expect(getResponse.playlist_name).toBe("Get Test Playlist");
 });

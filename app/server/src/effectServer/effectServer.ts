@@ -47,7 +47,7 @@ export const EffectServerApi = HttpApi.make("EffectServer").add(
     HttpApiEndpoint.del("deleteProfile", `/social/delete_profile/:user_id`)
       .middleware(Authentication)
       .setUrlParams(Schema.Struct({ user_id: Schema.UUID }))
-      .addSuccess(Schema.Void)
+      .addSuccess(Schema.String)
       .addError(NotFound)
   )
 ).add(
@@ -145,9 +145,7 @@ export const EffectServerLive = Layer.merge(
 
 
 const homeHandler = (_req: {readonly request: HttpServerRequest.HttpServerRequest}) => Effect.gen(function* () {
-  return HttpServerResponse.text(
-    "If Bitcoin is to change the culture of money, it needs to be cool. Ordinals was the missing piece. The path to $1m is preordained"
-  );
+  return "If Bitcoin is to change the culture of money, it needs to be cool. Ordinals was the missing piece. The path to $1m is preordained";
 })
 
 const createPlaylistHandler = (req: { 
@@ -193,7 +191,7 @@ const deletePlaylistHandler = (req: {
 }) => Effect.gen(function* () {
   let db = yield* SocialDbService;
   const deleted = yield* db.deletePlaylist(req.urlParams.playlist_id);
-  return HttpServerResponse.text(`Playlist ${deleted.playlist_id} deleted successfully`);
+  return `Playlist ${deleted.playlist_id} deleted successfully`;
 }).pipe(
   Effect.tapError((error) => Effect.logError("Failed to delete playlist", error)),
   Effect.catchTags({
@@ -254,7 +252,7 @@ const deletePlaylistInscriptionsHandler = (req: {
 }) => Effect.gen(function* () {
   let db = yield* SocialDbService;
   const deleted = yield* db.deletePlaylistInscriptions(req.urlParams.playlist_id, req.payload);
-  return HttpServerResponse.text(`${deleted.length} inscriptions deleted successfully from playlist ${req.urlParams.playlist_id}`);
+  return `${deleted.length} inscriptions deleted successfully from playlist ${req.urlParams.playlist_id}`;
 }).pipe(
   Effect.tapError((error) => Effect.logError("Failed to delete playlist inscriptions", error)),
   Effect.catchTags({
@@ -314,7 +312,7 @@ const deleteProfileHandler = (req: {
 }) => Effect.gen(function* () {
   let db = yield* SocialDbService;
   const deleted = yield* db.deleteProfile(req.urlParams.user_id);
-  return HttpServerResponse.text(`Profile ${deleted.user_id} deleted successfully`);
+  return `Profile ${deleted.user_id} deleted successfully`;
 }).pipe(
   Effect.tapError((error) => Effect.logError("Failed to delete profile", error)),
   Effect.catchTags({

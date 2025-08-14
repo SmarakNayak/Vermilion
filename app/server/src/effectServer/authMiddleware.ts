@@ -40,7 +40,7 @@ export const AuthenticationLive = Layer.effect(
         Effect.gen(function* () {
           const tokenValue = Redacted.value(token) // Extract the actual token value
           if (tokenValue === "") {
-            return yield* Effect.fail(new Unauthorized({message: "No Bearer token provided"  }));
+            return yield* Effect.fail(new Unauthorized({ message: "No Bearer token provided" }));
           }
           const payload = yield* jwtService.verifyToken(tokenValue);
           return {
@@ -66,7 +66,6 @@ export const AuthenticationTest = Layer.succeed(
           message: "No Bearer token provided"
         }));
       }
-      yield* Effect.log(`Test token: ${tokenValue}...`);
       return {
         userAddress: tokenValue, // For testing, we can use the token value as the user address
         // userId: "test-user-id",
