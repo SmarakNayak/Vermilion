@@ -170,6 +170,18 @@ const useInscriptionContent = (number) => {
           case "audio/mpeg":
             contentTypeCategory = "audio";
             break;
+          case "audio/opus":
+            contentTypeCategory = "audio";
+            break;
+          case "audio/ogg":
+            contentTypeCategory = "audio";
+            break;
+          case "audio/ogg; codecs=opus":
+            contentTypeCategory = "audio";
+            break;
+          case "audio/ogg;codecs=opus":
+            contentTypeCategory = "audio";
+            break;
           //Pdf types
           case "application/pdf":
             contentTypeCategory = "pdf";

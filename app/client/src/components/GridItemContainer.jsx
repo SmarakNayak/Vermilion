@@ -90,6 +90,18 @@ const GridItemContainer = (props) => {
         case "audio/mpeg":
           setContentType("audio");
           break;
+        case "audio/opus":
+          setContentType("audio");
+          break;
+        case "audio/ogg":
+          setContentType("audio");
+          break;
+        case "audio/ogg; codecs=opus":
+          setContentType("audio");
+          break;
+        case "audio/ogg;codecs=opus":
+          setContentType("audio");
+          break;
         //Pdf types
         case "application/pdf":
           setContentType("pdf");
