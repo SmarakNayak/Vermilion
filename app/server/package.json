@@ -11,11 +11,12 @@
     "@types/bun": "latest"
   },
   "dependencies": {
+    "@effect/platform": "^0.90.3",
     "@effect/platform-bun": "^0.77.0",
     "@effect/sql-pg": "^0.42.0",
     "@types/jsonwebtoken": "^9.0.9",
     "bip322-js": "^3.0.0",
-    "effect": "^3.17.3",
+    "effect": "^3.17.7",
     "jimp": "^1.6.0",
     "jsonwebtoken": "^9.0.2",
     "pg": "^8.13.3",

@@ -22,6 +22,7 @@ import Children from '../pages/Children';
 import Attributions from '../pages/Attributions';
 import History from '../pages/History';
 import Settings from '../pages/Settings';
+// import { SomeComponent } from '../api/EffectApi';
 
 import { addCommas, formatAddress } from '../utils/format';
 import PostHogPageView from '../../PostHogPageView';
@@ -189,6 +190,7 @@ const Navigation = () => {
           <Route path="/search/:query" element={<TitledComponent title="Search" Component={Search} />} />
           <Route path="/history" element={<TitledComponent title="Order History" Component={History} />} />
           <Route path="/settings/profile" element={<TitledComponent title="Edit Profile" Component={Settings} />} />
+          {/* <Route path="/apitest" element={<TitledComponent title="Api test" Component={SomeComponent} />} /> */}
 
           {/* Add 404 route */}
           <Route path="*" element={<TitledComponent title="404 - Page Not Found" Component={NotFound} />} />
