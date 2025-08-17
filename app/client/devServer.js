@@ -2,6 +2,7 @@ import homepage from "./index.html";
 
 const useLocalSocial = process.argv.includes('--local-social');
 const socialTarget = useLocalSocial ? 'http://localhost:1082' : 'https://blue.vermilion.place';
+const effectTarget = useLocalSocial ? 'http://localhost:1083' : 'https://blue.vermilion.place';
 
 const server = Bun.serve({
   port: 3000,
@@ -31,6 +32,20 @@ const server = Bun.serve({
         return proxyRequest(req, socialTarget, '/social/*');
       }
     },
+    '/effect/*': {
+      GET: async req => {
+        return proxyRequest(req, effectTarget, false, '/effect');
+      },
+      POST: async req => {
+        return proxyRequest(req, effectTarget, false, '/effect');
+      },
+      PUT: async req => {
+        return proxyRequest(req, effectTarget, false, '/effect');
+      },
+      DELETE: async req => {
+        return proxyRequest(req, effectTarget, false, '/effect');
+      }
+    },
     '/r/*': async req => {
       return proxyRequest(req, 'https://blue.vermilion.place');
     },
@@ -50,9 +65,15 @@ const server = Bun.serve({
   }
 });
 
-async function proxyRequest(req, targetHost, rewrite) {
-  const url = new URL(req.url);
+async function proxyRequest(req, targetHost, rewrite, strip) {
+  let url = new URL(req.url);
   let path = url.pathname;
+
+  // strip prefix if specified
+  if (strip && path.startsWith(strip)) {
+    path = path.slice(strip.length);
+    if (!path.startsWith('/')) path = '/' + path;
+  }
 
   // handle wildcard in rewrite
   if (rewrite) {

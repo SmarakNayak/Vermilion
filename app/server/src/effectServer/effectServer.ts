@@ -266,7 +266,7 @@ const EffectServerApiLive = HttpApiBuilder.api(EffectServerApi).pipe(
 )
 
 // Set up the server using BunHttpServer
-const ServerLive = HttpApiBuilder.serve().pipe(
+export const ServerLive = HttpApiBuilder.serve().pipe(
   HttpServer.withLogAddress,
   Layer.provide(HttpApiSwagger.layer()),
   Layer.provide(HttpApiBuilder.middlewareOpenApi()),

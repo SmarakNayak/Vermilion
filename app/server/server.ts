@@ -5,6 +5,8 @@ import { addInscriptionPreviewsToHtml, renderInscriptionCard } from './src/ssr';
 import { broadcastTx } from './src/mempool';
 import { Authenticator } from './src/authenticator';
 import type { CreateProfileRequest, UpdateProfileRequest, ProfileResponse } from './src/types/profile';
+import { ServerLive } from './src/effectServer/effectServer';
+import { Layer, Effect, Fiber } from 'effect';
 
 // Configuration - use local address in production or fall back to external URL
 const isProd = process.env.NODE_ENV === 'production';
@@ -421,6 +423,9 @@ const server = Bun.serve({
 await db.setupDatabase();
 bundexer.runBundexer();
 
+// Start the Effect server
+const effectServerFiber = await Effect.runFork(Layer.launch(ServerLive));
+
 async function getRenderedContentResponse(id: any, content_type: any, is_recursive: any, originalHeaders: any) {
   if (content_type?.startsWith('text/html') || (content_type?.startsWith('image/svg') && is_recursive)) {
     let row = await db.getRenderedContent(id);
@@ -473,6 +478,7 @@ function checkAuthFail(authHeader: any, ordinalsAddress: any) {
     })
     return response;
   }
+  return undefined; // No auth failure, continue processing
 }
 
 function getAuthorizedAddress(authHeader: any) {
@@ -488,6 +494,10 @@ function getAuthorizedAddress(authHeader: any) {
 
 // Shutdown function to clean up everything
 async function shutdown() {
+  // Stop Effect server
+  await Effect.runPromise(Fiber.interrupt(effectServerFiber));
+  console.log("Effect server stopped");
+
   // Stop Bun server
   await server.stop();
   console.log("Bun server stopped");
@@ -518,4 +528,5 @@ process.on("SIGTERM", async () => {
   process.exit(0);
 });
 
-console.log(`🚀 Server running at ${server.url}`);
+console.log(`🚀 Bun server running at ${server.url}`);
+console.log(`🚀 Effect server running at http://localhost:1083`);

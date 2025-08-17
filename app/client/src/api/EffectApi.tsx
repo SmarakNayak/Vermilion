@@ -6,7 +6,7 @@ import type React from "react";
 class SocialClient extends AtomHttpApi.Tag<SocialClient>()("SocialClient", {
   api: EffectServerApi,
   httpClient: FetchHttpClient.layer,
-  baseUrl: "http://localhost:1083",
+  baseUrl: "/effect/",
 }) {};
 
 export const SomeComponent: React.FC = () => {
@@ -18,7 +18,7 @@ export const SomeComponent: React.FC = () => {
   return (
     <div>
       <p>Home Playlists</p>
-      <p>Home: {Result.getOrElse(home, () => 'ahhh nothing')}</p>
+      <p>Home: {Result.getOrElse(home, () => 'ahhh nothing2')}</p>
     </div>
   );
 }
