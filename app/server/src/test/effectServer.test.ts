@@ -1,12 +1,13 @@
 import { expect, it, beforeAll, describe } from "bun:test";
 import { Effect, Layer, Option } from "effect";
 import { HttpApiClient, FetchHttpClient, HttpClient, HttpClientRequest } from '@effect/platform';
-import { EffectServerApi, ServerTest } from "../effectServer/effectServer";
+import { ServerTest } from "../effectServer/effectServer";
+import { EffectServerApi } from "../../../shared/api/effectServerApi";
 import { PostgresTest, SocialDbService } from "../effectDb";
 import { ConfigService } from "../config";
-import { Unauthorized } from "../effectServer/authMiddleware";
+import { Unauthorized } from "../../../shared/api/authMiddleware";
 import { ParseError } from "effect/ParseResult";
-import { NotFound, Issue, Conflict, Forbidden } from "../effectServer/apiErrors";
+import { NotFound, Issue, Conflict, Forbidden } from "../../../shared/api/apiErrors";
 
 let dbLayer = SocialDbService.Default.pipe(
   Layer.provide(PostgresTest),

@@ -4,9 +4,9 @@ import { SqlSchema } from "@effect/sql";
 import { withErrorContext } from "./effectUtils";
 import { Effect, Layer, Redacted, Array, Option, Schema, identity } from "effect";
 import { ConfigService } from "./config";
-import { PlaylistTable, InsertPlaylistInscriptions, UpdatePlaylistInscriptions, PlaylistInscriptionsSchema } from "./types/playlist";
-import { AuthenticatedUserContext } from "./effectServer/authMiddleware";
-import { ProfileTable, ProfileView } from "./types/effectProfile";
+import { PlaylistTable, InsertPlaylistInscriptions, UpdatePlaylistInscriptions, PlaylistInscriptionsSchema } from "../../shared/types/playlist";
+import { AuthenticatedUserContext } from "../../shared/api/authMiddleware";
+import { ProfileTable, ProfileView } from "../../shared/types/effectProfile";
 import { DatabaseNotFoundError, mapPostgresInsertError, mapPostgresUpdateError } from "./effectDbErrors";
 
 export class SocialDbService extends Effect.Service<SocialDbService>()("EffectPostgres", {

@@ -1,0 +1,9 @@
+{
+  "name": "shared",
+  "private": true,
+  "dependencies": {
+    "@effect/platform": "^0.90.3",
+    "@effect/sql": "^0.44.1",
+    "effect": "^3.17.7"
+  }
+}

@@ -1,6 +1,6 @@
 import { AtomHttpApi, Result, useAtomValue } from "@effect-atom/atom-react";
 import { FetchHttpClient } from "@effect/platform";
-import { EffectServerApi } from '../../../server/src/effectServer/effectServer';
+import { EffectServerApi } from '../../../shared/api/effectServerApi';
 import type React from "react";
 
 class SocialClient extends AtomHttpApi.Tag<SocialClient>()("SocialClient", {

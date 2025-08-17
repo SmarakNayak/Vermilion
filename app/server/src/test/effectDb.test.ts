@@ -2,9 +2,9 @@ import { expect, beforeAll, describe, it } from "bun:test";
 import { Effect, Layer, Logger, Schema, Option } from "effect";
 import { SocialDbService, PostgresTest } from "../effectDb";
 import { ConfigService } from "../config";
-import { AuthenticatedUserContext } from "../effectServer/authMiddleware"
-import { ProfileTable } from "../types/effectProfile";
-import { PlaylistTable, InsertPlaylistInscriptionsSchema, UpdatePlaylistInscriptionsSchema } from "../types/playlist";
+import { AuthenticatedUserContext } from "../../../shared/api/authMiddleware"
+import { ProfileTable } from "../../../shared/types/effectProfile";
+import { PlaylistTable, InsertPlaylistInscriptionsSchema, UpdatePlaylistInscriptionsSchema } from "../../../shared/types/playlist";
 import { withErrorContext } from "../effectUtils";
 import { DatabaseDuplicateKeyError, DatabaseInvalidRowError, DatabaseNotFoundError, DatabaseSecurityError } from "../effectDbErrors";
 
