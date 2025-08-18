@@ -12,6 +12,8 @@ import {
   GalleryContainer,
   ProfileContainer,
   HorizontalDivider,
+  HorizontalTabContainer,
+  TabText
 } from '../components/grid/Layout';
 import GridControls from '../components/grid/GridControls';
 import { GridHeaderSkeleton } from '../components/grid/GridHeaderSkeleton';
@@ -43,6 +45,7 @@ const Address = () => {
   const [filterVisibility, setFilterVisibility] = useState(false);
   const [zoomGrid, setZoomGrid] = useState(true);
   const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState('inscriptions');
 
   const [selectedSortOption, setSelectedSortOption] = useState('newest');
   const [selectedFilterOptions, setSelectedFilterOptions] = useState({"Content Type": ["text", "image", "gif", "audio", "video", "html"], "Satributes": [], "Charms":[]});
@@ -124,27 +127,49 @@ const Address = () => {
           </HeaderContainer>
         </>
       )}
-      <HorizontalDivider></HorizontalDivider>
-      <GridControls 
-        filterVisibility={filterVisibility} 
-        toggleFilterVisibility={toggleFilterVisibility} 
-        numberVisibility={numberVisibility} 
-        toggleNumberVisibility={toggleNumberVisibility} 
-        zoomGrid={zoomGrid} 
-        toggleGridType={toggleGridType} 
-        handleSortOptionChange={handleSortOptionChange} 
-        handleFilterOptionsChange={handleFilterOptionsChange} 
-        selectedFilterOptions={selectedFilterOptions}
-        filtersEnabled={true}
-        initialOption={'newest'}
-        includeRelevance={false}
-      />
-      <RowContainer>
-        <FilterMenu isOpen={filterVisibility} onSelectionChange ={handleFilterOptionsChange} onClose={toggleFilterVisibility} initialSelection={selectedFilterOptions}></FilterMenu>
-        <GalleryContainer>
-          <GalleryInfiniteScroll baseApi={baseApi} numberVisibility={numberVisibility} zoomGrid={zoomGrid} />
-        </GalleryContainer>
-      </RowContainer>
+      <HorizontalTabContainer>
+        <TabText 
+          isActive={activeTab === 'inscriptions'}
+          onClick={() => setActiveTab('inscriptions')}
+        >
+          Inscriptions
+        </TabText>
+        <TabText 
+          isActive={activeTab === 'bookmarks'}
+          onClick={() => setActiveTab('bookmarks')}
+        >
+          Bookmarks
+        </TabText>
+      </HorizontalTabContainer>
+      {activeTab === 'inscriptions' && (
+        <>
+          <GridControls 
+            filterVisibility={filterVisibility} 
+            toggleFilterVisibility={toggleFilterVisibility} 
+            numberVisibility={numberVisibility} 
+            toggleNumberVisibility={toggleNumberVisibility} 
+            zoomGrid={zoomGrid} 
+            toggleGridType={toggleGridType} 
+            handleSortOptionChange={handleSortOptionChange} 
+            handleFilterOptionsChange={handleFilterOptionsChange} 
+            selectedFilterOptions={selectedFilterOptions}
+            filtersEnabled={true}
+            initialOption={'newest'}
+            includeRelevance={false}
+          />
+          <RowContainer>
+            <FilterMenu isOpen={filterVisibility} onSelectionChange ={handleFilterOptionsChange} onClose={toggleFilterVisibility} initialSelection={selectedFilterOptions}></FilterMenu>
+            <GalleryContainer>
+              <GalleryInfiniteScroll baseApi={baseApi} numberVisibility={numberVisibility} zoomGrid={zoomGrid} />
+            </GalleryContainer>
+          </RowContainer>
+        </>
+      )}
+      {activeTab === 'bookmarks' && (
+        <Stack gap={'1rem'} padding={'1rem'}>
+          <MainText>No bookmarks found for this address.</MainText>
+        </Stack>
+      )}
     </PageContainer>
   )
 }

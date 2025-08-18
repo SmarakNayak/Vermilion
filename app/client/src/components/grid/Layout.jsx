@@ -85,3 +85,40 @@ export const HorizontalDivider = styled.div`
   width: 100%;
   border-bottom: 1px solid ${theme.colors.border};
 `;
+
+export const HorizontalTabContainer = styled.div`
+  display: flex;
+  padding-top: 24px;
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 24px;
+  align-self: stretch;
+  border-top: 1px solid ${theme.colors.border};
+`;
+
+export const TabText = styled.div`
+  display: flex;
+  padding: 0 4px 12px 4px;
+  justify-content: center;
+  align-items: center;
+  gap: 4px;
+  //Text
+  color: ${props => props.isActive ? theme.colors.background.verm : theme.colors.text.tertiary};
+  font-family: ${theme.typography.fontFamilies.medium};
+  font-size: 16px;
+  font-style: normal;
+  //font-weight: 700;
+  line-height: 16px; /* 100% */
+  cursor: pointer;
+  ${props => props.isActive ? 'border-bottom: 2px solid ' + theme.colors.background.verm : ''};
+  
+  &:hover {
+    color: ${theme.colors.background.verm};
+    svg {
+      fill: ${theme.colors.background.verm};
+    }
+  }
+  &:active {
+    transform: scale(0.96);
+  }
+`;
