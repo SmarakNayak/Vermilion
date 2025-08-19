@@ -141,35 +141,41 @@ const Address = () => {
           Bookmarks
         </TabText>
       </HorizontalTabContainer>
-      {activeTab === 'inscriptions' && (
-        <>
-          <GridControls 
-            filterVisibility={filterVisibility} 
-            toggleFilterVisibility={toggleFilterVisibility} 
-            numberVisibility={numberVisibility} 
-            toggleNumberVisibility={toggleNumberVisibility} 
-            zoomGrid={zoomGrid} 
-            toggleGridType={toggleGridType} 
-            handleSortOptionChange={handleSortOptionChange} 
-            handleFilterOptionsChange={handleFilterOptionsChange} 
-            selectedFilterOptions={selectedFilterOptions}
-            filtersEnabled={true}
-            initialOption={'newest'}
-            includeRelevance={false}
-          />
-          <RowContainer>
-            <FilterMenu isOpen={filterVisibility} onSelectionChange ={handleFilterOptionsChange} onClose={toggleFilterVisibility} initialSelection={selectedFilterOptions}></FilterMenu>
-            <GalleryContainer>
-              <GalleryInfiniteScroll baseApi={baseApi} numberVisibility={numberVisibility} zoomGrid={zoomGrid} />
-            </GalleryContainer>
-          </RowContainer>
-        </>
-      )}
-      {activeTab === 'bookmarks' && (
+      {/* Display:contents is effectively a no-op in terms of layout,
+          it's a truly empty div that does not effect the layout at all,
+          it allows the children to be rendered without creating a new block formatting context.
+          Altering display to none does not rerender (and thus trigger new network requests) on tab switch
+          This is a much better than conditionally rendering the entire component
+          i.e. { activeTab === 'inscriptions' ? <InscriptionsComponent /> : <BookmarksComponent />}
+          Longer term we would want to refactor this to use effect-atom/react-query to cache the data fetching
+       */}
+      <div style={{ display: activeTab === 'inscriptions' ? 'contents' : 'none' }}>
+        <GridControls 
+          filterVisibility={filterVisibility} 
+          toggleFilterVisibility={toggleFilterVisibility} 
+          numberVisibility={numberVisibility} 
+          toggleNumberVisibility={toggleNumberVisibility} 
+          zoomGrid={zoomGrid} 
+          toggleGridType={toggleGridType} 
+          handleSortOptionChange={handleSortOptionChange} 
+          handleFilterOptionsChange={handleFilterOptionsChange} 
+          selectedFilterOptions={selectedFilterOptions}
+          filtersEnabled={true}
+          initialOption={'newest'}
+          includeRelevance={false}
+        />
+        <RowContainer>
+          <FilterMenu isOpen={filterVisibility} onSelectionChange ={handleFilterOptionsChange} onClose={toggleFilterVisibility} initialSelection={selectedFilterOptions}></FilterMenu>
+          <GalleryContainer>
+            <GalleryInfiniteScroll baseApi={baseApi} numberVisibility={numberVisibility} zoomGrid={zoomGrid} />
+          </GalleryContainer>
+        </RowContainer>
+      </div>
+      <div style={{ display: activeTab === 'bookmarks' ? 'contents' : 'none' }}>
         <Stack gap={'1rem'} padding={'1rem'}>
           <MainText>No bookmarks found for this address.</MainText>
         </Stack>
-      )}
+      </div>
     </PageContainer>
   )
 }
