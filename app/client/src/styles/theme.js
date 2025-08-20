@@ -10,6 +10,7 @@ export const theme = {
       tertiary: '#C2C2C2',   // Tertiary text, inactive, etc.
       white: '#FFFFFF',      // White text
       error: '#FF0000',      // Error text color
+      errorSecondary: '#E50500', // Secondary error text color
       success: '#28a745',    // Success text color
     },
 
@@ -19,6 +20,7 @@ export const theme = {
       aquaLight: '#BFF2ED',   // Dark aqua background (used in logo)
       acquaExtraLight: '#DFF9F6' , // Extra light aqua background (used in logo)
       dark: '#0A0A0A',       // Dark background (used in important buttons)
+      error: '#FEEAEA',      // Error background color
       light: '#FBFAF9',
       primary: '#F6F6F6',    // Primary background (used in buttons, cards)
       purp: '#D23B75',       // Runes color
