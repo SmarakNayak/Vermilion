@@ -45,6 +45,7 @@ import InscriptionIcon from '../components/InscriptionIcon';
 import CheckoutModal from '../components/modals/CheckoutModal';
 import BoostsModal from '../components/modals/BoostsModal';
 import CommentsModal from '../components/modals/CommentsModal';
+import { BookmarkDropdown } from '../components/menus/BookmarkDropdown';
 
 // Utils
 import { addCommas, formatAddress, shortenBytes } from '../utils/format';
@@ -67,7 +68,9 @@ import {
   ArrowRotateIcon,
   CheckIcon,
   ClockIcon,
-  ScanIcon
+  ScanIcon,
+  BookmarkIcon,
+  BookmarkIconFilled
 } from '../components/common/Icon';
 import theme from '../styles/theme';
 import Tooltip from '../components/common/Tooltip';
@@ -305,6 +308,9 @@ const Inscription = () => {
 
   // State for managing copy action
   const [copied, setCopied] = useState(false);
+  const [bookmarked, setBookmarked] = useState(false);
+  const [showFolderOverlay, setShowFolderOverlay] = useState(false);
+
   
   // 3D model reference
   const modelViewerRef = useRef(null);
@@ -739,6 +745,10 @@ const Inscription = () => {
     setTimeout(() => setCopied(false), 2000); // Reset after 2 seconds
   };
 
+  const handleBookmarkClick = () => {
+    setShowFolderOverlay(!showFolderOverlay);
+  };
+
   useEffect(() => {
     // Reset state when navigating to a new inscription
     setBoosts(0);
@@ -878,6 +888,16 @@ const Inscription = () => {
                       <ChevronUpDuoIcon size={'1.25rem'} color={theme.colors.background.white} />
                       Boost
                     </BoostButton>
+                    <TooltipOverlayContainer>
+                      <Tooltip content={bookmarked ? 'Bookmarked!' : 'Bookmark'}>
+                        <ButtonWrapper>
+                          <IconButton onClick={() => handleBookmarkClick()} bookmarked={bookmarked}>
+                            {bookmarked ? <BookmarkIconFilled size={'1.25rem'} color={theme.colors.text.primary} /> : <BookmarkIcon size={'1.25rem'} color={theme.colors.text.primary} />}
+                          </IconButton>
+                        </ButtonWrapper>
+                      </Tooltip>
+                      {showFolderOverlay && (<BookmarkDropdown/>)}
+                    </TooltipOverlayContainer>
                     <Tooltip content={copied ? 'Copied!' : 'Copy link'}>
                       <ButtonWrapper>
                         <IconButton onClick={() => handleCopyClick()} copied={copied}>
@@ -1276,6 +1296,13 @@ const ButtonWrapper = styled.div`
   justify-content: center;
   padding: 0;
   margin: 0;
+  ${props => props.relative && 'position: relative;'}
+`;
+
+const TooltipOverlayContainer = styled.div`
+  position: relative;
+  display: flex;
+  justify-content: center;
 `;
 
 export default Inscription;
