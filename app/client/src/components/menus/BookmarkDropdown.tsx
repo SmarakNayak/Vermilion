@@ -1,6 +1,8 @@
 import styled from "styled-components";
 import { theme } from '../../styles/theme';
 import { FolderIcon, PlusIconCircled } from "../common/Icon";
+import { BookmarkModal } from "../modals/BookmarkModal";
+import React, { useState } from 'react';
 
 const BookmarkMenuContainer = styled.div`
   //layout  
@@ -40,6 +42,7 @@ const BookmarkMenuEntryContainer = styled.div`
   border-radius: 8px;
   &:hover {
     background-color: ${theme.colors.background.secondary};
+    cursor: pointer;
   }
 `;
 
@@ -58,11 +61,16 @@ const FolderIconContainer = styled.div`
 `;
 
 
-export const BookmarkDropdown = () => {
+export const BookmarkDropdown = React.forwardRef((props, ref) => {
+  const [isBookmarkModalOpen, setIsBookmarkModalOpen] = useState(false);
+  const handleCreateFolderClick = () => {
+    setIsBookmarkModalOpen(true);
+  };
   return (
     <BookmarkMenuContainer>
+      <BookmarkModal isOpen={isBookmarkModalOpen} onClose={() => setIsBookmarkModalOpen(false)} />
       <BookmarkMenuTitle>Add to folder</BookmarkMenuTitle>
-      <BookmarkMenuEntryContainer >
+      <BookmarkMenuEntryContainer onClick={handleCreateFolderClick}>
         <FolderIconContainer>
           <PlusIconCircled size={'1.25rem'} color={theme.colors.text.primary} className={'fake'} />
         </FolderIconContainer>
@@ -76,4 +84,4 @@ export const BookmarkDropdown = () => {
       </BookmarkMenuEntryContainer>
     </BookmarkMenuContainer>
   );
-}
+});
