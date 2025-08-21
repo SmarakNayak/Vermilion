@@ -1,10 +1,14 @@
 import styled from 'styled-components';
 import { theme } from '../../styles/theme';
+import React, { useEffect, useRef } from 'react';
+import { useModalScrollLock } from '../../hooks/useModalScrollLock';
 
 export const BookmarkModal = ({isOpen, onClose}: {
   isOpen: boolean, 
   onClose: any
 }) => {
+  const modalContentRef = useRef<HTMLDivElement>(null);
+  useModalScrollLock(isOpen, modalContentRef);
   return (
     <ModalOverlay isOpen={isOpen} onClick={onClose}>
       <ModalContainer isOpen={isOpen} onClick={(e) => e.stopPropagation()}>

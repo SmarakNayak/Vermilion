@@ -8,7 +8,7 @@ import { useEffect } from 'react';
 // useClickOutside(modalRef, () => { setIsModalOpen(false) });
 // <modal ref={modalRef} isOpen={isModalOpen} />
 
-export const useClickOutside = (ref: React.RefObject<HTMLElement>, callback: (event: MouseEvent) => void) => {
+export const useClickOutside = <T extends HTMLElement>(ref: React.RefObject<T|null>, callback: (event: MouseEvent) => void) => {
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (ref.current && !ref.current.contains(event.target as Node)) {
