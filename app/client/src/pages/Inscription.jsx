@@ -745,10 +745,16 @@ const Inscription = () => {
 
   const [bookmarked, setBookmarked] = useState(false);
   const bookmarkDropdownRef = useRef(null);
+  const bookmarkRef = useRef(null);
   const [showFolderOverlay, setShowFolderOverlay] = useState(false);
-  useClickOutside(bookmarkDropdownRef, () => {setShowFolderOverlay(false)});
-  const handleBookmarkClick = () => {
-    setShowFolderOverlay(!showFolderOverlay);
+  useClickOutside(bookmarkDropdownRef, (event) => {
+    if (bookmarkRef.current?.contains(event.target)) {
+      return;
+    }
+    setShowFolderOverlay(false)
+  });
+  const handleBookmarkClick = (e) => {
+    setShowFolderOverlay((prev) => !prev);
   };
 
   useEffect(() => {
@@ -893,7 +899,7 @@ const Inscription = () => {
                     <TooltipOverlayContainer>
                       <Tooltip content={bookmarked ? 'Bookmarked!' : 'Bookmark'}>
                         <ButtonWrapper>
-                          <IconButton onClick={() => handleBookmarkClick()} bookmarked={bookmarked}>
+                          <IconButton onClick={(e) => handleBookmarkClick(e)} bookmarked={bookmarked} ref={bookmarkRef}>
                             {bookmarked ? <BookmarkIconFilled size={'1.25rem'} color={theme.colors.text.primary} /> : <BookmarkIcon size={'1.25rem'} color={theme.colors.text.primary} />}
                           </IconButton>
                         </ButtonWrapper>
