@@ -60,14 +60,13 @@ const FolderIconContainer = styled.div`
   border: 1px solid ${theme.colors.border};
 `;
 
-
-export const BookmarkDropdown = React.forwardRef((props, ref) => {
+export const BookmarkDropdown = ({ref}: {ref: React.Ref<HTMLDivElement>}) => {
   const [isBookmarkModalOpen, setIsBookmarkModalOpen] = useState(false);
   const handleCreateFolderClick = () => {
     setIsBookmarkModalOpen(true);
   };
   return (
-    <BookmarkMenuContainer>
+    <BookmarkMenuContainer ref={ref}>
       <BookmarkModal isOpen={isBookmarkModalOpen} onClose={() => setIsBookmarkModalOpen(false)} />
       <BookmarkMenuTitle>Add to folder</BookmarkMenuTitle>
       <BookmarkMenuEntryContainer onClick={handleCreateFolderClick}>
@@ -84,4 +83,4 @@ export const BookmarkDropdown = React.forwardRef((props, ref) => {
       </BookmarkMenuEntryContainer>
     </BookmarkMenuContainer>
   );
-});
+};

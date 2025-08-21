@@ -74,6 +74,7 @@ import {
 } from '../components/common/Icon';
 import theme from '../styles/theme';
 import Tooltip from '../components/common/Tooltip';
+import { useClickOutside } from '../hooks/useClickOutside';
 
 // Custom hook for handling section visibility
 const useSectionVisibility = (initialState) => {
@@ -308,9 +309,6 @@ const Inscription = () => {
 
   // State for managing copy action
   const [copied, setCopied] = useState(false);
-  const [bookmarked, setBookmarked] = useState(false);
-  const [showFolderOverlay, setShowFolderOverlay] = useState(false);
-
   
   // 3D model reference
   const modelViewerRef = useRef(null);
@@ -745,6 +743,10 @@ const Inscription = () => {
     setTimeout(() => setCopied(false), 2000); // Reset after 2 seconds
   };
 
+  const [bookmarked, setBookmarked] = useState(false);
+  const bookmarkDropdownRef = useRef(null);
+  const [showFolderOverlay, setShowFolderOverlay] = useState(false);
+  useClickOutside(bookmarkDropdownRef, () => {setShowFolderOverlay(false)});
   const handleBookmarkClick = () => {
     setShowFolderOverlay(!showFolderOverlay);
   };
@@ -896,7 +898,7 @@ const Inscription = () => {
                           </IconButton>
                         </ButtonWrapper>
                       </Tooltip>
-                      {showFolderOverlay && (<BookmarkDropdown/>)}
+                      {showFolderOverlay && (<BookmarkDropdown ref={bookmarkDropdownRef}/>)}
                     </TooltipOverlayContainer>
                     <Tooltip content={copied ? 'Copied!' : 'Copy link'}>
                       <ButtonWrapper>
