@@ -71,13 +71,13 @@ export const BookmarkDropdown = ({ref}: {ref: React.Ref<HTMLDivElement>}) => {
       <BookmarkMenuTitle>Add to folder</BookmarkMenuTitle>
       <BookmarkMenuEntryContainer onClick={handleCreateFolderClick}>
         <FolderIconContainer>
-          <PlusIconCircled size={'1.25rem'} color={theme.colors.text.primary} className={'fake'} />
+          <PlusIconCircled size={'1.25rem'} color={theme.colors.text.primary} />
         </FolderIconContainer>
         Create Folder
       </BookmarkMenuEntryContainer>
       <BookmarkMenuEntryContainer>
         <FolderIconContainer>
-          <FolderIcon size={'1.25rem'} color={theme.colors.text.primary} className={'fake'} />
+          <FolderIcon size={'1.25rem'} color={theme.colors.text.primary} />
         </FolderIconContainer>
         Wish List
       </BookmarkMenuEntryContainer>
