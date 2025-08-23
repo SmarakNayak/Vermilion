@@ -3,6 +3,7 @@ import { ThemeProvider } from 'styled-components';
 import theme from './styles/theme';
 import Navigation from './navigation/routes';
 import { PostHogProvider } from 'posthog-js/react';
+import { Toaster } from 'sonner';
 const ReactGA = require('react-ga4').default; // ESM import syntax doesn't work for this package in bun, using old cjs syntax for now
 
 const options = {
@@ -22,6 +23,7 @@ function App() {
         options={options}
       >
         <Navigation />
+        <Toaster /> {/* Sonner toast notifications */}
       </PostHogProvider>
     </ThemeProvider>
   )

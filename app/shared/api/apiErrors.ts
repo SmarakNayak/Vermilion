@@ -1,5 +1,6 @@
 import { HttpApiSchema } from "@effect/platform"
 import { Schema} from "effect"
+import { Unauthorized } from "./authMiddleware";
 
 export class Conflict extends Schema.TaggedError<Conflict>()(
   "Conflict",
@@ -32,3 +33,5 @@ export class NotFound extends Schema.TaggedError<NotFound>()(
   },
   HttpApiSchema.annotations({ status: 404, description: "Requested data was not found or denied by security policy" })
 ) {};
+
+export type ApiError = Conflict | Forbidden | Issue | NotFound | Unauthorized;
