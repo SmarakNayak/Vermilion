@@ -318,7 +318,7 @@ describe("Profile Endpoints", () => {
       const updateResponse = await runTest(Effect.gen(function* () {
         const apiClient = yield* authenticatedClientEffect;
         return yield* apiClient.profiles.updateProfile({
-          urlParams: { user_id: createResponse.user_id },
+          path: { user_id: createResponse.user_id },
           payload: {
             user_bio: Option.some("Updated bio"),
             user_website: Option.some("https://example.com")
@@ -336,7 +336,7 @@ describe("Profile Endpoints", () => {
       const result = await runTest(Effect.gen(function* () {
         const apiClient = yield* unauthenticatedClientEffect;
         return yield* apiClient.profiles.updateProfile({
-          urlParams: { user_id: "00000000-0000-0000-0000-000000000001" },
+          path: { user_id: "00000000-0000-0000-0000-000000000001" },
           payload: {
             user_bio: Option.some("Unauthorized update")
           }
@@ -379,7 +379,7 @@ describe("Profile Endpoints", () => {
       const result = await runTest(Effect.gen(function* () {
         const apiClient = yield* authenticatedClient2;
         return yield* apiClient.profiles.updateProfile({
-          urlParams: { user_id: profileResponse.user_id },
+          path: { user_id: profileResponse.user_id },
           payload: {
             user_bio: Option.some("Unauthorized update")
           }
@@ -421,7 +421,7 @@ describe("Profile Endpoints", () => {
       const deleteResponse = await runTest(Effect.gen(function* () {
         const apiClient = yield* authenticatedClientEffect;
         return yield* apiClient.profiles.deleteProfile({
-          urlParams: { user_id: createResponse.user_id }
+          path: { user_id: createResponse.user_id }
         });
       }));
       expect(deleteResponse).toBeDefined();
@@ -432,7 +432,7 @@ describe("Profile Endpoints", () => {
       const result = await runTest(Effect.gen(function* () {
         const apiClient = yield* unauthenticatedClientEffect;
         return yield* apiClient.profiles.deleteProfile({
-          urlParams: { user_id: "00000000-0000-0000-0000-000000000001" }
+          path: { user_id: "00000000-0000-0000-0000-000000000001" }
         }).pipe(
           Effect.catchTag("Unauthorized", (error) => {
             return Effect.succeed(error);
@@ -452,7 +452,7 @@ describe("Profile Endpoints", () => {
       const result = await runTest(Effect.gen(function* () {
         const apiClient = yield* authenticatedClientEffect;
         return yield* apiClient.profiles.deleteProfile({
-          urlParams: { user_id: "00000000-0000-0000-0000-000000000999" }
+          path: { user_id: "00000000-0000-0000-0000-000000000999" }
         }).pipe(
           Effect.catchTag("NotFound", (error) => {
             return Effect.succeed(error);
@@ -491,7 +491,7 @@ describe("Profile Endpoints", () => {
       const getResponse = await runTest(Effect.gen(function* () {
         const apiClient = yield* unauthenticatedClientEffect; // No auth required for GET
         return yield* apiClient.profiles.getProfileById({
-          urlParams: { user_id: createResponse.user_id }
+          path: { user_id: createResponse.user_id }
         });
       }));
       
@@ -505,7 +505,7 @@ describe("Profile Endpoints", () => {
       const result = await runTest(Effect.gen(function* () {
         const apiClient = yield* unauthenticatedClientEffect;
         return yield* apiClient.profiles.getProfileById({
-          urlParams: { user_id: "00000000-0000-0000-0000-000000000999" }
+          path: { user_id: "00000000-0000-0000-0000-000000000999" }
         }).pipe(
           Effect.catchTag("NotFound", (error) => {
             return Effect.succeed(error);
@@ -542,7 +542,7 @@ describe("Profile Endpoints", () => {
       const getResponse = await runTest(Effect.gen(function* () {
         const apiClient = yield* unauthenticatedClientEffect; // No auth required for GET
         return yield* apiClient.profiles.getProfileByAddress({
-          urlParams: { user_address: testAddress }
+          path: { user_address: testAddress }
         });
       }));
       
@@ -576,7 +576,7 @@ describe("Profile Endpoints", () => {
       const getResponse = await runTest(Effect.gen(function* () {
         const apiClient = yield* unauthenticatedClientEffect; // No auth required for GET
         return yield* apiClient.profiles.getProfileByHandle({
-          urlParams: { user_handle: "getbyhandle" }
+          path: { user_handle: "getbyhandle" }
         });
       }));
       
@@ -756,7 +756,7 @@ describe("Playlist Endpoints", () => {
       const updateResponse = await runTest(Effect.gen(function* () {
         const apiClient = yield* authenticatedClientEffect;
         return yield* apiClient.playlists.updatePlaylist({
-          urlParams: { playlist_id: playlistResponse.playlist_id },
+          path: { playlist_id: playlistResponse.playlist_id },
           payload: {
             user_id: profileResponse.user_id,
             playlist_name: "Updated Playlist Name",
@@ -775,7 +775,7 @@ describe("Playlist Endpoints", () => {
       const result = await runTest(Effect.gen(function* () {
         const apiClient = yield* unauthenticatedClientEffect;
         return yield* apiClient.playlists.updatePlaylist({
-          urlParams: { playlist_id: "00000000-0000-0000-0000-000000000001" },
+          path: { playlist_id: "00000000-0000-0000-0000-000000000001" },
           payload: {
             user_id: "00000000-0000-0000-0000-000000000010",
             playlist_name: "Unauthorized Update"
@@ -799,7 +799,7 @@ describe("Playlist Endpoints", () => {
       const result = await runTest(Effect.gen(function* () {
         const apiClient = yield* authenticatedClientEffect;
         return yield* apiClient.profiles.updateProfile({
-          urlParams: { user_id: "00000000-0000-0000-0000-000000000999" },
+          path: { user_id: "00000000-0000-0000-0000-000000000999" },
           payload: {
             user_bio: Option.some("Updated bio")
           }
@@ -853,7 +853,7 @@ describe("Playlist Endpoints", () => {
       const deleteResponse = await runTest(Effect.gen(function* () {
         const apiClient = yield* authenticatedClientEffect;
         return yield* apiClient.playlists.deletePlaylist({
-          urlParams: { playlist_id: playlistResponse.playlist_id }
+          path: { playlist_id: playlistResponse.playlist_id }
         });
       }));
       
@@ -865,7 +865,7 @@ describe("Playlist Endpoints", () => {
       const result = await runTest(Effect.gen(function* () {
         const apiClient = yield* unauthenticatedClientEffect;
         return yield* apiClient.playlists.deletePlaylist({
-          urlParams: { playlist_id: "00000000-0000-0000-0000-000000000001" }
+          path: { playlist_id: "00000000-0000-0000-0000-000000000001" }
         }).pipe(
           Effect.catchTag("Unauthorized", (error) => {
             return Effect.succeed(error);
@@ -916,7 +916,7 @@ describe("Playlist Endpoints", () => {
       const getResponse = await runTest(Effect.gen(function* () {
         const apiClient = yield* unauthenticatedClientEffect; // No auth required for GET
         return yield* apiClient.playlists.getPlaylist({
-          urlParams: { playlist_id: playlistResponse.playlist_id }
+          path: { playlist_id: playlistResponse.playlist_id }
         });
       }));
       
@@ -929,7 +929,7 @@ describe("Playlist Endpoints", () => {
       const result = await runTest(Effect.gen(function* () {
         const apiClient = yield* unauthenticatedClientEffect;
         return yield* apiClient.playlists.getPlaylist({
-          urlParams: { playlist_id: "00000000-0000-0000-0000-000000000999" }
+          path: { playlist_id: "00000000-0000-0000-0000-000000000999" }
         }).pipe(
           Effect.catchTag("NotFound", (error) => {
             return Effect.succeed(error);
@@ -1063,7 +1063,7 @@ describe("Playlist Inscriptions Endpoints", () => {
       const updateResponse = await runTest(Effect.gen(function* () {
         const apiClient = yield* authenticatedClientEffect;
         return yield* apiClient.playlists.updatePlaylistInscriptions({
-          urlParams: { playlist_id: playlistResponse.playlist_id },
+          path: { playlist_id: playlistResponse.playlist_id },
           payload: [
             { inscription_id: "updated_inscription_1", playlist_id: playlistResponse.playlist_id },
             { inscription_id: "updated_inscription_2", playlist_id: playlistResponse.playlist_id }
@@ -1127,7 +1127,7 @@ describe("Playlist Inscriptions Endpoints", () => {
       const deleteResponse = await runTest(Effect.gen(function* () {
         const apiClient = yield* authenticatedClientEffect;
         return yield* apiClient.playlists.deletePlaylistInscriptions({
-          urlParams: { playlist_id: playlistResponse.playlist_id },
+          path: { playlist_id: playlistResponse.playlist_id },
           payload: ["delete_inscription_1", "delete_inscription_2"]
         });
       }));
@@ -1186,7 +1186,7 @@ describe("Playlist Inscriptions Endpoints", () => {
       const getResponse = await runTest(Effect.gen(function* () {
         const apiClient = yield* unauthenticatedClientEffect; // No auth required for GET
         return yield* apiClient.playlists.getPlaylistInscriptions({
-          urlParams: { playlist_id: playlistResponse.playlist_id }
+          path: { playlist_id: playlistResponse.playlist_id }
         });
       }));
       

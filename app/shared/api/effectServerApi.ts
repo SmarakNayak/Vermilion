@@ -19,30 +19,30 @@ export const EffectServerApi = HttpApi.make("EffectServer").add(
   ).add(
     HttpApiEndpoint.put("updateProfile", `/social/update_profile/:user_id`)
       .middleware(Authentication)
-      .setUrlParams(Schema.Struct({ user_id: Schema.UUID }))
+      .setPath(Schema.Struct({ user_id: Schema.UUID }))
       .setPayload(ProfileView.jsonUpdate)
       .addSuccess(ProfileView.json)
       .addError(NotFound)
       .addError(Issue)
   ).add(
     HttpApiEndpoint.get("getProfileById", `/social/get_profile_by_id/:user_id`)
-      .setUrlParams(Schema.Struct({ user_id: Schema.UUID }))
+      .setPath(Schema.Struct({ user_id: Schema.UUID }))
       .addSuccess(ProfileView.json)
       .addError(NotFound)
   ).add(
     HttpApiEndpoint.get("getProfileByAddress", `/social/get_profile_by_address/:user_address`)
-      .setUrlParams(Schema.Struct({ user_address: Schema.String }))
+      .setPath(Schema.Struct({ user_address: Schema.String }))
       .addSuccess(ProfileView.json)
       .addError(NotFound)
   ).add(
     HttpApiEndpoint.get("getProfileByHandle", `/social/get_profile_by_handle/:user_handle`)
-      .setUrlParams(Schema.Struct({ user_handle: Schema.String }))
+      .setPath(Schema.Struct({ user_handle: Schema.String }))
       .addSuccess(ProfileView.json)
       .addError(NotFound)
   ).add(
     HttpApiEndpoint.del("deleteProfile", `/social/delete_profile/:user_id`)
       .middleware(Authentication)
-      .setUrlParams(Schema.Struct({ user_id: Schema.UUID }))
+      .setPath(Schema.Struct({ user_id: Schema.UUID }))
       .addSuccess(Schema.String)
       .addError(NotFound)
   )
@@ -60,7 +60,7 @@ export const EffectServerApi = HttpApi.make("EffectServer").add(
   ).add(
     HttpApiEndpoint.put("updatePlaylist", `/social/update_playlist/:playlist_id`)
       .middleware(Authentication)
-      .setUrlParams(Schema.Struct({ playlist_id: Schema.UUID }))
+      .setPath(Schema.Struct({ playlist_id: Schema.UUID }))
       .setPayload(PlaylistTable.jsonUpdate)
       .addSuccess(PlaylistTable.json)
       .addError(NotFound)
@@ -68,12 +68,12 @@ export const EffectServerApi = HttpApi.make("EffectServer").add(
   ).add(
     HttpApiEndpoint.del("deletePlaylist", `/social/delete_playlist/:playlist_id`)
       .middleware(Authentication)
-      .setUrlParams(Schema.Struct({ playlist_id: Schema.UUID }))
+      .setPath(Schema.Struct({ playlist_id: Schema.UUID }))
       .addSuccess(Schema.String)
       .addError(NotFound)
   ).add(
     HttpApiEndpoint.get("getPlaylist", `/social/get_playlist/:playlist_id`)
-      .setUrlParams(Schema.Struct({ playlist_id: Schema.UUID }))
+      .setPath(Schema.Struct({ playlist_id: Schema.UUID }))
       .addSuccess(PlaylistTable.json)
       .addError(NotFound)
   ).add(
@@ -87,7 +87,7 @@ export const EffectServerApi = HttpApi.make("EffectServer").add(
   ).add(
     HttpApiEndpoint.put("updatePlaylistInscriptions", `/social/update_playlist_inscriptions/:playlist_id`)
       .middleware(Authentication)
-      .setUrlParams(Schema.Struct({ playlist_id: Schema.UUID }))
+      .setPath(Schema.Struct({ playlist_id: Schema.UUID }))
       .setPayload(UpdatePlaylistInscriptionsSchema)
       .addSuccess(PlaylistInscriptionsSchema)
       .addError(Conflict)
@@ -96,13 +96,13 @@ export const EffectServerApi = HttpApi.make("EffectServer").add(
   ).add(
     HttpApiEndpoint.del("deletePlaylistInscriptions", `/social/delete_playlist_inscriptions/:playlist_id`)
       .middleware(Authentication)
-      .setUrlParams(Schema.Struct({ playlist_id: Schema.UUID }))
+      .setPath(Schema.Struct({ playlist_id: Schema.UUID }))
       .setPayload(Schema.Array(Schema.String))
       .addSuccess(Schema.String)
       .addError(NotFound)
   ).add(
     HttpApiEndpoint.get("getPlaylistInscriptions", `/social/get_playlist_inscriptions/:playlist_id`)
-      .setUrlParams(Schema.Struct({ playlist_id: Schema.UUID }))
+      .setPath(Schema.Struct({ playlist_id: Schema.UUID }))
       .addSuccess(PlaylistInscriptionsSchema)
   ).add(
     HttpApiEndpoint.get("home", `/`)

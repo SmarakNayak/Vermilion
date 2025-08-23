@@ -60,13 +60,13 @@ const createPlaylistHandler = (req: {
 );
 
 const updatePlaylistHandler = (req: {
-  readonly urlParams: { readonly playlist_id: string },
+  readonly path: { readonly playlist_id: string },
   readonly request: HttpServerRequest.HttpServerRequest, 
   readonly payload: typeof PlaylistTable.jsonUpdate.Type
 }) => Effect.gen(function* () {
   let db = yield* SocialDbService;
   const dbUpdate: typeof PlaylistTable.update.Type = {
-    playlist_id: req.urlParams.playlist_id,
+    playlist_id: req.path.playlist_id,
     playlist_updated_at: undefined, // This is handled by effectSchema
     ...req.payload
   };
@@ -81,11 +81,11 @@ const updatePlaylistHandler = (req: {
 );
 
 const deletePlaylistHandler = (req: {
-  readonly urlParams: { readonly playlist_id: string },
+  readonly path: { readonly playlist_id: string },
   readonly request: HttpServerRequest.HttpServerRequest
 }) => Effect.gen(function* () {
   let db = yield* SocialDbService;
-  const deleted = yield* db.deletePlaylist(req.urlParams.playlist_id);
+  const deleted = yield* db.deletePlaylist(req.path.playlist_id);
   return `Playlist ${deleted.playlist_id} deleted successfully`;
 }).pipe(
   Effect.tapError((error) => Effect.logError("Failed to delete playlist", error)),
@@ -95,11 +95,11 @@ const deletePlaylistHandler = (req: {
 );
 
 const getPlaylistHandler = (req: {
-  readonly urlParams: { readonly playlist_id: string },
+  readonly path: { readonly playlist_id: string },
   readonly request: HttpServerRequest.HttpServerRequest
 }) => Effect.gen(function* () {
   let db = yield* SocialDbService;
-  return yield* db.getPlaylist(req.urlParams.playlist_id);
+  return yield* db.getPlaylist(req.path.playlist_id);
 }).pipe(
   Effect.tapError((error) => Effect.logError("Failed to get playlist", error)),
   Effect.catchTags({
@@ -124,12 +124,12 @@ const insertPlaylistInscriptionsHandler = (req: {
 );
 
 const updatePlaylistInscriptionsHandler = (req: {
-  readonly urlParams: { readonly playlist_id: string },
+  readonly path: { readonly playlist_id: string },
   readonly request: HttpServerRequest.HttpServerRequest, 
   readonly payload: typeof UpdatePlaylistInscriptionsSchema.Type
 }) => Effect.gen(function* () {
   let db = yield* SocialDbService;
-  let updatedInscriptions = yield* db.updatePlaylistInscriptions(req.urlParams.playlist_id, req.payload);
+  let updatedInscriptions = yield* db.updatePlaylistInscriptions(req.path.playlist_id, req.payload);
   return updatedInscriptions;
 }).pipe(
   Effect.tapError((error) => Effect.logError("Failed to update playlist", error)),
@@ -141,13 +141,13 @@ const updatePlaylistInscriptionsHandler = (req: {
 );
 
 const deletePlaylistInscriptionsHandler = (req: {
-  readonly urlParams: { readonly playlist_id: string },
+  readonly path: { readonly playlist_id: string },
   readonly request: HttpServerRequest.HttpServerRequest,
   readonly payload: readonly string[]
 }) => Effect.gen(function* () {
   let db = yield* SocialDbService;
-  const deleted = yield* db.deletePlaylistInscriptions(req.urlParams.playlist_id, req.payload);
-  return `${deleted.length} inscriptions deleted successfully from playlist ${req.urlParams.playlist_id}`;
+  const deleted = yield* db.deletePlaylistInscriptions(req.path.playlist_id, req.payload);
+  return `${deleted.length} inscriptions deleted successfully from playlist ${req.path.playlist_id}`;
 }).pipe(
   Effect.tapError((error) => Effect.logError("Failed to delete playlist inscriptions", error)),
   Effect.catchTags({
@@ -156,11 +156,11 @@ const deletePlaylistInscriptionsHandler = (req: {
 );
 
 const getPlaylistInscriptionsHandler = (req: {
-  readonly urlParams: { readonly playlist_id: string },
+  readonly path: { readonly playlist_id: string },
   readonly request: HttpServerRequest.HttpServerRequest
 }) => Effect.gen(function* () {
   let db = yield* SocialDbService;
-  return yield* db.getPlaylistInscriptions(req.urlParams.playlist_id);
+  return yield* db.getPlaylistInscriptions(req.path.playlist_id);
 });
 
 const createProfileHandler = (req: {
@@ -181,13 +181,13 @@ const createProfileHandler = (req: {
 );
 
 const updateProfileHandler = (req: {
-  readonly urlParams: { readonly user_id: string },
+  readonly path: { readonly user_id: string },
   readonly request: HttpServerRequest.HttpServerRequest,
   readonly payload: typeof ProfileTable.jsonUpdate.Type
 }) => Effect.gen(function* () {
   let db = yield* SocialDbService;
   const dbUpdate: typeof ProfileTable.update.Type = {
-    user_id: req.urlParams.user_id,
+    user_id: req.path.user_id,
     user_updated_at: undefined, // This is handled by effectSchema
     ...req.payload
   };
@@ -202,11 +202,11 @@ const updateProfileHandler = (req: {
 );
 
 const deleteProfileHandler = (req: {
-  readonly urlParams: { readonly user_id: string },
+  readonly path: { readonly user_id: string },
   readonly request: HttpServerRequest.HttpServerRequest
 }) => Effect.gen(function* () {
   let db = yield* SocialDbService;
-  const deleted = yield* db.deleteProfile(req.urlParams.user_id);
+  const deleted = yield* db.deleteProfile(req.path.user_id);
   return `Profile ${deleted.user_id} deleted successfully`;
 }).pipe(
   Effect.tapError((error) => Effect.logError("Failed to delete profile", error)),
@@ -216,11 +216,11 @@ const deleteProfileHandler = (req: {
 );
 
 const getProfileByIdHandler = (req: {
-  readonly urlParams: { readonly user_id: string },
+  readonly path: { readonly user_id: string },
   readonly request: HttpServerRequest.HttpServerRequest
 }) => Effect.gen(function* () {
   let db = yield* SocialDbService;
-  return yield* db.getProfileById(req.urlParams.user_id);
+  return yield* db.getProfileById(req.path.user_id);
 }).pipe(
   Effect.tapError((error) => Effect.logError("Failed to get profile by ID", error)),
   Effect.catchTags({
@@ -229,11 +229,11 @@ const getProfileByIdHandler = (req: {
 );
 
 const getProfileByAddressHandler = (req: {
-  readonly urlParams: { readonly user_address: string },
+  readonly path: { readonly user_address: string },
   readonly request: HttpServerRequest.HttpServerRequest
 }) => Effect.gen(function* () {
   let db = yield* SocialDbService;
-  return yield* db.getProfileByAddress(req.urlParams.user_address);
+  return yield* db.getProfileByAddress(req.path.user_address);
 }).pipe(
   Effect.tapError((error) => Effect.logError("Failed to get profile by address", error)),
   Effect.catchTags({
@@ -242,11 +242,11 @@ const getProfileByAddressHandler = (req: {
 );
 
 const getProfileByHandleHandler = (req: {
-  readonly urlParams: { readonly user_handle: string },
+  readonly path: { readonly user_handle: string },
   readonly request: HttpServerRequest.HttpServerRequest
 }) => Effect.gen(function* () {
   let db = yield* SocialDbService;
-  return yield* db.getProfileByHandle(req.urlParams.user_handle);
+  return yield* db.getProfileByHandle(req.path.user_handle);
 }).pipe(
   Effect.tapError((error) => Effect.logError("Failed to get profile by handle", error)),
   Effect.catchTags({
