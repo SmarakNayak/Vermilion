@@ -8,7 +8,9 @@ export class PlaylistTable extends Model.Class<PlaylistTable>("PlaylistTable")({
   user_id: Schema.UUID,
   playlist_name: FieldUpdateOmittable(Schema.String),
   playlist_inscription_icon: FieldOptionOmittable(Schema.String),
-  playlist_description: FieldOptionOmittable(Schema.String),
+  playlist_description: FieldOptionOmittable(Schema.String.pipe(
+    Schema.maxLength(280)
+  )),
   playlist_created_at: Model.Field({
     select: Schema.DateTimeUtc,
     json: Schema.DateTimeUtc,

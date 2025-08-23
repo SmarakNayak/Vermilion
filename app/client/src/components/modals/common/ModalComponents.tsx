@@ -116,6 +116,15 @@ export const ModalContent = styled.div`
   padding: 0.5rem 1.25rem 1.5rem;
 `;
 
+// Use ModalForm instead of ModalContent for forms
+export const ModalForm = styled.form`
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  overflow-y: auto;
+  padding: 0.5rem 1.25rem 1.5rem;
+`;
+
 export const ModalSection = styled.div`
   display: flex;
   flex-direction: column;

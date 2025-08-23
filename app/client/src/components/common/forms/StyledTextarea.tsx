@@ -5,6 +5,8 @@ export const StyledTextarea = styled.textarea<{ $isError?: boolean }>`
   width: 100%;
   max-width: 100%;
   min-height: 7rem;
+  max-height: 45vh;
+  field-sizing: content;
   padding: 0.5rem 0.75rem;
   background-color: ${theme.colors.background.primary};
   font-family: ${theme.typography.fontFamilies.medium};
@@ -18,6 +20,7 @@ export const StyledTextarea = styled.textarea<{ $isError?: boolean }>`
   transition: all 200ms ease;
   resize: none;
   overflow-y: hidden;
+
 
   &:hover {
     border: 2px solid ${props => (props.$isError ? theme.colors.text.errorSecondary : theme.colors.border)};

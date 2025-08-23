@@ -3,7 +3,7 @@ import { FetchHttpClient } from "@effect/platform";
 import { EffectServerApi } from '../../../shared/api/effectServerApi';
 import type React from "react";
 
-class SocialClient extends AtomHttpApi.Tag<SocialClient>()("SocialClient", {
+export class SocialClient extends AtomHttpApi.Tag<SocialClient>()("SocialClient", {
   api: EffectServerApi,
   httpClient: FetchHttpClient.layer,
   baseUrl: "/effect/",
