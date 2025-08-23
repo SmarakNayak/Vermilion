@@ -109,6 +109,7 @@ async function proxyRequest(req, targetHost, rewrite, strip) {
       headers,
       body: ['GET', 'HEAD'].includes(req.method) ? undefined : req.body,
       decompress: false,
+      keepalive: false // Disable keepalive to avoid 400 issues with chrome
     });
     return response;
   } catch (error) {

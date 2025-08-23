@@ -1,4 +1,4 @@
-import { HttpServer, HttpServerRequest, HttpApiBuilder, HttpApiSwagger } from "@effect/platform"
+import { HttpServer, HttpServerRequest, HttpApiBuilder, HttpApiSwagger, HttpMiddleware } from "@effect/platform"
 import { BunHttpServer } from "@effect/platform-bun"
 import { Effect, Layer, Logger } from "effect"
 import { PlaylistTable, InsertPlaylistInscriptionsSchema, UpdatePlaylistInscriptionsSchema } from "../../../shared/types/playlist"
@@ -262,11 +262,12 @@ const EffectServerApiLive = HttpApiBuilder.api(EffectServerApi).pipe(
   Layer.provide(JwtService.Default),
   Layer.provide(SocialDbService.Default),
   Layer.provide(PostgresLive),
-  Layer.provide(ConfigService.Default)
+  Layer.provide(ConfigService.Default),
+  Layer.provide(Logger.pretty)
 )
 
 // Set up the server using BunHttpServer
-export const ServerLive = HttpApiBuilder.serve().pipe(
+export const ServerLive = HttpApiBuilder.serve(HttpMiddleware.logger).pipe(
   HttpServer.withLogAddress,
   Layer.provide(HttpApiSwagger.layer()),
   Layer.provide(HttpApiBuilder.middlewareOpenApi()),
@@ -277,7 +278,7 @@ export const ServerLive = HttpApiBuilder.serve().pipe(
 )
 
 //Test layer for development
-export const ServerTest = HttpApiBuilder.serve().pipe(
+export const ServerTest = HttpApiBuilder.serve(HttpMiddleware.logger).pipe(
   //server stuff
   HttpServer.withLogAddress,
   Layer.provide(HttpApiSwagger.layer()),
