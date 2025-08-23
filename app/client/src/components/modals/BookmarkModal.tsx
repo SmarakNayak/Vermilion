@@ -6,8 +6,7 @@ import { effectTsResolver } from '@hookform/resolvers/effect-ts';
 import { useModalScrollLock } from '../../hooks/useModalScrollLock';
 import { 
   Modal,
-  ModalHeader, 
-  ModalContent,
+  ModalHeader,
   ModalForm,
   ModalSection,
   ModalSectionTitle,
@@ -25,8 +24,8 @@ export const BookmarkModal = ({isOpen, onClose}: {
   isOpen: boolean, 
   onClose: () => void
 }) => {
-  const modalContentRef = useRef<HTMLFormElement>(null);
-  useModalScrollLock(isOpen, modalContentRef);
+  const modalFormRef = useRef<HTMLFormElement>(null);
+  useModalScrollLock(isOpen, modalFormRef);
   
   const wallet = useStore((state) => state.wallet);
   const userId = useAtomValue(SocialClient.query("profiles", "getProfileByAddress", {
@@ -46,7 +45,7 @@ export const BookmarkModal = ({isOpen, onClose}: {
   return (
     <Modal isOpen={isOpen} onClose={onClose}>
       <ModalHeader title='Create bookmark folder' onClose={onClose}/>
-      <ModalForm ref={modalContentRef} onSubmit={handleSubmit(onFormSubmit)}>
+      <ModalForm ref={modalFormRef} onSubmit={handleSubmit(onFormSubmit)}>
           <ModalSection>
             <ModalSectionTitle>Folder Name</ModalSectionTitle>
             <StyledInput
@@ -59,7 +58,7 @@ export const BookmarkModal = ({isOpen, onClose}: {
           </ModalSection>
 
           <ModalSection>
-            <ModalSectionTitle>Description</ModalSectionTitle>
+            <ModalSectionTitle>Description (optional)</ModalSectionTitle>
             <StyledTextarea
               {...register('playlist_description')}
               placeholder="Enter folder description"

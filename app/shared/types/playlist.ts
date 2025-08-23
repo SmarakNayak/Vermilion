@@ -6,10 +6,13 @@ import { FieldOptionOmittable, FieldUpdateOmittable } from "./omittable";
 export class PlaylistTable extends Model.Class<PlaylistTable>("PlaylistTable")({
   playlist_id: Model.Generated(Schema.UUID),
   user_id: Schema.UUID,
-  playlist_name: FieldUpdateOmittable(Schema.String),
+  playlist_name: FieldUpdateOmittable(Schema.String.pipe(
+    Schema.minLength(1,{message: () => "Name cannot be empty" }),
+    Schema.maxLength(100, { message: () => "Name must be 100 characters or less" })
+  )),
   playlist_inscription_icon: FieldOptionOmittable(Schema.String),
   playlist_description: FieldOptionOmittable(Schema.String.pipe(
-    Schema.maxLength(280)
+    Schema.maxLength(280, { message: () => "Description must be 280 characters or less" })
   )),
   playlist_created_at: Model.Field({
     select: Schema.DateTimeUtc,
