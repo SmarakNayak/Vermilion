@@ -45,7 +45,6 @@ export const BookmarkModal = ({isOpen, onClose}: {
   }, [userId, setValue]);
 
   const onValidSubmit = async (data: typeof PlaylistTable.jsonCreate.Type) => {
-    console.log("Creating bookmark folder with data:", data);
     const result = await createBookmarkFolder({ payload: data });
     Exit.match(result, {
       onSuccess: (x) => {

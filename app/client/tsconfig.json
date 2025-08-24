@@ -20,6 +20,13 @@
     "noFallthroughCasesInSwitch": true,
     "noUncheckedIndexedAccess": true,
 
+    // Effect-friendly additions
+    "exactOptionalPropertyTypes": true,
+    //"noImplicitReturns": true,
+    "plugins": [
+      { "name": "@effect/language-service" }
+    ],
+
     // Some stricter flags (disabled by default)
     "noUnusedLocals": false,
     "noUnusedParameters": false,
