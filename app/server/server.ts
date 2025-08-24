@@ -424,7 +424,12 @@ await db.setupDatabase();
 bundexer.runBundexer();
 
 // Start the Effect server
-const effectServerFiber = await Effect.runFork(Layer.launch(ServerLive));
+const effectServerFiber = Effect.runFork(
+  Layer.launch(ServerLive).pipe(
+    Effect.tapError((err) => Effect.logError(err, "Failed to start Effect server")),
+    Effect.tap(() => Effect.logInfo("Effect server successfully stopped running at http://localhost:1083"))
+  )
+);
 
 async function getRenderedContentResponse(id: any, content_type: any, is_recursive: any, originalHeaders: any) {
   if (content_type?.startsWith('text/html') || (content_type?.startsWith('image/svg') && is_recursive)) {
@@ -529,4 +534,3 @@ process.on("SIGTERM", async () => {
 });
 
 console.log(`🚀 Bun server running at ${server.url}`);
-console.log(`🚀 Effect server running at http://localhost:1083`);

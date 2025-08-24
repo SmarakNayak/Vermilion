@@ -600,3 +600,10 @@ export const PostgresTest = Effect.gen(function* () {
 }).pipe(
   Layer.unwrapEffect
 );
+
+export const DatabaseSetupLive = Layer.effectDiscard(
+  Effect.gen(function* () {
+    const db = yield* SocialDbService;
+    yield* db.setupDatabase();
+  })
+);

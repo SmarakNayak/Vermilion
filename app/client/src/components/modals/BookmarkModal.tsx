@@ -19,7 +19,7 @@ import { StyledTextarea } from '../common/forms/StyledTextarea';
 import { FieldError } from '../common/forms/FieldError';
 import { SaveButton } from '../common/buttons/SaveButton';
 
-import { SocialClient, getErrorMessage } from '../../api/EffectApi';
+import { AuthSocialClient, getErrorMessage } from '../../api/EffectApi';
 import useStore from '../../store/zustand';
 import { PlaylistTable } from '../../../../shared/types/playlist';
 
@@ -31,17 +31,17 @@ export const BookmarkModal = ({isOpen, onClose}: {
   useModalScrollLock(isOpen, modalFormRef);
   
   const wallet = useStore((state) => state.wallet);
-  const userId = useAtomValue(SocialClient.query("profiles", "getProfileByAddress", {
+  const userId = useAtomValue(AuthSocialClient.query("profiles", "getProfileByAddress", {
     path: { user_address: wallet.ordinalsAddress },
   }));
-  const createBookmarkFolder = useAtomSet(SocialClient.mutation("playlists", "createPlaylist"), { mode: 'promiseExit' });
+  const createBookmarkFolder = useAtomSet(AuthSocialClient.mutation("playlists", "createPlaylist"), { mode: 'promiseExit' });
 
   const { register, handleSubmit, formState: { errors, isSubmitting, isValid }, setValue } = useForm({
     resolver: effectTsResolver(PlaylistTable.jsonCreate),
     mode: 'onChange',
   });
   useEffect(() => {
-    if (userId._tag === 'Success') setValue('user_id', '00000000-0000-0000-0000-000000000001' || userId.value.user_id);
+    if (userId._tag === 'Success') setValue('user_id', userId.value.user_id);
   }, [userId, setValue]);
 
   const onValidSubmit = async (data: typeof PlaylistTable.jsonCreate.Type) => {

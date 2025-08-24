@@ -2,7 +2,7 @@ import { HttpServer, HttpServerRequest, HttpApiBuilder, HttpApiSwagger, HttpMidd
 import { BunHttpServer } from "@effect/platform-bun"
 import { Effect, Layer, Logger } from "effect"
 import { PlaylistTable, InsertPlaylistInscriptionsSchema, UpdatePlaylistInscriptionsSchema } from "../../../shared/types/playlist"
-import { SocialDbService, PostgresLive, PostgresTest } from "../effectDb"
+import { SocialDbService, PostgresLive, PostgresTest, DatabaseSetupLive } from "../effectDb"
 import { ConfigService } from "../config"
 import { AuthenticatedUserContext} from "../../../shared/api/authMiddleware"
 import { AuthenticationLive, AuthenticationTest } from "./authLayers";
@@ -255,26 +255,25 @@ const getProfileByHandleHandler = (req: {
 );
 
 
-// Provide the implementation for the API
-const EffectServerApiLive = HttpApiBuilder.api(EffectServerApi).pipe(
+// Set up the server using BunHttpServer
+export const ServerLive = HttpApiBuilder.serve(HttpMiddleware.logger).pipe(
+  //server stuff
+  HttpServer.withLogAddress,
+  Layer.provide(HttpApiSwagger.layer()),
+  Layer.provide(HttpApiBuilder.middlewareOpenApi()),
+  Layer.provide(
+    BunHttpServer.layer({ port: 1083 })
+  ),
+  //api stuff
+  Layer.provide(HttpApiBuilder.api(EffectServerApi)),
   Layer.provide(EffectServerLive),
   Layer.provide(AuthenticationLive),
   Layer.provide(JwtService.Default),
+  Layer.provide(DatabaseSetupLive),
   Layer.provide(SocialDbService.Default),
   Layer.provide(PostgresLive),
   Layer.provide(ConfigService.Default),
   Layer.provide(Logger.pretty)
-)
-
-// Set up the server using BunHttpServer
-export const ServerLive = HttpApiBuilder.serve(HttpMiddleware.logger).pipe(
-  HttpServer.withLogAddress,
-  Layer.provide(HttpApiSwagger.layer()),
-  Layer.provide(HttpApiBuilder.middlewareOpenApi()),
-  Layer.provide(EffectServerApiLive),
-  Layer.provide(
-    BunHttpServer.layer({ port: 1083 })
-  )
 )
 
 //Test layer for development
