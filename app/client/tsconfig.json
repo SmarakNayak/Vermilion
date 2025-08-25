@@ -22,7 +22,7 @@
 
     // Effect-friendly additions
     "exactOptionalPropertyTypes": true,
-    //"noImplicitReturns": true,
+    "noImplicitReturns": true,
     "plugins": [
       { "name": "@effect/language-service" }
     ],

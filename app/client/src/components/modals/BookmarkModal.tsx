@@ -18,10 +18,11 @@ import { StyledInput } from '../common/forms/StyledInput';
 import { StyledTextarea } from '../common/forms/StyledTextarea';
 import { FieldError } from '../common/forms/FieldError';
 import { SaveButton } from '../common/buttons/SaveButton';
+import AuthGuardSaveButton from '../common/buttons/AuthGuardSaveButton';
 
 import { AuthSocialClient, getErrorMessage } from '../../api/EffectApi';
-import useStore from '../../store/zustand';
 import { PlaylistTable } from '../../../../shared/types/playlist';
+import { useAuth } from '../../hooks/useAuth';
 
 export const BookmarkModal = ({isOpen, onClose}: {
   isOpen: boolean, 
@@ -30,10 +31,7 @@ export const BookmarkModal = ({isOpen, onClose}: {
   const modalFormRef = useRef<HTMLFormElement>(null);
   useModalScrollLock(isOpen, modalFormRef);
   
-  const wallet = useStore((state) => state.wallet);
-  const userId = useAtomValue(AuthSocialClient.query("profiles", "getProfileByAddress", {
-    path: { user_address: wallet.ordinalsAddress },
-  }));
+  const { isSignedIn, userProfile, profileErrorMessage } = useAuth();
   const createBookmarkFolder = useAtomSet(AuthSocialClient.mutation("playlists", "createPlaylist"), { mode: 'promiseExit' });
 
   const { register, handleSubmit, formState: { errors, isSubmitting, isValid }, setValue } = useForm({
@@ -41,8 +39,10 @@ export const BookmarkModal = ({isOpen, onClose}: {
     mode: 'onChange',
   });
   useEffect(() => {
-    if (userId._tag === 'Success') setValue('user_id', userId.value.user_id);
-  }, [userId, setValue]);
+    if (isSignedIn && userProfile._tag === 'Success') {
+      setValue('user_id', userProfile.value.user_id, { shouldValidate: true });
+    }
+  }, [userProfile, setValue]);
 
   const onValidSubmit = async (data: typeof PlaylistTable.jsonCreate.Type) => {
     const result = await createBookmarkFolder({ payload: data });
@@ -74,15 +74,13 @@ export const BookmarkModal = ({isOpen, onClose}: {
         </ModalSection>
 
         <ModalSection>
-          <SaveButton type="submit" disabled={isSubmitting || !isValid}>
-            {isSubmitting ? 'Creating folder...' : 'Create folder'}
-          </SaveButton>
+          <AuthGuardSaveButton actionLabel="bookmark">
+            <SaveButton type="submit" disabled={isSubmitting || !isValid}>
+              {isSubmitting ? 'Creating folder...' : 'Create folder'}
+            </SaveButton>
+          </AuthGuardSaveButton>
         </ModalSection>
-        {userId._tag === 'Failure' && (
-          <FieldError>
-            {userId.cause._tag === 'Fail' ? userId.cause.error.message : 'Failed to load user profile. Please refresh and try again.'}
-          </FieldError>
-        )}
+        {profileErrorMessage && (<FieldError>{profileErrorMessage}</FieldError>)}
       </ModalForm>
     </Modal>
   );

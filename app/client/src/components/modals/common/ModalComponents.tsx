@@ -2,7 +2,7 @@ import styled from 'styled-components';
 import { theme } from '../../../styles/theme';
 import { CrossIcon } from '../../common/Icon';
 
-const ModalOverlay = styled.div<{isOpen: boolean}>`
+export const ModalOverlay = styled.div<{isOpen: boolean}>`
   position: fixed;
   top: 0;
   left: 0;
@@ -31,7 +31,11 @@ const ModalContainer = styled.div<{isOpen: boolean}>`
   flex-direction: column;
   opacity: ${props => (props.isOpen ? 1 : 0)};
   visibility: ${props => (props.isOpen ? 'visible' : 'hidden')};
-  transform: ${props => (props.isOpen ? 'scale(1)' : 'scale(0.92)')};
+  
+  // NOTE: transform creates a stacking context, preventing child modals from rendering correctly
+  // when isOpen we default to no transform instead of scale(1) to avoid this issue while still allowing for
+  // animation. In the future we can use createPortal to render modals at the root level to avoid this issue entirely.
+  transform: ${props => (props.isOpen ? '' : 'scale(0.92)')};
   transition: opacity 200ms ease, visibility 200ms ease, transform 200ms ease;
 
   @media (max-width: 500px) {

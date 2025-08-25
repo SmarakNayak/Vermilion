@@ -401,7 +401,7 @@ const HeaderTitle = styled.p`
   margin: 0;
 `;
 
-const Button = styled.button`
+const Button = styled.button.attrs({ type: 'button' })` // Type button to prevent form submission
   background-color: ${theme.colors.background.white};
   border: none;
   border-radius: 1rem;
@@ -450,7 +450,7 @@ const WalletName = styled.span`
   transition: color 200ms ease;
 `;
 
-const WalletOption = styled.button`
+const WalletOption = styled.button.attrs({ type: 'button' })`
   display: flex;
   align-items: center;
   width: 100%;
@@ -544,7 +544,7 @@ const Divider = styled.div`
   margin: 0;
 `;
 
-const OtherWalletsOption = styled.button`
+const OtherWalletsOption = styled.button.attrs({ type: 'button' })`
   display: flex;
   align-items: center;
   justify-content: space-between;
