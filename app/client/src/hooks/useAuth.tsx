@@ -28,7 +28,7 @@ export const useAuth = (): AuthState => {
     return 'error';
   });
   const profileErrorMessage = useAtomValue(userProfileAtom, (result) => {
-    if (result._tag === 'Failure' && result.cause._tag === 'Fail') {
+    if (result._tag === 'Failure' && result.cause._tag === 'Fail' && result.cause.error._tag === 'NotFound') {
       //Not found is not a user facing error in this context - it just means no profile exists (which can be checked with hasProfile)
       return null;
     }
