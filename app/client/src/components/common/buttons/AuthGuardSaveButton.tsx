@@ -45,7 +45,7 @@ const AuthGuardSaveButton = ({ children, actionLabel = "use this feature" } :{
     );
   }
 
-  if (!hasProfile) {
+  if (hasProfile === 'no') {
     return (
       <SaveButton type="button" onClick={handleProfileClick}>
         <AvatarPlusIcon size="2rem" color={theme.colors.background.white} />
