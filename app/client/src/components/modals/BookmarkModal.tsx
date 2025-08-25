@@ -30,7 +30,7 @@ export const BookmarkModal = ({isOpen, onClose}: {
 }) => {
   const modalFormRef = useRef<HTMLFormElement>(null);
   useModalScrollLock(isOpen, modalFormRef);
-  
+
   const { isSignedIn, userProfile, profileErrorMessage } = useAuth();
   const createBookmarkFolder = useAtomSet(AuthSocialClient.mutation("playlists", "createPlaylist"), { mode: 'promiseExit' });
 

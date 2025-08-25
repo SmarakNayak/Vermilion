@@ -1,10 +1,15 @@
-import { useAtomValue } from "@effect-atom/atom-react";
+import { useAtomValue, Result } from "@effect-atom/atom-react";
 import useStore from "../store/zustand";
 import { AuthSocialClient } from "../api/EffectApi";
+import { ProfileView } from "../../../shared/types/effectProfile";
+import { NotFound } from "../../../shared/api/apiErrors";
+import type { HttpClientError } from "@effect/platform/HttpClientError";
+import type { ParseResult } from "effect";
 
+type ProfileError = NotFound | HttpClientError | ParseResult.ParseError;
 type AuthState =
   | { isSignedIn: false; wallet: undefined; hasProfile: false; userProfile: undefined; profileErrorMessage: null }
-  | { isSignedIn: true; wallet: any; hasProfile: boolean; userProfile: any; profileErrorMessage: string | null }
+  | { isSignedIn: true; wallet: any; hasProfile: boolean; userProfile: Result.Result<typeof ProfileView.json.Type, ProfileError>; profileErrorMessage: string | null };
 
 export const useAuth = (): AuthState => {
   const wallet = useStore(state => state.wallet);
