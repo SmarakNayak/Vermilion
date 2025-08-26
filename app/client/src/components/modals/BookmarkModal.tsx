@@ -1,7 +1,7 @@
-import React, { useEffect, useRef } from 'react';
-import { useAtomSet, useAtomValue, Result } from '@effect-atom/atom-react';
-import { Exit, Cause } from 'effect';
-import { useForm, type FieldErrors } from 'react-hook-form';
+import { useEffect, useRef } from 'react';
+import { useAtomSet } from '@effect-atom/atom-react';
+import { Exit } from 'effect';
+import { useForm } from 'react-hook-form';
 import { effectTsResolver } from '@hookform/resolvers/effect-ts';
 import { toast } from 'sonner';
 import { toastifyInvalidFields } from '../../utils/toastifyInvalidFields';
@@ -42,7 +42,7 @@ export const BookmarkModal = ({isOpen, onClose}: {
     if (auth.state === 'signed-in-with-profile') {
       setValue('user_id', auth.profile.user_id, { shouldValidate: true });
     }
-  }, [auth.state, setValue]);
+  }, [auth.state]);
 
   const onValidSubmit = async (data: typeof PlaylistTable.jsonCreate.Type) => {
     const result = await createBookmarkFolder({ payload: data });

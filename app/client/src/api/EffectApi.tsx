@@ -5,7 +5,6 @@ import { EffectServerApi } from '../../../shared/api/effectServerApi';
 import { type ApiError } from "../../../shared/api/apiErrors";
 import type { HttpClientError } from "@effect/platform/HttpClientError";
 import type { ParseResult } from "effect";
-import type React from "react";
 import useStore from '../store/zustand.js';
 
 export class SocialClient extends AtomHttpApi.Tag<SocialClient>()("SocialClient", {
@@ -58,17 +57,3 @@ export const getErrorMessage = <E extends SocialClientError>(cause: Cause.Cause<
   // For other causes, return generic message
   return ' for an unknown reason. Please try again.';
 };
-
-export const SomeComponent: React.FC = () => {
-  const home = useAtomValue(SocialClient.query("playlists", "home", {
-    reactivityKeys: ["home"],
-    timeToLive: 1000 * 20, // 20 seconds
-  }));
-
-  return (
-    <div>
-      <p>Home Playlists</p>
-      <p>Home: {Result.getOrElse(home, () => 'ahhh nothing2')}</p>
-    </div>
-  );
-}

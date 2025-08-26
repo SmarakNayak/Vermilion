@@ -64,7 +64,7 @@ export const InfoContainer = styled.div`
   max-width: 27rem;
   display: flex;
   flex-direction: column;
-  overflow-y: auto;
+  //overflow-y: auto; commented out to prevent bookmark menu from being cut off
   position: relative;
 
   @media (max-width: 864px) {

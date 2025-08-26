@@ -3,6 +3,9 @@ import { theme } from '../../styles/theme';
 import { FolderIcon, PlusIconCircled } from "../common/Icon";
 import { BookmarkModal } from "../modals/BookmarkModal";
 import React, { useState } from 'react';
+import { useAtomValue, Atom, Result } from "@effect-atom/atom-react";
+import { AuthSocialClient } from "../../api/EffectApi";
+import { useAuth } from "../../hooks/useAuth";
 
 const BookmarkMenuContainer = styled.div`
   //layout  
@@ -60,11 +63,40 @@ const FolderIconContainer = styled.div`
   border: 1px solid ${theme.colors.border};
 `;
 
+const ScrollableList = styled.div`
+  width: 100%;
+  max-height: 200px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  /* Hide scrollbar for WebKit-based browsers (Chrome, Safari, Edge) */
+  &::-webkit-scrollbar {
+    display: none;
+  }
+  /* Hide scrollbar for Firefox */
+  scrollbar-width: none; /* Firefox */
+`;
+
+const playlistsAtomFam = Atom.family((user_id?: string) =>
+  Atom.make((get) => {
+    if (!user_id) return [];
+    const playlistResult = get(AuthSocialClient.query("playlists", "getPlaylistsByUserId", {  
+      path: { user_id }  
+    }));  
+    return Result.getOrElse(playlistResult, () => []);  
+  }).pipe(Atom.keepAlive)
+);
+
 export const BookmarkDropdown = ({ref}: {ref: React.Ref<HTMLDivElement>}) => {
   const [isBookmarkModalOpen, setIsBookmarkModalOpen] = useState(false);
   const handleCreateFolderClick = () => {
     setIsBookmarkModalOpen(true);
   };
+  const auth = useAuth();
+  const playlistsAtom = playlistsAtomFam(auth.state === 'signed-in-with-profile' ? auth.profile.user_id : undefined);
+  const folderList = useAtomValue(playlistsAtom);
+
   return (
     <BookmarkMenuContainer ref={ref}>
       <BookmarkModal isOpen={isBookmarkModalOpen} onClose={() => setIsBookmarkModalOpen(false)} />
@@ -75,12 +107,16 @@ export const BookmarkDropdown = ({ref}: {ref: React.Ref<HTMLDivElement>}) => {
         </FolderIconContainer>
         Create Folder
       </BookmarkMenuEntryContainer>
-      <BookmarkMenuEntryContainer>
-        <FolderIconContainer>
-          <FolderIcon size={'1.25rem'} color={theme.colors.text.primary} />
-        </FolderIconContainer>
-        Wish List
-      </BookmarkMenuEntryContainer>
+      <ScrollableList>
+        {folderList.map((folder) => (
+          <BookmarkMenuEntryContainer key={folder.playlist_id}>
+            <FolderIconContainer>
+              <FolderIcon size={'1.25rem'} color={theme.colors.text.primary} />
+            </FolderIconContainer>
+            {folder.playlist_name}
+          </BookmarkMenuEntryContainer>
+        ))}
+      </ScrollableList>
     </BookmarkMenuContainer>
   );
 };
