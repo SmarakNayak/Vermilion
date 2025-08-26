@@ -18,6 +18,7 @@ const PlaylistsGroup = HttpApiBuilder.group(EffectServerApi, "playlists", (handl
     .handle("updatePlaylist", updatePlaylistHandler)
     .handle("deletePlaylist", deletePlaylistHandler)
     .handle("getPlaylist", getPlaylistHandler)
+    .handle("getPlaylistsByUserId", getPlaylistsByUserIdHandler)
     .handle("insertPlaylistInscriptions", insertPlaylistInscriptionsHandler)
     .handle("updatePlaylistInscriptions", updatePlaylistInscriptionsHandler)
     .handle("deletePlaylistInscriptions", deletePlaylistInscriptionsHandler)
@@ -105,6 +106,16 @@ const getPlaylistHandler = (req: {
   Effect.catchTags({
     "DatabaseNotFoundError": (error) => new NotFound({message: error.message}),
   })
+);
+
+const getPlaylistsByUserIdHandler = (req: {
+  readonly path: { readonly user_id: string },
+  readonly request: HttpServerRequest.HttpServerRequest
+}) => Effect.gen(function* () {
+  let db = yield* SocialDbService;
+  return yield* db.getPlaylistsByUserId(req.path.user_id);
+}).pipe(
+  Effect.tapError((error) => Effect.logError("Failed to get playlists by user ID", error))
 );
 
 const insertPlaylistInscriptionsHandler = (req: {

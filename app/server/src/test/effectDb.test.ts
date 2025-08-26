@@ -481,6 +481,58 @@ describe("Playlist Operations", () => {
     expect((result as DatabaseNotFoundError).message).toBe("This playlist could not be found.");
   });
 
+  it("should get playlists by user ID", async () => {
+    // First create a second playlist for the same user
+    const secondPlaylist: Schema.Schema.Type<typeof PlaylistTable.insert> = {
+      user_id: TEST_USER_ID_1,
+      playlist_name: "Second Test Playlist",
+      playlist_inscription_icon: Option.some("https://example.com/second_playlist_icon.jpg"),
+      playlist_description: Option.some("Second test playlist description."),
+    };
+
+    await runTestWithUser(
+      Effect.gen(function* () {
+        const db = yield* SocialDbService;
+        return yield* db.createPlaylist(secondPlaylist);
+      }),
+      TEST_USER_ADDRESS_1
+    );
+
+    // Now get all playlists for the user
+    const result = await runTest(
+      Effect.gen(function* () {
+        const db = yield* SocialDbService;
+        return yield* db.getPlaylistsByUserId(TEST_USER_ID_1);
+      })
+    );
+
+    expect(result).toBeDefined();
+    expect(Array.isArray(result)).toBe(true);
+    expect(result.length).toBe(2);
+    
+    // Verify the playlists are ordered by creation date (most recent first)
+    expect(result[0]?.user_id).toBe(TEST_USER_ID_1);
+    expect(result[1]?.user_id).toBe(TEST_USER_ID_1);
+    
+    // The newer playlist should be first due to ORDER BY playlist_created_at DESC
+    const playlistNames = result.map(p => p.playlist_name);
+    expect(playlistNames).toContain("Updated Test Playlist");
+    expect(playlistNames).toContain("Second Test Playlist");
+  });
+
+  it("should return empty array for user with no playlists", async () => {
+    const result = await runTest(
+      Effect.gen(function* () {
+        const db = yield* SocialDbService;
+        return yield* db.getPlaylistsByUserId("00000000-0000-0000-0000-000000000999");
+      })
+    );
+
+    expect(result).toBeDefined();
+    expect(Array.isArray(result)).toBe(true);
+    expect(result.length).toBe(0);
+  });
+
   it("should insert inscriptions into a playlist", async () => {
     const inscriptions: Schema.Schema.Type<typeof InsertPlaylistInscriptionsSchema> = [
       { playlist_id: TEST_PLAYLIST_ID, inscription_id: "inscription1" },

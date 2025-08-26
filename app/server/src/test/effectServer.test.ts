@@ -940,6 +940,104 @@ describe("Playlist Endpoints", () => {
       expect(result).toBeDefined();
       expect(result).toBeInstanceOf(NotFound);
     });
+
+    it("should get playlists by user ID", async () => {
+      const testAddress = "test_user_address_get_playlists_by_user";
+      const authenticatedClientEffect = makeAuthenticatedClient(testAddress);
+      
+      // First create a profile
+      const profileResponse = await runTest(Effect.gen(function* () {
+        const apiClient = yield* authenticatedClientEffect;
+        return yield* apiClient.profiles.createProfile({
+          payload: {
+            user_handle: "getplsuser",
+            user_name: "Get Playlists User",
+            user_picture: Option.none(),
+            user_bio: Option.none(),
+            user_twitter: Option.none(),
+            user_discord: Option.none(),
+            user_website: Option.none(),
+            user_addresses: [testAddress]
+          }
+        });
+      }));
+
+      // Create multiple playlists for the user
+      const firstPlaylistResponse = await runTest(Effect.gen(function* () {
+        const apiClient = yield* authenticatedClientEffect;
+        return yield* apiClient.playlists.createPlaylist({
+          payload: {
+            user_id: profileResponse.user_id,
+            playlist_name: "First Playlist",
+            playlist_inscription_icon: Option.none(),
+            playlist_description: Option.none()
+          }
+        });
+      }));
+
+      const secondPlaylistResponse = await runTest(Effect.gen(function* () {
+        const apiClient = yield* authenticatedClientEffect;
+        return yield* apiClient.playlists.createPlaylist({
+          payload: {
+            user_id: profileResponse.user_id,
+            playlist_name: "Second Playlist",
+            playlist_inscription_icon: Option.none(),
+            playlist_description: Option.some("Second playlist description")
+          }
+        });
+      }));
+
+      // Get all playlists by user ID
+      const result = await runTest(Effect.gen(function* () {
+        const apiClient = yield* unauthenticatedClientEffect; // This endpoint doesn't require auth
+        return yield* apiClient.playlists.getPlaylistsByUserId({
+          path: { user_id: profileResponse.user_id }
+        });
+      }));
+
+      expect(result).toBeDefined();
+      expect(Array.isArray(result)).toBe(true);
+      expect(result.length).toBe(2);
+      
+      // Verify all playlists belong to the correct user
+      result.forEach(playlist => {
+        expect(playlist.user_id).toBe(profileResponse.user_id);
+      });
+      
+      // Verify playlist names are present
+      const playlistNames = result.map(p => p.playlist_name);
+      expect(playlistNames).toContain("First Playlist");
+      expect(playlistNames).toContain("Second Playlist");
+    });
+
+    it("should return empty array for user with no playlists", async () => {
+      const result = await runTest(Effect.gen(function* () {
+        const apiClient = yield* unauthenticatedClientEffect;
+        return yield* apiClient.playlists.getPlaylistsByUserId({
+          path: { user_id: "00000000-0000-0000-0000-000000000999" }
+        });
+      }));
+
+      expect(result).toBeDefined();
+      expect(Array.isArray(result)).toBe(true);
+      expect(result.length).toBe(0);
+    });
+
+    it("should fail with invalid UUID format", async () => {
+      const result = await runTest(Effect.gen(function* () {
+        const apiClient = yield* unauthenticatedClientEffect;
+        return yield* apiClient.playlists.getPlaylistsByUserId({
+          path: { user_id: "invalid-uuid-format" }
+        }).pipe(
+          Effect.catchTag("ParseError", (error) => {
+            return Effect.succeed(error);
+          })
+        );
+      }));
+
+      expect(result).toBeDefined();
+      expect(result).toBeInstanceOf(ParseError);
+    });
   });
 });
 

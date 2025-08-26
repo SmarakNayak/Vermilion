@@ -415,6 +415,15 @@ export class SocialDbService extends Effect.Service<SocialDbService>()("EffectPo
           "NoSuchElementException": (_e) => Effect.fail(DatabaseNotFoundError.fromNoSuchElementException("playlist", "get"))
         })
       ),
+      getPlaylistsByUserId: (userId: string) => Effect.gen(function* () {
+        const result = yield* sql`SELECT * FROM social.playlist_info WHERE user_id = ${userId} ORDER BY playlist_created_at DESC`;
+        return yield* Schema.decodeUnknown(Schema.Array(PlaylistTable.select))(result);
+      }).pipe(
+        Effect.catchTags({
+          "ParseError": (e) => Effect.die(e),
+          "SqlError": (e) => Effect.die(e),
+        })
+      ),
       insertPlaylistInscriptions: (insertPlaylistInscriptions: InsertPlaylistInscriptions) => Effect.gen(function* () {
         yield* sql`CREATE TEMP TABLE temp_playlist_inscriptions ON COMMIT DROP AS TABLE social.playlist_inscriptions WITH NO DATA`;
         yield* sql`INSERT INTO temp_playlist_inscriptions ${sql.insert(insertPlaylistInscriptions)}`;

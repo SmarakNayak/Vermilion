@@ -77,6 +77,10 @@ export const EffectServerApi = HttpApi.make("EffectServer").add(
       .addSuccess(PlaylistTable.json)
       .addError(NotFound)
   ).add(
+    HttpApiEndpoint.get("getPlaylistsByUserId", `/social/get_playlists_by_user_id/:user_id`)
+      .setPath(Schema.Struct({ user_id: Schema.UUID }))
+      .addSuccess(Schema.Array(PlaylistTable.json))
+  ).add(
     HttpApiEndpoint.post("insertPlaylistInscriptions", `/social/insert_playlist_inscriptions`)
       .middleware(Authentication)
       .setPayload(InsertPlaylistInscriptionsSchema)
