@@ -93,10 +93,9 @@ export class Authenticator {
     const secret = config.access_token_secret;
     try {
       const decoded = jwt.verify(token, secret) as { address: string };
-      return {
-        isValid: decoded.address === address,
-        error: decoded.address === address ? undefined : 'Addresses do not match'
-      };
+      return decoded.address === address
+        ? { isValid: true }
+        : { isValid: false, error: 'Addresses do not match' };
     } catch (err: any) {
       if (err.name === 'TokenExpiredError') {
         return {
