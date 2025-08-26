@@ -19,7 +19,7 @@ const AuthGuardSaveButton = ({ children, actionLabel = "use this feature" } :{
   children: React.ReactNode;
   actionLabel: string;
 }) => {
-  const { isSignedIn, hasProfile } = useAuth();
+  const auth = useAuth();
   const navigate = useNavigate();
   const [showWalletConnect, setShowWalletConnect] = React.useState(false);
 
@@ -31,7 +31,7 @@ const AuthGuardSaveButton = ({ children, actionLabel = "use this feature" } :{
     navigate('/settings/profile');
   };
 
-  if (!isSignedIn) {
+  if (auth.state === 'not-signed-in') {
     return (
       <>
         <SaveButton type="button" onClick={handleSignInClick}>
@@ -45,7 +45,7 @@ const AuthGuardSaveButton = ({ children, actionLabel = "use this feature" } :{
     );
   }
 
-  if (hasProfile === 'no') {
+  if (auth.state === 'signed-in-no-profile') {
     return (
       <SaveButton type="button" onClick={handleProfileClick}>
         <AvatarPlusIcon size="2rem" color={theme.colors.background.white} />

@@ -31,7 +31,7 @@ export const BookmarkModal = ({isOpen, onClose}: {
   const modalFormRef = useRef<HTMLFormElement>(null);
   useModalScrollLock(isOpen, modalFormRef);
 
-  const { isSignedIn, userProfile, profileErrorMessage } = useAuth();
+  const auth = useAuth();
   const createBookmarkFolder = useAtomSet(AuthSocialClient.mutation("playlists", "createPlaylist"), { mode: 'promiseExit' });
 
   const { register, handleSubmit, formState: { errors, isSubmitting, isValid }, setValue } = useForm({
@@ -39,10 +39,10 @@ export const BookmarkModal = ({isOpen, onClose}: {
     mode: 'onChange',
   });
   useEffect(() => {
-    if (isSignedIn && userProfile._tag === 'Success') {
-      setValue('user_id', userProfile.value.user_id, { shouldValidate: true });
+    if (auth.state === 'signed-in-with-profile') {
+      setValue('user_id', auth.profile.user_id, { shouldValidate: true });
     }
-  }, [userProfile, setValue]);
+  }, [auth.state, setValue]);
 
   const onValidSubmit = async (data: typeof PlaylistTable.jsonCreate.Type) => {
     const result = await createBookmarkFolder({ payload: data });
@@ -80,7 +80,7 @@ export const BookmarkModal = ({isOpen, onClose}: {
             </SaveButton>
           </AuthGuardSaveButton>
         </ModalSection>
-        {profileErrorMessage && (<FieldError>{profileErrorMessage}</FieldError>)}
+        {auth.state === 'signed-in-profile-error' && (<FieldError>{auth.errorMessage}</FieldError>)}
       </ModalForm>
     </Modal>
   );
