@@ -18,6 +18,8 @@ export class Forbidden extends Schema.TaggedError<Forbidden>()(
   HttpApiSchema.annotations({ status: 403, description: "Access denied by security policy" })
 ) {};
 
+// Note Issue is used for db validation errors not caught by Schema.
+// As of now, all db constraints are handled by Schema via ParseError, so they should not occur.
 export class Issue extends Schema.TaggedError<Issue>()(
   "Issue",
   {

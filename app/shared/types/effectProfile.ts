@@ -5,7 +5,13 @@ import { FieldOptionOmittable, FieldUpdateOmittable } from "./omittable";
 // Profile model using @effect/sql Model.Class
 const baseFields = {
   user_id: Model.Generated(Schema.UUID),
-  user_handle: FieldUpdateOmittable(Schema.String.pipe(Schema.minLength(2), Schema.maxLength(17))),
+  user_handle: FieldUpdateOmittable(Schema.String.pipe(
+    Schema.minLength(2), 
+    Schema.maxLength(17),
+    Schema.pattern(/^[a-zA-Z0-9_]{2,17}$/, {
+      message: () => "Handle must be 2-17 alphanumeric characters, and can include underscores"
+    })
+  )),
   user_name: FieldUpdateOmittable(Schema.String.pipe(Schema.maxLength(30))),
   user_picture: FieldOptionOmittable(Schema.String.pipe(Schema.maxLength(80))),
   user_bio: FieldOptionOmittable(Schema.String.pipe(Schema.maxLength(280))),

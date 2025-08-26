@@ -7,7 +7,8 @@ import { PostgresTest, SocialDbService } from "../effectDb";
 import { ConfigService } from "../config";
 import { Unauthorized } from "../../../shared/api/authMiddleware";
 import { ParseError } from "effect/ParseResult";
-import { NotFound, Issue, Conflict, Forbidden } from "../../../shared/api/apiErrors";
+import { NotFound, Conflict, Forbidden } from "../../../shared/api/apiErrors";
+// Note IssueError is not imported because there are no db constraints that aren't handled by Schema via ParseError
 
 let dbLayer = SocialDbService.Default.pipe(
   Layer.provide(PostgresTest),
@@ -289,6 +290,35 @@ describe("Profile Endpoints", () => {
       
       expect(result).toBeDefined();
       expect(result).toBeInstanceOf(ParseError);
+    });
+
+    it("should fail to create profile with invalid handle characters (ParseError)", async () => {
+      const testAddress = "test_user_address_bad_handle";
+      const authenticatedClientEffect = makeAuthenticatedClient(testAddress);
+      
+      const result = await runTest(Effect.gen(function* () {
+        const apiClient = yield* authenticatedClientEffect;
+        return yield* apiClient.profiles.createProfile({
+          payload: {
+            user_handle: "bad handle", // Contains space - violates schema pattern
+            user_name: "Bad Handle User",
+            user_picture: Option.none(),
+            user_bio: Option.none(),
+            user_twitter: Option.none(),
+            user_discord: Option.none(),
+            user_website: Option.none(),
+            user_addresses: [testAddress]
+          }
+        }).pipe(
+          Effect.catchTag("ParseError", (error) => {
+            return Effect.succeed(error);
+          })
+        );
+      }));
+
+      expect(result).toBeDefined();
+      expect(result).toBeInstanceOf(ParseError);
+      expect((result as ParseError).message).toContain("Handle must be 2-17 alphanumeric characters, and can include underscores");
     });
   });
 
@@ -963,7 +993,7 @@ describe("Playlist Endpoints", () => {
       }));
 
       // Create multiple playlists for the user
-      const firstPlaylistResponse = await runTest(Effect.gen(function* () {
+      await runTest(Effect.gen(function* () {
         const apiClient = yield* authenticatedClientEffect;
         return yield* apiClient.playlists.createPlaylist({
           payload: {
@@ -975,7 +1005,7 @@ describe("Playlist Endpoints", () => {
         });
       }));
 
-      const secondPlaylistResponse = await runTest(Effect.gen(function* () {
+      await runTest(Effect.gen(function* () {
         const apiClient = yield* authenticatedClientEffect;
         return yield* apiClient.playlists.createPlaylist({
           payload: {

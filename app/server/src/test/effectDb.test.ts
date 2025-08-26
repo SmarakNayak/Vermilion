@@ -6,7 +6,7 @@ import { AuthenticatedUserContext } from "../../../shared/api/authMiddleware"
 import { ProfileTable } from "../../../shared/types/effectProfile";
 import { PlaylistTable, InsertPlaylistInscriptionsSchema, UpdatePlaylistInscriptionsSchema } from "../../../shared/types/playlist";
 import { withErrorContext } from "../effectUtils";
-import { DatabaseDuplicateKeyError, DatabaseInvalidRowError, DatabaseNotFoundError, DatabaseSecurityError } from "../effectDbErrors";
+import { DatabaseDuplicateKeyError, DatabaseInvalidRowError, DatabaseNotFoundError, DatabaseSecurityError, mapPostgresInsertError } from "../effectDbErrors";
 
 // Test-specific UUIDs
 let TEST_USER_ID_1 = "00000000-0000-0000-0000-000000000001";
@@ -143,14 +143,18 @@ describe("Profile Operations", () => {
   });
 
   it("should not create a profile with a bad handle", async () => {
+    // Note: We are directly using SQL to bypass schema validation and test database constraint
     const result = await runTestWithUser(
       Effect.gen(function* () {
         const db = yield* SocialDbService;
-        return yield* db.createProfile(testProfileBadHandle, TEST_USER_ADDRESS_2);
+        // Use raw SQL to bypass schema validation and test database constraint
+        yield* db.sql`
+          INSERT INTO social.profiles (user_handle, user_name) 
+          VALUES (${testProfileBadHandle.user_handle}, ${testProfileBadHandle.user_name})
+        `;
       }).pipe(
-        Effect.catchTag("DatabaseInvalidRowError", (error) => {
-          return Effect.succeed(error);
-        })
+        Effect.catchTag("SqlError", mapPostgresInsertError),
+        Effect.catchTag("DatabaseInvalidRowError", Effect.succeed)
       ),
       TEST_USER_ADDRESS_2
     );
