@@ -2,8 +2,9 @@ import styled from "styled-components";
 import { theme } from '../../styles/theme';
 import { FolderIcon, PlusIconCircled } from "../common/Icon";
 import { BookmarkModal } from "../modals/BookmarkModal";
+import { SkeletonElement } from "../common/skeleton/SkeletonComponents";
 import React, { useState } from 'react';
-import { useAtomValue, Atom, Result } from "@effect-atom/atom-react";
+import { useAtomValue, useAtomSuspense, Atom, Result } from "@effect-atom/atom-react";
 import { AuthSocialClient } from "../../api/EffectApi";
 import { useAuth } from "../../hooks/useAuth";
 
@@ -77,6 +78,34 @@ const ScrollableList = styled.div`
   /* Hide scrollbar for Firefox */
   scrollbar-width: none; /* Firefox */
 `;
+
+const BookmarkSkeletonEntryContainer = styled.div`
+  display: flex;
+  padding: 8px;
+  align-items: center;
+  gap: 12px;
+  align-self: stretch;
+  border-radius: 8px;
+`;
+
+const BookmarkSkeletonEntry = () => {
+  return (
+    <BookmarkSkeletonEntryContainer>
+      <SkeletonElement width={'40px'} height={'40px'} radius={'12px'} />
+      <SkeletonElement width={'120px'} height={'1rem'} />
+    </BookmarkSkeletonEntryContainer>
+  );
+};
+
+const BookmarkListSkeleton = () => {
+  return (
+    <>
+      {Array.from({ length: 3 }, (_, index) => (
+        <BookmarkSkeletonEntry key={index} />
+      ))}
+    </>
+  );
+};
 
 const playlistsAtomFam = Atom.family((user_id?: string) =>
   Atom.make((get) => {
