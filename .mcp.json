@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "effect-docs": {
+      "command": "bun",
+      "args": ["x", "@effect-docs/mcp-server"]
+    }
+  }
+}
