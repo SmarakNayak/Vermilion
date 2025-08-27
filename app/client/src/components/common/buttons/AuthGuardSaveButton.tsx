@@ -45,7 +45,7 @@ const AuthGuardSaveButton = ({ children, actionLabel = "use this feature" } :{
     );
   }
 
-  if (auth.state === 'signed-in-no-profile') {
+  if (auth.state === 'signed-in-no-profile' || auth.state === 'signed-in-loading-profile') { //TODO: add loading button state
     return (
       <SaveButton type="button" onClick={handleProfileClick}>
         <AvatarPlusIcon size="2rem" color={theme.colors.background.white} />

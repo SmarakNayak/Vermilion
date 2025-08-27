@@ -13,6 +13,7 @@ type ProfileError = NotFound | HttpClientError | ParseResult.ParseError;
 type AuthState =
   | { state: 'not-signed-in' }
   | { state: 'signed-in-no-profile'; wallet: any }
+  | { state: 'signed-in-loading-profile'; wallet: any }
   | { state: 'signed-in-with-profile'; wallet: any; profile: typeof ProfileView.json.Type }
   | { state: 'signed-in-profile-error'; wallet: any; error: ProfileError | null; errorMessage: string };
 
@@ -25,12 +26,11 @@ export const userProfileAtomFam = Atom.family((user_address?: string) =>
       Result.map(Option.some), // map result to result of option
       (result) => Result.builder(result)
         .onErrorTag('NotFound', () => Result.success(Option.none())) // if 404, return none
-        .orElse(() => result) // else return original result
+        .orElse(() => result) // else return unchanged result
     )
     return profileResult;
   }).pipe(Atom.keepAlive)
 );
-
 
 export const useAuth = (): AuthState => {
   const wallet = useStore(state => state.wallet);
@@ -44,9 +44,9 @@ export const useAuth = (): AuthState => {
   return useMemo(() => {
     if (!isSignedIn) {  
       return { state: 'not-signed-in' };  
-    } else {  
+    } else {
       switch (userProfile._tag) {  
-        case 'Initial': return { state: 'signed-in-no-profile', wallet };  
+        case 'Initial': return { state: 'signed-in-loading-profile', wallet };  
         case 'Success': {
           if (Option.isSome(userProfile.value)) {
             return { state: 'signed-in-with-profile', wallet, profile: userProfile.value.value };

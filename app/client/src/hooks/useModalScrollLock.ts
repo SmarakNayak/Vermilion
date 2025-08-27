@@ -27,7 +27,7 @@ export const useModalScrollLock = <T extends HTMLElement>(isOpen: boolean, modal
       //   modalContentRef.current.scrollTop = 0;
       // }
     }
-    console.log("useModalScrollLock openModalCount:", openModalCount);
+
     return () => {
       // modal has switched from open to closed - decrement counter and unlock scroll if no modals remain open
       // this runs before useEffect[isOpen=false]
@@ -39,7 +39,6 @@ export const useModalScrollLock = <T extends HTMLElement>(isOpen: boolean, modal
         if (modalContentRef?.current) {
           modalContentRef.current.scrollTop = 0; // reset scroll position of modal content
         }
-        console.log("useModalScrollLock cleanup openModalCount:", openModalCount);
       }
     };
   }, [isOpen]);

@@ -5,8 +5,11 @@ import { BookmarkModal } from "../modals/BookmarkModal";
 import { SkeletonElement } from "../common/skeleton/SkeletonComponents";
 import React, { useState } from 'react';
 import { useAtomValue, useAtomSuspense, Atom, Result } from "@effect-atom/atom-react";
-import { AuthSocialClient } from "../../api/EffectApi";
+import { userProfileAtom } from "../../atoms/userAtoms";
+import { flatMap, flatMapP } from "../../atoms/atomHelpers";
 import { useAuth } from "../../hooks/useAuth";
+import { Option } from "effect";
+import { AuthSocialClient } from "../../api/EffectApi";
 
 const BookmarkMenuContainer = styled.div`
   //layout  
@@ -107,24 +110,28 @@ const BookmarkListSkeleton = () => {
   );
 };
 
-const playlistsAtomFam = Atom.family((user_id?: string) =>
-  Atom.make((get) => {
-    if (!user_id) return [];
-    const playlistResult = get(AuthSocialClient.query("playlists", "getPlaylistsByUserId", {  
-      path: { user_id }  
-    }));  
-    return Result.getOrElse(playlistResult, () => []);  
-  }).pipe(Atom.keepAlive)
-);
+const userFoldersAtom = Atom.make((get) => {
+  const profile = get(userProfileAtom);
+  let playlists = flatMap(profile, (x) => {
+    return Option.match(x, {
+      onSome: (profile) => {
+        const user_id = profile.user_id;
+        return get(AuthSocialClient.query("playlists", "getPlaylistsByUserId", {
+          path: { user_id }
+        }));
+      },
+      onNone: () => Result.success([]),
+    })
+  });
+  return playlists;
+}).pipe(Atom.keepAlive);
 
 export const BookmarkDropdown = ({ref}: {ref: React.Ref<HTMLDivElement>}) => {
   const [isBookmarkModalOpen, setIsBookmarkModalOpen] = useState(false);
   const handleCreateFolderClick = () => {
     setIsBookmarkModalOpen(true);
   };
-  const auth = useAuth();
-  const playlistsAtom = playlistsAtomFam(auth.state === 'signed-in-with-profile' ? auth.profile.user_id : undefined);
-  const folderList = useAtomValue(playlistsAtom);
+  const folderList = useAtomValue(userFoldersAtom);
 
   return (
     <BookmarkMenuContainer ref={ref}>
@@ -137,7 +144,7 @@ export const BookmarkDropdown = ({ref}: {ref: React.Ref<HTMLDivElement>}) => {
         Create Folder
       </BookmarkMenuEntryContainer>
       <ScrollableList>
-        {folderList.map((folder) => (
+        {folderList._tag === 'Success' && folderList.value.map((folder) => (
           <BookmarkMenuEntryContainer key={folder.playlist_id}>
             <FolderIconContainer>
               <FolderIcon size={'1.25rem'} color={theme.colors.text.primary} />
@@ -145,6 +152,7 @@ export const BookmarkDropdown = ({ref}: {ref: React.Ref<HTMLDivElement>}) => {
             {folder.playlist_name}
           </BookmarkMenuEntryContainer>
         ))}
+        {folderList._tag === 'Initial' && BookmarkListSkeleton()}
       </ScrollableList>
     </BookmarkMenuContainer>
   );
