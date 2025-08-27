@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import styled from 'styled-components';
 import theme from '../../styles/theme';
 import Spinner from '../Spinner';
+import { useModalScrollLock } from '../../hooks/useModalScrollLock';
 
 // Utils
 import { addCommas, formatAddress, shortenBytes } from '../../utils/format';
@@ -16,23 +17,8 @@ import {
 const BoostsModal = ({ boostsList, onClose, fetchMoreBoosts, hasMoreBoosts, isBoostsLoading, isBoostsModalOpen }) => {
   const observer = useRef();
   const modalContentRef = useRef(); // Ref for the modal content
-
-  useEffect(() => {
-    if (isBoostsModalOpen) {
-      document.body.style.overflow = 'hidden'; // Disable page scrolling
-    } else {
-      document.body.style.overflow = 'auto'; // Enable page scrolling
-
-      // Reset scroll position when modal is closed
-      if (modalContentRef.current) {
-        modalContentRef.current.scrollTop = 0;
-      }
-    }
-
-    return () => {
-      document.body.style.overflow = 'auto'; // Cleanup on unmount
-    };
-  }, [isBoostsModalOpen]);
+  
+  useModalScrollLock(isBoostsModalOpen, modalContentRef);
 
   const lastBoostRef = useCallback(
     (node) => {

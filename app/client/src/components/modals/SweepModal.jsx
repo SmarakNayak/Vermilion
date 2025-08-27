@@ -10,24 +10,14 @@ import useStore from '../../store/zustand';
 import { NETWORKS } from '../../wallet/networks';
 import { getRevealSweepTransaction } from '../../wallet/inscriptionBuilder';
 import * as bitcoin from 'bitcoinjs-lib';
+import { useModalScrollLock } from '../../hooks/useModalScrollLock';
 
 const SweepModal = ({
   isOpen,
   onClose,
   boostHistoryRow
 }) => {
-  useEffect(() => {
-    // Prevent background scrolling when the modal is open
-    if (isOpen) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = 'auto';
-    }
-    // Cleanup function to re-enable scrolling when the component unmounts or isOpen changes
-    return () => {
-      document.body.style.overflow = 'auto';
-    };
-  }, [isOpen]);
+  useModalScrollLock(isOpen);
 
   const wallet = useStore((state) => state.wallet);
   const setWallet = useStore((state) => state.setWallet);

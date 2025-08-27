@@ -5,6 +5,7 @@ import { ArrowLeftIcon, ChevronRightIcon, CrossIcon, ErrorCircleIcon, WalletIcon
 import { theme } from '../../styles/theme';
 import { connectWallet, detectWallets } from '../../wallet/wallets';
 import useStore from '../../store/zustand';
+import { useModalScrollLock } from '../../hooks/useModalScrollLock';
 
 // Import wallet logos
 import unisatLogo from '../../assets/wallets/unisat.png';
@@ -73,6 +74,8 @@ const WalletConnectMenu = ({ isOpen, onClose }) => {
   const [isMobile, setIsMobile] = useState(false);
   const menuRef = useRef(null);
   const modalContentRef = useRef(); // Ref for the modal content
+  
+  useModalScrollLock(isOpen, modalContentRef);
 
   const posthog = usePostHog();
 
@@ -80,23 +83,6 @@ const WalletConnectMenu = ({ isOpen, onClose }) => {
     const mobileCheck = /iphone|ipad|ipod|ios|android|XiaoMi|MiuiBrowser/i.test(navigator.userAgent);
     setIsMobile(mobileCheck);
   }, []);
-
-  useEffect(() => {
-    if (isOpen) {
-      document.body.style.overflow = 'hidden'; // Disable page scrolling
-    } else {
-      document.body.style.overflow = 'auto'; // Enable page scrolling
-
-      // Reset scroll position when modal is closed
-      if (modalContentRef.current) {
-        modalContentRef.current.scrollTop = 0;
-      }
-    }
-
-    return () => {
-      document.body.style.overflow = 'auto'; // Cleanup on unmount
-    };
-  }, [isOpen]);
 
   // Use Zustand store to manage wallet state - has to be top-level
   const setWallet = useStore(state => state.setWallet);

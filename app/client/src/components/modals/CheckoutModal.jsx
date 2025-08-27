@@ -4,6 +4,7 @@ import styled from 'styled-components';
 import theme from '../../styles/theme';
 // Utils
 import { addCommas, formatSatsStringFull, formatSatsToDollars } from '../../utils/format';
+import { useModalScrollLock } from '../../hooks/useModalScrollLock';
 
 // icons
 import { 
@@ -40,6 +41,8 @@ const CheckoutModal = ({ onClose, isCheckoutModalOpen, delegateData }) => {
   const [successDetails, setSuccessDetails] = useState(null);
 
   const modalContentRef = useRef(); // Ref for the modal content
+  
+  useModalScrollLock(isCheckoutModalOpen, modalContentRef);
   const wallet = useStore(state => state.wallet); // Use zustand store to get the wallet (has to be top-level)
   const setWallet = useStore(state => state.setWallet);
   const authToken = useStore(state => state.authToken);
@@ -62,20 +65,8 @@ const CheckoutModal = ({ onClose, isCheckoutModalOpen, delegateData }) => {
 
   useEffect(() => {
     if (isCheckoutModalOpen) {
-      document.body.style.overflow = 'hidden'; // Disable page scrolling
       pollFeesAndPrice(); // Poll fees and price every 5 seconds when modal is open
-    } else {
-      document.body.style.overflow = 'auto'; // Enable page scrolling
-
-      // Reset scroll position when modal is closed
-      if (modalContentRef.current) {
-        modalContentRef.current.scrollTop = 0;
-      }
     }
-
-    return () => {
-      document.body.style.overflow = 'auto'; // Cleanup on unmount
-    };
   }, [isCheckoutModalOpen]);
 
   const pollFeesAndPrice = async () => {

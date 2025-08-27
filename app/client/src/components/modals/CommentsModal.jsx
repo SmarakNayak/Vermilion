@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import styled from 'styled-components';
 import theme from '../../styles/theme';
+import { useModalScrollLock } from '../../hooks/useModalScrollLock';
 
 // icons
 import { 
@@ -20,23 +21,8 @@ const CommentsModal = ({ commentsList, onClose, isCommentsModalOpen }) => {
 
   const observer = useRef();
   const modalContentRef = useRef(); // Ref for the modal content
-
-  useEffect(() => {
-    if (isCommentsModalOpen) {
-      document.body.style.overflow = 'hidden'; // Disable page scrolling
-    } else {
-      document.body.style.overflow = 'auto'; // Enable page scrolling
-
-      // Reset scroll position when modal is closed
-      if (modalContentRef.current) {
-        modalContentRef.current.scrollTop = 0;
-      }
-    }
-
-    return () => {
-      document.body.style.overflow = 'auto'; // Cleanup on unmount
-    };
-  }, [isCommentsModalOpen]);
+  
+  useModalScrollLock(isCommentsModalOpen, modalContentRef);
 
   return (
     <ModalOverlay isOpen={isCommentsModalOpen} onClick={onClose}>

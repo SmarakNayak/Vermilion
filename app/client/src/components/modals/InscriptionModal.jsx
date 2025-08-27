@@ -6,6 +6,7 @@ import useStore from '../../store/zustand';
 import InnerInscriptionContent from '../common/InnerInscriptionContent';
 import InscriptionIcon from '../InscriptionIcon';
 import { addCommas } from '../../utils/format';
+import { useModalScrollLock } from '../../hooks/useModalScrollLock';
 
 // icons
 import { 
@@ -19,21 +20,13 @@ const InscriptionModal = ({ isOpen, onClose, onSelect, selectedInscription }) =>
   const [inscriptions, setInscriptions] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+  
+  useModalScrollLock(isOpen, modalContentRef);
 
   useEffect(() => {
     if (isOpen) {
-      document.body.style.overflow = 'hidden';
       fetchInscriptions();
-    } else {
-      document.body.style.overflow = 'auto';
-      if (modalContentRef.current) {
-        modalContentRef.current.scrollTop = 0;
-      }
     }
-
-    return () => {
-      document.body.style.overflow = 'auto';
-    };
   }, [isOpen]);
 
   const fetchInscriptions = async () => {

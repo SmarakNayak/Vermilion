@@ -13,21 +13,12 @@ import { NETWORKS } from '../../wallet/networks';
 import useStore from '../../store/zustand';
 import { BorderedTagSection } from '../Inscription/Layout';
 import { addCommas } from '../../utils';
+import { useModalScrollLock } from '../../hooks/useModalScrollLock';
 
 const SuccessModal = ({ isOpen, onClose, boostDetails }) => {
   const wallet = useStore(state => state.wallet);
-  useEffect(() => {
-    // Prevent background scrolling when the modal is open
-    if (isOpen) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = 'auto';
-    }
-    // Cleanup function to re-enable scrolling when the component unmounts or isOpen changes
-    return () => {
-      document.body.style.overflow = 'auto';
-    };
-  }, [isOpen]);
+  
+  useModalScrollLock(isOpen);
 
   // Don't render the modal if it's not open
   if (!isOpen) {
