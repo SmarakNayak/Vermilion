@@ -3,6 +3,10 @@
     "effect-docs": {
       "command": "bun",
       "args": ["x", "effect-mcp@latest"]
+    },
+    "DeepWiki": {
+      "command": "bun",
+      "args": ["x", "mcp-deepwiki@latest"]
     }
   }
 }
