@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "bun --hot devServer.js",
     "dev:local-social": "bun --hot devServer.js --local-social",
-    "build": "bun build.js"
+    "build": "bun build.js",
+    "check": "bun tsc --noEmit"
   },
   "dependencies": {
     "@bitcoinerlab/secp256k1": "^1.2.0",

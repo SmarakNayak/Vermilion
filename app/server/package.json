@@ -3,7 +3,8 @@
   "private": true,
   "scripts": {
     "test": "bun test",
-    "test:watch": "bun test --watch"
+    "test:watch": "bun test --watch",
+    "check": "bun tsc --noEmit"
   },
   "devDependencies": {
     "typescript": "^5",
