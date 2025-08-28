@@ -6,8 +6,7 @@ import { SkeletonElement } from "../common/skeleton/SkeletonComponents";
 import React, { useState } from 'react';
 import { useAtomValue, useAtomSuspense, Atom, Result } from "@effect-atom/atom-react";
 import { userProfileAtom } from "../../atoms/userAtoms";
-import { flatMap, flatMapP } from "../../atoms/atomHelpers";
-import { useAuth } from "../../hooks/useAuth";
+import { cleanErrorResult, flatMap, flatMapP } from "../../atoms/atomHelpers";
 import { Option } from "effect";
 import { AuthSocialClient } from "../../api/EffectApi";
 
@@ -118,7 +117,7 @@ const userFoldersAtom = Atom.make((get) => {
         const user_id = profile.user_id;
         return get(AuthSocialClient.query("playlists", "getPlaylistsByUserId", {
           path: { user_id }
-        }));
+        })).pipe(cleanErrorResult);
       },
       onNone: () => Result.success([]),
     })

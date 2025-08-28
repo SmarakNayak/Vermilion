@@ -1,5 +1,7 @@
-import { Result } from "@effect-atom/atom-react";
-import { Option } from "effect";
+import { Atom, Result } from "@effect-atom/atom-react";
+import { Cause, Option } from "effect";
+import { type HttpClientError, isHttpClientError } from "@effect/platform/HttpClientError";
+import { ParseResult } from "effect";
 
 /**
  * Applies a function to the successful value of a `Result`, returning a new `Result`.
@@ -50,4 +52,33 @@ export const flatMapP = <A, B, E2>(
     }),  
     onSuccess: (success) => f(success.value)  
   });  
+};
+
+/**
+ * Cleans the error channel of a `Result` by removing
+ * `HttpClientError` and `ParseError` types from the error union.
+ *
+ * If the error is an `HttpClientError` or a `ParseError`, it is converted to a defect
+ * using `Cause.die`, effectively treating it as an unrecoverable error.
+ * All other errors and states are propagated as-is.
+ *
+ * @typeParam A - The type of the success value.
+ * @typeParam E - The type of the remaining error after cleaning.
+ * @param result - The input `Result` with possible extra error types.
+ * @returns A `Result` with only the cleaned error type.
+ */
+export const cleanErrorResult = <A, E>(
+  result: Result.Result<A, E>
+): Result.Result<A, Exclude<E, HttpClientError | ParseResult.ParseError>> => {
+  return Result.matchWithError(result, {
+    onInitial: (initial) => initial as Result.Result<A, Exclude<E, HttpClientError | ParseResult.ParseError>>,
+    onError: (error, failure) => {
+      if (isHttpClientError(error) || ParseResult.isParseError(error)) {
+        return Result.failure(Cause.die(error));
+      }
+      return failure as Result.Result<A, Exclude<E, HttpClientError | ParseResult.ParseError>>;
+    },
+    onSuccess: (success) => success as Result.Result<A, Exclude<E, HttpClientError | ParseResult.ParseError>>,
+    onDefect: (defect, failure) => failure as Result.Result<A, Exclude<E, HttpClientError | ParseResult.ParseError>>,
+  });
 };

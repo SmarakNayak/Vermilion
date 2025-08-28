@@ -1,7 +1,8 @@
 import { Result, Atom } from "@effect-atom/atom-react";
 import useStore from "../store/zustand";
 import { AuthSocialClient } from "../api/EffectApi";
-import { Option } from "effect";
+import { Option, Cause } from "effect";
+import { cleanErrorResult } from "./atomHelpers";
 
 export const userAddressAtom = Atom.make((get) => {  
   // Get initial value  
@@ -27,13 +28,17 @@ export const userProfileAtom = Atom.make((get) => {
     return Result.success(Option.none());
   }
   const user_address = userAddressOption.value;
-  const profileResult = get(AuthSocialClient.query("profiles", "getProfileByAddress", {
+  const profile = get(AuthSocialClient.query("profiles", "getProfileByAddress", {
     path: { user_address }
-  })).pipe(
-    Result.map(Option.some), // map result to result of option
-    (result) => Result.builder(result)
-      .onErrorTag('NotFound', () => Result.success(Option.none())) // if 404, return none
-      .orElse(() => result) // else return unchanged result
-  )
-  return profileResult;
+  })).pipe(cleanErrorResult);
+  const profileOption = Result.matchWithError(profile, {
+    onInitial: (initial) => Result.initial(initial.waiting),
+    onError: (error) => {
+      if (error._tag === 'NotFound') return Result.success(Option.none());
+      return Result.failure(Cause.die(error)); // No other errors will be possible. Defect to keep type clean without throwing
+    },
+    onSuccess: (success) => Result.success(Option.some(success.value)),
+    onDefect: (defect) =>  Result.failure(Cause.die(defect)),
+  });
+  return profileOption;
 }).pipe(Atom.keepAlive);
