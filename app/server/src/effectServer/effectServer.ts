@@ -208,6 +208,7 @@ const updateProfileHandler = (req: {
 }).pipe(
   Effect.tapError((error) => Effect.logError("Failed to update profile", error)),
   Effect.catchTags({
+    "DatabaseDuplicateKeyError": (error) => new Conflict({message: error.message}),
     "DatabaseInvalidRowError": (error) => new Issue({message: error.message}),
     "DatabaseNotFoundError": (error) => new NotFound({message: error.message}),
   })

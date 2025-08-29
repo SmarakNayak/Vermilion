@@ -7,7 +7,7 @@ import { ConfigService } from "./config";
 import { PlaylistTable, InsertPlaylistInscriptions, UpdatePlaylistInscriptions, PlaylistInscriptionsSchema } from "../../shared/types/playlist";
 import { AuthenticatedUserContext } from "../../shared/api/authMiddleware";
 import { ProfileTable, ProfileView } from "../../shared/types/effectProfile";
-import { DatabaseNotFoundError, mapPostgresError, mapPostgresInsertError, mapPostgresUpdateError } from "./effectDbErrors";
+import { DatabaseNotFoundError, mapPostgresInsertError, mapPostgresUpdateError } from "./effectDbErrors";
 
 export class SocialDbService extends Effect.Service<SocialDbService>()("EffectPostgres", {
   effect: Effect.gen(function* () {
@@ -381,11 +381,7 @@ export class SocialDbService extends Effect.Service<SocialDbService>()("EffectPo
         Effect.catchTags({
           "NoSuchElementException": (_error) => Effect.fail(DatabaseNotFoundError.fromNoSuchElementException("playlist", "update")),
           "ParseError": (error) => Effect.die(error),
-          "SqlError": mapPostgresError({
-            handleDuplicateKey: true,
-            handleInvalidRow: true,
-            handleSecurity: false
-          }),
+          "SqlError": mapPostgresUpdateError,
         }),
       ),
       deletePlaylist: (playlistId: string) => Effect.gen(function* () {

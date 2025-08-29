@@ -238,6 +238,53 @@ describe("Profile Operations", () => {
     expect((result as DatabaseNotFoundError).message).toBe("This profile could not be updated. You may not have permission or it may not exist.");
   });
 
+  it("should not update a profile to have the same handle as another profile", async () => {
+    // First create a second profile with a different handle
+    const secondProfileAddress = "test_second_profile_address";
+    const secondProfile: Schema.Schema.Type<typeof ProfileTable.insert> = {
+      user_handle: "seconduser",
+      user_name: "Second User",
+      user_picture: Option.none(),
+      user_bio: Option.none(),
+      user_twitter: Option.none(),
+      user_discord: Option.none(),
+      user_website: Option.none()
+    };
+
+    const secondProfileResult = await runTestWithUser(
+      Effect.gen(function* () {
+        const db = yield* SocialDbService;
+        return yield* db.createProfile(secondProfile, secondProfileAddress);
+      }),
+      secondProfileAddress
+    );
+
+    expect(secondProfileResult).toBeDefined();
+
+    // Now try to update the second profile to have the same handle as the first profile
+    const updateWithDuplicateHandle: Schema.Schema.Type<typeof ProfileTable.update> = {
+      user_id: secondProfileResult.user_id,
+      user_handle: "testuser1", // Same handle as the first profile
+      user_updated_at: undefined
+    };
+
+    const result = await runTestWithUser(
+      Effect.gen(function* () {
+        const db = yield* SocialDbService;
+        return yield* db.updateProfile(updateWithDuplicateHandle);
+      }).pipe(
+        Effect.catchTag("DatabaseDuplicateKeyError", (error) => {
+          return Effect.succeed(error);
+        })
+      ),
+      secondProfileAddress
+    );
+
+    expect(result).toBeDefined();
+    expect(result).toBeInstanceOf(DatabaseDuplicateKeyError);
+    expect((result as DatabaseDuplicateKeyError).message).toBe("This handle is already taken");
+  });
+
   it("should get a profile by user ID", async () => {
     const result = await runTest(
       Effect.gen(function* () {
@@ -723,7 +770,6 @@ describe("Playlist Operations", () => {
 
     expect(createResult).toBeDefined();
     const secondPlaylistId = createResult.playlist_id;
-    console.log("Second playlist created with ID:", secondPlaylistId);
 
     // Now try to update this playlist to have the same name as the first one
     const updateWithDuplicateName: Schema.Schema.Type<typeof PlaylistTable.update> = {

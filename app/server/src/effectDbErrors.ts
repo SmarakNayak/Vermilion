@@ -152,6 +152,41 @@ export class DatabaseNotFoundError extends Data.TaggedError("DatabaseNotFoundErr
   }
 }
 
+export const mapPostgresInsertError = (error: SqlError.SqlError) => Effect.gen(function* () {
+  const potentialPostgresError = error.cause;
+  const duplicateKeyResult = Schema.decodeUnknownOption(PostgresDuplicateKeySchema)(potentialPostgresError);
+  if (Option.isSome(duplicateKeyResult)) {
+    return yield* Effect.fail(DatabaseDuplicateKeyError.fromPostgresError(duplicateKeyResult.value));
+  }
+  const invalidRowResult = Schema.decodeUnknownOption(PostgresInvalidRowSchema)(potentialPostgresError);
+  if (Option.isSome(invalidRowResult)) {
+    return yield* Effect.fail(DatabaseInvalidRowError.fromPostgresError(invalidRowResult.value));
+  }
+  const securityResult = Schema.decodeUnknownOption(PostgresSecuritySchema)(potentialPostgresError);
+  if (Option.isSome(securityResult)) {
+    return yield* Effect.fail(DatabaseSecurityError.fromPostgresError(securityResult.value));
+  }
+  yield* Effect.logError(`---Unhandled Postgres Error---`, { cause: error.cause });
+  return yield* Effect.die(error);
+})
+
+// This function maps Postgres errors that occur during updates, including duplicate key errors.
+export const mapPostgresUpdateError = (error: SqlError.SqlError) => Effect.gen(function* () {
+  const potentialPostgresError = error.cause;
+  const duplicateKeyResult = Schema.decodeUnknownOption(PostgresDuplicateKeySchema)(potentialPostgresError);
+  if (Option.isSome(duplicateKeyResult)) {
+    return yield* Effect.fail(DatabaseDuplicateKeyError.fromPostgresError(duplicateKeyResult.value));
+  }
+  const invalidRowResult = Schema.decodeUnknownOption(PostgresInvalidRowSchema)(potentialPostgresError);
+  if (Option.isSome(invalidRowResult)) {
+    return yield* Effect.fail(DatabaseInvalidRowError.fromPostgresError(invalidRowResult.value));
+  }
+  yield* Effect.logError(`---Unhandled Postgres Error---`, { cause: error.cause });
+  return yield* Effect.die(error);
+})
+
+
+// Generic function to map Postgres errors based on provided options
 interface PostgresErrorOptions {
   readonly handleDuplicateKey: boolean;
   readonly handleInvalidRow: boolean;
@@ -160,8 +195,7 @@ interface PostgresErrorOptions {
 type conditionalDuplicate<T extends PostgresErrorOptions> = T['handleDuplicateKey'] extends true ? DatabaseDuplicateKeyError : never;
 type conditionalInvalidRow<T extends PostgresErrorOptions> = T['handleInvalidRow'] extends true ? DatabaseInvalidRowError : never;
 type conditionalSecurity<T extends PostgresErrorOptions> = T['handleSecurity'] extends true ? DatabaseSecurityError : never;
-
-export const mapPostgresError = <T extends PostgresErrorOptions>(
+export const mapPostgresErrorAbstract = <T extends PostgresErrorOptions>(
   options: T
 ): ((error: SqlError.SqlError) => Effect.Effect<
   never,
@@ -198,17 +232,3 @@ export const mapPostgresError = <T extends PostgresErrorOptions>(
     });
   };
 };
-
-// Backwards compatibility functions
-export const mapPostgresInsertError = mapPostgresError({
-  handleDuplicateKey: true,
-  handleInvalidRow: true,
-  handleSecurity: true
-});
-
-// Security errors and duplicate key errors do not occur during **most** updates, so they are not handled here.
-export const mapPostgresUpdateError = mapPostgresError({
-  handleDuplicateKey: false,
-  handleInvalidRow: true,
-  handleSecurity: false,
-});

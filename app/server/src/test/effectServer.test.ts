@@ -905,6 +905,70 @@ describe("Playlist Endpoints", () => {
       expect(result).toBeInstanceOf(NotFound);
     });
 
+    it("should not update a profile to have the same handle as another profile", async () => {
+      const firstUserAddress = "test_user_address_first_handle";
+      const secondUserAddress = "test_user_address_second_handle";
+      const firstClientEffect = makeAuthenticatedClient(firstUserAddress);
+      const secondClientEffect = makeAuthenticatedClient(secondUserAddress);
+      
+      // Create first profile
+      const firstProfileResponse = await runTest(Effect.gen(function* () {
+        const apiClient = yield* firstClientEffect;
+        return yield* apiClient.profiles.createProfile({
+          payload: {
+            user_handle: "firstuserhandle",
+            user_name: "First User",
+            user_picture: Option.none(),
+            user_bio: Option.none(),
+            user_twitter: Option.none(),
+            user_discord: Option.none(),
+            user_website: Option.none(),
+            user_addresses: [firstUserAddress]
+          }
+        });
+      }));
+
+      expect(firstProfileResponse).toBeDefined();
+
+      // Create second profile with different handle
+      const secondProfileResponse = await runTest(Effect.gen(function* () {
+        const apiClient = yield* secondClientEffect;
+        return yield* apiClient.profiles.createProfile({
+          payload: {
+            user_handle: "seconduserhandle",
+            user_name: "Second User",
+            user_picture: Option.none(),
+            user_bio: Option.none(),
+            user_twitter: Option.none(),
+            user_discord: Option.none(),
+            user_website: Option.none(),
+            user_addresses: [secondUserAddress]
+          }
+        });
+      }));
+
+      expect(secondProfileResponse).toBeDefined();
+
+      // Try to update second profile to have same handle as first - should fail
+      const result = await runTest(Effect.gen(function* () {
+        const apiClient = yield* secondClientEffect;
+        return yield* apiClient.profiles.updateProfile({
+          path: { user_id: secondProfileResponse.user_id },
+          payload: {
+            user_handle: "firstuserhandle" // Same handle as first profile
+          }
+        });
+      }).pipe(
+        Effect.catchTag("Conflict", (error) => {
+          return Effect.succeed(error);
+        })
+      ));
+
+      expect(result).toBeDefined();
+      expect(result).toBeInstanceOf(Conflict);
+      expect((result as Conflict).message).toBe("This handle is already taken");
+    });
+
     it("should not update a playlist to have the same name as another playlist for the same user", async () => {
       const testAddress = "test_user_address_update_duplicate_playlist";
       const authenticatedClientEffect = makeAuthenticatedClient(testAddress);

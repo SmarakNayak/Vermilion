@@ -24,6 +24,7 @@ export const EffectServerApi = HttpApi.make("EffectServer").add(
       .addSuccess(ProfileView.json)
       .addError(NotFound)
       .addError(Issue)
+      .addError(Conflict)
   ).add(
     HttpApiEndpoint.get("getProfileById", `/social/get_profile_by_id/:user_id`)
       .setPath(Schema.Struct({ user_id: Schema.UUID }))
