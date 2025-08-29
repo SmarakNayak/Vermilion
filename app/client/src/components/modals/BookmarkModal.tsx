@@ -23,6 +23,7 @@ import AuthGuardSaveButton from '../common/buttons/AuthGuardSaveButton';
 import { AuthSocialClient, getErrorMessage } from '../../api/EffectApi';
 import { PlaylistTable } from '../../../../shared/types/playlist';
 import { useAuth } from '../../hooks/useAuth';
+import { cleanErrorExit } from '../../atoms/atomHelpers';
 
 export const BookmarkModal = ({isOpen, onClose}: {
   isOpen: boolean, 
@@ -46,15 +47,18 @@ export const BookmarkModal = ({isOpen, onClose}: {
 
   const onValidSubmit = async (data: typeof PlaylistTable.jsonCreate.Type) => {
     const result = await createBookmarkFolder({ payload: data });
-    Exit.match(result, {
-      onSuccess: (x) => {
-        toast.success(`Bookmark folder "${data.playlist_name}" created successfully!`);
-        onClose();
-      },
-      onFailure: (cause) => {
-        toast.error(`Failed to create bookmark folder "${data.playlist_name}"${getErrorMessage(cause)}`);
-      },
-    });
+    result.pipe(
+      cleanErrorExit,
+      Exit.match({
+        onSuccess: (x) => {
+          toast.success(`Bookmark folder "${data.playlist_name}" created successfully!`);
+          onClose();
+        },
+        onFailure: (cause) => {
+          toast.error(`Failed to create bookmark folder "${data.playlist_name}"${getErrorMessage(cause)}`);
+        },
+      })
+    )
   };
 
   return (

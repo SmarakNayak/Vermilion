@@ -6,7 +6,7 @@ import { SkeletonElement } from "../common/skeleton/SkeletonComponents";
 import React, { useState } from 'react';
 import { useAtomValue, useAtomSuspense, Atom, Result } from "@effect-atom/atom-react";
 import { userProfileAtom } from "../../atoms/userAtoms";
-import { cleanErrorResult, flatMap, flatMapP } from "../../atoms/atomHelpers";
+import { cleanErrorResult, flatMap } from "../../atoms/atomHelpers";
 import { Option } from "effect";
 import { AuthSocialClient } from "../../api/EffectApi";
 
