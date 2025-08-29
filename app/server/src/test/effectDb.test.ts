@@ -681,6 +681,75 @@ describe("Playlist Operations", () => {
     expect(result.length).toBe(0);
   });
 
+  it("should not create a playlist with duplicate name for the same user", async () => {
+    const duplicatePlaylist: Schema.Schema.Type<typeof PlaylistTable.insert> = {
+      user_id: TEST_USER_ID_1,
+      playlist_name: "Updated Test Playlist", // Same name as the updated playlist from earlier test
+      playlist_inscription_icon: Option.some("https://example.com/duplicate_icon.jpg"),
+    };
+
+    const result = await runTestWithUser(
+      Effect.gen(function* () {
+        const db = yield* SocialDbService;
+        return yield* db.createPlaylist(duplicatePlaylist);
+      }).pipe(
+        Effect.catchTag("DatabaseDuplicateKeyError", (error) => {
+          return Effect.succeed(error);
+        })
+      ),
+      TEST_USER_ADDRESS_1
+    );
+
+    expect(result).toBeDefined();
+    expect(result).toBeInstanceOf(DatabaseDuplicateKeyError);
+    expect((result as DatabaseDuplicateKeyError).message).toBe("A playlist with this name already exists");
+  });
+
+  it("should not update a playlist to have the same name as another playlist for the same user", async () => {
+    // First create another playlist with a different name
+    const secondPlaylist: Schema.Schema.Type<typeof PlaylistTable.insert> = {
+      user_id: TEST_USER_ID_1,
+      playlist_name: "Second Test Playlist Update Test",
+      playlist_inscription_icon: Option.some("https://example.com/second_icon.jpg"),
+    };
+
+    const createResult = await runTestWithUser(
+      Effect.gen(function* () {
+        const db = yield* SocialDbService;
+        return yield* db.createPlaylist(secondPlaylist);
+      }),
+      TEST_USER_ADDRESS_1
+    );
+
+    expect(createResult).toBeDefined();
+    const secondPlaylistId = createResult.playlist_id;
+    console.log("Second playlist created with ID:", secondPlaylistId);
+
+    // Now try to update this playlist to have the same name as the first one
+    const updateWithDuplicateName: Schema.Schema.Type<typeof PlaylistTable.update> = {
+      user_id: TEST_USER_ID_1,
+      playlist_id: secondPlaylistId,
+      playlist_name: "Updated Test Playlist", // Same name as the existing playlist
+      playlist_updated_at: undefined
+    };
+
+    const updateResult = await runTestWithUser(
+      Effect.gen(function* () {
+        const db = yield* SocialDbService;
+        return yield* db.updatePlaylist(updateWithDuplicateName);
+      }).pipe(
+        Effect.catchTag("DatabaseDuplicateKeyError", (error) => {
+          return Effect.succeed(error);
+        })
+      ),
+      TEST_USER_ADDRESS_1
+    );
+
+    expect(updateResult).toBeDefined();
+    expect(updateResult).toBeInstanceOf(DatabaseDuplicateKeyError);
+    expect((updateResult as DatabaseDuplicateKeyError).message).toBe("A playlist with this name already exists");
+  });
+
 });
 
 describe("Cleanup Operations", () => {

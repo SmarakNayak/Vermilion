@@ -7,7 +7,7 @@ import { ConfigService } from "./config";
 import { PlaylistTable, InsertPlaylistInscriptions, UpdatePlaylistInscriptions, PlaylistInscriptionsSchema } from "../../shared/types/playlist";
 import { AuthenticatedUserContext } from "../../shared/api/authMiddleware";
 import { ProfileTable, ProfileView } from "../../shared/types/effectProfile";
-import { DatabaseNotFoundError, mapPostgresInsertError, mapPostgresUpdateError } from "./effectDbErrors";
+import { DatabaseNotFoundError, mapPostgresError, mapPostgresInsertError, mapPostgresUpdateError } from "./effectDbErrors";
 
 export class SocialDbService extends Effect.Service<SocialDbService>()("EffectPostgres", {
   effect: Effect.gen(function* () {
@@ -134,7 +134,8 @@ export class SocialDbService extends Effect.Service<SocialDbService>()("EffectPo
           playlist_inscription_icon varchar(80),
           playlist_description TEXT,
           playlist_created_at TIMESTAMPTZ DEFAULT NOW(),
-          playlist_updated_at TIMESTAMPTZ DEFAULT NOW()
+          playlist_updated_at TIMESTAMPTZ DEFAULT NOW(),
+          UNIQUE(user_id, playlist_name)
         )`.pipe(
           withErrorContext(`Error creating playlist_info table`)
         );
@@ -380,7 +381,11 @@ export class SocialDbService extends Effect.Service<SocialDbService>()("EffectPo
         Effect.catchTags({
           "NoSuchElementException": (_error) => Effect.fail(DatabaseNotFoundError.fromNoSuchElementException("playlist", "update")),
           "ParseError": (error) => Effect.die(error),
-          "SqlError": mapPostgresUpdateError,
+          "SqlError": mapPostgresError({
+            handleDuplicateKey: true,
+            handleInvalidRow: true,
+            handleSecurity: false
+          }),
         }),
       ),
       deletePlaylist: (playlistId: string) => Effect.gen(function* () {

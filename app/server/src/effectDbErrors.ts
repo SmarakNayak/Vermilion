@@ -27,6 +27,7 @@ export class DatabaseDuplicateKeyError extends Data.TaggedError("DatabaseDuplica
     const constraintMessages: Record<string, string> = {
       "profile_addresses_pkey": "This address is already associated with another profile",
       "profiles_user_handle_key": "This handle is already taken",
+      "playlist_info_user_id_playlist_name_key": "A playlist with this name already exists",
       // "unique_handle_case_insensitive": "This handle is already taken"
     };
 
@@ -151,32 +152,63 @@ export class DatabaseNotFoundError extends Data.TaggedError("DatabaseNotFoundErr
   }
 }
 
-export const mapPostgresInsertError = (error: SqlError.SqlError) => Effect.gen(function* () {
-  const potentialPostgresError = error.cause;
-  const duplicateKeyResult = Schema.decodeUnknownOption(PostgresDuplicateKeySchema)(potentialPostgresError);
-  if (Option.isSome(duplicateKeyResult)) {
-    return yield* Effect.fail(DatabaseDuplicateKeyError.fromPostgresError(duplicateKeyResult.value));
-  }
-  const invalidRowResult = Schema.decodeUnknownOption(PostgresInvalidRowSchema)(potentialPostgresError);
-  if (Option.isSome(invalidRowResult)) {
-    return yield* Effect.fail(DatabaseInvalidRowError.fromPostgresError(invalidRowResult.value));
-  }
-  const securityResult = Schema.decodeUnknownOption(PostgresSecuritySchema)(potentialPostgresError);
-  if (Option.isSome(securityResult)) {
-    return yield* Effect.fail(DatabaseSecurityError.fromPostgresError(securityResult.value));
-  }
-  yield* Effect.logError(`---Unhandled Postgres Error---`, { cause: error.cause });
-  return yield* Effect.die(error);
-})
+interface PostgresErrorOptions {
+  readonly handleDuplicateKey: boolean;
+  readonly handleInvalidRow: boolean;
+  readonly handleSecurity: boolean;
+}
+type conditionalDuplicate<T extends PostgresErrorOptions> = T['handleDuplicateKey'] extends true ? DatabaseDuplicateKeyError : never;
+type conditionalInvalidRow<T extends PostgresErrorOptions> = T['handleInvalidRow'] extends true ? DatabaseInvalidRowError : never;
+type conditionalSecurity<T extends PostgresErrorOptions> = T['handleSecurity'] extends true ? DatabaseSecurityError : never;
 
-// This function maps Postgres errors that occur during updates, specifically for invalid rows. 
-// Security errors and duplcate key errors do not occur during updates, so they are not handled here.
-export const mapPostgresUpdateError = (error: SqlError.SqlError) => Effect.gen(function* () {
-  const potentialPostgresError = error.cause;
-  const invalidRowResult = Schema.decodeUnknownOption(PostgresInvalidRowSchema)(potentialPostgresError);
-  if (Option.isSome(invalidRowResult)) {
-    return yield* Effect.fail(DatabaseInvalidRowError.fromPostgresError(invalidRowResult.value));
-  }
-  yield* Effect.logError(`---Unhandled Postgres Error---`, { cause: error.cause });
-  return yield* Effect.die(error);
-})
+export const mapPostgresError = <T extends PostgresErrorOptions>(
+  options: T
+): ((error: SqlError.SqlError) => Effect.Effect<
+  never,
+  conditionalDuplicate<T> | conditionalInvalidRow<T> | conditionalSecurity<T>,  
+  never
+>) => {
+  return (error: SqlError.SqlError) => {
+    const potentialPostgresError = error.cause;
+    
+    if (options.handleDuplicateKey) {
+      const duplicateKeyResult = Schema.decodeUnknownOption(PostgresDuplicateKeySchema)(potentialPostgresError);
+      if (Option.isSome(duplicateKeyResult)) {
+        return Effect.fail(DatabaseDuplicateKeyError.fromPostgresError(duplicateKeyResult.value)) as Effect.Effect<never, conditionalDuplicate<T> , never>;
+      }
+    }
+    
+    if (options.handleInvalidRow) {
+      const invalidRowResult = Schema.decodeUnknownOption(PostgresInvalidRowSchema)(potentialPostgresError);
+      if (Option.isSome(invalidRowResult)) {
+        return Effect.fail(DatabaseInvalidRowError.fromPostgresError(invalidRowResult.value)) as Effect.Effect<never, conditionalInvalidRow<T> , never>;
+      }
+    }
+    
+    if (options.handleSecurity) {
+      const securityResult = Schema.decodeUnknownOption(PostgresSecuritySchema)(potentialPostgresError);
+      if (Option.isSome(securityResult)) {
+        return Effect.fail(DatabaseSecurityError.fromPostgresError(securityResult.value)) as Effect.Effect<never, conditionalSecurity<T> , never>;
+      }
+    }
+    
+    return Effect.gen(function* () {
+      yield* Effect.logError(`---Unhandled Postgres Error---`, { cause: error.cause });
+      return yield* Effect.die(error);
+    });
+  };
+};
+
+// Backwards compatibility functions
+export const mapPostgresInsertError = mapPostgresError({
+  handleDuplicateKey: true,
+  handleInvalidRow: true,
+  handleSecurity: true
+});
+
+// Security errors and duplicate key errors do not occur during **most** updates, so they are not handled here.
+export const mapPostgresUpdateError = mapPostgresError({
+  handleDuplicateKey: false,
+  handleInvalidRow: true,
+  handleSecurity: false,
+});

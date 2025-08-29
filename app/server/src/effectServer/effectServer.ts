@@ -76,6 +76,7 @@ const updatePlaylistHandler = (req: {
 }).pipe(
   Effect.tapError((error) => Effect.logError("Failed to update playlist", error)),
   Effect.catchTags({
+    "DatabaseDuplicateKeyError": (error) => new Conflict({message: error.message}),
     "DatabaseInvalidRowError": (error) => new Issue({message: error.message}),
     "DatabaseNotFoundError": (error) => new NotFound({message: error.message}),
   })
@@ -288,7 +289,7 @@ export const ServerLive = HttpApiBuilder.serve(HttpMiddleware.logger).pipe(
 )
 
 //Test layer for development
-export const ServerTest = HttpApiBuilder.serve(HttpMiddleware.logger).pipe(
+export const ServerTest = HttpApiBuilder.serve().pipe(
   //server stuff
   HttpServer.withLogAddress,
   Layer.provide(HttpApiSwagger.layer()),

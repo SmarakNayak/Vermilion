@@ -65,6 +65,7 @@ export const EffectServerApi = HttpApi.make("EffectServer").add(
       .addSuccess(PlaylistTable.json)
       .addError(NotFound)
       .addError(Issue)
+      .addError(Conflict)
   ).add(
     HttpApiEndpoint.del("deletePlaylist", `/social/delete_playlist/:playlist_id`)
       .middleware(Authentication)
