@@ -746,6 +746,67 @@ describe("Playlist Endpoints", () => {
       expect(result).toBeDefined();
       expect(result).toBeInstanceOf(ParseError);
     });
+
+    it("should not create a playlist with duplicate name for the same user", async () => {
+      const testAddress = "test_user_address_duplicate_playlist";
+      const authenticatedClientEffect = makeAuthenticatedClient(testAddress);
+      
+      // First create a profile
+      const profileResponse = await runTest(Effect.gen(function* () {
+        const apiClient = yield* authenticatedClientEffect;
+        return yield* apiClient.profiles.createProfile({
+          payload: {
+            user_handle: "duplicateplaylist",
+            user_name: "Duplicate Playlist User",
+            user_picture: Option.none(),
+            user_bio: Option.none(),
+            user_twitter: Option.none(),
+            user_discord: Option.none(),
+            user_website: Option.none(),
+            user_addresses: [testAddress]
+          }
+        });
+      }));
+
+      expect(profileResponse).toBeDefined();
+      const userId = profileResponse.user_id;
+
+      // Create first playlist
+      const firstPlaylistResponse = await runTest(Effect.gen(function* () {
+        const apiClient = yield* authenticatedClientEffect;
+        return yield* apiClient.playlists.createPlaylist({
+          payload: {
+            user_id: userId,
+            playlist_name: "Unique Playlist Name",
+            playlist_inscription_icon: Option.none(),
+            playlist_description: Option.none(),
+          }
+        });
+      }));
+
+      expect(firstPlaylistResponse).toBeDefined();
+
+      // Try to create second playlist with same name - should fail
+      const result = await runTest(Effect.gen(function* () {
+        const apiClient = yield* authenticatedClientEffect;
+        return yield* apiClient.playlists.createPlaylist({
+          payload: {
+            user_id: userId,
+            playlist_name: "Unique Playlist Name", // Same name as first playlist
+            playlist_inscription_icon: Option.none(),
+            playlist_description: Option.some("Different description"),
+          }
+        });
+      }).pipe(
+        Effect.catchTag("Conflict", (error) => {
+          return Effect.succeed(error);
+        })
+      ));
+
+      expect(result).toBeDefined();
+      expect(result).toBeInstanceOf(Conflict);
+      expect((result as Conflict).message).toBe("A playlist with this name already exists");
+    });
   });
 
   describe("Update Tests", () => {
@@ -842,6 +903,83 @@ describe("Playlist Endpoints", () => {
       
       expect(result).toBeDefined();
       expect(result).toBeInstanceOf(NotFound);
+    });
+
+    it("should not update a playlist to have the same name as another playlist for the same user", async () => {
+      const testAddress = "test_user_address_update_duplicate_playlist";
+      const authenticatedClientEffect = makeAuthenticatedClient(testAddress);
+      
+      // First create a profile
+      const profileResponse = await runTest(Effect.gen(function* () {
+        const apiClient = yield* authenticatedClientEffect;
+        return yield* apiClient.profiles.createProfile({
+          payload: {
+            user_handle: "updateduplicate",
+            user_name: "Update Duplicate User",
+            user_picture: Option.none(),
+            user_bio: Option.none(),
+            user_twitter: Option.none(),
+            user_discord: Option.none(),
+            user_website: Option.none(),
+            user_addresses: [testAddress]
+          }
+        });
+      }));
+
+      expect(profileResponse).toBeDefined();
+      const userId = profileResponse.user_id;
+
+      // Create first playlist
+      const firstPlaylistResponse = await runTest(Effect.gen(function* () {
+        const apiClient = yield* authenticatedClientEffect;
+        return yield* apiClient.playlists.createPlaylist({
+          payload: {
+            user_id: userId,
+            playlist_name: "First Playlist Name",
+            playlist_inscription_icon: Option.none(),
+            playlist_description: Option.none(),
+          }
+        });
+      }));
+
+      expect(firstPlaylistResponse).toBeDefined();
+
+      // Create second playlist with different name
+      const secondPlaylistResponse = await runTest(Effect.gen(function* () {
+        const apiClient = yield* authenticatedClientEffect;
+        return yield* apiClient.playlists.createPlaylist({
+          payload: {
+            user_id: userId,
+            playlist_name: "Second Playlist Name",
+            playlist_inscription_icon: Option.none(),
+            playlist_description: Option.none(),
+          }
+        });
+      }));
+
+      expect(secondPlaylistResponse).toBeDefined();
+
+      // Try to update second playlist to have same name as first - should fail
+      const result = await runTest(Effect.gen(function* () {
+        const apiClient = yield* authenticatedClientEffect;
+        return yield* apiClient.playlists.updatePlaylist({
+          path: { playlist_id: secondPlaylistResponse.playlist_id },
+          payload: {
+            user_id: userId,
+            playlist_name: "First Playlist Name", // Same name as first playlist
+            playlist_inscription_icon: Option.none(),
+            playlist_description: Option.some("Updated description"),
+          }
+        });
+      }).pipe(
+        Effect.catchTag("Conflict", (error) => {
+          return Effect.succeed(error);
+        })
+      ));
+
+      expect(result).toBeDefined();
+      expect(result).toBeInstanceOf(Conflict);
+      expect((result as Conflict).message).toBe("A playlist with this name already exists");
     });
   });
 
