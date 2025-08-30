@@ -49,7 +49,7 @@ export const getErrorMessage = <E extends SocialClientError>(cause: Cause.Cause<
         cause.error._tag === 'Issue' ||
         cause.error._tag === 'NotFound' ||
         cause.error._tag === 'Unauthorized') {
-      return `: ${cause.error.name} - ${cause.error.message}`;
+      return `: ${cause.error.message}`;
     }
     // For system errors (ParseError, HttpClientError), return generic message
     return ' for an unknown reason. Please try again.';

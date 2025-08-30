@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react';
-import { useAtomSet } from '@effect-atom/atom-react';
+import { useAtomSet, useAtomValue } from '@effect-atom/atom-react';
 import { Exit } from 'effect';
-import { useForm } from 'react-hook-form';
+import { useForm, type Resolver } from 'react-hook-form';
 import { effectTsResolver } from '@hookform/resolvers/effect-ts';
 import { toast } from 'sonner';
 import { toastifyInvalidFields } from '../../utils/toastifyInvalidFields';
@@ -24,6 +24,7 @@ import { AuthSocialClient, getErrorMessage } from '../../api/EffectApi';
 import { PlaylistTable } from '../../../../shared/types/playlist';
 import { useAuth } from '../../hooks/useAuth';
 import { cleanErrorExit } from '../../atoms/atomHelpers';
+import { userFoldersAtom } from '../menus/BookmarkDropdown';
 
 export const BookmarkModal = ({isOpen, onClose}: {
   isOpen: boolean, 
@@ -35,15 +36,38 @@ export const BookmarkModal = ({isOpen, onClose}: {
   const auth = useAuth();
   const createBookmarkFolder = useAtomSet(AuthSocialClient.mutation("playlists", "createPlaylist"), { mode: 'promiseExit' });
 
-  const { register, handleSubmit, formState: { errors, isSubmitting, isValid }, setValue } = useForm({
-    resolver: effectTsResolver(PlaylistTable.jsonCreate),
+  const userFolders = useAtomValue(userFoldersAtom);
+
+  const dupeValidator: Resolver<typeof PlaylistTable.jsonCreate.Encoded, unknown, typeof PlaylistTable.jsonCreate.Type> = async (values, context, options) => {
+    const baseValidator = effectTsResolver(PlaylistTable.jsonCreate);
+    const result = await baseValidator(values, context, options);
+    const isDuplicate = userFolders._tag === 'Success' && 
+      userFolders.value.some(folder => folder.playlist_name === values.playlist_name);
+    if (isDuplicate) {
+      return {
+        ...result,
+        errors: { 
+          ...result.errors, 
+          playlist_name: { type: 'duplicate', message: 'You already have a folder with this name' } 
+        },
+      };
+    }
+    return result;
+  };
+
+  const { register, handleSubmit, formState: { errors, isSubmitting, isValid, dirtyFields }, setValue, trigger } = useForm({
+    //resolver: effectTsResolver(PlaylistTable.jsonCreate), // default validator
+    resolver: dupeValidator,
     mode: 'onChange',
   });
-  useEffect(() => {
+  useEffect(() => { //Manually set user_id when auth state changes
     if (auth.state === 'signed-in-with-profile') {
       setValue('user_id', auth.profile.user_id, { shouldValidate: true });
     }
   }, [auth.state]);
+  useEffect(() => {// validate dirty playlist_name on userFolders success (to catch duplicates)
+    if (userFolders._tag === 'Success' && dirtyFields.playlist_name) trigger('playlist_name');
+  }, [userFolders]);
 
   const onValidSubmit = async (data: typeof PlaylistTable.jsonCreate.Type) => {
     const result = await createBookmarkFolder({ payload: data });

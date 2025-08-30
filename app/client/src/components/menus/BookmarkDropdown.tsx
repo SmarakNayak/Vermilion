@@ -109,7 +109,7 @@ const BookmarkListSkeleton = () => {
   );
 };
 
-const userFoldersAtom = Atom.make((get) => {
+export const userFoldersAtom = Atom.make((get) => {
   const profile = get(userProfileAtom);
   let playlists = flatMap(profile, (x) => {
     return Option.match(x, {
@@ -120,7 +120,7 @@ const userFoldersAtom = Atom.make((get) => {
         })).pipe(cleanErrorResult);
       },
       onNone: () => Result.success([]),
-    })
+    });
   });
   return playlists;
 }).pipe(Atom.keepAlive);
