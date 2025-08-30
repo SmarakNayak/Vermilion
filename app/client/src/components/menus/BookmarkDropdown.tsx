@@ -81,6 +81,13 @@ const ScrollableList = styled.div`
   scrollbar-width: none; /* Firefox */
 `;
 
+const FolderName = styled.span`
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 200px;
+`;
+
 const BookmarkSkeletonEntryContainer = styled.div`
   display: flex;
   padding: 8px;
@@ -148,7 +155,7 @@ export const BookmarkDropdown = ({ref}: {ref: React.Ref<HTMLDivElement>}) => {
             <FolderIconContainer>
               <FolderIcon size={'1.25rem'} color={theme.colors.text.primary} />
             </FolderIconContainer>
-            {folder.playlist_name}
+            <FolderName>{folder.playlist_name}</FolderName>
           </BookmarkMenuEntryContainer>
         ))}
         {folderList._tag === 'Initial' && BookmarkListSkeleton()}
