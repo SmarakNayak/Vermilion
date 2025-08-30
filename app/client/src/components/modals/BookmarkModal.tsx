@@ -70,7 +70,7 @@ export const BookmarkModal = ({isOpen, onClose}: {
   }, [userFolders]);
 
   const onValidSubmit = async (data: typeof PlaylistTable.jsonCreate.Type) => {
-    const result = await createBookmarkFolder({ payload: data });
+    const result = await createBookmarkFolder({ payload: data, reactivityKeys: ['userFolders'] });
     result.pipe(
       cleanErrorExit,
       Exit.match({

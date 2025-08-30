@@ -123,7 +123,8 @@ export const userFoldersAtom = Atom.make((get) => {
       onSome: (profile) => {
         const user_id = profile.user_id;
         return get(AuthSocialClient.query("playlists", "getPlaylistsByUserId", {
-          path: { user_id }
+          path: { user_id },
+          reactivityKeys: ['userFolders']
         })).pipe(cleanErrorResult);
       },
       onNone: () => Result.success([]),
