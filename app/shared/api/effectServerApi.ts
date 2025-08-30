@@ -2,7 +2,7 @@ import { Schema } from "effect";
 import { HttpApi, HttpApiEndpoint, HttpApiGroup } from "@effect/platform";
 import { Authentication } from "./authMiddleware";
 import { Conflict, Forbidden, Issue, NotFound } from "./apiErrors";
-import { ProfileView } from "../types/effectProfile";
+import { ProfileView, ProfileTable } from "../types/effectProfile";
 import { PlaylistTable, UpdatePlaylistInscriptionsSchema, InsertPlaylistInscriptionsSchema, PlaylistInscriptionsSchema } from "../types/playlist";
 
 // 1. Define the Api
@@ -11,7 +11,7 @@ export const EffectServerApi = HttpApi.make("EffectServer").add(
   .add(
     HttpApiEndpoint.post("createProfile", `/social/create_profile`)
       .middleware(Authentication)
-      .setPayload(ProfileView.jsonCreate)
+      .setPayload(ProfileTable.jsonCreate)
       .addSuccess(ProfileView.json)
       .addError(Conflict)
       .addError(Forbidden)

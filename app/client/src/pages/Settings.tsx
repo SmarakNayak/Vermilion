@@ -155,7 +155,7 @@ const Settings: React.FC = () => {
     }
 
     try {
-      const response = await fetch(`/bun/social/get_profile_by_address/${wallet.ordinalsAddress}`);
+      const response = await fetch(`/effect/social/get_profile_by_address/${wallet.ordinalsAddress}`);
       if (response.ok) {
         const profileData: ProfileResponse = await response.json() as ProfileResponse;
         setProfile({
@@ -229,15 +229,15 @@ const Settings: React.FC = () => {
 
     try {
       const endpoint = existingProfile 
-        ? `/bun/social/update_profile/${wallet.ordinalsAddress}`
-        : `/bun/social/create_profile/${wallet.ordinalsAddress}`;
+        ? `/effect/social/update_profile/${existingProfile.user_id}`
+        : `/effect/social/create_profile`;
 
       const requestBody: CreateProfileRequest | UpdateProfileRequest = existingProfile 
         ? { ...profile, user_id: existingProfile.user_id }
         : profile;
 
       const response = await fetch(endpoint, {
-        method: 'POST',
+        method: existingProfile ? 'PUT' : 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${authToken}`

@@ -75,7 +75,7 @@ export class SocialDbService extends Effect.Service<SocialDbService>()("EffectPo
           DROP POLICY IF EXISTS profiles_policy_insert ON social.profiles;
           CREATE POLICY profiles_policy_insert ON social.profiles
             FOR INSERT
-            WITH CHECK (true);
+            WITH CHECK (true); -- because we don't know the user_id yet
           DROP POLICY IF EXISTS profiles_policy_update ON social.profiles;
           CREATE POLICY profiles_policy_update ON social.profiles
             FOR UPDATE
