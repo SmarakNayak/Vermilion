@@ -87,7 +87,7 @@ const GalleryInfiniteScroll = ({ baseApi, isCollectionPage, numberVisibility, zo
   )
 }
 
-const EmptyStateContainer = styled.div`
+export const EmptyStateContainer = styled.div`
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -120,7 +120,7 @@ const LoaderContainer = styled.div`
   padding-top: ${props => props.numberVisibility ? '.5rem' : '2.125rem'};
 `;
 
-const GridContainer = styled.div`
+export const GridContainer = styled.div`
   display: grid;
   grid-template-columns: repeat(6, 1fr);
   gap: .25rem;

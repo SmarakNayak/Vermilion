@@ -27,6 +27,7 @@ import IconButton from '../components/common/buttons/IconButton';
 import Stack from '../components/Stack';
 import FilterMenu from '../components/FilterMenu';
 import GalleryInfiniteScroll from '../components/GalleryInfiniteScroll';
+import { FolderInfiniteScroll } from '../components/FolderInfiniteScroll';
 import InscriptionIcon from '../components/InscriptionIcon';
 import Tag from '../components/Tag';
 
@@ -43,6 +44,9 @@ import {
 } from '../utils/format';
 import { copyText } from '../utils/clipboard';
 
+import { useAtomValue } from '@effect-atom/atom-react';
+import { foldersAtomFamily, profileAtomFamily } from '../atoms/familyAtomics';
+
 const Address = () => {
   const [baseApi, setBaseApi] = useState(null); 
   let { address } = useParams();
@@ -57,6 +61,9 @@ const Address = () => {
 
   const [selectedSortOption, setSelectedSortOption] = useState('newest');
   const [selectedFilterOptions, setSelectedFilterOptions] = useState({"Content Type": ["text", "image", "gif", "audio", "video", "html"], "Satributes": [], "Charms":[]});
+
+  const profile = useAtomValue(profileAtomFamily(address));
+  const folders = useAtomValue(foldersAtomFamily(address));
 
   //1. Get links
   useEffect(() => {
@@ -256,9 +263,7 @@ const Address = () => {
         </RowContainer>
       </div>
       <div style={{ display: activeTab === 'bookmarks' ? 'contents' : 'none' }}>
-        <Stack gap={'1rem'} padding={'1rem'}>
-          <MainText>No bookmarks found for this address.</MainText>
-        </Stack>
+        <FolderInfiniteScroll address={address} />
       </div>
     </PageContainer>
   )

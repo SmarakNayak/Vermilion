@@ -3,6 +3,7 @@ import useStore from "../store/zustand";
 import { AuthSocialClient } from "../api/EffectApi";
 import { Option, Cause } from "effect";
 import { cleanErrorResult } from "./atomHelpers";
+import { flatMap } from "./atomHelpers";
 
 export const userAddressAtom = Atom.make((get) => {  
   // Get initial value  
@@ -41,4 +42,22 @@ export const userProfileAtom = Atom.make((get) => {
     onDefect: (defect) =>  Result.failure(Cause.die(defect)),
   });
   return profileOption;
+}).pipe(Atom.keepAlive);
+
+
+export const userFoldersAtom = Atom.make((get) => {
+  const profile = get(userProfileAtom);
+  let playlists = flatMap(profile, (x) => {
+    return Option.match(x, {
+      onSome: (profile) => {
+        const user_id = profile.user_id;
+        return get(AuthSocialClient.query("playlists", "getPlaylistsByUserIdPreview", {
+          path: { user_id },
+          reactivityKeys: ['userFolders']
+        })).pipe(cleanErrorResult);
+      },
+      onNone: () => Result.success([]),
+    });
+  });
+  return playlists;
 }).pipe(Atom.keepAlive);

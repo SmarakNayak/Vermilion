@@ -6,7 +6,7 @@ import { SkeletonElement } from "../common/skeleton/SkeletonComponents";
 import InscriptionIcon from "../InscriptionIcon";
 import React, { useState } from 'react';
 import { useAtomValue, useAtom, Atom, Result } from "@effect-atom/atom-react";
-import { userProfileAtom } from "../../atoms/userAtoms";
+import { userFoldersAtom } from "../../atoms/userAtoms";
 import { cleanErrorResult, cleanErrorExit, flatMap } from "../../atoms/atomHelpers";
 import { Option, Exit } from "effect";
 import { AuthSocialClient, getErrorMessage } from "../../api/EffectApi";
@@ -117,23 +117,6 @@ const BookmarkListSkeleton = () => {
     </>
   );
 };
-
-export const userFoldersAtom = Atom.make((get) => {
-  const profile = get(userProfileAtom);
-  let playlists = flatMap(profile, (x) => {
-    return Option.match(x, {
-      onSome: (profile) => {
-        const user_id = profile.user_id;
-        return get(AuthSocialClient.query("playlists", "getPlaylistsByUserIdPreview", {
-          path: { user_id },
-          reactivityKeys: ['userFolders']
-        })).pipe(cleanErrorResult);
-      },
-      onNone: () => Result.success([]),
-    });
-  });
-  return playlists;
-}).pipe(Atom.keepAlive);
 
 export const BookmarkDropdown = ({ref, inscriptionId, onClose}: {
   ref: React.Ref<HTMLDivElement>;

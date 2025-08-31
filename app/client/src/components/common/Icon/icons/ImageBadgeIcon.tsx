@@ -1,7 +1,7 @@
 import { BaseIcon } from '../BaseIcon'
-import { IconProps } from '../types'
+import { type IconProps } from '../tsTypes'
 
-export const ImageBadgeIcon = ({ size, color, className }) => (
+export const ImageBadgeIcon = ({ size, color, className }: IconProps) => (
   <BaseIcon size={size} color={color} className={className}>
     <path
       d="M6 3C4.34315 3 3 4.34315 3 6V18C3 19.6569 4.34315 21 6 21H11.6736C11.3783 20.3783 11.1719 19.7061 11.0709 19H6C5.44772 19 5 18.5523 5 18V17.4142L8.29289 14.1213C8.68342 13.7308 9.31658 13.7308 9.70711 14.1213L11.361 15.7752C11.5869 15.1007 11.9127 14.472 12.3209 13.9067L11.1213 12.7071C9.94975 11.5355 8.05025 11.5355 6.87868 12.7071L5 14.5858V6C5 5.44772 5.44772 5 6 5H18C18.5523 5 19 5.44772 19 6V11.0709C19.7061 11.1719 20.3783 11.3783 21 11.6736V6C21 4.34315 19.6569 3 18 3H6Z"
@@ -21,5 +21,3 @@ export const ImageBadgeIcon = ({ size, color, className }) => (
     />
   </BaseIcon>
 )
-
-ImageBadgeIcon.propTypes = IconProps
