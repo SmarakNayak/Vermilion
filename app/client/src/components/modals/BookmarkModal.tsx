@@ -56,7 +56,6 @@ export const BookmarkModal = ({isOpen, onClose}: {
   };
 
   const { register, handleSubmit, formState: { errors, isSubmitting, isValid, dirtyFields }, setValue, trigger } = useForm({
-    //resolver: effectTsResolver(PlaylistTable.jsonCreate), // default validator
     resolver: dupeValidator,
     mode: 'onChange',
   });

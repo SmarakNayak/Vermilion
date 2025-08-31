@@ -63,3 +63,12 @@ export const UpdatePlaylistInscriptionsSchema = Schema.Union(
   UpdatePlaylistInscriptionsWithoutPositionsSchema
 );
 export type UpdatePlaylistInscriptions = Schema.Schema.Type<typeof UpdatePlaylistInscriptionsSchema>;
+
+
+// Join types
+export const PlaylistPreviewSchema = Schema.extend(
+  PlaylistTable.select,
+  Schema.Struct({
+    inscription_previews: Schema.Array(Schema.String)
+  })
+);

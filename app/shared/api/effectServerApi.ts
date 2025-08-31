@@ -3,7 +3,7 @@ import { HttpApi, HttpApiEndpoint, HttpApiGroup } from "@effect/platform";
 import { Authentication } from "./authMiddleware";
 import { Conflict, Forbidden, Issue, NotFound } from "./apiErrors";
 import { ProfileView, ProfileTable } from "../types/effectProfile";
-import { PlaylistTable, UpdatePlaylistInscriptionsSchema, InsertPlaylistInscriptionsSchema, PlaylistInscriptionsSchema } from "../types/playlist";
+import { PlaylistTable, UpdatePlaylistInscriptionsSchema, InsertPlaylistInscriptionsSchema, PlaylistInscriptionsSchema, PlaylistPreviewSchema } from "../types/playlist";
 
 // 1. Define the Api
 export const EffectServerApi = HttpApi.make("EffectServer").add(
@@ -82,6 +82,10 @@ export const EffectServerApi = HttpApi.make("EffectServer").add(
     HttpApiEndpoint.get("getPlaylistsByUserId", `/social/get_playlists_by_user_id/:user_id`)
       .setPath(Schema.Struct({ user_id: Schema.UUID }))
       .addSuccess(Schema.Array(PlaylistTable.json))
+  ).add(
+    HttpApiEndpoint.get("getPlaylistsByUserIdPreview", `/social/get_playlists_by_user_id_preview/:user_id`)
+      .setPath(Schema.Struct({ user_id: Schema.UUID }))
+      .addSuccess(Schema.Array(PlaylistPreviewSchema))
   ).add(
     HttpApiEndpoint.post("insertPlaylistInscriptions", `/social/insert_playlist_inscriptions`)
       .middleware(Authentication)

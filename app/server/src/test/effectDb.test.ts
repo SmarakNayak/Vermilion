@@ -796,11 +796,119 @@ describe("Playlist Operations", () => {
     expect((updateResult as DatabaseDuplicateKeyError).message).toBe("A playlist with this name already exists");
   });
 
+  
+  it("should get playlists with preview inscriptions by user ID", async () => {
+    // First, add some inscriptions to the test playlist
+    const inscriptions: Schema.Schema.Type<typeof InsertPlaylistInscriptionsSchema> = [
+      { playlist_id: TEST_PLAYLIST_ID, inscription_id: "preview_inscription1" },
+      { playlist_id: TEST_PLAYLIST_ID, inscription_id: "preview_inscription2" },
+      { playlist_id: TEST_PLAYLIST_ID, inscription_id: "preview_inscription3" }
+    ];
+
+    await runTestWithUser(
+      Effect.gen(function* () {
+        const db = yield* SocialDbService;
+        return yield* db.insertPlaylistInscriptions(inscriptions);
+      }),
+      TEST_USER_ADDRESS_1
+    );
+
+    // Now get playlists with preview inscriptions
+    const result = await runTest(
+      Effect.gen(function* () {
+        const db = yield* SocialDbService;
+        return yield* db.getPlaylistsByUserIdPreview(TEST_USER_ID_1);
+      })
+    );
+
+    expect(result).toBeDefined();
+    expect(Array.isArray(result)).toBe(true);
+    expect(result.length).toBeGreaterThanOrEqual(1);
+    
+    const playlistWithPreviews = result.find(p => p.playlist_id === TEST_PLAYLIST_ID);
+    expect(playlistWithPreviews).toBeDefined();
+    expect(playlistWithPreviews?.inscription_previews).toBeDefined();
+    expect(Array.isArray(playlistWithPreviews?.inscription_previews)).toBe(true);
+    expect(playlistWithPreviews?.inscription_previews.length).toBe(3);
+    expect(playlistWithPreviews?.inscription_previews).toContain("preview_inscription1");
+    expect(playlistWithPreviews?.inscription_previews).toContain("preview_inscription2");
+    expect(playlistWithPreviews?.inscription_previews).toContain("preview_inscription3");
+  });
+
+  it("should return empty inscription_previews for playlist with no inscriptions", async () => {
+    // Create a new playlist with no inscriptions
+    const newPlaylistId = await runTestWithUser(
+      Effect.gen(function* () {
+        const db = yield* SocialDbService;
+        return yield* db.createPlaylist({
+          user_id: TEST_USER_ID_1,
+          playlist_name: "Empty Preview Playlist",
+          playlist_inscription_icon: Option.none(),
+          playlist_description: Option.none()
+        });
+      }),
+      TEST_USER_ADDRESS_1
+    );
+
+    const result = await runTest(
+      Effect.gen(function* () {
+        const db = yield* SocialDbService;
+        return yield* db.getPlaylistsByUserIdPreview(TEST_USER_ID_1);
+      })
+    );
+
+    expect(result).toBeDefined();
+    expect(Array.isArray(result)).toBe(true);
+    
+    const emptyPlaylist = result.find(p => p.playlist_id === newPlaylistId.playlist_id);
+    expect(emptyPlaylist).toBeDefined();
+    expect(emptyPlaylist?.inscription_previews).toBeDefined();
+    expect(Array.isArray(emptyPlaylist?.inscription_previews)).toBe(true);
+    expect(emptyPlaylist?.inscription_previews.length).toBe(0);
+  });
+
+  it("should limit preview inscriptions to maximum of 3", async () => {
+    // Create a playlist with more than 3 inscriptions
+    const manyInscriptions: Schema.Schema.Type<typeof InsertPlaylistInscriptionsSchema> = [
+      { playlist_id: TEST_PLAYLIST_ID, inscription_id: "inscription_1" },
+      { playlist_id: TEST_PLAYLIST_ID, inscription_id: "inscription_2" },
+      { playlist_id: TEST_PLAYLIST_ID, inscription_id: "inscription_3" },
+      { playlist_id: TEST_PLAYLIST_ID, inscription_id: "inscription_4" },
+      { playlist_id: TEST_PLAYLIST_ID, inscription_id: "inscription_5" }
+    ];
+
+    // Clear existing inscriptions and add new ones
+    await runTestWithUser(
+      Effect.gen(function* () {
+        const db = yield* SocialDbService;
+        // First update with empty array to clear
+        yield* db.updatePlaylistInscriptions(TEST_PLAYLIST_ID, []);
+        // Then add the many inscriptions
+        return yield* db.insertPlaylistInscriptions(manyInscriptions);
+      }),
+      TEST_USER_ADDRESS_1
+    );
+
+    const result = await runTest(
+      Effect.gen(function* () {
+        const db = yield* SocialDbService;
+        return yield* db.getPlaylistsByUserIdPreview(TEST_USER_ID_1);
+      })
+    );
+
+    expect(result).toBeDefined();
+    const playlistWithPreviews = result.find(p => p.playlist_id === TEST_PLAYLIST_ID);
+    expect(playlistWithPreviews).toBeDefined();
+    expect(playlistWithPreviews?.inscription_previews).toBeDefined();
+    expect(Array.isArray(playlistWithPreviews?.inscription_previews)).toBe(true);
+    expect(playlistWithPreviews?.inscription_previews.length).toBe(3); // Should be limited to 3
+  });
+
 });
 
 describe("Cleanup Operations", () => {
   it("should not delete inscriptions from a playlist with an unauthorised address", async () => {
-    const inscriptionIds = ["updated_inscription1", "updated_inscription2"];
+    const inscriptionIds = ["inscription_1", "inscription_2"];
     const result = await runTestWithUser(
       Effect.gen(function* () {
         const db = yield* SocialDbService;
@@ -818,7 +926,7 @@ describe("Cleanup Operations", () => {
   });
 
   it("should delete inscriptions from a playlist", async () => {
-    const inscriptionIds = ["updated_inscription1", "updated_inscription2"];
+    const inscriptionIds = ["inscription_1", "inscription_2"];
 
     const result = await runTestWithUser(
       Effect.gen(function* () {
@@ -830,8 +938,8 @@ describe("Cleanup Operations", () => {
 
     expect(result).toBeDefined();
     expect(result.length).toBe(2);
-    expect(result[0]?.inscription_id).toEqual("updated_inscription1");
-    expect(result[1]?.inscription_id).toEqual("updated_inscription2");
+    expect(result[0]?.inscription_id).toEqual("inscription_1");
+    expect(result[1]?.inscription_id).toEqual("inscription_2");
   })
 
   it("should not delete a playlist with an unauthorised address", async () => {

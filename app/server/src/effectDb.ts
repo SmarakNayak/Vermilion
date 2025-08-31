@@ -4,7 +4,7 @@ import { SqlSchema } from "@effect/sql";
 import { withErrorContext } from "./effectUtils";
 import { Effect, Layer, Redacted, Array, Option, Schema, identity } from "effect";
 import { ConfigService } from "./config";
-import { PlaylistTable, InsertPlaylistInscriptions, UpdatePlaylistInscriptions, PlaylistInscriptionsSchema } from "../../shared/types/playlist";
+import { PlaylistTable, InsertPlaylistInscriptions, UpdatePlaylistInscriptions, PlaylistInscriptionsSchema, PlaylistPreviewSchema } from "../../shared/types/playlist";
 import { AuthenticatedUserContext } from "../../shared/api/authMiddleware";
 import { ProfileTable, ProfileView } from "../../shared/types/effectProfile";
 import { DatabaseNotFoundError, mapPostgresInsertError, mapPostgresUpdateError } from "./effectDbErrors";
@@ -425,6 +425,29 @@ export class SocialDbService extends Effect.Service<SocialDbService>()("EffectPo
           "SqlError": (e) => Effect.die(e),
         })
       ),
+      getPlaylistsByUserIdPreview: (userId: string) => Effect.gen(function* () {
+        const result = yield* sql`
+          SELECT
+            pi.*,
+            ARRAY(
+              SELECT inscription_id
+              FROM social.playlist_inscriptions pli
+              WHERE pli.playlist_id = pi.playlist_id
+              ORDER BY added_at DESC
+              LIMIT 3
+            ) AS inscription_previews
+          FROM social.playlist_info pi
+          WHERE pi.user_id = ${userId}
+          ORDER BY pi.playlist_created_at DESC;
+        `;
+        return yield* Schema.decodeUnknown(Schema.Array(PlaylistPreviewSchema))(result);
+      }).pipe(
+        Effect.tapError(() => Effect.logDebug("Error decoding playlist previews")),
+        Effect.catchTags({
+          "ParseError": (e) => Effect.die(e),
+          "SqlError": (e) => Effect.die(e),
+        })
+      ),
       insertPlaylistInscriptions: (insertPlaylistInscriptions: InsertPlaylistInscriptions) => Effect.gen(function* () {
         yield* sql`CREATE TEMP TABLE temp_playlist_inscriptions ON COMMIT DROP AS TABLE social.playlist_inscriptions WITH NO DATA`;
         yield* sql`INSERT INTO temp_playlist_inscriptions ${sql.insert(insertPlaylistInscriptions)}`;
@@ -446,13 +469,18 @@ export class SocialDbService extends Effect.Service<SocialDbService>()("EffectPo
         })
       ),
       updatePlaylistInscriptions: (playlistId: string, updatePlaylistInscriptions: UpdatePlaylistInscriptions) => Effect.gen(function* () {
+        // Delete all existing inscriptions for this playlist
+        yield* sql`DELETE FROM social.playlist_inscriptions WHERE playlist_id = ${playlistId}`;
+        if (updatePlaylistInscriptions.length === 0) { //sql.insert doesn't like empty arrays
+          return [];
+        }
+        
         let inscriptionsToInsert = updatePlaylistInscriptions.map((inscription, index) => ({
           playlist_id: inscription.playlist_id,
           inscription_id: inscription.inscription_id,
           playlist_position: 'playlist_position' in inscription ? inscription.playlist_position : index
         }));
-        // Delete all existing inscriptions for this playlist
-        yield* sql`DELETE FROM social.playlist_inscriptions WHERE playlist_id = ${playlistId}`;
+        
         // Insert the new inscriptions
         const insertResult = yield* sql`
           INSERT INTO social.playlist_inscriptions ${sql.insert(inscriptionsToInsert)} RETURNING *

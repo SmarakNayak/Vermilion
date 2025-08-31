@@ -72,8 +72,7 @@ describe("Profile Endpoints", () => {
             user_bio: Option.none(),
             user_twitter: Option.none(),
             user_discord: Option.none(),
-            user_website: Option.none(),
-            user_addresses: ["test_address"]
+            user_website: Option.none()
           }
         }).pipe(
           Effect.catchTag("Unauthorized", (error) => {
@@ -101,8 +100,7 @@ describe("Profile Endpoints", () => {
             user_bio: Option.some("Test bio"),
             user_twitter: Option.none(),
             user_discord: Option.none(),
-            user_website: Option.none(),
-            user_addresses: [testAddress]
+            user_website: Option.none()
           }
         });
       }));
@@ -127,8 +125,7 @@ describe("Profile Endpoints", () => {
             user_bio: Option.none(),
             user_twitter: Option.none(),
             user_discord: Option.none(),
-            user_website: Option.none(),
-            user_addresses: [testAddress]
+            user_website: Option.none()
           }
         }).pipe(
           Effect.catchTag("ParseError", (error) => {
@@ -159,8 +156,7 @@ describe("Profile Endpoints", () => {
             user_bio: Option.none(),
             user_twitter: Option.none(),
             user_discord: Option.none(),
-            user_website: Option.none(),
-            user_addresses: [userAddress1]
+            user_website: Option.none()
           }
         });
       }));
@@ -176,8 +172,7 @@ describe("Profile Endpoints", () => {
             user_bio: Option.none(),
             user_twitter: Option.none(),
             user_discord: Option.none(),
-            user_website: Option.none(),
-            user_addresses: [userAddress2]
+            user_website: Option.none()
           }
         }).pipe(
           Effect.catchTag("Conflict", (error) => {
@@ -205,8 +200,7 @@ describe("Profile Endpoints", () => {
             user_bio: Option.none(),
             user_twitter: Option.none(),
             user_discord: Option.none(),
-            user_website: Option.none(),
-            user_addresses: [userAddress]
+            user_website: Option.none()
           }
         });
       }));
@@ -222,8 +216,7 @@ describe("Profile Endpoints", () => {
             user_bio: Option.none(),
             user_twitter: Option.none(),
             user_discord: Option.none(),
-            user_website: Option.none(),
-            user_addresses: [userAddress] // Same address
+            user_website: Option.none()
           }
         }).pipe(
           Effect.catchTag("Conflict", (error) => {
@@ -250,8 +243,7 @@ describe("Profile Endpoints", () => {
             user_bio: Option.none(),
             user_twitter: Option.none(),
             user_discord: Option.none(),
-            user_website: Option.none(),
-            user_addresses: [testAddress]
+            user_website: Option.none()
           }
         }).pipe(
           Effect.catchTag("ParseError", (error) => {
@@ -278,8 +270,7 @@ describe("Profile Endpoints", () => {
             user_bio: Option.none(),
             user_twitter: Option.none(),
             user_discord: Option.none(),
-            user_website: Option.none(),
-            user_addresses: [testAddress]
+            user_website: Option.none()
           }
         }).pipe(
           Effect.catchTag("ParseError", (error) => {
@@ -306,8 +297,7 @@ describe("Profile Endpoints", () => {
             user_bio: Option.none(),
             user_twitter: Option.none(),
             user_discord: Option.none(),
-            user_website: Option.none(),
-            user_addresses: [testAddress]
+            user_website: Option.none()
           }
         }).pipe(
           Effect.catchTag("ParseError", (error) => {
@@ -338,8 +328,7 @@ describe("Profile Endpoints", () => {
             user_bio: Option.some("Original bio"),
             user_twitter: Option.none(),
             user_discord: Option.none(),
-            user_website: Option.none(),
-            user_addresses: [testAddress]
+            user_website: Option.none()
           }
         });
       }));
@@ -399,8 +388,7 @@ describe("Profile Endpoints", () => {
             user_bio: Option.none(),
             user_twitter: Option.none(),
             user_discord: Option.none(),
-            user_website: Option.none(),
-            user_addresses: [userAddress1]
+            user_website: Option.none()
           }
         });
       }));
@@ -441,8 +429,7 @@ describe("Profile Endpoints", () => {
             user_bio: Option.none(),
             user_twitter: Option.none(),
             user_discord: Option.none(),
-            user_website: Option.none(),
-            user_addresses: [testAddress]
+            user_website: Option.none()
           }
         });
       }));
@@ -511,8 +498,7 @@ describe("Profile Endpoints", () => {
             user_bio: Option.some("Test bio"),
             user_twitter: Option.none(),
             user_discord: Option.none(),
-            user_website: Option.none(),
-            user_addresses: [testAddress]
+            user_website: Option.none()
           }
         });
       }));
@@ -562,8 +548,7 @@ describe("Profile Endpoints", () => {
             user_bio: Option.none(),
             user_twitter: Option.none(),
             user_discord: Option.none(),
-            user_website: Option.none(),
-            user_addresses: [testAddress]
+            user_website: Option.none()
           }
         });
       }));
@@ -596,8 +581,7 @@ describe("Profile Endpoints", () => {
             user_bio: Option.none(),
             user_twitter: Option.none(),
             user_discord: Option.none(),
-            user_website: Option.none(),
-            user_addresses: [testAddress]
+            user_website: Option.none()
           }
         });
       }));
@@ -634,8 +618,7 @@ describe("Playlist Endpoints", () => {
             user_bio: Option.none(),
             user_twitter: Option.none(),
             user_discord: Option.none(),
-            user_website: Option.none(),
-            user_addresses: [testAddress]
+            user_website: Option.none()
           }
         });
       }));
@@ -696,8 +679,7 @@ describe("Playlist Endpoints", () => {
             user_bio: Option.none(),
             user_twitter: Option.none(),
             user_discord: Option.none(),
-            user_website: Option.none(),
-            user_addresses: [userAddress1]
+            user_website: Option.none()
           }
         });
       }));
@@ -762,8 +744,7 @@ describe("Playlist Endpoints", () => {
             user_bio: Option.none(),
             user_twitter: Option.none(),
             user_discord: Option.none(),
-            user_website: Option.none(),
-            user_addresses: [testAddress]
+            user_website: Option.none()
           }
         });
       }));
@@ -825,8 +806,7 @@ describe("Playlist Endpoints", () => {
             user_bio: Option.none(),
             user_twitter: Option.none(),
             user_discord: Option.none(),
-            user_website: Option.none(),
-            user_addresses: [testAddress]
+            user_website: Option.none()
           }
         });
       }));
@@ -922,8 +902,7 @@ describe("Playlist Endpoints", () => {
             user_bio: Option.none(),
             user_twitter: Option.none(),
             user_discord: Option.none(),
-            user_website: Option.none(),
-            user_addresses: [firstUserAddress]
+            user_website: Option.none()
           }
         });
       }));
@@ -941,8 +920,7 @@ describe("Playlist Endpoints", () => {
             user_bio: Option.none(),
             user_twitter: Option.none(),
             user_discord: Option.none(),
-            user_website: Option.none(),
-            user_addresses: [secondUserAddress]
+            user_website: Option.none()
           }
         });
       }));
@@ -984,8 +962,7 @@ describe("Playlist Endpoints", () => {
             user_bio: Option.none(),
             user_twitter: Option.none(),
             user_discord: Option.none(),
-            user_website: Option.none(),
-            user_addresses: [testAddress]
+            user_website: Option.none()
           }
         });
       }));
@@ -1063,8 +1040,7 @@ describe("Playlist Endpoints", () => {
             user_bio: Option.none(),
             user_twitter: Option.none(),
             user_discord: Option.none(),
-            user_website: Option.none(),
-            user_addresses: [testAddress]
+            user_website: Option.none()
           }
         });
       }));
@@ -1126,8 +1102,7 @@ describe("Playlist Endpoints", () => {
             user_bio: Option.none(),
             user_twitter: Option.none(),
             user_discord: Option.none(),
-            user_website: Option.none(),
-            user_addresses: [testAddress]
+            user_website: Option.none()
           }
         });
       }));
@@ -1188,8 +1163,7 @@ describe("Playlist Endpoints", () => {
             user_bio: Option.none(),
             user_twitter: Option.none(),
             user_discord: Option.none(),
-            user_website: Option.none(),
-            user_addresses: [testAddress]
+            user_website: Option.none()
           }
         });
       }));
@@ -1255,6 +1229,125 @@ describe("Playlist Endpoints", () => {
       expect(result.length).toBe(0);
     });
 
+    it("should get playlists with previews by user ID", async () => {
+      const testAddress = "test_user_address_get_playlists_preview";
+      const authenticatedClientEffect = makeAuthenticatedClient(testAddress);
+      
+      // First create a profile
+      const profileResponse = await runTest(Effect.gen(function* () {
+        const apiClient = yield* authenticatedClientEffect;
+        return yield* apiClient.profiles.createProfile({
+          payload: {
+            user_handle: "previewuser",
+            user_name: "Preview User",
+            user_picture: Option.none(),
+            user_bio: Option.none(),
+            user_twitter: Option.none(),
+            user_discord: Option.none(),
+            user_website: Option.none()
+          }
+        });
+      }));
+
+      // Create playlist
+      const playlistResponse = await runTest(Effect.gen(function* () {
+        const apiClient = yield* authenticatedClientEffect;
+        return yield* apiClient.playlists.createPlaylist({
+          payload: {
+            user_id: profileResponse.user_id,
+            playlist_name: "Preview Playlist",
+            playlist_inscription_icon: Option.none(),
+            playlist_description: Option.none()
+          }
+        });
+      }));
+
+      // Add inscriptions to the playlist
+      await runTest(Effect.gen(function* () {
+        const apiClient = yield* authenticatedClientEffect;
+        return yield* apiClient.playlists.insertPlaylistInscriptions({
+          payload: [
+            { playlist_id: playlistResponse.playlist_id, inscription_id: "preview_inscription_1" },
+            { playlist_id: playlistResponse.playlist_id, inscription_id: "preview_inscription_2" },
+            { playlist_id: playlistResponse.playlist_id, inscription_id: "preview_inscription_3" }
+          ]
+        });
+      }));
+
+      // Get playlists with previews
+      const result = await runTest(Effect.gen(function* () {
+        const apiClient = yield* unauthenticatedClientEffect;
+        return yield* apiClient.playlists.getPlaylistsByUserIdPreview({
+          path: { user_id: profileResponse.user_id }
+        });
+      }));
+
+      expect(result).toBeDefined();
+      expect(Array.isArray(result)).toBe(true);
+      expect(result.length).toBe(1);
+      
+      const playlist = result[0];
+      expect(playlist).toBeDefined();
+      expect(playlist?.user_id).toBe(profileResponse.user_id);
+      expect(playlist?.playlist_name).toBe("Preview Playlist");
+      expect(playlist?.inscription_previews).toBeDefined();
+      expect(Array.isArray(playlist?.inscription_previews)).toBe(true);
+      expect(playlist?.inscription_previews.length).toBe(3);
+      expect(playlist?.inscription_previews).toContain("preview_inscription_1");
+      expect(playlist?.inscription_previews).toContain("preview_inscription_2");
+      expect(playlist?.inscription_previews).toContain("preview_inscription_3");
+    });
+
+    it("should return empty inscription_previews for playlist with no inscriptions", async () => {
+      const testAddress = "test_user_address_empty_preview";
+      const authenticatedClientEffect = makeAuthenticatedClient(testAddress);
+      
+      // Create profile and playlist without inscriptions
+      const profileResponse = await runTest(Effect.gen(function* () {
+        const apiClient = yield* authenticatedClientEffect;
+        return yield* apiClient.profiles.createProfile({
+          payload: {
+            user_handle: "emptypreview",
+            user_name: "Empty Preview User",
+            user_picture: Option.none(),
+            user_bio: Option.none(),
+            user_twitter: Option.none(),
+            user_discord: Option.none(),
+            user_website: Option.none()
+          }
+        });
+      }));
+
+      await runTest(Effect.gen(function* () {
+        const apiClient = yield* authenticatedClientEffect;
+        return yield* apiClient.playlists.createPlaylist({
+          payload: {
+            user_id: profileResponse.user_id,
+            playlist_name: "Empty Preview Playlist",
+            playlist_inscription_icon: Option.none(),
+            playlist_description: Option.none()
+          }
+        });
+      }));
+
+      const result = await runTest(Effect.gen(function* () {
+        const apiClient = yield* unauthenticatedClientEffect;
+        return yield* apiClient.playlists.getPlaylistsByUserIdPreview({
+          path: { user_id: profileResponse.user_id }
+        });
+      }));
+
+      expect(result).toBeDefined();
+      expect(Array.isArray(result)).toBe(true);
+      expect(result.length).toBe(1);
+      
+      const playlist = result[0];
+      expect(playlist).toBeDefined();
+      expect(playlist?.inscription_previews).toBeDefined();
+      expect(Array.isArray(playlist?.inscription_previews)).toBe(true);
+      expect(playlist?.inscription_previews.length).toBe(0);
+    });
+
     it("should fail with invalid UUID format", async () => {
       const result = await runTest(Effect.gen(function* () {
         const apiClient = yield* unauthenticatedClientEffect;
@@ -1290,8 +1383,7 @@ describe("Playlist Inscriptions Endpoints", () => {
             user_bio: Option.none(),
             user_twitter: Option.none(),
             user_discord: Option.none(),
-            user_website: Option.none(),
-            user_addresses: [testAddress]
+            user_website: Option.none()
           }
         });
       }));
@@ -1360,8 +1452,7 @@ describe("Playlist Inscriptions Endpoints", () => {
             user_bio: Option.none(),
             user_twitter: Option.none(),
             user_discord: Option.none(),
-            user_website: Option.none(),
-            user_addresses: [testAddress]
+            user_website: Option.none()
           }
         });
       }));
@@ -1424,8 +1515,7 @@ describe("Playlist Inscriptions Endpoints", () => {
             user_bio: Option.none(),
             user_twitter: Option.none(),
             user_discord: Option.none(),
-            user_website: Option.none(),
-            user_addresses: [testAddress]
+            user_website: Option.none()
           }
         });
       }));
@@ -1483,8 +1573,7 @@ describe("Playlist Inscriptions Endpoints", () => {
             user_bio: Option.none(),
             user_twitter: Option.none(),
             user_discord: Option.none(),
-            user_website: Option.none(),
-            user_addresses: [testAddress]
+            user_website: Option.none()
           }
         });
       }));
