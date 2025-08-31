@@ -124,7 +124,6 @@ const getPlaylistsByUserIdPreviewHandler = (req: {
   readonly path: { readonly user_id: string },
   readonly request: HttpServerRequest.HttpServerRequest
 }) => Effect.gen(function* () {
-  console.log("Getting playlists preview for user ID:", req.path.user_id);
   let db = yield* SocialDbService;
   return yield* db.getPlaylistsByUserIdPreview(req.path.user_id);
 }).pipe(

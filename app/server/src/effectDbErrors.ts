@@ -27,8 +27,8 @@ export class DatabaseDuplicateKeyError extends Data.TaggedError("DatabaseDuplica
     const constraintMessages: Record<string, string> = {
       "profile_addresses_pkey": "This address is already associated with another profile",
       "profiles_user_handle_key": "This handle is already taken",
-      "playlist_info_user_id_playlist_name_key": "A playlist with this name already exists",
-      // "unique_handle_case_insensitive": "This handle is already taken"
+      "playlist_info_user_id_playlist_name_key": "A folder with this name already exists",
+      "playlist_inscriptions_pkey": "This inscription is already in the folder",
     };
 
     return new DatabaseDuplicateKeyError({
@@ -97,8 +97,8 @@ export class DatabaseSecurityError extends Data.TaggedError("DatabaseSecurityErr
     const postgresMessages: Record<string, string> = {
       "new row violates row-level security policy for table \"profile_addresses\"": "You do not have permission to add this address to a profile",
       "new row violates row-level security policy for table \"profiles\"": "You do not have permission to modify this profile",
-      "new row violates row-level security policy for table \"playlist_info\"": "You do not have permission to create this playlist",
-      "new row violates row-level security policy for table \"playlist_inscriptions\"": "You do not have permission to add inscriptions to this playlist",
+      "new row violates row-level security policy for table \"playlist_info\"": "You do not have permission to create this folder",
+      "new row violates row-level security policy for table \"playlist_inscriptions\"": "You do not have permission to add inscriptions to this folder",
     };
 
     return new DatabaseSecurityError({

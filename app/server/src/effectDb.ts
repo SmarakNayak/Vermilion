@@ -379,7 +379,7 @@ export class SocialDbService extends Effect.Service<SocialDbService>()("EffectPo
         );
       }).pipe(
         Effect.catchTags({
-          "NoSuchElementException": (_error) => Effect.fail(DatabaseNotFoundError.fromNoSuchElementException("playlist", "update")),
+          "NoSuchElementException": (_error) => Effect.fail(DatabaseNotFoundError.fromNoSuchElementException("folder", "update")),
           "ParseError": (error) => Effect.die(error),
           "SqlError": mapPostgresUpdateError,
         }),
@@ -397,7 +397,7 @@ export class SocialDbService extends Effect.Service<SocialDbService>()("EffectPo
         );
       }).pipe(
         Effect.catchTags({
-          "NoSuchElementException": (_error) => Effect.fail(DatabaseNotFoundError.fromNoSuchElementException("playlist", "delete")),
+          "NoSuchElementException": (_error) => Effect.fail(DatabaseNotFoundError.fromNoSuchElementException("folder", "delete")),
           "ParseError": (error) => Effect.die(error),
           "SqlError": (error) => Effect.die(error),
         }),
@@ -413,7 +413,7 @@ export class SocialDbService extends Effect.Service<SocialDbService>()("EffectPo
         Effect.catchTags({
           "ParseError": (e) => Effect.die(e),
           "SqlError": (e) => Effect.die(e),
-          "NoSuchElementException": (_e) => Effect.fail(DatabaseNotFoundError.fromNoSuchElementException("playlist", "get"))
+          "NoSuchElementException": (_e) => Effect.fail(DatabaseNotFoundError.fromNoSuchElementException("folder", "get"))
         })
       ),
       getPlaylistsByUserId: (userId: string) => Effect.gen(function* () {

@@ -3,12 +3,14 @@ import { theme } from '../../styles/theme';
 import { FolderIcon, PlusIconCircled } from "../common/Icon";
 import { BookmarkModal } from "../modals/BookmarkModal";
 import { SkeletonElement } from "../common/skeleton/SkeletonComponents";
+import InscriptionIcon from "../InscriptionIcon";
 import React, { useState } from 'react';
-import { useAtomValue, useAtomSuspense, Atom, Result } from "@effect-atom/atom-react";
+import { useAtomValue, useAtom, Atom, Result } from "@effect-atom/atom-react";
 import { userProfileAtom } from "../../atoms/userAtoms";
-import { cleanErrorResult, flatMap } from "../../atoms/atomHelpers";
-import { Option } from "effect";
-import { AuthSocialClient } from "../../api/EffectApi";
+import { cleanErrorResult, cleanErrorExit, flatMap } from "../../atoms/atomHelpers";
+import { Option, Exit } from "effect";
+import { AuthSocialClient, getErrorMessage } from "../../api/EffectApi";
+import { toast } from "sonner";
 
 const BookmarkMenuContainer = styled.div`
   //layout  
@@ -122,7 +124,7 @@ export const userFoldersAtom = Atom.make((get) => {
     return Option.match(x, {
       onSome: (profile) => {
         const user_id = profile.user_id;
-        return get(AuthSocialClient.query("playlists", "getPlaylistsByUserId", {
+        return get(AuthSocialClient.query("playlists", "getPlaylistsByUserIdPreview", {
           path: { user_id },
           reactivityKeys: ['userFolders']
         })).pipe(cleanErrorResult);
@@ -133,12 +135,38 @@ export const userFoldersAtom = Atom.make((get) => {
   return playlists;
 }).pipe(Atom.keepAlive);
 
-export const BookmarkDropdown = ({ref}: {ref: React.Ref<HTMLDivElement>}) => {
+export const BookmarkDropdown = ({ref, inscriptionId, onClose}: {
+  ref: React.Ref<HTMLDivElement>;
+  inscriptionId: string;
+  onClose: () => void;
+}) => {
   const [isBookmarkModalOpen, setIsBookmarkModalOpen] = useState(false);
+  
   const handleCreateFolderClick = () => {
     setIsBookmarkModalOpen(true);
   };
+  
   const folderList = useAtomValue(userFoldersAtom);
+  const [insertResult, insertInscription] = useAtom(AuthSocialClient.mutation("playlists", "insertPlaylistInscriptions"), { mode: 'promiseExit' });
+
+  const handleFolderClick = async (playlistId: string, playlistName: string) => {
+    const result = await insertInscription({ 
+      payload: [{ playlist_id: playlistId, inscription_id: inscriptionId }],
+      reactivityKeys: ['userFolders']
+    });
+    result.pipe(
+      cleanErrorExit,
+      Exit.match({
+        onSuccess: () => {
+          toast.success(`Inscription added to "${playlistName}" successfully!`);
+          onClose();
+        },
+        onFailure: (cause) => {
+          toast.error(`Failed to add inscription to "${playlistName}"${getErrorMessage(cause)}`);
+        },
+      })
+    );
+  };
 
   return (
     <BookmarkMenuContainer ref={ref}>
@@ -152,9 +180,20 @@ export const BookmarkDropdown = ({ref}: {ref: React.Ref<HTMLDivElement>}) => {
       </BookmarkMenuEntryContainer>
       <ScrollableList>
         {folderList._tag === 'Success' && folderList.value.map((folder) => (
-          <BookmarkMenuEntryContainer key={folder.playlist_id}>
+          <BookmarkMenuEntryContainer 
+            key={folder.playlist_id}
+            onClick={() => handleFolderClick(folder.playlist_id, folder.playlist_name)}
+          >
             <FolderIconContainer>
-              <FolderIcon size={'1.25rem'} color={theme.colors.text.primary} />
+              {folder.inscription_previews.length > 0 ? (
+                <InscriptionIcon 
+                  size={'1.8rem'}
+                  endpoint={`/content/${folder.inscription_previews[0]}`}
+                  useBlockIconDefault={false}
+                />
+              ) : (
+                <FolderIcon size={'1.25rem'} color={theme.colors.text.primary} />
+              )}
             </FolderIconContainer>
             <FolderName>{folder.playlist_name}</FolderName>
           </BookmarkMenuEntryContainer>

@@ -904,7 +904,13 @@ const Inscription = () => {
                           </IconButton>
                         </ButtonWrapper>
                       </Tooltip>
-                      {showFolderOverlay && (<BookmarkDropdown ref={bookmarkDropdownRef}/>)}
+                      {showFolderOverlay && (
+                        <BookmarkDropdown 
+                          ref={bookmarkDropdownRef}
+                          inscriptionId={metadata?.id}
+                          onClose={() => setShowFolderOverlay(false)}
+                        />
+                      )}
                     </TooltipOverlayContainer>
                     <Tooltip content={copied ? 'Copied!' : 'Copy link'}>
                       <ButtonWrapper>
