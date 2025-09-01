@@ -435,7 +435,11 @@ export class SocialDbService extends Effect.Service<SocialDbService>()("EffectPo
               WHERE pli.playlist_id = pi.playlist_id
               ORDER BY added_at DESC
               LIMIT 3
-            ) AS inscription_previews
+            ) AS inscription_previews,
+            (SELECT count(*)::int
+             FROM social.playlist_inscriptions pli
+             WHERE pli.playlist_id = pi.playlist_id
+            ) AS count
           FROM social.playlist_info pi
           WHERE pi.user_id = ${userId}
           ORDER BY pi.playlist_created_at DESC;
@@ -524,7 +528,7 @@ export class SocialDbService extends Effect.Service<SocialDbService>()("EffectPo
           "SqlError": (error) => Effect.die(error),
         })
       ),
-      getPlaylistInscriptions: (playlistId: string) => Effect.gen(function* () {
+      getPlaylistInscriptionIds: (playlistId: string) => Effect.gen(function* () {
         let result = yield* sql`SELECT * FROM social.playlist_inscriptions WHERE playlist_id = ${playlistId} ORDER BY playlist_position`
         const parsedResult = yield* Schema.decodeUnknown(PlaylistInscriptionsSchema)(result);
         return parsedResult
@@ -533,7 +537,24 @@ export class SocialDbService extends Effect.Service<SocialDbService>()("EffectPo
           "ParseError": (e) => Effect.die(e),
           "SqlError": (e) => Effect.die(e),
         })
-      )
+      ),
+      getPlaylistInscriptions: (playlistId: string) => Effect.gen(function* () {
+        let result = yield* sql`
+          SELECT * 
+          FROM social.playlist_inscriptions pi
+          LEFT JOIN ordinals_full_t on pi.inscription_id = ordinals_full_t.id
+          WHERE pi.playlist_id = ${playlistId} 
+          ORDER BY pi.playlist_position
+        `;
+        const parsedResult = yield* Schema.decodeUnknown(PlaylistInscriptionsSchema)(result);
+        return parsedResult
+      }).pipe(
+        Effect.catchTags({
+          "ParseError": (e) => Effect.die(e),
+          "SqlError": (e) => Effect.die(e),
+        })
+      ),
+
     };
   })
 }) {};

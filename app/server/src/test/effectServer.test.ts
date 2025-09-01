@@ -1604,7 +1604,7 @@ describe("Playlist Inscriptions Endpoints", () => {
       // Get inscriptions
       const getResponse = await runTest(Effect.gen(function* () {
         const apiClient = yield* unauthenticatedClientEffect; // No auth required for GET
-        return yield* apiClient.playlists.getPlaylistInscriptions({
+        return yield* apiClient.playlists.getPlaylistInscriptionIds({
           path: { playlist_id: playlistResponse.playlist_id }
         });
       }));

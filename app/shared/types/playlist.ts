@@ -69,6 +69,7 @@ export type UpdatePlaylistInscriptions = Schema.Schema.Type<typeof UpdatePlaylis
 export const PlaylistPreviewSchema = Schema.extend(
   PlaylistTable.select,
   Schema.Struct({
-    inscription_previews: Schema.Array(Schema.String)
+    inscription_previews: Schema.Array(Schema.String),
+    count: Schema.Number,
   })
 );

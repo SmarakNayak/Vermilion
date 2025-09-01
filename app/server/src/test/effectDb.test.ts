@@ -701,7 +701,7 @@ describe("Playlist Operations", () => {
     const result = await runTestWithUser(
       Effect.gen(function* () {
         const db = yield* SocialDbService;
-        return yield* db.getPlaylistInscriptions(TEST_PLAYLIST_ID);
+        return yield* db.getPlaylistInscriptionIds(TEST_PLAYLIST_ID);
       }),
       TEST_USER_ADDRESS_1
     );
@@ -719,7 +719,7 @@ describe("Playlist Operations", () => {
     const result = await runTestWithUser(
       Effect.gen(function* () {
         const db = yield* SocialDbService;
-        return yield* db.getPlaylistInscriptions(emptyPlaylistId);
+        return yield* db.getPlaylistInscriptionIds(emptyPlaylistId);
       }),
       TEST_USER_ADDRESS_1
     );

@@ -4,9 +4,9 @@ import { renderContent, browserPool } from './src/puppeteer';
 import { addInscriptionPreviewsToHtml, renderInscriptionCard } from './src/ssr';
 import { broadcastTx } from './src/mempool';
 import { Authenticator } from './src/authenticator';
-import type { CreateProfileRequest, UpdateProfileRequest, ProfileResponse } from './src/types/profile';
 import { ServerLive } from './src/effectServer/effectServer';
-import { Layer, Effect, Fiber } from 'effect';
+import { Layer, Effect } from 'effect';
+import { BunRuntime } from '@effect/platform-bun';
 
 // Configuration - use local address in production or fall back to external URL
 const isProd = process.env.NODE_ENV === 'production';
@@ -329,14 +329,6 @@ const server = Bun.serve({
 await db.setupDatabase();
 bundexer.runBundexer();
 
-// Start the Effect server
-const effectServerFiber = Effect.runFork(
-  Layer.launch(ServerLive).pipe(
-    Effect.tapError((err) => Effect.logError(err, "Failed to start Effect server")),
-    Effect.tap(() => Effect.logInfo("Effect server successfully stopped running at http://localhost:1083"))
-  )
-);
-
 async function getRenderedContentResponse(id: any, content_type: any, is_recursive: any, originalHeaders: any) {
   if (content_type?.startsWith('text/html') || (content_type?.startsWith('image/svg') && is_recursive)) {
     let row = await db.getRenderedContent(id);
@@ -405,10 +397,6 @@ function getAuthorizedAddress(authHeader: any) {
 
 // Shutdown function to clean up everything
 async function shutdown() {
-  // Stop Effect server
-  await Effect.runPromise(Fiber.interrupt(effectServerFiber));
-  console.log("Effect server stopped");
-
   // Stop Bun server
   await server.stop();
   console.log("Bun server stopped");
@@ -440,3 +428,19 @@ process.on("SIGTERM", async () => {
 });
 
 console.log(`🚀 Bun server running at ${server.url}`);
+
+// Start the Effect server
+BunRuntime.runMain(
+  Layer.launch(ServerLive).pipe(
+    Effect.tapDefect(() => Effect.logError("Effect server failed to start!!!")),
+    Effect.tapError((err) => Effect.logError(err, "Failed to start Effect server")),
+    Effect.tap(() => Effect.logInfo("Effect server successfully stopped running at http://localhost:1083"))
+  ),
+  {
+    teardown: async () => {
+      console.log("Effect server teardown initiated");
+      await shutdown();
+      console.log("Effect server teardown complete");
+    }
+  }
+)

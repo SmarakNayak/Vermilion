@@ -86,7 +86,7 @@ const FolderItemContainer = ({ folder }: { folder: Schema.Type<typeof PlaylistPr
         <TextLink to={`/folder/${folder.playlist_id}`}>
           <ItemText>{folder.playlist_name}</ItemText>
         </TextLink>
-        <FolderInfo>13 items</FolderInfo>
+        <FolderInfo>{folder.count > 0 ? folder.count + ' items' : null}</FolderInfo>
       </InfoContainer>
     </ItemContainer>
   );

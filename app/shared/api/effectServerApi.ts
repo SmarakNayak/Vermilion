@@ -111,7 +111,7 @@ export const EffectServerApi = HttpApi.make("EffectServer").add(
       .addSuccess(Schema.String)
       .addError(NotFound)
   ).add(
-    HttpApiEndpoint.get("getPlaylistInscriptions", `/social/get_playlist_inscriptions/:playlist_id`)
+    HttpApiEndpoint.get("getPlaylistInscriptionIds", `/social/get_playlist_inscriptions/:playlist_id`)
       .setPath(Schema.Struct({ playlist_id: Schema.UUID }))
       .addSuccess(PlaylistInscriptionsSchema)
   ).add(
