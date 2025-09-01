@@ -32,7 +32,6 @@
     "noUnusedParameters": true,
     
     // Bun-specific
-    "types": ["bun-types"],
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
     "forceConsistentCasingInFileNames": true
