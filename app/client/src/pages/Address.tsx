@@ -52,11 +52,9 @@ import { Result } from '@effect-atom/atom-react';
 const Address = () => {
   const [baseApi, setBaseApi] = useState<any|null>(null); 
   let { address } = useParams();
-  const [inscriptionList, setInscriptionList] = useState([]); 
   const [numberVisibility, setNumberVisibility] = useState(true);
   const [filterVisibility, setFilterVisibility] = useState(false);
   const [zoomGrid, setZoomGrid] = useState(true);
-  const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('inscriptions');
   const [copied, setCopied] = useState(false);
 
@@ -70,21 +68,7 @@ const Address = () => {
     Option.flatten // Flattens to Option<Profile>
   );
 
-  //1. Get links
-  useEffect(() => {
-    const fetchContent = async () => {
-      setLoading(true);
-      setInscriptionList([]);
-      const response = await fetch("/api/inscriptions_in_address/" + address);
-      let json = await response.json();
-      setInscriptionList(json);
-      setLoading(false);
-    }
-    fetchContent();
-  },[address])
-
-
-  //2. get endpoint
+  //1. get endpoint
   useEffect(() => {
     let query_string = "/api/inscriptions_in_address/" + address + "?sort_by=" + selectedSortOption;
     if (selectedFilterOptions["Content Type"] !== undefined && selectedFilterOptions["Content Type"].length > 0) {
@@ -136,7 +120,7 @@ const Address = () => {
 
   return (
     <PageContainer>
-      {loading ? (
+      {profileResult._tag === 'Initial' ? (
         <GridHeaderSkeleton 
           pageType={'Address'} 
           isProfile={true}
@@ -152,7 +136,7 @@ const Address = () => {
               <InfoText>Address</InfoText>
               <DetailsStack>
                 <ProfileContainer>
-                  {Option.isSome(profileOption) && Option.isSome(profileOption.value.user_picture) ? (
+                  {Option.isSome(profileOption) && Option.isSome(profileOption.value.user_picture) && profileOption.value.user_picture.value !=='' ? (
                     <ProfilePicture src={`/content/${profileOption.value.user_picture.value}`} alt="Profile" />
                   ) : (
                     <WalletIcon size={'2rem'} color={theme.colors.background.verm}></WalletIcon>
@@ -176,7 +160,7 @@ const Address = () => {
             </MainContentStack>
             {hasSocialLinks && (
               <SocialStack>
-                {Option.isSome(profileOption) && Option.isSome(profileOption.value.user_twitter) && (
+                {Option.isSome(profileOption) && Option.isSome(profileOption.value.user_twitter) && profileOption.value.user_twitter.value !=='' && (
                   <Tooltip content={"Twitter"}>
                     <ButtonWrapper>
                       <UnstyledLink to={`https://twitter.com/${profileOption.value.user_twitter.value}`} target='_blank'>
@@ -187,7 +171,7 @@ const Address = () => {
                     </ButtonWrapper>
                   </Tooltip>
                 )}
-                {Option.isSome(profileOption) && Option.isSome(profileOption.value.user_discord) && (
+                {Option.isSome(profileOption) && Option.isSome(profileOption.value.user_discord) && profileOption.value.user_discord.value !==''  && (
                   <Tooltip content={"Discord"}>
                     <ButtonWrapper>
                       <UnstyledLink to={`https://discord.com/users/${profileOption.value.user_discord.value}`} target='_blank'>
@@ -198,7 +182,7 @@ const Address = () => {
                     </ButtonWrapper>
                   </Tooltip>
                 )}
-                {Option.isSome(profileOption) && Option.isSome(profileOption.value.user_website) && (
+                {Option.isSome(profileOption) && Option.isSome(profileOption.value.user_website) && profileOption.value.user_website.value !=='' && (
                   <Tooltip content={"Website"}>
                     <ButtonWrapper>
                       <UnstyledLink to={profileOption.value.user_website.value} target='_blank'>
@@ -212,7 +196,7 @@ const Address = () => {
               </SocialStack>
             )}
           </HeaderContainer>
-          {Option.isSome(profileOption) && Option.isSome(profileOption.value.user_bio) && (
+          {Option.isSome(profileOption) && Option.isSome(profileOption.value.user_bio) && profileOption.value.user_bio.value !=='' && (
             <RowContainer>
               <InfoText islarge={true}>{profileOption.value.user_bio.value}</InfoText>
             </RowContainer>
