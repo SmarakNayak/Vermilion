@@ -1,6 +1,7 @@
 import { Schema } from "effect";
 import { Model } from "@effect/sql";
 import { FieldOptionOmittable, FieldUpdateOmittable } from "./omittable";
+import { FullOrdinalMetadataSchema } from "./ordinals";
 
 // Using sql.Model.Class to define the PlaylistInfo tables
 export class PlaylistTable extends Model.Class<PlaylistTable>("PlaylistTable")({
@@ -26,15 +27,13 @@ export class PlaylistTable extends Model.Class<PlaylistTable>("PlaylistTable")({
 }) {};
 
 // Using raw schemas for PlaylistInscriptions Schemas due to complicated array types
-export const PlaylistInscriptionsSchema = Schema.Array(
-  Schema.Struct({
-    playlist_id: Schema.UUID,
-    inscription_id: Schema.String,
-    playlist_position: Schema.Number,
-    added_at: Schema.DateTimeUtc,
-  })
-);
-export type PlaylistInscriptions = Schema.Schema.Type<typeof PlaylistInscriptionsSchema>;
+const PlaylistInscriptionRowSchema = Schema.Struct({
+  playlist_id: Schema.UUID,
+  inscription_id: Schema.String,
+  playlist_position: Schema.Number,
+  added_at: Schema.DateTimeUtc,
+});
+export const PlaylistInscriptionsSchema = Schema.Array(PlaylistInscriptionRowSchema);
 
 export const InsertPlaylistInscriptionsSchema = Schema.Array(
   Schema.Struct({
@@ -73,3 +72,8 @@ export const PlaylistPreviewSchema = Schema.extend(
     count: Schema.Number,
   })
 );
+
+export const PlaylistInscriptionsWithMetadataSchema = Schema.Array(Schema.Struct({
+  ...PlaylistInscriptionRowSchema.fields,
+  ...FullOrdinalMetadataSchema.fields,
+}));

@@ -444,7 +444,7 @@ describe("Playlist Operations", () => {
 
     expect(result).toBeDefined();
     expect(result).toBeInstanceOf(DatabaseSecurityError);
-    expect((result as DatabaseSecurityError).message).toBe("You do not have permission to create this playlist");
+    expect((result as DatabaseSecurityError).message).toBe("You do not have permission to create this folder");
   });
 
   it("should update a playlist", async () => {
@@ -496,7 +496,7 @@ describe("Playlist Operations", () => {
 
     expect(result).toBeDefined();
     expect(result).toBeInstanceOf(DatabaseNotFoundError);
-    expect((result as DatabaseNotFoundError).message).toBe("This playlist could not be updated. You may not have permission or it may not exist.");
+    expect((result as DatabaseNotFoundError).message).toBe("This folder could not be updated. You may not have permission or it may not exist.");
   });
 
   it("should get a playlist by ID", async () => {
@@ -529,7 +529,7 @@ describe("Playlist Operations", () => {
 
     expect(result).toBeDefined();
     expect(result).toBeInstanceOf(DatabaseNotFoundError);
-    expect((result as DatabaseNotFoundError).message).toBe("This playlist could not be found.");
+    expect((result as DatabaseNotFoundError).message).toBe("This folder could not be found.");
   });
 
   it("should get playlists by user ID", async () => {
@@ -627,7 +627,7 @@ describe("Playlist Operations", () => {
 
     expect(result).toBeDefined();
     expect(result).toBeInstanceOf(DatabaseSecurityError);
-    expect((result as DatabaseSecurityError).message).toBe("You do not have permission to add inscriptions to this playlist");
+    expect((result as DatabaseSecurityError).message).toBe("You do not have permission to add inscriptions to this folder");
   });
 
   it("should update inscriptions in a playlist with positions", async () => {
@@ -694,7 +694,7 @@ describe("Playlist Operations", () => {
 
     expect(result).toBeDefined();
     expect(result).toBeInstanceOf(DatabaseSecurityError);
-    expect((result as DatabaseSecurityError).message).toBe("You do not have permission to add inscriptions to this playlist");
+    expect((result as DatabaseSecurityError).message).toBe("You do not have permission to add inscriptions to this folder");
   });
 
   it("should get inscriptions from a playlist", async () => {
@@ -749,7 +749,7 @@ describe("Playlist Operations", () => {
 
     expect(result).toBeDefined();
     expect(result).toBeInstanceOf(DatabaseDuplicateKeyError);
-    expect((result as DatabaseDuplicateKeyError).message).toBe("A playlist with this name already exists");
+    expect((result as DatabaseDuplicateKeyError).message).toBe("A folder with this name already exists");
   });
 
   it("should not update a playlist to have the same name as another playlist for the same user", async () => {
@@ -793,7 +793,7 @@ describe("Playlist Operations", () => {
 
     expect(updateResult).toBeDefined();
     expect(updateResult).toBeInstanceOf(DatabaseDuplicateKeyError);
-    expect((updateResult as DatabaseDuplicateKeyError).message).toBe("A playlist with this name already exists");
+    expect((updateResult as DatabaseDuplicateKeyError).message).toBe("A folder with this name already exists");
   });
 
   
@@ -922,7 +922,7 @@ describe("Cleanup Operations", () => {
     );
     expect(result).toBeDefined();
     expect(result).toBeInstanceOf(DatabaseNotFoundError);
-    expect((result as DatabaseNotFoundError).message).toBe("The inscriptions in this playlist could not be deleted. You may not have permission or they may have already been removed.");
+    expect((result as DatabaseNotFoundError).message).toBe("The inscriptions in this folder could not be deleted. You may not have permission or they may have already been removed.");
   });
 
   it("should delete inscriptions from a playlist", async () => {
@@ -957,7 +957,7 @@ describe("Cleanup Operations", () => {
 
     expect(result).toBeDefined();
     expect(result).toBeInstanceOf(DatabaseNotFoundError);
-    expect((result as DatabaseNotFoundError).message).toBe("This playlist could not be deleted. You may not have permission or it may have already been removed.");
+    expect((result as DatabaseNotFoundError).message).toBe("This folder could not be deleted. You may not have permission or it may have already been removed.");
   });
 
   it("should delete a playlist", async () => {

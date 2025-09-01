@@ -3,7 +3,7 @@ import { HttpApi, HttpApiEndpoint, HttpApiGroup } from "@effect/platform";
 import { Authentication } from "./authMiddleware";
 import { Conflict, Forbidden, Issue, NotFound } from "./apiErrors";
 import { ProfileView, ProfileTable } from "../types/effectProfile";
-import { PlaylistTable, UpdatePlaylistInscriptionsSchema, InsertPlaylistInscriptionsSchema, PlaylistInscriptionsSchema, PlaylistPreviewSchema } from "../types/playlist";
+import { PlaylistTable, UpdatePlaylistInscriptionsSchema, InsertPlaylistInscriptionsSchema, PlaylistInscriptionsSchema, PlaylistPreviewSchema, PlaylistInscriptionsWithMetadataSchema } from "../types/playlist";
 
 // 1. Define the Api
 export const EffectServerApi = HttpApi.make("EffectServer").add(
@@ -114,6 +114,10 @@ export const EffectServerApi = HttpApi.make("EffectServer").add(
     HttpApiEndpoint.get("getPlaylistInscriptionIds", `/social/get_playlist_inscriptions/:playlist_id`)
       .setPath(Schema.Struct({ playlist_id: Schema.UUID }))
       .addSuccess(PlaylistInscriptionsSchema)
+  ).add(
+    HttpApiEndpoint.get("getPlaylistInscriptions", `/social/get_playlist_inscriptions_with_metadata/:playlist_id`)
+      .setPath(Schema.Struct({ playlist_id: Schema.UUID }))
+      .addSuccess(PlaylistInscriptionsWithMetadataSchema)
   ).add(
     HttpApiEndpoint.get("home", `/`)
       .addSuccess(Schema.String)

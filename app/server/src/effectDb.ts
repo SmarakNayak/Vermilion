@@ -4,7 +4,7 @@ import { SqlSchema } from "@effect/sql";
 import { withErrorContext } from "./effectUtils";
 import { Effect, Layer, Redacted, Array, Option, Schema, identity } from "effect";
 import { ConfigService } from "./config";
-import { PlaylistTable, InsertPlaylistInscriptions, UpdatePlaylistInscriptions, PlaylistInscriptionsSchema, PlaylistPreviewSchema } from "../../shared/types/playlist";
+import { PlaylistTable, InsertPlaylistInscriptions, UpdatePlaylistInscriptions, PlaylistInscriptionsSchema, PlaylistPreviewSchema, PlaylistInscriptionsWithMetadataSchema } from "../../shared/types/playlist";
 import { AuthenticatedUserContext } from "../../shared/api/authMiddleware";
 import { ProfileTable, ProfileView } from "../../shared/types/effectProfile";
 import { DatabaseNotFoundError, mapPostgresInsertError, mapPostgresUpdateError } from "./effectDbErrors";
@@ -516,7 +516,7 @@ export class SocialDbService extends Effect.Service<SocialDbService>()("EffectPo
         );
         if (result.length === 0) {
           return yield* Effect.fail(DatabaseNotFoundError.manuallyCreate(
-            "The inscriptions in this playlist could not be deleted. You may not have permission or they may have already been removed.", 
+            "The inscriptions in this folder could not be deleted. You may not have permission or they may have already been removed.", 
             "playlist_inscriptions", 
             "delete"
           ));
@@ -546,7 +546,7 @@ export class SocialDbService extends Effect.Service<SocialDbService>()("EffectPo
           WHERE pi.playlist_id = ${playlistId} 
           ORDER BY pi.playlist_position
         `;
-        const parsedResult = yield* Schema.decodeUnknown(PlaylistInscriptionsSchema)(result);
+        const parsedResult = yield* Schema.decodeUnknown(PlaylistInscriptionsWithMetadataSchema)(result);
         return parsedResult
       }).pipe(
         Effect.catchTags({
@@ -554,7 +554,7 @@ export class SocialDbService extends Effect.Service<SocialDbService>()("EffectPo
           "SqlError": (e) => Effect.die(e),
         })
       ),
-
+      
     };
   })
 }) {};

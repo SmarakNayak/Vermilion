@@ -786,7 +786,7 @@ describe("Playlist Endpoints", () => {
 
       expect(result).toBeDefined();
       expect(result).toBeInstanceOf(Conflict);
-      expect((result as Conflict).message).toBe("A playlist with this name already exists");
+      expect((result as Conflict).message).toBe("A folder with this name already exists");
     });
   });
 
@@ -1020,7 +1020,7 @@ describe("Playlist Endpoints", () => {
 
       expect(result).toBeDefined();
       expect(result).toBeInstanceOf(Conflict);
-      expect((result as Conflict).message).toBe("A playlist with this name already exists");
+      expect((result as Conflict).message).toBe("A folder with this name already exists");
     });
   });
 

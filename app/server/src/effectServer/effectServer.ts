@@ -24,6 +24,7 @@ const PlaylistsGroup = HttpApiBuilder.group(EffectServerApi, "playlists", (handl
     .handle("updatePlaylistInscriptions", updatePlaylistInscriptionsHandler)
     .handle("deletePlaylistInscriptions", deletePlaylistInscriptionsHandler)
     .handle("getPlaylistInscriptionIds", getPlaylistInscriptionsHandler)
+    .handle("getPlaylistInscriptions", getPlaylistInscriptionsWithMetadataHandler)
 )
 const ProfileGroup = HttpApiBuilder.group(EffectServerApi, "profiles", (handlers) =>
   handlers
@@ -184,6 +185,14 @@ const getPlaylistInscriptionsHandler = (req: {
 }) => Effect.gen(function* () {
   let db = yield* SocialDbService;
   return yield* db.getPlaylistInscriptionIds(req.path.playlist_id);
+});
+
+const getPlaylistInscriptionsWithMetadataHandler = (req: {
+  readonly path: { readonly playlist_id: string },
+  readonly request: HttpServerRequest.HttpServerRequest
+}) => Effect.gen(function* () {
+  let db = yield* SocialDbService;
+  return yield* db.getPlaylistInscriptions(req.path.playlist_id);
 });
 
 const createProfileHandler = (req: {
