@@ -1,4 +1,4 @@
-import React, { useState, useEffect, ChangeEvent } from 'react';
+import React, { useState, useEffect } from 'react';
 import styled, { keyframes } from 'styled-components';
 import GridItemContainer from './GridItemContainer';
 import InfiniteScroll from 'react-infinite-scroll-component';
@@ -6,8 +6,15 @@ import Spinner from './Spinner';
 import theme from '../styles/theme';
 import { ImageBadgeIcon } from './common/Icon';
 
-const GalleryInfiniteScroll = ({ baseApi, isCollectionPage, numberVisibility, zoomGrid }) => {
-  const [inscriptions, setInscriptions] = useState([]);
+interface GalleryInfiniteScrollProps {
+  baseApi: string;
+  isCollectionPage?: boolean;
+  numberVisibility: boolean;
+  zoomGrid: boolean;
+}
+
+const GalleryInfiniteScroll = ({ baseApi, isCollectionPage, numberVisibility, zoomGrid }: GalleryInfiniteScrollProps) => {
+  const [inscriptions, setInscriptions] = useState<any>([]);
   const [hasMore, setHasMore] = useState(true);
   const [pageSize, setPageSize] = useState(24);
   const [nextPageNo, setNextPageNo] = useState(0);
@@ -64,7 +71,7 @@ const GalleryInfiniteScroll = ({ baseApi, isCollectionPage, numberVisibility, zo
       >
         <GridContainer zoomGrid={zoomGrid}>
           {inscriptions.map(
-              entry => 
+              (entry: any) => 
                 <GridItemContainer 
                   collection={entry.collection_name} 
                   collection_symbol={entry.collection_symbol}
@@ -112,7 +119,7 @@ export const EmptyStateContainer = styled.div`
   }
 `;
 
-const LoaderContainer = styled.div`
+const LoaderContainer = styled.div<{ numberVisibility: boolean }>`
   display: flex;
   justify-content: center;
   align-items: center;
@@ -120,7 +127,7 @@ const LoaderContainer = styled.div`
   padding-top: ${props => props.numberVisibility ? '.5rem' : '2.125rem'};
 `;
 
-export const GridContainer = styled.div`
+export const GridContainer = styled.div<{ zoomGrid: boolean }>`
   display: grid;
   grid-template-columns: repeat(6, 1fr);
   gap: .25rem;

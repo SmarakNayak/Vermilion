@@ -3,7 +3,16 @@ import styled from 'styled-components';
 import { Link } from "react-router-dom";
 import theme from '../../styles/theme';
 
-const GridTag = ({ category, color, icon, islarge, link, value }) => {
+interface GridTagProps {
+  category?: string;
+  color: string;
+  icon?: React.ReactNode;
+  islarge?: boolean;
+  link?: string;
+  value: string | number;
+}
+
+const GridTag = ({ category, color, icon, islarge, link, value }: GridTagProps) => {
   // Create the inner content that will be the same regardless of link status
   const tagContent = (
     <>
@@ -60,7 +69,7 @@ const TagContainer = styled.button`
   }
 `;
 
-const TagSpan = styled.span`
+const TagSpan = styled.span<{ islarge?: boolean | undefined; isValue?: boolean; color?: string }>`
   font-size: ${props => props.islarge ? '1rem' : '.875rem'};
   color: ${props => props.color};
   overflow: hidden;

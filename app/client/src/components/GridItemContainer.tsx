@@ -14,15 +14,15 @@ import {
   TagContainer
 } from './common/GridItemStyles';
 
-const GridItemContainer = (props) => {
-  const [binaryContent, setBinaryContent] = useState(null);
-  const [blobUrl, setBlobUrl] = useState(null);
-  const [textContent, setTextContent] = useState(null);
-  const [rawContentType, setRawContentType] =useState(null);
-  const [contentType, setContentType] = useState(null);
+const GridItemContainer = (props: any) => {
+  const [binaryContent, setBinaryContent] = useState<Blob|null>(null);
+  const [blobUrl, setBlobUrl] = useState<string|null>(null);
+  const [textContent, setTextContent] = useState<string|null>(null);
+  const [rawContentType, setRawContentType] =useState<string|null>(null);
+  const [contentType, setContentType] = useState<string|null>(null);
 
   // state for 3d
-  const [modelUrl, setModelUrl] = useState(null);
+  const [modelUrl, setModelUrl] = useState<string|null>(null);
   const modelViewerRef = useRef(null);
 
   // state for display name
@@ -135,7 +135,7 @@ const GridItemContainer = (props) => {
   useEffect(()=> {
     const updateText = async () => {
       //1. Update text state variable if text type
-      if(contentType==="text" || contentType==="svg" || contentType==="html") {
+      if((contentType==="text" || contentType==="svg" || contentType==="html") && binaryContent) {
         const text = await binaryContent.text();
         setTextContent(text);
         if(contentType==="svg" && text.includes("/content")) {
@@ -153,10 +153,10 @@ const GridItemContainer = (props) => {
   return(
   <ItemContainer>
     <UnstyledLink 
-      to={'/inscription/' + props.number} 
-      applySpace={shouldApplySpace}
+      to={'/inscription/' + props.number}
     >
       <MediaContainer>
+        {/*@ts-ignore*/}
         <InnerInscriptionContent
           contentType={contentType}
           blobUrl={blobUrl}
