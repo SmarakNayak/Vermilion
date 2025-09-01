@@ -146,7 +146,7 @@ const Folder = () => {
                             is_child={entry.parents.length > 0}
                             is_recursive={entry.is_recursive}
                             isCollectionPage={false}
-                            item_name={(entry.off_chain_metadata as any).name}
+                            item_name={(entry.off_chain_metadata as any)?.name}
                             key={entry.number} 
                             number={entry.number} 
                             numberVisibility={true} 
