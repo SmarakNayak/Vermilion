@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { useParams, Link } from "react-router-dom";
+import { useState, useEffect } from 'react';
+import { useParams } from "react-router-dom";
 import styled from 'styled-components';
 import { theme } from '../styles/theme';
 
@@ -13,7 +13,6 @@ import {
   RowContainer,
   GalleryContainer,
   ProfileContainer,
-  HorizontalDivider,
   HorizontalTabContainer,
   TabText
 } from '../components/grid/Layout';
@@ -28,25 +27,17 @@ import Stack from '../components/Stack';
 import FilterMenu from '../components/FilterMenu';
 import GalleryInfiniteScroll from '../components/GalleryInfiniteScroll';
 import { FolderInfiniteScroll } from '../components/FolderInfiniteScroll';
-import InscriptionIcon from '../components/InscriptionIcon';
-import Tag from '../components/Tag';
 
 // import icons
-import { BlockIcon, CopyIcon, CheckIcon, WalletIcon, TwitterIcon, DiscordIcon, WebIcon } from '../components/common/Icon';
+import { CopyIcon, CheckIcon, WalletIcon, TwitterIcon, DiscordIcon, WebIcon } from '../components/common/Icon';
 
 // import utils
-import { 
-  addCommas, 
-  formatAddress,
-  formatSatsString, 
-  formatTimestampMs, 
-  shortenBytesString 
-} from '../utils/format';
+import { formatAddress } from '../utils/format';
 import { copyText } from '../utils/clipboard';
 
 import { useAtomValue } from '@effect-atom/atom-react';
-import { foldersAtomFamily, profileAtomFamily } from '../atoms/familyAtomics';
-import { Effect, Option, pipe } from 'effect';
+import { profileAtomFamily } from '../atoms/familyAtomics';
+import { Option, pipe } from 'effect';
 import { Result } from '@effect-atom/atom-react';
 
 const Address = () => {
@@ -133,7 +124,7 @@ const Address = () => {
         <>
           <HeaderContainer>
             <MainContentStack>
-              <InfoText>Address</InfoText>
+              <InfoText>{Option.isSome(profileOption) ? 'Profile' : 'Address'}</InfoText>
               <DetailsStack>
                 <ProfileContainer>
                   {Option.isSome(profileOption) && Option.isSome(profileOption.value.user_picture) && profileOption.value.user_picture.value !=='' ? (
