@@ -2,10 +2,8 @@ import { GridContainer } from "./GalleryInfiniteScroll";
 import { foldersAtomFamily } from "../atoms/familyAtomics";
 import { useAtomValue, Result } from "@effect-atom/atom-react";
 ////////////////////////////////////////////////////////////////
-import React from 'react';
-import styled from 'styled-components';
-import GridTag from './common/GridTag';
 import theme from '../styles/theme';
+import styled from 'styled-components';
 import {
   UnstyledLink,
   TextLink,
@@ -21,6 +19,16 @@ import type { Schema } from 'effect/Schema';
 import { ImageBadgeIcon } from './common/Icon';
 import { EmptyStateContainer } from "./GalleryInfiniteScroll";
 
+const FolderInfo = styled.p`
+  color: ${theme.colors.text.secondary};
+  font-family: ${theme.typography.fontFamilies.medium};
+  font-size: ${theme.typography.fontSize.xs};
+  font-style: normal;
+  font-weight: 500;
+  line-height: normal;
+  margin: 0;
+`;
+
 const FolderItemContainer = ({ folder }: { folder: Schema.Type<typeof PlaylistPreviewSchema> }) => {
   return (
     <ItemContainer>
@@ -30,8 +38,10 @@ const FolderItemContainer = ({ folder }: { folder: Schema.Type<typeof PlaylistPr
         </MediaContainer>
       </UnstyledLink>
       <InfoContainer>
-        <TextLink to={`/folder/${folder.playlist_id}`}>{folder.playlist_name}</TextLink>
-        <p>13 items</p>
+        <TextLink to={`/folder/${folder.playlist_id}`}>
+          <ItemText>{folder.playlist_name}</ItemText>
+        </TextLink>
+        <FolderInfo>13 items</FolderInfo>
       </InfoContainer>
     </ItemContainer>
   );
@@ -51,7 +61,7 @@ export const FolderInfiniteScroll = ({ address}: {address: string | undefined })
               <p>This user has not made any bookmarks</p>
             </EmptyStateContainer>
           )}
-          <GridContainer>
+          <GridContainer zoomGrid={true}>
             {folders.map((folder) => (
               <FolderItemContainer key={folder.playlist_id} folder={folder} />
             ))}
