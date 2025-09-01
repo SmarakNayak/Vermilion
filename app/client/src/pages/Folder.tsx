@@ -10,10 +10,12 @@ import { flatMap } from "../atoms/atomHelpers";
 import MainText from "../components/common/text/MainText";
 import { ItemText, TextLink } from "../components/common/GridItemStyles";
 import styled from "styled-components";
-import { AvatarCircleIcon, EditIcon, LinkIcon } from "../components/common/Icon";
+import { AvatarCircleIcon, CheckIcon, EditIcon, LinkIcon } from "../components/common/Icon";
 import Tooltip from '../components/common/Tooltip';
 import IconButton from "../components/common/buttons/IconButton";
 import theme from "../styles/theme";
+import { useAuth } from "../hooks/useAuth";
+import { useCopy } from "../hooks/useCopy";
 
 const profileFromFolderAtomFamily = Atom.family((folderId?: string) =>
   Atom.make((get) => {
@@ -58,6 +60,8 @@ const Folder = () => {
   const folder = useAtomValue(folderAtomFamily(folderId));
   const folderInscriptions = useAtomValue(folderInscriptionsAtomFamily(folderId));
   const userProfile = useAtomValue(profileFromFolderAtomFamily(folderId));
+  const auth = useAuth();
+  const { copied, copy } = useCopy();
 
   return (
     <PageContainer>
@@ -101,8 +105,8 @@ const Folder = () => {
               </Tooltip>
               <Tooltip content={"Copy Folder Link"}>
                 <ButtonWrapper>
-                  <IconButton>
-                    <LinkIcon size={'1.25rem'} color={theme.colors.text.primary} />
+                  <IconButton onClick={() => {copy(window.location.href)}}>
+                    {copied ? <CheckIcon size={'1.25rem'} color={theme.colors.background.success} /> : <LinkIcon size={'1.25rem'} />}
                   </IconButton>
                 </ButtonWrapper>
               </Tooltip>

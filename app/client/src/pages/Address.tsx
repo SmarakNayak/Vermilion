@@ -33,7 +33,9 @@ import { CopyIcon, CheckIcon, WalletIcon, TwitterIcon, DiscordIcon, WebIcon } fr
 
 // import utils
 import { formatAddress } from '../utils/format';
-import { copyText } from '../utils/clipboard';
+
+// import hooks
+import { useCopy } from '../hooks/useCopy';
 
 import { useAtomValue } from '@effect-atom/atom-react';
 import { profileAtomFamily } from '../atoms/familyAtomics';
@@ -47,7 +49,6 @@ const Address = () => {
   const [filterVisibility, setFilterVisibility] = useState(false);
   const [zoomGrid, setZoomGrid] = useState(true);
   const [activeTab, setActiveTab] = useState('inscriptions');
-  const [copied, setCopied] = useState(false);
 
   const [selectedSortOption, setSelectedSortOption] = useState('newest');
   const [selectedFilterOptions, setSelectedFilterOptions] = useState({"Content Type": ["text", "image", "gif", "audio", "video", "html"], "Satributes": [], "Charms":[]});
@@ -95,11 +96,7 @@ const Address = () => {
     setSelectedFilterOptions(filterOptions);
   };
 
-  const handleCopyClick = () => {
-    copyText(address);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  };
+  const { copied, copy } = useCopy();
 
   let hasSocialLinks = false;
   if(Option.isSome(profileOption)) {
@@ -142,7 +139,7 @@ const Address = () => {
                   </MainText>
                   <AddressRow>
                     <InfoText>{formatAddress(address)}</InfoText>
-                    <CopyButton onClick={handleCopyClick} copied={copied}>
+                    <CopyButton onClick={() => copy(address || '')} copied={copied}>
                       {copied ? <CheckIcon size={'1.125rem'} /> : <CopyIcon size={'1.125rem'} />}
                     </CopyButton>
                   </AddressRow>
