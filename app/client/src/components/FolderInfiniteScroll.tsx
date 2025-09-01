@@ -9,15 +9,14 @@ import {
   TextLink,
   ItemContainer,
   MediaContainer,
-  ContentOverlay,
   ItemText,
-  InfoContainer,
-  TagContainer
+  InfoContainer
 } from './common/GridItemStyles';
 import { PlaylistPreviewSchema } from '../../../shared/types/playlist';
 import type { Schema } from 'effect/Schema';
 import { ImageBadgeIcon } from './common/Icon';
 import { EmptyStateContainer } from "./GalleryInfiniteScroll";
+import { FolderIcon } from "./common/Icon";
 
 const FolderInfo = styled.p`
   color: ${theme.colors.text.secondary};
@@ -29,12 +28,58 @@ const FolderInfo = styled.p`
   margin: 0;
 `;
 
+const FrontPreview = styled.img<{ renderedSrc: string }>`
+  //style
+  border-radius: 12px;
+  border: 1px solid #E9E9E9;
+  background: url(${props => props.renderedSrc}) lightgray 50% / cover no-repeat;
+  box-shadow: 0 1px 6px 0 rgba(0, 0, 0, 0.09);
+  // stack effect
+  width: 70%;
+  height: 70%;
+  z-index: 3;
+  position: absolute;
+  transform: scale(1) translate(0%, 5%);
+`
+
+const MidPreview = styled.img<{ renderedSrc: string }>`
+  //style
+  border-radius: 12px;
+  border: 1px solid #E9E9E9;
+  background: url(${props => props.renderedSrc}) lightgray 50% / cover no-repeat;
+  box-shadow: 0 1px 6px 0 rgba(0, 0, 0, 0.09);
+  // stack effect
+  z-index: 2;
+  width: 70%;
+  height: 70%;
+  position: absolute;
+  transform: scale(0.9) translate(0%, -5%);
+
+`
+
+const RearPreview = styled.img<{ renderedSrc: string }>`
+  //style
+  border-radius: 12px;
+  border: 1px solid #E9E9E9;
+  background: url(${props => props.renderedSrc}) lightgray 50% / cover no-repeat;
+  box-shadow: 0 1px 6px 0 rgba(0, 0, 0, 0.09);
+  // stack effect
+  z-index: 1;
+  width: 70%;
+  height: 70%;
+  position: absolute;
+  transform: scale(0.8) translate(0%, -15%);
+`
+
 const FolderItemContainer = ({ folder }: { folder: Schema.Type<typeof PlaylistPreviewSchema> }) => {
   return (
     <ItemContainer>
       <UnstyledLink to={`/folder/${folder.playlist_id}`}>
         <MediaContainer>
-          <p>{folder.playlist_name}</p>
+          {folder.inscription_previews.length === 0 && FolderIcon({ size: '10rem', color: theme.colors.text.secondary })}
+          {folder.inscription_previews[2] && <RearPreview renderedSrc={'/bun/rendered_content/' + folder.inscription_previews[2]} />}
+          {folder.inscription_previews[1] && <MidPreview renderedSrc={'/bun/rendered_content/' + folder.inscription_previews[1]} />}
+          {folder.inscription_previews[0] && <FrontPreview renderedSrc={'/bun/rendered_content/' + folder.inscription_previews[0]} />}
         </MediaContainer>
       </UnstyledLink>
       <InfoContainer>
