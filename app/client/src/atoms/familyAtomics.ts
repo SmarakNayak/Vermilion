@@ -3,7 +3,7 @@ import { AuthSocialClient } from "../api/EffectApi";
 import { Option, Cause } from "effect";
 import { flatMap, cleanErrorResult} from "./atomHelpers";
 
-
+// profiles
 export const profileAtomFamily = Atom.family((user_address?: string) =>
   Atom.make((get) => {
     if (!user_address) return Result.success(Option.none());
@@ -23,6 +23,17 @@ export const profileAtomFamily = Atom.family((user_address?: string) =>
   })
 );
 
+export const profileFromIdAtomFamily = Atom.family((user_id?: string) =>
+  Atom.make((get) => {
+    if (!user_id) return Result.failure(Cause.die("No user ID provided"));
+    const profileResult = get(AuthSocialClient.query("profiles", "getProfileById", {
+      path: { user_id }
+    })).pipe(cleanErrorResult);
+    return profileResult;
+  })
+);
+
+// bookmarks
 export const foldersAtomFamily = Atom.family((user_address?: string) =>
   Atom.make((get) => {
     if (!user_address) return Result.success([]);
@@ -41,3 +52,25 @@ export const foldersAtomFamily = Atom.family((user_address?: string) =>
     return playlists;
   })
 );
+
+export const folderAtomFamily = Atom.family((playlist_id?: string) =>
+  Atom.make((get) => {
+    if (!playlist_id) return Result.failure(Cause.die("No playlist ID provided"));
+    const folder = get(AuthSocialClient.query("playlists", 'getPlaylist', {
+      path: { playlist_id }
+    })).pipe(cleanErrorResult);
+    return folder;
+  })
+);
+
+export const folderInscriptionsAtomFamily = Atom.family((playlist_id?: string) =>
+  Atom.make((get) => {
+    if (!playlist_id) return Result.success([]);
+    const inscriptions = get(AuthSocialClient.query("playlists", 'getPlaylistInscriptions', {
+      path: { playlist_id }
+    })).pipe(cleanErrorResult);
+    return inscriptions;
+  })
+);
+
+
