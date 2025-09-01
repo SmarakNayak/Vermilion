@@ -96,7 +96,7 @@ export const HorizontalTabContainer = styled.div`
   border-top: 1px solid ${theme.colors.border};
 `;
 
-export const TabText = styled.div`
+export const TabText = styled.div<{ isActive: boolean }>`
   display: flex;
   padding: 0 4px 12px 4px;
   justify-content: center;

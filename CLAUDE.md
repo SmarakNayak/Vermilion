@@ -1,7 +1,7 @@
 ## Rules
-### Frontend
+- ALWAYS run `bun tsc --noEmit` after editing ANY TypeScript file in the relevant directory
 - Javascript is deprecated. All new files should be in TypeScript, with a strong preference for Effect-ts
-- Immediately run `bun tsc --noEmit` after editing ANY TypeScript file
+### Frontend
 - If react logic is being duplicated, write a custom hook in app/client/src/hooks
 - React components should be short and easy to read. low level logic should not be mixed with high level logic
 - Minimise prop drilling
@@ -11,7 +11,7 @@
 - Use effect-ts for complex logic. Ideal data flow is EffectServer -> effectAtomHttpClient -> Derived Atom using Custom Effect Logic -> React
 - When using the effect-atom-http client make sure to handle all error and loading states
 - Expected errors should display the server error.message which will be user friendly. Unexpected errors should display a generic error message
-- If there is a loading state we should create a skeleton component and use the appropriate suspense atom
+- If there is a loading state we should create a skeleton component
 
 ### Backend
 - Unexpected errors aka defects when there is a bug in our code. We should Effect.die on these

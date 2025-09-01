@@ -24,7 +24,7 @@ import { AuthSocialClient, getErrorMessage } from '../../api/EffectApi';
 import { PlaylistTable } from '../../../../shared/types/playlist';
 import { useAuth } from '../../hooks/useAuth';
 import { cleanErrorExit } from '../../atoms/atomHelpers';
-import { userFoldersAtom } from '../menus/BookmarkDropdown';
+import { userFoldersAtom } from '../../atoms/userAtoms';
 
 export const BookmarkModal = ({isOpen, onClose}: {
   isOpen: boolean, 

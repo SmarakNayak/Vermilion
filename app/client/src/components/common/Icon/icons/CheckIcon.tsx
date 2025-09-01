@@ -1,7 +1,7 @@
 import { BaseIcon } from '../BaseIcon'
-import { IconProps } from '../types'
+import type { IconProps } from '../tsTypes'
 
-export const CheckIcon = ({ size, color, className }) => (
+export const CheckIcon = ({ size, color, className }: IconProps) => (
   <BaseIcon size={size} color={color} className={className}>
     <path
       fillRule="evenodd"
@@ -12,4 +12,3 @@ export const CheckIcon = ({ size, color, className }) => (
   </BaseIcon>
 )
 
-CheckIcon.propTypes = IconProps

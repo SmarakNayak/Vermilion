@@ -46,9 +46,11 @@ import { copyText } from '../utils/clipboard';
 
 import { useAtomValue } from '@effect-atom/atom-react';
 import { foldersAtomFamily, profileAtomFamily } from '../atoms/familyAtomics';
+import { Effect, Option, pipe } from 'effect';
+import { Result } from '@effect-atom/atom-react';
 
 const Address = () => {
-  const [baseApi, setBaseApi] = useState(null); 
+  const [baseApi, setBaseApi] = useState<any|null>(null); 
   let { address } = useParams();
   const [inscriptionList, setInscriptionList] = useState([]); 
   const [numberVisibility, setNumberVisibility] = useState(true);
@@ -56,14 +58,17 @@ const Address = () => {
   const [zoomGrid, setZoomGrid] = useState(true);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('inscriptions');
-  const [profileData, setProfileData] = useState(null);
   const [copied, setCopied] = useState(false);
 
   const [selectedSortOption, setSelectedSortOption] = useState('newest');
   const [selectedFilterOptions, setSelectedFilterOptions] = useState({"Content Type": ["text", "image", "gif", "audio", "video", "html"], "Satributes": [], "Charms":[]});
 
-  const profile = useAtomValue(profileAtomFamily(address));
-  const folders = useAtomValue(foldersAtomFamily(address));
+  const profileResult = useAtomValue(profileAtomFamily(address));
+  // Extract profile data from Result<Option<Profile>>
+  const profileOption = pipe(  
+    Result.value(profileResult), // Returns Option<Option<Profile>>
+    Option.flatten // Flattens to Option<Profile>
+  );
 
   //1. Get links
   useEffect(() => {
@@ -78,21 +83,6 @@ const Address = () => {
     fetchContent();
   },[address])
 
-  // Fetch profile data
-  useEffect(() => {
-    const fetchProfile = async () => {
-      try {
-        const response = await fetch("/bun/social/get_profile_by_address/" + address);
-        if (response.ok) {
-          const profile = await response.json();
-          setProfileData(profile);
-        }
-      } catch (err) {
-        console.error('Failed to fetch profile:', err);
-      }
-    }
-    fetchProfile();
-  }, [address])
 
   //2. get endpoint
   useEffect(() => {
@@ -122,11 +112,11 @@ const Address = () => {
     setZoomGrid(!zoomGrid);
   };
 
-  const handleSortOptionChange = (option) => {
+  const handleSortOptionChange = (option: any) => {
     setSelectedSortOption(option);
   };
 
-  const handleFilterOptionsChange = (filterOptions) => {
+  const handleFilterOptionsChange = (filterOptions: any) => {
     setSelectedFilterOptions(filterOptions);
   };
 
@@ -136,7 +126,13 @@ const Address = () => {
     setTimeout(() => setCopied(false), 2000);
   };
 
-  const hasSocialLinks = profileData?.user_twitter || profileData?.user_discord || profileData?.user_website;
+  let hasSocialLinks = false;
+  if(Option.isSome(profileOption)) {
+    const profile = profileOption.value;
+    if (Option.isSome(profile.user_twitter) || Option.isSome(profile.user_discord) || Option.isSome(profile.user_website)) {
+      hasSocialLinks = true;
+    }
+  }
 
   return (
     <PageContainer>
@@ -156,14 +152,19 @@ const Address = () => {
               <InfoText>Address</InfoText>
               <DetailsStack>
                 <ProfileContainer>
-                  {profileData?.user_picture ? (
-                    <ProfilePicture src={`/content/${profileData.user_picture}`} alt="Profile" />
+                  {Option.isSome(profileOption) && Option.isSome(profileOption.value.user_picture) ? (
+                    <ProfilePicture src={`/content/${profileOption.value.user_picture.value}`} alt="Profile" />
                   ) : (
                     <WalletIcon size={'2rem'} color={theme.colors.background.verm}></WalletIcon>
                   )}
                 </ProfileContainer>
                 <Stack gap={'.5rem'}>
-                  <MainText>{profileData?.user_name || formatAddress(address)}</MainText>
+                  <MainText>
+                    {profileOption.pipe(
+                      Option.map((profile) => profile.user_name),
+                      Option.getOrElse(() => formatAddress(address))
+                    )}
+                  </MainText>
                   <AddressRow>
                     <InfoText>{formatAddress(address)}</InfoText>
                     <CopyButton onClick={handleCopyClick} copied={copied}>
@@ -175,10 +176,10 @@ const Address = () => {
             </MainContentStack>
             {hasSocialLinks && (
               <SocialStack>
-                {profileData?.user_twitter && (
+                {Option.isSome(profileOption) && Option.isSome(profileOption.value.user_twitter) && (
                   <Tooltip content={"Twitter"}>
                     <ButtonWrapper>
-                      <UnstyledLink to={`https://twitter.com/${profileData.user_twitter}`} target='_blank'>
+                      <UnstyledLink to={`https://twitter.com/${profileOption.value.user_twitter.value}`} target='_blank'>
                         <IconButton>
                           <TwitterIcon size={'1.25rem'} color={theme.colors.text.primary} />
                         </IconButton>
@@ -186,10 +187,10 @@ const Address = () => {
                     </ButtonWrapper>
                   </Tooltip>
                 )}
-                {profileData?.user_discord && (
+                {Option.isSome(profileOption) && Option.isSome(profileOption.value.user_discord) && (
                   <Tooltip content={"Discord"}>
                     <ButtonWrapper>
-                      <UnstyledLink to={`https://discord.com/users/${profileData.user_discord}`} target='_blank'>
+                      <UnstyledLink to={`https://discord.com/users/${profileOption.value.user_discord.value}`} target='_blank'>
                         <IconButton>
                           <DiscordIcon size={'1.25rem'} color={theme.colors.text.primary} />
                         </IconButton>
@@ -197,10 +198,10 @@ const Address = () => {
                     </ButtonWrapper>
                   </Tooltip>
                 )}
-                {profileData?.user_website && (
+                {Option.isSome(profileOption) && Option.isSome(profileOption.value.user_website) && (
                   <Tooltip content={"Website"}>
                     <ButtonWrapper>
-                      <UnstyledLink to={profileData.user_website} target='_blank'>
+                      <UnstyledLink to={profileOption.value.user_website.value} target='_blank'>
                         <IconButton>
                           <WebIcon size={'1.25rem'} color={theme.colors.text.primary} />
                         </IconButton>
@@ -211,9 +212,9 @@ const Address = () => {
               </SocialStack>
             )}
           </HeaderContainer>
-          {profileData?.user_bio && profileData.user_bio.trim() !== "" && (
+          {Option.isSome(profileOption) && Option.isSome(profileOption.value.user_bio) && (
             <RowContainer>
-              <InfoText islarge={true}>{profileData.user_bio}</InfoText>
+              <InfoText islarge={true}>{profileOption.value.user_bio.value}</InfoText>
             </RowContainer>
           )}
         </>
@@ -254,11 +255,12 @@ const Address = () => {
           filtersEnabled={true}
           initialOption={'newest'}
           includeRelevance={false}
+          setZoomGrid={false}
         />
         <RowContainer>
           <FilterMenu isOpen={filterVisibility} onSelectionChange ={handleFilterOptionsChange} onClose={toggleFilterVisibility} initialSelection={selectedFilterOptions}></FilterMenu>
           <GalleryContainer>
-            <GalleryInfiniteScroll baseApi={baseApi} numberVisibility={numberVisibility} zoomGrid={zoomGrid} />
+            <GalleryInfiniteScroll baseApi={baseApi} numberVisibility={numberVisibility} zoomGrid={zoomGrid} isCollectionPage={false} />
           </GalleryContainer>
         </RowContainer>
       </div>
@@ -291,7 +293,7 @@ const AddressRow = styled.div`
   gap: 0.5rem;
 `;
 
-const CopyButton = styled.button`
+const CopyButton = styled.button<{ copied: boolean }>`
   border: none;
   margin: 0;
   padding: 0;

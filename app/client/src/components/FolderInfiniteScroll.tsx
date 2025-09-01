@@ -37,7 +37,7 @@ const FolderItemContainer = ({ folder }: { folder: Schema.Type<typeof PlaylistPr
   );
 }
 
-export const FolderInfiniteScroll = ({ address}: {address: string}) => {
+export const FolderInfiniteScroll = ({ address}: {address: string | undefined }) => {
   const folders = useAtomValue(foldersAtomFamily(address));
   return (
     Result.builder(folders)

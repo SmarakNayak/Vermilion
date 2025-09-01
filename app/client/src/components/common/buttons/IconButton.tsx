@@ -2,7 +2,7 @@ import React from 'react';
 import styled from 'styled-components';
 import { theme } from '../../../styles/theme';
 
-const StyledButton = styled.button`
+const StyledButton = styled.button<{ gap?: string | undefined}>`
   width: 2.75rem;
   height: 2.75rem;
   min-width: 2.75rem;
@@ -28,13 +28,21 @@ const StyledButton = styled.button`
   }
 `;
 
+interface IconButtonProps {
+  onClick?: () => void;
+  children: React.ReactNode;
+  gap?: string;
+  [key: string]: any;
+}
+
 const IconButton = ({ 
   onClick, 
   children, 
   gap,
   ...props 
-}) => {
+}: IconButtonProps) => {
   return (
+
     <StyledButton 
       onClick={onClick} 
       gap={gap}
