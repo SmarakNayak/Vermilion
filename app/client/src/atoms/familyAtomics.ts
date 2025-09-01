@@ -66,7 +66,7 @@ export const folderAtomFamily = Atom.family((playlist_id?: string) =>
 export const folderInscriptionsAtomFamily = Atom.family((playlist_id?: string) =>
   Atom.make((get) => {
     if (!playlist_id) return Result.success([]);
-    const inscriptions = get(AuthSocialClient.query("playlists", 'getPlaylistInscriptionIds', {
+    const inscriptions = get(AuthSocialClient.query("playlists", 'getPlaylistInscriptions', {
       path: { playlist_id }
     })).pipe(cleanErrorResult);
     return inscriptions;
