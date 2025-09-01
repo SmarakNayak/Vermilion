@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "cd client && bun install && bun run dev",
     "dev:both": "bun install && concurrently \"cd client && bun install && bun run dev:local-social\" \"cd server && bun install && bun run server.ts\" --names \"frontend,server\" --prefix-colors \"cyan,yellow\"",
-    "build": "cd client && bun run build",
+    "build": "cd shared && bun install && cd ../client && bun install && bun run build",
     "check": "bun tsc --noEmit"
   },
   "devDependencies": {
