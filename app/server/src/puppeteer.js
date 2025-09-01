@@ -341,7 +341,7 @@ async function renderContent(url, retryCount = 0, fullPage = true) {
       console.log('Network aborted, trying again: ', url);
       return renderContent(url, retryCount + 1, false);
 
-    } else if (error.message.includes('ProtocolError')) {
+    } else if (error?.name === 'ProtocolError' || error.message.includes('ProtocolError')) {
       if (retryCount > 1) {
         console.log(`Puppeteer Protocol error after 2 retries`);
         return {buffer, renderStatus: "PROTOCOL_ERROR"};
