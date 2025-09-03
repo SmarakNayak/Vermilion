@@ -71,17 +71,19 @@ export const cleanErrorResult = <A, E>(
  * @param exit - The input `Exit` with possible extra error types.  
  * @returns An `Exit` with only the cleaned error type.  
  */  
-export const cleanErrorExit = <A, E>(
-  exit: Exit.Exit<A, E>  
-): Exit.Exit<A, Exclude<E, HttpClientError | ParseResult.ParseError>> => {  
-  if (Exit.isSuccess(exit)) {  
-    return exit as Exit.Exit<A, Exclude<E, HttpClientError | ParseResult.ParseError>>;  
+export const cleanErrorExit = <T extends Exit.Exit<any, any>>(
+  exit: T
+): T extends Exit.Exit<infer A, infer E> 
+  ? Exit.Exit<A, Exclude<E, HttpClientError | ParseResult.ParseError>>
+  : never => {
+  if (Exit.isSuccess(exit)) {
+    return exit as any;
   }
-  const cleanedCause = Cause.flatMap(exit.cause, (error) => {  
-    if (isHttpClientError(error) || ParseResult.isParseError(error)) {  
-      return Cause.die(error);  
-    }  
-    return Cause.fail(error as Exclude<E, HttpClientError | ParseResult.ParseError>);  
-  });  
-  return Exit.failCause(cleanedCause);  
+  const cleanedCause = Cause.flatMap((exit as any).cause, (error: any) => {
+    if (isHttpClientError(error) || ParseResult.isParseError(error)) {
+      return Cause.die(error);
+    }
+    return Cause.fail(error);
+  });
+  return Exit.failCause(cleanedCause) as any;
 };

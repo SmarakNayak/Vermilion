@@ -25,24 +25,40 @@ import { PlaylistTable } from '../../../../shared/types/playlist';
 import { useAuth } from '../../hooks/useAuth';
 import { cleanErrorExit } from '../../atoms/atomHelpers';
 import { userFoldersAtom } from '../../atoms/userAtoms';
+import { folderAtomFamily } from '../../atoms/familyAtomics';
+import { Option } from 'effect';
 
-export const BookmarkModal = ({isOpen, onClose}: {
-  isOpen: boolean, 
-  onClose: () => void
-}) => {
+type FolderModalProps = {
+  isOpen: boolean;
+  onClose: () => void;
+} & ({
+  mode: 'create';
+} | {
+  mode: 'edit';
+  folderId: string;
+});
+
+export const BookmarkModal = (props: FolderModalProps) => {
+  const { isOpen, onClose, mode } = props;
   const modalFormRef = useRef<HTMLFormElement>(null);
   useModalScrollLock(isOpen, modalFormRef);
 
   const auth = useAuth();
   const createBookmarkFolder = useAtomSet(AuthSocialClient.mutation("playlists", "createPlaylist"), { mode: 'promiseExit' });
+  const updateBookmarkFolder = useAtomSet(AuthSocialClient.mutation("playlists", "updatePlaylist"), { mode: 'promiseExit' });
 
   const userFolders = useAtomValue(userFoldersAtom);
+  const existingFolder = useAtomValue(folderAtomFamily(mode === 'edit' ? props.folderId : undefined));
 
   const dupeValidator: Resolver<typeof PlaylistTable.jsonCreate.Encoded, unknown, typeof PlaylistTable.jsonCreate.Type> = async (values, context, options) => {
     const baseValidator = effectTsResolver(PlaylistTable.jsonCreate);
     const result = await baseValidator(values, context, options);
-    const isDuplicate = userFolders._tag === 'Success' && 
+    let isDuplicate = userFolders._tag === 'Success' && 
       userFolders.value.some(folder => folder.playlist_name === values.playlist_name);
+    // If editing, allow the same name as the existing folder
+    if (mode === 'edit' && existingFolder._tag === 'Success' && existingFolder.value.playlist_name === values.playlist_name) {
+      isDuplicate = false;
+    }
     if (isDuplicate) {
       return {
         ...result,
@@ -68,25 +84,52 @@ export const BookmarkModal = ({isOpen, onClose}: {
     if (userFolders._tag === 'Success' && dirtyFields.playlist_name) trigger('playlist_name');
   }, [userFolders]);
 
-  const onValidSubmit = async (data: typeof PlaylistTable.jsonCreate.Type) => {
-    const result = await createBookmarkFolder({ payload: data, reactivityKeys: ['userFolders'] });
-    result.pipe(
-      cleanErrorExit,
-      Exit.match({
-        onSuccess: (x) => {
-          toast.success(`Bookmark folder "${data.playlist_name}" created successfully!`);
-          onClose();
-        },
-        onFailure: (cause) => {
-          toast.error(`Failed to create bookmark folder "${data.playlist_name}"${getErrorMessage(cause)}`);
-        },
-      })
-    )
+  useEffect(() => { // Set form values when editing and folder data loads
+    if (mode === 'edit' && existingFolder._tag === 'Success') {
+      setValue('playlist_name', existingFolder.value.playlist_name);
+      setValue('playlist_description', Option.getOrNull(existingFolder.value.playlist_description));
+    }
+  }, [mode, existingFolder, setValue]);
+
+  const onValidSubmit = async (data: any) => {
+    if (mode ==='create') {
+      const result = await createBookmarkFolder({ payload: data, reactivityKeys: ['userFolders'] })
+      result.pipe(
+        cleanErrorExit,
+        Exit.match({
+          onSuccess: () => {
+            toast.success(`Bookmark folder "${data.playlist_name}" created successfully!`);
+            onClose();
+          },
+          onFailure: (cause) => {
+            toast.error(`Failed to create bookmark folder "${data.playlist_name}"${getErrorMessage(cause)}`);
+          },
+        })
+      );
+    } else if (mode === 'edit') {
+      const result = await updateBookmarkFolder({
+        path: { playlist_id: props.folderId },
+        payload: data, 
+        reactivityKeys: ['userFolders', `${props.folderId}`]
+      });
+      result.pipe(
+        cleanErrorExit,
+        Exit.match({
+          onSuccess: () => {
+            toast.success(`Bookmark folder "${data.playlist_name}" updated successfully!`);
+            onClose();
+          },
+          onFailure: (cause) => {
+            toast.error(`Failed to update bookmark folder "${data.playlist_name}"${getErrorMessage(cause)}`);
+          },
+        })
+      );
+    }
   };
 
   return (
     <Modal isOpen={isOpen} onClose={onClose}>
-      <ModalHeader title='Create bookmark folder' onClose={onClose}/>
+      <ModalHeader title={mode === 'create' ? 'Create bookmark folder' : 'Edit bookmark folder'} onClose={onClose}/>
       <ModalForm ref={modalFormRef} onSubmit={handleSubmit(onValidSubmit, toastifyInvalidFields )}>
         <ModalSection>
           <ModalSectionTitle>Folder Name</ModalSectionTitle>
@@ -103,7 +146,7 @@ export const BookmarkModal = ({isOpen, onClose}: {
         <ModalSection>
           <AuthGuardSaveButton actionLabel="bookmark">
             <SaveButton type="submit" disabled={isSubmitting || !isValid}>
-              {isSubmitting ? 'Creating folder...' : 'Create folder'}
+              {isSubmitting ? `${mode === 'create' ? 'Creating' : 'Updating'} folder...` : `${mode === 'create' ? 'Create' : 'Update'} folder`}
             </SaveButton>
           </AuthGuardSaveButton>
         </ModalSection>

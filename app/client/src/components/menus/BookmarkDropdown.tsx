@@ -153,7 +153,7 @@ export const BookmarkDropdown = ({ref, inscriptionId, onClose}: {
 
   return (
     <BookmarkMenuContainer ref={ref}>
-      <BookmarkModal isOpen={isBookmarkModalOpen} onClose={() => setIsBookmarkModalOpen(false)} />
+      <BookmarkModal mode='create' isOpen={isBookmarkModalOpen} onClose={() => setIsBookmarkModalOpen(false)} />
       <BookmarkMenuTitle>Add to folder</BookmarkMenuTitle>
       <BookmarkMenuEntryContainer onClick={handleCreateFolderClick}>
         <FolderIconContainer>

@@ -57,7 +57,8 @@ export const folderAtomFamily = Atom.family((playlist_id?: string) =>
   Atom.make((get) => {
     if (!playlist_id) return Result.failure(Cause.die("No playlist ID provided"));
     const folder = get(AuthSocialClient.query("playlists", 'getPlaylist', {
-      path: { playlist_id }
+      path: { playlist_id },
+      reactivityKeys: [playlist_id]
     })).pipe(cleanErrorResult);
     return folder;
   })

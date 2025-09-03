@@ -18,6 +18,8 @@ import { useAuth } from "../hooks/useAuth";
 import { useCopy } from "../hooks/useCopy";
 import { GridContainer } from "../components/GalleryInfiniteScroll";
 import GridItemContainer from "../components/GridItemContainer";
+import { BookmarkModal } from "../components/modals/BookmarkModal";
+import { useModal } from "../hooks/useModal";
 
 const profileFromFolderAtomFamily = Atom.family((folderId?: string) =>
   Atom.make((get) => {
@@ -64,6 +66,7 @@ const Folder = () => {
   const userProfile = useAtomValue(profileFromFolderAtomFamily(folderId));
   const auth = useAuth();
   const { copied, copy } = useCopy();
+  const { isOpen: isEditModalOpen, open: openEditModal, close: closeEditModal } = useModal();
 
   return (
     <PageContainer>
@@ -102,7 +105,7 @@ const Folder = () => {
                 {(auth.state === 'signed-in-with-profile' && auth.profile.user_id === folderData.user_id) ? (
                   <Tooltip content={"Edit Folder"}>
                     <ButtonWrapper>
-                      <IconButton>
+                      <IconButton onClick={openEditModal}>
                         <EditIcon size={'1.25rem'} color={theme.colors.text.primary} />
                       </IconButton>
                     </ButtonWrapper>
@@ -163,6 +166,14 @@ const Folder = () => {
         .onDefect((defect) => <p>Something went wrong</p>)
         .orNull()
       }
+      {folderId && (
+        <BookmarkModal 
+          isOpen={isEditModalOpen} 
+          onClose={closeEditModal} 
+          mode="edit" 
+          folderId={folderId} 
+        />
+      )}
     </PageContainer>
   );
 }
