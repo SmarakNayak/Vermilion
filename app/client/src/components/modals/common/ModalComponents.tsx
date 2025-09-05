@@ -1,3 +1,5 @@
+import React from 'react';
+import { createPortal } from 'react-dom';
 import styled from 'styled-components';
 import { theme } from '../../../styles/theme';
 import { CrossIcon } from '../../common/Icon';
@@ -142,3 +144,37 @@ export const ModalSectionTitle = styled.p`
   color: ${theme.colors.text.primary};
   margin: 0;
 `;
+
+/**
+ * A portal-based modal component that renders outside the React component tree
+ * 
+ * This modal is rendered directly to document.body using React's createPortal,
+ * which prevents it from interfering with:
+ * - useClickOutside hooks that only listen to clicks within the #root element
+ * - Parent component forms (avoids nested form issues)
+ * - CSS stacking contexts and z-index conflicts
+ * - Event bubbling to parent components
+ * 
+ * This allows other modals and interactive components to coexist without
+ * conflicting event handling or layout issues.
+ * 
+ * @param isOpen - Controls modal visibility
+ * @param onClose - Callback when modal should close (overlay click or escape)
+ * @param children - Modal content to render
+ */
+export const PortalModal = ({ isOpen, onClose, children }: {
+  isOpen: boolean;
+  onClose: () => void;
+  children: React.ReactNode;
+}) => {
+  if (!isOpen) return null;
+
+  return createPortal(
+    <ModalOverlay isOpen={true} onClick={onClose}>
+      <ModalContainer isOpen={true} onClick={(e) => e.stopPropagation()}>
+        {children}
+      </ModalContainer>
+    </ModalOverlay>,
+    document.body
+  );
+};

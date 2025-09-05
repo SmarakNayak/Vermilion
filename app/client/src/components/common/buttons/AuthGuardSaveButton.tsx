@@ -1,11 +1,12 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../../hooks/useAuth';
+import { useModal } from '../../../hooks/useModal';
 import { LoginIcon, AvatarPlusIcon } from '../Icon';
 import theme from '../../../styles/theme';
 import WalletConnectMenu from '../../navigation/WalletConnectMenu';
 import { ModalOverlay } from '../../modals/common/ModalComponents';
 import { SaveButton } from './SaveButton';
+import { ProfileCreationModal } from '../../modals/ProfileCreationModal';
 
 /**
  * A button component that guards actions behind authentication and profile creation
@@ -20,15 +21,16 @@ const AuthGuardSaveButton = ({ children, actionLabel = "use this feature" } :{
   actionLabel: string;
 }) => {
   const auth = useAuth();
-  const navigate = useNavigate();
-  const [showWalletConnect, setShowWalletConnect] = React.useState(false);
+  const { isOpen: showWalletConnect, open: openWalletConnect, close: closeWalletConnect } = useModal();
+  const { isOpen: showProfileModal, open: openProfileModal, close: closeProfileModal } = useModal();
+  
 
   const handleSignInClick = () => {
-    setShowWalletConnect(true);
+    openWalletConnect();
   };
 
   const handleProfileClick = () => {
-    navigate('/settings/profile');
+    openProfileModal();
   };
 
   if (auth.state === 'not-signed-in') {
@@ -38,8 +40,8 @@ const AuthGuardSaveButton = ({ children, actionLabel = "use this feature" } :{
           <LoginIcon size="1rem" color={theme.colors.background.white} />
           Sign in to {actionLabel}
         </SaveButton>
-        <ModalOverlay isOpen={showWalletConnect} onClick={() => setShowWalletConnect(false)}>
-          <WalletConnectMenu isOpen={showWalletConnect} onClose={() => setShowWalletConnect(false)}></WalletConnectMenu>
+        <ModalOverlay isOpen={showWalletConnect} onClick={closeWalletConnect}>
+          <WalletConnectMenu isOpen={showWalletConnect} onClose={closeWalletConnect}></WalletConnectMenu>
         </ModalOverlay>
       </>
     );
@@ -47,10 +49,13 @@ const AuthGuardSaveButton = ({ children, actionLabel = "use this feature" } :{
 
   if (auth.state === 'signed-in-no-profile' || auth.state === 'signed-in-loading-profile') { //TODO: add loading button state
     return (
-      <SaveButton type="button" onClick={handleProfileClick}>
-        <AvatarPlusIcon size="2rem" color={theme.colors.background.white} />
-        Create a profile to {actionLabel}
-      </SaveButton>
+      <>
+        <SaveButton type="button" onClick={handleProfileClick}>
+          <AvatarPlusIcon size="2rem" color={theme.colors.background.white} />
+          Create a profile to {actionLabel}
+        </SaveButton>
+        <ProfileCreationModal isOpen={showProfileModal} onClose={closeProfileModal} />
+      </>
     );
   }
 

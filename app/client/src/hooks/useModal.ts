@@ -1,5 +1,4 @@
-import { useState, useRef } from 'react';
-import { useModalScrollLock } from './useModalScrollLock';
+import { useState } from 'react';
 
 interface UseModalReturn {
   /** Whether the modal is currently open */
@@ -10,15 +9,10 @@ interface UseModalReturn {
   close: () => void;
   /** Function to toggle modal state */
   toggle: () => void;
-  /** Ref for modal content element (used for scroll lock) */
-  modalRef: React.RefObject<HTMLDivElement | null>;
 }
 
 /**
- * Hook to manage modal state with automatic scroll locking
- * 
- * Combines modal open/close state management with the existing useModalScrollLock
- * hook to prevent background scrolling when modal is open.
+ * Hook to manage modal state
  * 
  * @param initialState - Initial open state (default: false)
  * @returns Object with modal state and control functions
@@ -26,18 +20,12 @@ interface UseModalReturn {
  * @example
  * ```tsx
  * const MyComponent = () => {
- *   const { isOpen, open, close, modalRef } = useModal();
+ *   const { isOpen, open, close } = useModal();
  *   
  *   return (
  *     <>
  *       <button onClick={open}>Open Modal</button>
- *       {isOpen && (
- *         <Modal>
- *           <ModalContent ref={modalRef}>
- *             <button onClick={close}>Close</button>
- *           </ModalContent>
- *         </Modal>
- *       )}
+ *       <SomeModal isOpen={isOpen} onClose={close} />
  *     </>
  *   );
  * };
@@ -45,10 +33,6 @@ interface UseModalReturn {
  */
 export const useModal = (initialState: boolean = false): UseModalReturn => {
   const [isOpen, setIsOpen] = useState(initialState);
-  const modalRef = useRef<HTMLDivElement>(null);
-
-  // Automatically handle scroll locking
-  useModalScrollLock(isOpen, modalRef);
 
   const open = () => setIsOpen(true);
   const close = () => setIsOpen(false);
@@ -58,7 +42,6 @@ export const useModal = (initialState: boolean = false): UseModalReturn => {
     isOpen,
     open,
     close,
-    toggle,
-    modalRef
+    toggle
   };
 };

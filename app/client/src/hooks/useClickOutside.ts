@@ -8,15 +8,17 @@ import { useEffect } from 'react';
 // useClickOutside(modalRef, () => { setIsModalOpen(false) });
 // <modal ref={modalRef} isOpen={isModalOpen} />
 
-export const useClickOutside = <T extends HTMLElement>(ref: React.RefObject<T|null>, callback: (event: MouseEvent) => void) => {
+export const useClickOutside = <T extends HTMLElement>(ref: React.RefObject<T|null>, callback: (event: Event) => void) => {
   useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
+    const handleClickOutside = (event: Event) => {
       if (ref.current && !ref.current.contains(event.target as Node)) {
         callback(event);
       }
     };
-
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    // Attach the listener to the root element to ensure it doesn't capture clicks inside nested portals/modals
+    // (which are attached to document.body)
+    const root = document.getElementById('root') || document;
+    root.addEventListener('mousedown', handleClickOutside);
+    return () => root.removeEventListener('mousedown', handleClickOutside);
   }, [ref, callback]);
 };

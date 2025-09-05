@@ -751,7 +751,7 @@ const Inscription = () => {
     if (bookmarkRef.current?.contains(event.target)) {
       return;
     }
-    setShowFolderOverlay(false)
+    setShowFolderOverlay(false);
   });
   const handleBookmarkClick = (e) => {
     setShowFolderOverlay((prev) => !prev);
