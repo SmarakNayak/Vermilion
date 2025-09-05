@@ -3,14 +3,8 @@ import { Link } from "react-router-dom";
 import styled, { keyframes } from 'styled-components';
 import * as Toast from '@radix-ui/react-toast';
 import Spinner from '../components/Spinner';
-import InnerInscriptionContent from '../components/common/InnerInscriptionContent';
-import { addCommas } from '../utils/format';
-import { copyText } from '../utils/clipboard';
-import { ImageIcon, SettingsIcon, CheckIcon, CheckCircleIcon, ErrorCircleIcon } from '../components/common/Icon';
+import { ImageIcon, CheckCircleIcon, ErrorCircleIcon } from '../components/common/Icon';
 import theme from '../styles/theme';
-import CheckoutModal from '../components/modals/CheckoutModal';
-import BoostsModal from '../components/modals/BoostsModal';
-import CommentsModal from '../components/modals/CommentsModal';
 import InscriptionModal from '../components/modals/InscriptionModal';
 import useStore from '../store/zustand';
 import type { 
