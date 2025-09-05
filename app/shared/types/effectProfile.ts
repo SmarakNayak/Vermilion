@@ -12,11 +12,20 @@ const baseFields = {
       message: () => "Handle must be 2-17 alphanumeric characters, and can include underscores"
     })
   )),
-  user_name: FieldUpdateOmittable(Schema.String.pipe(Schema.maxLength(30))),
+  user_name: FieldUpdateOmittable(Schema.String.pipe(
+    Schema.minLength(1, { message: () => "Display name cannot be empty" }),
+    Schema.maxLength(30, { message: () => "Display name must be 30 characters or less" })
+  )),
   user_picture: FieldOptionOmittable(Schema.String.pipe(Schema.maxLength(80))),
-  user_bio: FieldOptionOmittable(Schema.String.pipe(Schema.maxLength(280))),
-  user_twitter: FieldOptionOmittable(Schema.String.pipe(Schema.maxLength(15))),
-  user_discord: FieldOptionOmittable(Schema.String.pipe(Schema.maxLength(37))),
+  user_bio: FieldOptionOmittable(Schema.String.pipe(
+    Schema.maxLength(280, { message: () => "Bio must be 280 characters or less" })
+  )),
+  user_twitter: FieldOptionOmittable(Schema.String.pipe(
+    Schema.maxLength(15, { message: () => "Twitter username must be 15 characters or less" })
+  )),
+  user_discord: FieldOptionOmittable(Schema.String.pipe(
+    Schema.maxLength(37, { message: () => "Discord username must be 37 characters or less" })
+  )),
   user_website: FieldOptionOmittable(Schema.String),
   user_created_at: Model.Field({ // Db sets for insert || no need to update
     select: Schema.DateTimeUtc,

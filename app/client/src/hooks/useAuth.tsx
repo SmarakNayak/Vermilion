@@ -1,12 +1,12 @@
-import { useAtomValue, Result, Atom } from "@effect-atom/atom-react";
+import { useAtomValue } from "@effect-atom/atom-react";
 import useStore from "../store/zustand";
-import { profileAtomFamily } from "../atoms/familyAtomics";
 import { ProfileView } from "../../../shared/types/effectProfile";
 import { NotFound } from "../../../shared/api/apiErrors";
 import type { HttpClientError } from "@effect/platform/HttpClientError";
 import type { ParseResult } from "effect";
 import { useMemo } from "react";
 import { Option } from "effect";
+import { userProfileAtom } from "../atoms/userAtoms";
 
 type ProfileError = NotFound | HttpClientError | ParseResult.ParseError;
 
@@ -20,9 +20,6 @@ type AuthState =
 export const useAuth = (): AuthState => {
   const wallet = useStore(state => state.wallet);
   const isSignedIn = useStore(state => Boolean(state.wallet));
-  const walletAddress = useStore(state => state.wallet?.ordinalsAddress);
-  
-  const userProfileAtom = profileAtomFamily(walletAddress);
   const userProfile= useAtomValue(userProfileAtom);
   
   // we useMemo because returning a unmemoized object causes infinite renders in useEffects that depend on auth = useAuth()
@@ -47,6 +44,6 @@ export const useAuth = (): AuthState => {
         }
       }
     }
-  }, [isSignedIn, userProfile._tag]);
+  }, [isSignedIn, userProfile]);
 
 };

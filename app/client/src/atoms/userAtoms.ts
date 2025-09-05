@@ -30,7 +30,8 @@ export const userProfileAtom = Atom.make((get) => {
   }
   const user_address = userAddressOption.value;
   const profile = get(AuthSocialClient.query("profiles", "getProfileByAddress", {
-    path: { user_address }
+    path: { user_address },
+    reactivityKeys: ['userProfile']
   })).pipe(cleanErrorResult);
   const profileOption = Result.matchWithError(profile, {
     onInitial: (initial) => Result.initial(initial.waiting),

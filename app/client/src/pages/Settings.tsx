@@ -1,277 +1,102 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Link } from "react-router-dom";
-import styled, { keyframes } from 'styled-components';
-import * as Toast from '@radix-ui/react-toast';
-import Spinner from '../components/Spinner';
-import { ImageIcon, CheckCircleIcon, ErrorCircleIcon } from '../components/common/Icon';
+import React, { useEffect } from 'react';
+import { useForm } from 'react-hook-form';
+import { effectTsResolver } from '@hookform/resolvers/effect-ts';
+import { toast } from 'sonner';
+import { Exit, Option } from 'effect';
+import { useAtomSet } from '@effect-atom/atom-react';
+
+import styled from 'styled-components';
+import { ImageIcon } from '../components/common/Icon';
 import theme from '../styles/theme';
+import Spinner from '../components/Spinner';
 import InscriptionModal from '../components/modals/InscriptionModal';
-import useStore from '../store/zustand';
-import type { 
-  CreateProfileRequest, 
-  UpdateProfileRequest, 
-  ProfileResponse 
-} from '../../../server/src/types/profile';
+import { StyledInput } from '../components/common/forms/StyledInput';
+import { StyledTextarea } from '../components/common/forms/StyledTextarea';
+import { FieldError } from '../components/common/forms/FieldError';
+import { SaveButton } from '../components/common/buttons/SaveButton';
+
+import { useAuth } from '../hooks/useAuth';
+import { useModal } from '../hooks/useModal';
+import { AuthSocialClient, getErrorMessage } from '../api/EffectApi';
+import { cleanErrorExit } from '../atoms/atomHelpers';
+import { ProfileTable } from '../../../shared/types/effectProfile';
+import { toastifyInvalidFields } from '../utils/toastifyInvalidFields';
 
 const Settings: React.FC = () => {
-  const { wallet, authToken } = useStore();
-  const bioTextareaRef = useRef<HTMLTextAreaElement>(null);
+  const auth = useAuth();
+  const { isOpen: isInscriptionModalOpen, open: openInscriptionModal, close: closeInscriptionModal } = useModal();
   
-  const [profile, setProfile] = useState<CreateProfileRequest>({
-    user_handle: '',
-    user_name: '',
-    user_bio: '',
-    user_website: '',
-    user_twitter: '',
-    user_discord: '',
-    user_picture: ''
+  const createProfile = useAtomSet(AuthSocialClient.mutation("profiles", "createProfile"), { mode: 'promiseExit' });
+  const updateProfile = useAtomSet(AuthSocialClient.mutation("profiles", "updateProfile"), { mode: 'promiseExit' });
+  
+  const { register, handleSubmit, formState: { errors, isSubmitting, isValid }, setValue, watch } = useForm({
+    resolver: effectTsResolver(ProfileTable.jsonCreate),
+    mode: 'onChange',
   });
   
-  const [existingProfile, setExistingProfile] = useState<ProfileResponse | null>(null);
-  const [loading, setLoading] = useState<boolean>(false);
-  const [initialLoading, setInitialLoading] = useState<boolean>(true);
-  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
-  const [touchedFields, setTouchedFields] = useState<Record<string, boolean>>({});
-  const [toastOpen, setToastOpen] = useState<boolean>(false);
-  const [toastType, setToastType] = useState<'success' | 'error'>('success');
-  const [toastMessage, setToastMessage] = useState<string>('');
-  const [inscriptionModalOpen, setInscriptionModalOpen] = useState<boolean>(false);
-  const [selectedInscription, setSelectedInscription] = useState<any>(null);
-  
-  // Check if there are any validation errors
-  const hasErrors = Object.values(fieldErrors).some(error => error !== '');
-
-  const validateField = (field: keyof CreateProfileRequest, value: string): string => {
-    const errors: string[] = [];
-    
-    switch (field) {
-      case 'user_handle':
-        if (!value || value.length < 2) {
-          errors.push('Must be at least 2 characters');
-        }
-        if (value.length > 17) {
-          errors.push('Cannot be more than 17 characters');
-        }
-        if (value && !/^[a-z0-9_]*$/.test(value)) {
-          errors.push('Can only contain lowercase letters, numbers, or underscores');
-        }
-        break;
-        
-      case 'user_name':
-        if (!value || value.length < 1) {
-          errors.push('Must be at least 1 character');
-        }
-        if (value.length > 30) {
-          errors.push('Cannot be more than 30 characters');
-        }
-        break;
-        
-      case 'user_twitter':
-        if (value.length > 15) {
-          errors.push('Cannot be more than 15 characters');
-        }
-        if (value && value.includes(' ')) {
-          errors.push('Cannot contain spaces');
-        }
-        break;
-        
-      case 'user_discord':
-        if (value.length > 32) {
-          errors.push('Cannot be more than 32 characters');
-        }
-        if (value && value.includes(' ')) {
-          errors.push('Cannot contain spaces');
-        }
-        break;
-        
-      case 'user_website':
-        if (value && value.trim() !== '') {
-          try {
-            new URL(value);
-          } catch {
-            errors.push('Must be a valid URL (e.g., https://example.com)');
-          }
-        }
-        break;
-        
-      case 'user_bio':
-        if (value.length > 280) {
-          errors.push('Bio exceeds character limit');
-        }
-        break;
-    }
-    
-    return errors.join('. ');
-  };
-
-  const handleInputChange = (field: keyof CreateProfileRequest, value: string) => {
-    setProfile(prev => ({
-      ...prev,
-      [field]: value
-    }));
-    
-    // Validate field and update field-specific errors
-    const fieldError = validateField(field, value);
-    setFieldErrors(prev => ({
-      ...prev,
-      [field]: fieldError
-    }));
-    
-  };
-
-  const handleFieldBlur = (field: keyof CreateProfileRequest) => {
-    setTouchedFields(prev => ({
-      ...prev,
-      [field]: true
-    }));
-  };
+  const watchedBio = watch('user_bio') || '';
+  const bioLength = watchedBio.length;
 
   const handleInscriptionSelect = (inscription: any) => {
-    setSelectedInscription(inscription);
     if (inscription) {
-      // Update profile with inscription ID
-      setProfile(prev => ({
-        ...prev,
-        user_picture: inscription.id
-      }));
-      // Mark field as touched to trigger validation
-      setTouchedFields(prev => ({
-        ...prev,
-        user_picture: true
-      }));
+      setValue('user_picture', inscription.id, { shouldValidate: true });
     }
   };
 
-  const loadProfile = async (): Promise<void> => {
-    if (!wallet?.ordinalsAddress) {
-      setInitialLoading(false);
-      return;
+  // Load profile data into form when available
+  useEffect(() => {
+    if (auth.state === 'signed-in-with-profile') {
+      const profile = auth.profile;
+      setValue('user_handle', profile.user_handle);
+      setValue('user_name', profile.user_name);
+      setValue('user_bio', Option.getOrNull(profile.user_bio));
+      setValue('user_website', Option.getOrNull(profile.user_website));
+      setValue('user_twitter', Option.getOrNull(profile.user_twitter));
+      setValue('user_discord', Option.getOrNull(profile.user_discord));
+      setValue('user_picture', Option.getOrNull(profile.user_picture));
     }
+  }, [auth, setValue]);
 
-    try {
-      const response = await fetch(`/effect/social/get_profile_by_address/${wallet.ordinalsAddress}`);
-      if (response.ok) {
-        const profileData: ProfileResponse = await response.json() as ProfileResponse;
-        setProfile({
-          user_handle: profileData.user_handle || '',
-          user_name: profileData.user_name || '',
-          user_bio: profileData.user_bio || '',
-          user_website: profileData.user_website || '',
-          user_twitter: profileData.user_twitter || '',
-          user_discord: profileData.user_discord || '',
-          user_picture: profileData.user_picture || ''
-        });
-        setExistingProfile(profileData);
-      } else if (response.status === 404) {
-        // Profile doesn't exist yet - this is fine for new users
-        setExistingProfile(null);
-      } else {
-        setToastType('error');
-        setToastMessage('Failed to load profile');
-        setToastOpen(true);
-      }
-    } catch (err) {
-      console.error('Failed to load profile:', err);
-      setToastType('error');
-      setToastMessage('Failed to load profile');
-      setToastOpen(true);
-    } finally {
-      setInitialLoading(false);
-    }
-  };
-
-  const handleSubmit = async (): Promise<void> => {
-    if (!wallet?.ordinalsAddress) {
-      setToastType('error');
-      setToastMessage('Wallet not connected');
-      setToastOpen(true);
-      return;
-    }
-
-    if (!authToken) {
-      setToastType('error');
-      setToastMessage('Authentication required');
-      setToastOpen(true);
-      return;
-    }
-
-    // Basic validation
-    if (!profile.user_handle.trim()) {
-      setToastType('error');
-      setToastMessage('User handle is required');
-      setToastOpen(true);
-      return;
-    }
-
-    if (!profile.user_name.trim()) {
-      setToastType('error');
-      setToastMessage('Display name is required');
-      setToastOpen(true);
-      return;
-    }
-
-    // Validate handle format
-    const handleRegex = /^[a-zA-Z0-9_]{2,17}$/;
-    if (!handleRegex.test(profile.user_handle)) {
-      setToastType('error');
-      setToastMessage('Handle must be 2-17 characters, letters, numbers, and underscores only');
-      setToastOpen(true);
-      return;
-    }
-
-    setLoading(true);
-
-    try {
-      const endpoint = existingProfile 
-        ? `/effect/social/update_profile/${existingProfile.user_id}`
-        : `/effect/social/create_profile`;
-
-      const requestBody: CreateProfileRequest | UpdateProfileRequest = existingProfile 
-        ? { ...profile, user_id: existingProfile.user_id }
-        : profile;
-
-      const response = await fetch(endpoint, {
-        method: existingProfile ? 'PUT' : 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${authToken}`
-        },
-        body: JSON.stringify(requestBody)
+  const onValidSubmit = async (data: any) => {
+    const isUpdate = auth.state === 'signed-in-with-profile';
+    
+    if (isUpdate) {
+      const result = await updateProfile({
+        path: { user_id: auth.profile.user_id },
+        payload: data,
+        reactivityKeys: ['userProfile']
       });
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(errorText || `HTTP error! status: ${response.status}`);
-      }
-
-      const result: ProfileResponse = await response.json() as ProfileResponse;
-      setExistingProfile(result);
-      setToastType('success');
-      setToastMessage('Profile updated');
-      setToastOpen(true);
-      
-    } catch (err: any) {
-      console.error('Failed to save profile:', err);
-      setToastType('error');
-      setToastMessage(err.message || 'Failed to save profile');
-      setToastOpen(true);
-    } finally {
-      setLoading(false);
+      result.pipe(
+        cleanErrorExit,
+        Exit.match({
+          onSuccess: () => {
+            toast.success(`Profile updated successfully!`);
+          },
+          onFailure: (cause) => {
+            toast.error(`Failed to update profile${getErrorMessage(cause)}`);
+          },
+        })
+      );
+    } else {
+      const result = await createProfile({ 
+        payload: data, 
+        reactivityKeys: ['userProfile'] 
+      });
+      result.pipe(
+        cleanErrorExit,
+        Exit.match({
+          onSuccess: () => {
+            toast.success(`Profile created successfully!`);
+          },
+          onFailure: (cause) => {
+            toast.error(`Failed to create profile${getErrorMessage(cause)}`);
+          },
+        })
+      );
     }
   };
-
-  useEffect(() => {
-    loadProfile();
-  }, [wallet?.ordinalsAddress]);
-
-  useEffect(() => {
-    if (bioTextareaRef.current) {
-      bioTextareaRef.current.style.height = 'auto';
-      bioTextareaRef.current.style.height = `${bioTextareaRef.current.scrollHeight + 2}px`;
-    }
-  }, [profile.user_bio]);
   
-  if (initialLoading) {
+  if (auth.state === 'signed-in-loading-profile') {
     return (
       <MainContainer>
         <LoadingContainer>
@@ -281,14 +106,14 @@ const Settings: React.FC = () => {
     );
   }
 
-  if (!wallet) {
+  if (auth.state === 'not-signed-in') {
     return (
       <MainContainer>
         <SettingsContainer>
           <UnauthorizedContainer>
             <UnauthorizedText>
-              Wallet not connected.
-              <UnauthorizedTextDetail> Please connect to edit your profile.</UnauthorizedTextDetail>
+              Authentication required.
+              <UnauthorizedTextDetail> Please sign in to edit your profile.</UnauthorizedTextDetail>
             </UnauthorizedText>
           </UnauthorizedContainer>
         </SettingsContainer>
@@ -297,160 +122,138 @@ const Settings: React.FC = () => {
   }
 
   return (
-    <Toast.Provider swipeDirection="down">
-      <MainContainer>
-        <SettingsContainer>
-          <PageText>Edit Profile</PageText>
+    <MainContainer>
+      <SettingsContainer>
+        <PageText>Edit Profile</PageText>
         
-        
-        <SectionContainer>
-          <ImageContainer>
-            <ProfilePictureContainer>
-              {(selectedInscription || profile.user_picture) && (
-                <ProfilePicture 
-                  src={`/content/${selectedInscription?.id || profile.user_picture}`} 
-                  alt="Profile" 
-                />
-              )}
-            </ProfilePictureContainer>
-            <ImageButton onClick={() => setInscriptionModalOpen(true)}>
-              <ImageIcon size="1.25rem" color={''} className={'ImageIcon'} />
-              Change Image
-            </ImageButton>
-          </ImageContainer>
-          
-          <InputFieldDiv>
-            <InputLabel>
-              <PlainText>Username</PlainText>
-              <PlainText color={theme.colors.text.secondary}>Required</PlainText>
-            </InputLabel>
-            <StyledInput
-              placeholder="Enter your username"
-              value={profile.user_handle}
-              onChange={(e) => handleInputChange('user_handle', (e.target as any).value)}
-              onBlur={() => handleFieldBlur('user_handle')}
-              disabled={loading}
-              isError={!!fieldErrors.user_handle && touchedFields.user_handle}
-            />
-            {fieldErrors.user_handle && touchedFields.user_handle && <FieldError>{fieldErrors.user_handle}</FieldError>}
-          </InputFieldDiv>
-          
-          <InputFieldDiv>
-            <InputLabel>
-              <PlainText>Display Name</PlainText>
-              <PlainText color={theme.colors.text.secondary}>Required</PlainText>
-            </InputLabel>
-            <StyledInput
-              placeholder="Enter your display name"
-              value={profile.user_name}
-              onChange={(e) => handleInputChange('user_name', (e.target as any).value)}
-              onBlur={() => handleFieldBlur('user_name')}
-              disabled={loading}
-              isError={!!fieldErrors.user_name && touchedFields.user_name}
-            />
-            {fieldErrors.user_name && touchedFields.user_name && <FieldError>{fieldErrors.user_name}</FieldError>}
-          </InputFieldDiv>
-          
-          <InputFieldDiv>
-            <InputLabel>
-              <PlainText>Bio</PlainText>
-              <PlainText color={theme.colors.text.secondary}>
-                {profile.user_bio.length > 280 ? (
-                  <>
-                    <span style={{ color: theme.colors.text.errorSecondary }}>{profile.user_bio.length}</span>/280
-                  </>
-                ) : (
-                  `${profile.user_bio.length}/280`
+        <StyledForm onSubmit={handleSubmit(onValidSubmit, toastifyInvalidFields)}>
+          <SectionContainer>
+            <ImageContainer>
+              <ProfilePictureContainer>
+                {watch('user_picture') && (
+                  <ProfilePicture 
+                    src={`/content/${watch('user_picture')}`} 
+                    alt="Profile" 
+                  />
                 )}
-              </PlainText>
-            </InputLabel>
-            <StyledTextarea
-              ref={bioTextareaRef}
-              placeholder="Tell us about yourself"
-              value={profile.user_bio}
-              onChange={(e) => handleInputChange('user_bio', (e.target as any).value)}
-              disabled={loading}
-              rows={4}
-            />
-          </InputFieldDiv>
-        </SectionContainer>
-        
-        <SectionContainer>
-          <SectionText>Social Links</SectionText>
+              </ProfilePictureContainer>
+              <ImageButton onClick={openInscriptionModal} type='button'>
+                <ImageIcon size="1.25rem" color={''} className={'ImageIcon'} />
+                Change Image
+              </ImageButton>
+            </ImageContainer>
+            
+            <InputFieldDiv>
+              <InputLabel>
+                <PlainText>Username</PlainText>
+                <PlainText color={theme.colors.text.secondary}>Required</PlainText>
+              </InputLabel>
+              <StyledInput
+                {...register('user_handle')}
+                placeholder="Enter your username"
+                disabled={isSubmitting}
+                $isError={!!errors.user_handle}
+              />
+              {errors.user_handle && <FieldError>{errors.user_handle.message}</FieldError>}
+            </InputFieldDiv>
+            
+            <InputFieldDiv>
+              <InputLabel>
+                <PlainText>Display Name</PlainText>
+                <PlainText color={theme.colors.text.secondary}>Required</PlainText>
+              </InputLabel>
+              <StyledInput
+                {...register('user_name')}
+                placeholder="Enter your display name"
+                disabled={isSubmitting}
+                $isError={!!errors.user_name}
+              />
+              {errors.user_name && <FieldError>{errors.user_name.message}</FieldError>}
+            </InputFieldDiv>
+            
+            <InputFieldDiv>
+              <InputLabel>
+                <PlainText>Bio</PlainText>
+                <PlainText color={theme.colors.text.secondary}>
+                  {bioLength > 280 ? (
+                    <>
+                      <span style={{ color: theme.colors.text.errorSecondary }}>{bioLength}</span>/280
+                    </>
+                  ) : (
+                    `${bioLength}/280`
+                  )}
+                </PlainText>
+              </InputLabel>
+              <StyledTextarea
+                {...register('user_bio')}
+                placeholder="Tell us about yourself"
+                disabled={isSubmitting}
+                rows={4}
+                $isError={!!errors.user_bio}
+              />
+              {errors.user_bio && <FieldError>{errors.user_bio.message}</FieldError>}
+            </InputFieldDiv>
+          </SectionContainer>
           
-          <InputFieldDiv>
-            <InputLabel>
-              <PlainText>X (Twitter)</PlainText>
-            </InputLabel>
-            <StyledInput
-              placeholder="Enter your X (Twitter) username"
-              value={profile.user_twitter}
-              onChange={(e) => handleInputChange('user_twitter', (e.target as any).value)}
-              onBlur={() => handleFieldBlur('user_twitter')}
-              disabled={loading}
-              isError={!!fieldErrors.user_twitter && touchedFields.user_twitter}
-            />
-            {fieldErrors.user_twitter && touchedFields.user_twitter && <FieldError>{fieldErrors.user_twitter}</FieldError>}
-          </InputFieldDiv>
+          <SectionContainer>
+            <SectionText>Social Links</SectionText>
+            
+            <InputFieldDiv>
+              <InputLabel>
+                <PlainText>X (Twitter)</PlainText>
+              </InputLabel>
+              <StyledInput
+                {...register('user_twitter')}
+                placeholder="Enter your X (Twitter) username"
+                disabled={isSubmitting}
+                $isError={!!errors.user_twitter}
+              />
+              {errors.user_twitter && <FieldError>{errors.user_twitter.message}</FieldError>}
+            </InputFieldDiv>
+            
+            <InputFieldDiv>
+              <InputLabel>
+                <PlainText>Discord</PlainText>
+              </InputLabel>
+              <StyledInput
+                {...register('user_discord')}
+                placeholder="Enter your Discord username"
+                disabled={isSubmitting}
+                $isError={!!errors.user_discord}
+              />
+              {errors.user_discord && <FieldError>{errors.user_discord.message}</FieldError>}
+            </InputFieldDiv>
+            
+            <InputFieldDiv>
+              <InputLabel>
+                <PlainText>Website URL</PlainText>
+              </InputLabel>
+              <StyledInput
+                {...register('user_website')}
+                placeholder="https://"
+                disabled={isSubmitting}
+                $isError={!!errors.user_website}
+              />
+              {errors.user_website && <FieldError>{errors.user_website.message}</FieldError>}
+            </InputFieldDiv>
+          </SectionContainer>
           
-          <InputFieldDiv>
-            <InputLabel>
-              <PlainText>Discord</PlainText>
-            </InputLabel>
-            <StyledInput
-              placeholder="Enter your Discord username"
-              value={profile.user_discord}
-              onChange={(e) => handleInputChange('user_discord', (e.target as any).value)}
-              onBlur={() => handleFieldBlur('user_discord')}
-              disabled={loading}
-              isError={!!fieldErrors.user_discord && touchedFields.user_discord}
-            />
-            {fieldErrors.user_discord && touchedFields.user_discord && <FieldError>{fieldErrors.user_discord}</FieldError>}
-          </InputFieldDiv>
-          
-          <InputFieldDiv>
-            <InputLabel>
-              <PlainText>Website URL</PlainText>
-            </InputLabel>
-            <StyledInput
-              placeholder="https://"
-              value={profile.user_website}
-              onChange={(e) => handleInputChange('user_website', (e.target as any).value)}
-              onBlur={() => handleFieldBlur('user_website')}
-              disabled={loading}
-              isError={!!fieldErrors.user_website && touchedFields.user_website}
-            />
-            {fieldErrors.user_website && touchedFields.user_website && <FieldError>{fieldErrors.user_website}</FieldError>}
-          </InputFieldDiv>
-        </SectionContainer>
-        
-        <ButtonContainer>
-          <SaveButton onClick={handleSubmit} disabled={loading || hasErrors}>
-            {loading ? <Spinner isButton={true} /> : 'Save changes'}
-          </SaveButton>
-        </ButtonContainer>
+          <ButtonContainer>
+            <SaveButton type="submit" disabled={isSubmitting || !isValid}>
+              {isSubmitting ? <Spinner isButton={true} /> : 'Save changes'}
+            </SaveButton>
+          </ButtonContainer>
+        </StyledForm>
+        {auth.state === 'signed-in-profile-error' && <FieldError>{auth.errorMessage}</FieldError>}
         </SettingsContainer>
+        
+        <InscriptionModal 
+          isOpen={isInscriptionModalOpen}
+          onClose={closeInscriptionModal}
+          onSelect={handleInscriptionSelect}
+          selectedInscription={watch('user_picture') ? { id: watch('user_picture') } : null}
+        />
       </MainContainer>
-      
-      <StyledToastViewport />
-      <StyledToastRoot open={toastOpen} onOpenChange={setToastOpen} duration={3000}>
-        <StyledToastContent>
-          {toastType === 'success' ? (
-            <CheckCircleIcon size="1.25rem" color={theme.colors.text.white} />
-          ) : (
-            <ErrorCircleIcon size="1.25rem" color={theme.colors.text.white} />
-          )}
-          <ToastText>{toastMessage}</ToastText>
-        </StyledToastContent>
-      </StyledToastRoot>
-      
-      <InscriptionModal 
-        isOpen={inscriptionModalOpen}
-        onClose={() => setInscriptionModalOpen(false)}
-        onSelect={handleInscriptionSelect}
-        selectedInscription={selectedInscription || (profile.user_picture ? { id: profile.user_picture } : null)}
-      />
-    </Toast.Provider>
   );
 };
 
@@ -461,6 +264,12 @@ const MainContainer = styled.div`
   display: flex;
   flex-direction: column;
   align-items: center;
+`;
+
+const StyledForm = styled.form`
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
 `;
 
 const SettingsContainer = styled.div`
@@ -583,86 +392,6 @@ const InputLabel = styled.div`
   gap: 0.25rem;
 `;
 
-const StyledInput = styled.input.withConfig({
-  shouldForwardProp: (prop) => prop !== 'isError',
-})<{ isError?: boolean }>`
-  height: 2.5rem;
-  width: 100%;
-  max-width: 100%;
-  padding: 0 0.75rem;
-  background-color: ${theme.colors.background.primary};
-  font-family: ${theme.typography.fontFamilies.medium};
-  font-size: 1rem;
-  line-height: 1.5rem;
-  color: ${theme.colors.text.primary};
-  border: 2px solid ${props => (props.isError ? theme.colors.text.errorSecondary : 'transparent')};
-  border-radius: 0.75rem;
-  box-sizing: border-box;
-  outline: none;
-  transition: all 200ms ease;
-
-  &:hover {
-    border: 2px solid ${props => (props.isError ? theme.colors.text.errorSecondary : theme.colors.border)};
-  }
-
-  &:focus {
-    border: 2px solid ${props => (props.isError ? theme.colors.text.errorSecondary : theme.colors.border)};
-  }
-
-  &::placeholder { /* Chrome, Firefox, Opera, Safari 10.1+ */
-    color: ${theme.colors.text.tertiary};
-  }
-  
-  &:-ms-input-placeholder { /* Internet Explorer 10-11 */
-    color: ${theme.colors.text.tertiary};
-  }
-  
-  &::-ms-input-placeholder { /* Microsoft Edge */
-    color: ${theme.colors.text.tertiary};
-  }
-`;
-
-const StyledTextarea = styled.textarea.withConfig({
-  shouldForwardProp: (prop) => prop !== 'isError',
-})<{ isError?: boolean }>`
-  width: 100%;
-  max-width: 100%;
-  min-height: 7rem;
-  padding: 0.5rem 0.75rem;
-  background-color: ${theme.colors.background.primary};
-  font-family: ${theme.typography.fontFamilies.medium};
-  font-size: 1rem;
-  line-height: 1.5rem;
-  color: ${theme.colors.text.primary};
-  border: 2px solid ${props => (props.isError ? theme.colors.text.errorSecondary : 'transparent')};
-  border-radius: 0.75rem;
-  box-sizing: border-box;
-  outline: none;
-  transition: all 200ms ease;
-  resize: none;
-  overflow-y: hidden;
-
-  &:hover {
-    border: 2px solid ${props => (props.isError ? theme.colors.text.errorSecondary : theme.colors.border)};
-  }
-
-  &:focus {
-    border: 2px solid ${props => (props.isError ? theme.colors.text.errorSecondary : theme.colors.border)};
-  }
-
-  &::placeholder { /* Chrome, Firefox, Opera, Safari 10.1+ */
-    color: ${theme.colors.text.tertiary};
-  }
-  
-  &:-ms-input-placeholder { /* Internet Explorer 10-11 */
-    color: ${theme.colors.text.tertiary};
-  }
-  
-  &::-ms-input-placeholder { /* Microsoft Edge */
-    color: ${theme.colors.text.tertiary};
-  }
-`;
-
 const PlainText = styled.p`
   font-family: ${theme.typography.fontFamilies.medium};
   font-size: 1rem;
@@ -680,175 +409,6 @@ const ButtonContainer = styled.div`
   align-items: center;
   justify-content: space-between;
   width: 100%;
-`;
-
-const SaveButton = styled.button`
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-  height: 2.5rem;
-  min-height: 2.5rem;
-  border-radius: 0.75rem; 
-  border: none;
-  font-family: ${theme.typography.fontFamilies.medium};
-  font-size: 1rem;
-  line-height: 1.25rem;
-  color: ${theme.colors.background.white};
-  padding: 1rem;
-  margin: 0;
-  cursor: pointer;
-  background-color: ${theme.colors.background.dark};
-  transition: all 200ms ease;
-  transform-origin: center center;
-
-  &:hover:not(:disabled) {
-    opacity: 0.75;
-  }
-
-  &:active:not(:disabled) {
-    transform: scale(0.98);
-  }
-
-  &:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-  }
-`;
-
-const ErrorMessage = styled.div`
-  background-color: ${theme.colors.background.error};
-  color: ${theme.colors.text.errorSecondary};
-  padding: 0.75rem 1rem;
-  border-radius: 0.5rem;
-  border: none;
-  font-family: ${theme.typography.fontFamilies.medium};
-  font-size: 0.875rem;
-  margin-bottom: 1rem;
-`;
-
-const FieldError = styled.div`
-  background-color: ${theme.colors.background.error};
-  color: ${theme.colors.text.errorSecondary};
-  padding: 0.5rem 0.75rem;
-  border-radius: 0.75rem;
-  font-family: ${theme.typography.fontFamilies.medium};
-  font-size: 0.875rem;
-  line-height: 1.25rem;
-  margin-top: 0.25rem;
-`;
-
-
-const CancelButton = styled.button`
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-  height: 2.5rem;
-  min-height: 2.5rem;
-  border-radius: 0.75rem; 
-  border: none;
-  font-family: ${theme.typography.fontFamilies.medium};
-  font-size: 1rem;
-  line-height: 1.25rem;
-  color: ${theme.colors.text.secondary};
-  padding: 1rem;
-  margin: 0;
-  cursor: pointer;
-  background-color: ${theme.colors.background.primary};
-  transition: all 200ms ease;
-  transform-origin: center center;
-
-  &:hover {
-    background-color: ${theme.colors.background.secondary};
-    color: ${theme.colors.text.errorSecondary};
-  }
-
-  &:active {
-    transform: scale(0.98);
-  }
-`;
-
-const Divider = styled.div`
-  width: 100%;
-  border-bottom: 1px solid ${theme.colors.border};
-`;
-
-const UnstyledLink = styled(Link)`
-  color: unset;
-  text-decoration: unset;
-  display: inline-block;
-  max-width: 100%;
-`;
-
-// Toast animations
-const slideIn = keyframes`
-  from {
-    transform: translateY(100%);
-    opacity: 0;
-  }
-  to {
-    transform: translateY(0);
-    opacity: 1;
-  }
-`;
-
-const slideOut = keyframes`
-  from {
-    transform: translateY(0);
-    opacity: 1;
-  }
-  to {
-    transform: translateY(100%);
-    opacity: 0;
-  }
-`;
-
-const StyledToastViewport = styled(Toast.Viewport)`
-  position: fixed;
-  bottom: 0;
-  right: 0;
-  display: flex;
-  flex-direction: column;
-  padding: 1.5rem;
-  gap: 0.625rem;
-  max-width: 100vw;
-  margin: 0;
-  list-style: none;
-  z-index: 2147483647;
-  outline: none;
-`;
-
-const StyledToastRoot = styled(Toast.Root)`
-  height: 2.75rem;
-  width: auto;
-  border-radius: 1.375rem;
-  background-color: ${theme.colors.background.dark};
-  box-shadow: rgba(10, 10, 10, 0.1) 0px 4px 8px 0px;
-  padding: 0 1rem;
-  display: flex;
-  align-items: center;
-  
-  &[data-state='open'] {
-    animation: ${slideIn} 200ms ease-out;
-  }
-  
-  &[data-state='closed'] {
-    animation: ${slideOut} 200ms ease-in;
-  }
-`;
-
-const StyledToastContent = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 0.375rem;
-`;
-
-const ToastText = styled.span`
-  font-family: ${theme.typography.fontFamilies.medium};
-  font-size: 1rem;
-  line-height: 1.25rem;
-  color: ${theme.colors.text.white};
 `;
 
 const UnauthorizedContainer = styled.div`
@@ -878,6 +438,5 @@ const UnauthorizedTextDetail = styled.span`
   margin: 0;
   padding: 0;
 `;
-
 
 export default Settings;
