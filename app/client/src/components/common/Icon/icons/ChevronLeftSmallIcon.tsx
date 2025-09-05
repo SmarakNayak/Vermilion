@@ -1,7 +1,7 @@
-import { BaseIcon } from '../BaseIcon'
-import { IconProps } from '../types'
+import { BaseIcon } from '../BaseIcon';
+import { type IconProps } from '../tsTypes';
 
-export const ChevronLeftSmallIcon = ({ size, color, className }) => (
+export const ChevronLeftSmallIcon = ({ size, color, className }: IconProps) => (
   <BaseIcon size={size} color={color} className={className}>
     <path
       fillRule="evenodd"
@@ -10,6 +10,4 @@ export const ChevronLeftSmallIcon = ({ size, color, className }) => (
       fill={color}
     />
   </BaseIcon>
-)
-
-ChevronLeftSmallIcon.propTypes = IconProps
+);

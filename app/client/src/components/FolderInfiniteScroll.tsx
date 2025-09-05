@@ -14,9 +14,13 @@ import {
 } from './common/GridItemStyles';
 import { PlaylistPreviewSchema } from '../../../shared/types/playlist';
 import type { Schema } from 'effect/Schema';
-import { ImageBadgeIcon } from './common/Icon';
+import { DotGridIcon, GridIcon, ImageBadgeIcon } from './common/Icon';
 import { EmptyStateContainer } from "./GalleryInfiniteScroll";
 import { FolderIcon } from "./common/Icon";
+import GridControls, { DotButton, GridButton, SlidingBackground, ToggleContainer } from "./grid/GridControls";
+import { useState } from "react";
+import { RowContainer } from "./grid/Layout";
+import Stack from "./Stack";
 
 const FolderInfo = styled.p`
   color: ${theme.colors.text.secondary};
@@ -94,25 +98,49 @@ const FolderItemContainer = ({ folder }: { folder: Schema.Type<typeof PlaylistPr
 
 export const FolderInfiniteScroll = ({ address}: {address: string | undefined }) => {
   const folders = useAtomValue(foldersAtomFamily(address));
+  const [zoomGrid, setZoomGrid] = useState(false);
   return (
-    Result.builder(folders)
-      .onInitial(() => <p>Loading...</p>)
-      .onSuccess((folders) => (
-        <>
-          {folders.length === 0 && (
-            <EmptyStateContainer>
-              <ImageBadgeIcon size={'1.5rem'} color={theme.colors.text.secondary} />
-              <h2>No bookmarks found</h2>
-              <p>This user has not made any bookmarks</p>
-            </EmptyStateContainer>
-          )}
-          <GridContainer zoomGrid={true}>
-            {folders.map((folder) => (
-              <FolderItemContainer key={folder.playlist_id} folder={folder} />
-            ))}
-          </GridContainer>
-        </>
-      ))
-      .orNull()
+    <>
+      <RowContainer>
+        <Stack horizontal={true} center={true} style={{gap: '.75rem'}}>
+          <ToggleContainer>
+            <SlidingBackground active={zoomGrid} />
+            <GridButton
+              onClick={() => setZoomGrid(!zoomGrid)}
+              active={zoomGrid}
+              aria-label="Grid view"
+            >
+              <GridIcon size={'1.125rem'} />
+            </GridButton>
+            <DotButton
+              onClick={() => setZoomGrid(!zoomGrid)}
+              active={!zoomGrid}
+              aria-label="Dot view"
+            >
+              <DotGridIcon size={'1.125rem'} />
+            </DotButton>
+          </ToggleContainer>
+        </Stack>
+      </RowContainer>
+      {Result.builder(folders)
+        .onInitial(() => <p>Loading...</p>)
+        .onSuccess((folders) => (
+          <>
+            {folders.length === 0 && (
+              <EmptyStateContainer>
+                <ImageBadgeIcon size={'1.5rem'} color={theme.colors.text.secondary} />
+                <h2>No bookmarks found</h2>
+                <p>This user has not made any bookmarks</p>
+              </EmptyStateContainer>
+            )}
+            <GridContainer zoomGrid={zoomGrid}>
+              {folders.map((folder) => (
+                <FolderItemContainer key={folder.playlist_id} folder={folder} />
+              ))}
+            </GridContainer>
+          </>
+        ))
+        .orNull()}
+    </>
   );
 };

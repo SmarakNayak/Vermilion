@@ -2,7 +2,7 @@ import React from 'react';
 import styled from 'styled-components';
 import { theme } from '../../../styles/theme';
 
-const StyledButton = styled.button`
+const StyledButton = styled.button<{ gap?: string | undefined }>`
   height: 2.75rem;
   min-height: 2.75rem;
   padding: 0 0.8125rem;
@@ -12,7 +12,7 @@ const StyledButton = styled.button`
   display: flex;
   flex-direction: row;
   align-items: center;
-  gap: 0.5rem;
+  gap: ${({ gap }) => gap || '0.5rem'};
   font-family: ${theme.typography.fontFamilies.medium};
   font-size: 1rem;
   line-height: 1.5rem;
@@ -31,12 +31,19 @@ const StyledButton = styled.button`
   }
 `;
 
+interface TextButtonProps {
+  onClick: () => void;
+  children: React.ReactNode;
+  gap?: string;
+  [key: string]: any;
+}
+
 const TextButton = ({ 
   onClick, 
   children, 
   gap,
   ...props 
-}) => {
+}: TextButtonProps) => {
   return (
     <StyledButton 
       onClick={onClick} 

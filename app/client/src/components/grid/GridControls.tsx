@@ -9,13 +9,30 @@ import { theme } from '../../styles/theme';
 import { FilterIcon, EyeIcon, GridIcon, DotGridIcon, ArrowLeftIcon, ChevronRightIcon, ChevronLeftSmallIcon } from '../common/Icon';
 import TextButton from '../common/buttons/TextButton';
 
+interface GridControlsProps {
+  // Always required props
+  numberVisibility: boolean;
+  toggleNumberVisibility: () => void;
+  zoomGrid: boolean;
+  toggleGridType: () => void;
+  handleSortOptionChange: (option: string) => void;
+  filtersEnabled: boolean;
+  initialOption: string;
+  includeRelevance: boolean;
+  
+  // Optional props - not all pages use filters
+  filterVisibility?: boolean;
+  toggleFilterVisibility?: () => void;
+  handleFilterOptionsChange?: (options: Record<string, string[]>) => void;
+  selectedFilterOptions?: Record<string, string[]>;
+}
+
 const GridControls = ({ 
   filterVisibility, 
-  toggleFilterVisibility, 
+  toggleFilterVisibility = () => {}, 
   numberVisibility, 
   toggleNumberVisibility, 
-  zoomGrid, 
-  setZoomGrid,
+  zoomGrid,
   toggleGridType, 
   handleSortOptionChange, 
   handleFilterOptionsChange, 
@@ -23,10 +40,10 @@ const GridControls = ({
   filtersEnabled,
   initialOption,
   includeRelevance
-}) => {
+}: GridControlsProps) => {
 
   const filterCount = Object.values(selectedFilterOptions || {})
-  .reduce((acc, arr) => acc + (Array.isArray(arr) ? arr.length : 0), 0);
+    .reduce((acc, arr) => acc + (Array.isArray(arr) ? arr.length : 0), 0);
   
   return (
     <RowContainer>
@@ -52,14 +69,14 @@ const GridControls = ({
         <ToggleContainer>
           <SlidingBackground active={zoomGrid} />
           <GridButton
-            onClick={() => toggleGridType('grid')}
+            onClick={() => toggleGridType()}
             active={zoomGrid}
             aria-label="Grid view"
           >
             <GridIcon size={'1.125rem'} />
           </GridButton>
           <DotButton
-            onClick={() => toggleGridType('dot')}
+            onClick={() => toggleGridType()}
             active={!zoomGrid}
             aria-label="Dot view"
           >
@@ -118,7 +135,7 @@ const LabelText = styled.span`
   }
 `;
 
-const ToggleContainer = styled.div`
+export const ToggleContainer = styled.div`
   position: relative;
   height: 2.75rem;
   min-height: 2.75rem;
@@ -135,7 +152,7 @@ const ToggleContainer = styled.div`
   overflow: hidden;
 `;
 
-const SlidingBackground = styled.div`
+export const SlidingBackground = styled.div<{ active: boolean }>`
   position: absolute;
   top: 0.125rem;
   left: ${({ active }) => (active ? '0.125rem' : 'calc(50%)')};
@@ -147,7 +164,7 @@ const SlidingBackground = styled.div`
   z-index: 1;
 `;
 
-const GridButton = styled.button`
+export const GridButton = styled.button<{ active: boolean }>`
   z-index: 2;
   width: 3.25rem;
   min-width: 3.25rem;
@@ -170,7 +187,7 @@ const GridButton = styled.button`
   }
 `;
 
-const DotButton = styled(GridButton)`
+export const DotButton = styled(GridButton)`
   // Inherit all styles from GridButton
 `;
 
@@ -180,7 +197,7 @@ const NumberToggleContainer = styled.div`
   gap: .375rem;
 `;
 
-const Switch = styled.button`
+const Switch = styled.button<{ checked: boolean }>`
   width: 2.5rem;
   height: 1.25rem;
   border-radius: .625rem;
@@ -194,7 +211,7 @@ const Switch = styled.button`
   position: relative;
 `;
 
-const SwitchCircle = styled.span`
+const SwitchCircle = styled.span<{ checked: boolean }>`
   width: .75rem;
   height: .75rem;
   border-radius: 50%;

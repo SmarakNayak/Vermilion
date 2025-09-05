@@ -227,7 +227,6 @@ const Address = () => {
           filtersEnabled={true}
           initialOption={'newest'}
           includeRelevance={false}
-          setZoomGrid={false}
         />
         <RowContainer>
           <FilterMenu isOpen={filterVisibility} onSelectionChange ={handleFilterOptionsChange} onClose={toggleFilterVisibility} initialSelection={selectedFilterOptions}></FilterMenu>
