@@ -2,7 +2,7 @@ import React, { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { effectTsResolver } from '@hookform/resolvers/effect-ts';
 import { toast } from 'sonner';
-import { Exit, Option } from 'effect';
+import { Exit, Option, Schema } from 'effect';
 import { useAtomSet } from '@effect-atom/atom-react';
 
 import styled from 'styled-components';
@@ -21,6 +21,7 @@ import { AuthSocialClient, getErrorMessage } from '../api/EffectApi';
 import { cleanErrorExit } from '../atoms/atomHelpers';
 import { ProfileTable } from '../../../shared/types/effectProfile';
 import { toastifyInvalidFields } from '../utils/toastifyInvalidFields';
+import { rhfEmptyStringToNull } from '../utils/formHelpers';
 
 const Settings: React.FC = () => {
   const auth = useAuth();
@@ -57,9 +58,8 @@ const Settings: React.FC = () => {
     }
   }, [auth, setValue]);
 
-  const onValidSubmit = async (data: any) => {
+  const onValidSubmit = async (data: Schema.Schema.Type<typeof ProfileTable.jsonCreate>) => {
     const isUpdate = auth.state === 'signed-in-with-profile';
-    
     if (isUpdate) {
       const result = await updateProfile({
         path: { user_id: auth.profile.user_id },
@@ -185,7 +185,7 @@ const Settings: React.FC = () => {
                 </PlainText>
               </InputLabel>
               <StyledTextarea
-                {...register('user_bio')}
+                {...register('user_bio', { setValueAs: rhfEmptyStringToNull })}
                 placeholder="Tell us about yourself"
                 disabled={isSubmitting}
                 rows={4}
@@ -203,7 +203,7 @@ const Settings: React.FC = () => {
                 <PlainText>X (Twitter)</PlainText>
               </InputLabel>
               <StyledInput
-                {...register('user_twitter')}
+                {...register('user_twitter', { setValueAs: rhfEmptyStringToNull })}
                 placeholder="Enter your X (Twitter) username"
                 disabled={isSubmitting}
                 $isError={!!errors.user_twitter}
@@ -216,7 +216,7 @@ const Settings: React.FC = () => {
                 <PlainText>Discord</PlainText>
               </InputLabel>
               <StyledInput
-                {...register('user_discord')}
+                {...register('user_discord', { setValueAs: rhfEmptyStringToNull })}
                 placeholder="Enter your Discord username"
                 disabled={isSubmitting}
                 $isError={!!errors.user_discord}
@@ -229,7 +229,7 @@ const Settings: React.FC = () => {
                 <PlainText>Website URL</PlainText>
               </InputLabel>
               <StyledInput
-                {...register('user_website')}
+                {...register('user_website', { setValueAs: rhfEmptyStringToNull })}
                 placeholder="https://"
                 disabled={isSubmitting}
                 $isError={!!errors.user_website}
@@ -237,7 +237,6 @@ const Settings: React.FC = () => {
               {errors.user_website && <FieldError>{errors.user_website.message}</FieldError>}
             </InputFieldDiv>
           </SectionContainer>
-          
           <ButtonContainer>
             <SaveButton type="submit" disabled={isSubmitting || !isValid}>
               {isSubmitting ? <Spinner isButton={true} /> : 'Save changes'}

@@ -21,12 +21,22 @@ const baseFields = {
     Schema.maxLength(280, { message: () => "Bio must be 280 characters or less" })
   )),
   user_twitter: FieldOptionOmittable(Schema.String.pipe(
-    Schema.maxLength(15, { message: () => "Twitter username must be 15 characters or less" })
+    Schema.maxLength(15, { message: () => "Twitter username must be 15 characters or less" }),
+    Schema.pattern(/^[a-zA-Z0-9_]+$/, {
+      message: () => "Twitter username can only contain letters, numbers, and underscores"
+    })
   )),
   user_discord: FieldOptionOmittable(Schema.String.pipe(
-    Schema.maxLength(37, { message: () => "Discord username must be 37 characters or less" })
+    Schema.maxLength(37, { message: () => "Discord username must be 37 characters or less" }),
+    Schema.pattern(/^[a-zA-Z0-9_.]+$/, {
+      message: () => "Discord username can only contain letters, numbers, periods, and underscores"
+    })
   )),
-  user_website: FieldOptionOmittable(Schema.String),
+  user_website: FieldOptionOmittable(Schema.String.pipe(
+    Schema.pattern(/^https?:\/\/.+\..+/, {
+      message: () => "Website must be a valid URL starting with http:// or https://"
+    })
+  )),
   user_created_at: Model.Field({ // Db sets for insert || no need to update
     select: Schema.DateTimeUtc,
     json: Schema.DateTimeUtc,
@@ -47,3 +57,5 @@ export class ProfileView extends Model.Class<ProfileView>("ProfileView")({
     jsonCreate: Schema.Array(Schema.String), // Available in JSON create responses
   })
 }) {}
+
+//type Profile = Schema.Schema.Type<typeof ProfileTable.jsonCreate>
