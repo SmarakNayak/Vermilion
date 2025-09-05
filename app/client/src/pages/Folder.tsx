@@ -3,7 +3,7 @@ import PageContainer from "../components/layout/PageContainer";
 import { Atom, Result, useAtomValue } from "@effect-atom/atom-react";
 import { folderAtomFamily, folderInscriptionsAtomFamily, profileFromIdAtomFamily } from "../atoms/familyAtomics";
 import GridHeaderSkeleton from "../components/grid/GridHeaderSkeleton";
-import { HeaderContainer, MainContentStack, SocialStack } from "../components/grid/Layout";
+import { HeaderContainer, MainContentStack, RowContainer, SocialStack } from "../components/grid/Layout";
 import InfoText from "../components/common/text/InfoText";
 import { Cause } from "effect";
 import { flatMap } from "../atoms/atomHelpers";
@@ -20,6 +20,8 @@ import { GridContainer } from "../components/GalleryInfiniteScroll";
 import GridItemContainer from "../components/GridItemContainer";
 import { BookmarkModal } from "../components/modals/BookmarkModal";
 import { useModal } from "../hooks/useModal";
+import GridControls from "../components/grid/GridControls";
+import { useGridControls } from "../hooks/useGridControls";
 
 const profileFromFolderAtomFamily = Atom.family((folderId?: string) =>
   Atom.make((get) => {
@@ -67,6 +69,7 @@ const Folder = () => {
   const auth = useAuth();
   const { copied, copy } = useCopy();
   const { isOpen: isEditModalOpen, open: openEditModal, close: closeEditModal } = useModal();
+  const { zoomGrid, numberVisibility, toggleNumberVisibility, toggleGridType } = useGridControls();
 
   return (
     <PageContainer>
@@ -132,34 +135,44 @@ const Folder = () => {
                 </Tooltip>
               </SocialStack>
             </HeaderContainer>
-            {
-              Result.builder(folderInscriptions)
-                .onInitial(() => <p>Loading...</p>)
-                .onSuccess((inscriptions) => {
-                  return (
-                    <GridContainer zoomGrid={true}>
-                      {inscriptions.map(
-                        (entry) => 
-                          <GridItemContainer 
-                            collection={entry.collection_name} 
-                            collection_symbol={entry.collection_symbol}
-                            content_length={entry.content_length}
-                            id={entry.id} 
-                            is_boost={entry.delegate}
-                            is_child={entry.parents.length > 0}
-                            is_recursive={entry.is_recursive}
-                            isCollectionPage={false}
-                            item_name={(entry.off_chain_metadata as any)?.name}
-                            key={entry.number} 
-                            number={entry.number} 
-                            numberVisibility={true} 
-                            rune={entry.spaced_rune}
-                          />
-                      )}
-                    </GridContainer>
-                  )
-                })
-                .orNull()
+            <GridControls
+              numberVisibility={numberVisibility}
+              toggleNumberVisibility={toggleNumberVisibility}
+              zoomGrid={zoomGrid}
+              toggleGridType={toggleGridType}
+              handleSortOptionChange={() => {}}
+              filtersEnabled={false}
+              initialOption={'newest'}
+              includeRelevance={false}
+              sortByEnabled={false}
+            />
+            {Result.builder(folderInscriptions)
+              .onInitial(() => <p>Loading...</p>)
+              .onSuccess((inscriptions) => {
+                return (
+                  <GridContainer zoomGrid={zoomGrid}>
+                    {inscriptions.map(
+                      (entry) => 
+                        <GridItemContainer 
+                          collection={entry.collection_name} 
+                          collection_symbol={entry.collection_symbol}
+                          content_length={entry.content_length}
+                          id={entry.id} 
+                          is_boost={entry.delegate}
+                          is_child={entry.parents.length > 0}
+                          is_recursive={entry.is_recursive}
+                          isCollectionPage={false}
+                          item_name={(entry.off_chain_metadata as any)?.name}
+                          key={entry.number} 
+                          number={entry.number} 
+                          numberVisibility={numberVisibility} 
+                          rune={entry.spaced_rune}
+                        />
+                    )}
+                  </GridContainer>
+                )
+              })
+              .orNull()
             }
           </>
         ))

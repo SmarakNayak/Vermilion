@@ -8,6 +8,7 @@ import { RowContainer } from './Layout';
 import { theme } from '../../styles/theme';
 import { FilterIcon, EyeIcon, GridIcon, DotGridIcon, ArrowLeftIcon, ChevronRightIcon, ChevronLeftSmallIcon } from '../common/Icon';
 import TextButton from '../common/buttons/TextButton';
+import GridToggle from './GridToggle';
 
 interface GridControlsProps {
   // Always required props
@@ -25,6 +26,7 @@ interface GridControlsProps {
   toggleFilterVisibility?: () => void;
   handleFilterOptionsChange?: (options: Record<string, string[]>) => void;
   selectedFilterOptions?: Record<string, string[]>;
+  sortByEnabled?: boolean;
 }
 
 const GridControls = ({ 
@@ -39,7 +41,8 @@ const GridControls = ({
   selectedFilterOptions,
   filtersEnabled,
   initialOption,
-  includeRelevance
+  includeRelevance,
+  sortByEnabled = true,
 }: GridControlsProps) => {
 
   const filterCount = Object.values(selectedFilterOptions || {})
@@ -66,23 +69,7 @@ const GridControls = ({
         {/* <IconButton onClick={toggleNumberVisibility}>
           <EyeIcon size={'1.25rem'} color={numberVisibility ? theme.colors.text.primary : theme.colors.text.tertiary}></EyeIcon>
         </IconButton> */}
-        <ToggleContainer>
-          <SlidingBackground active={zoomGrid} />
-          <GridButton
-            onClick={() => toggleGridType()}
-            active={zoomGrid}
-            aria-label="Grid view"
-          >
-            <GridIcon size={'1.125rem'} />
-          </GridButton>
-          <DotButton
-            onClick={() => toggleGridType()}
-            active={!zoomGrid}
-            aria-label="Dot view"
-          >
-            <DotGridIcon size={'1.125rem'} />
-          </DotButton>
-        </ToggleContainer>
+        <GridToggle value={zoomGrid} onToggle={toggleGridType} />
         <NumberToggleContainer>
           <Switch
             checked={numberVisibility}
@@ -94,11 +81,11 @@ const GridControls = ({
           <SwitchLabel>Hide info</SwitchLabel>
         </NumberToggleContainer>
       </Stack>
-      <SortbyDropdown 
+      {sortByEnabled && <SortbyDropdown 
         onOptionSelect={handleSortOptionChange} 
         initialOption={initialOption}
         includeRelevance={includeRelevance}
-      />
+      />}
     </RowContainer>
   );
 };

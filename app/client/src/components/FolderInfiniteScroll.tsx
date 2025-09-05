@@ -17,10 +17,11 @@ import type { Schema } from 'effect/Schema';
 import { DotGridIcon, GridIcon, ImageBadgeIcon } from './common/Icon';
 import { EmptyStateContainer } from "./GalleryInfiniteScroll";
 import { FolderIcon } from "./common/Icon";
-import GridControls, { DotButton, GridButton, SlidingBackground, ToggleContainer } from "./grid/GridControls";
+import GridToggle from "./grid/GridToggle";
 import { useState } from "react";
 import { RowContainer } from "./grid/Layout";
 import Stack from "./Stack";
+import { useGridControls } from "../hooks/useGridControls";
 
 const FolderInfo = styled.p`
   color: ${theme.colors.text.secondary};
@@ -103,23 +104,7 @@ export const FolderInfiniteScroll = ({ address}: {address: string | undefined })
     <>
       <RowContainer>
         <Stack horizontal={true} center={true} style={{gap: '.75rem'}}>
-          <ToggleContainer>
-            <SlidingBackground active={zoomGrid} />
-            <GridButton
-              onClick={() => setZoomGrid(!zoomGrid)}
-              active={zoomGrid}
-              aria-label="Grid view"
-            >
-              <GridIcon size={'1.125rem'} />
-            </GridButton>
-            <DotButton
-              onClick={() => setZoomGrid(!zoomGrid)}
-              active={!zoomGrid}
-              aria-label="Dot view"
-            >
-              <DotGridIcon size={'1.125rem'} />
-            </DotButton>
-          </ToggleContainer>
+          <GridToggle value={zoomGrid} onToggle={() => setZoomGrid(!zoomGrid)} />
         </Stack>
       </RowContainer>
       {Result.builder(folders)
