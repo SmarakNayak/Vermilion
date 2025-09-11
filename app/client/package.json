@@ -8,7 +8,7 @@
     "dev:local-social": "bun --hot devServer.js --local-social",
     "build": "cd ../shared && bun install && cd ../client && bun install && bun build.js",
     "check": "bun tsc --noEmit",
-    "generate-rust-client": "bun x @tim-smart/openapi-gen --spec src/api/rustClient/api.json --name RustClient"
+    "generate-rust-client": "sed -i 's/\"schema\": true/\"schema\": {}/g' src/api/rustClient/api.json && bun x @tim-smart/openapi-gen --spec src/api/rustClient/api.json --name RustClient > src/api/rustClient/RustClient.ts"
   },
   "dependencies": {
     "@bitcoinerlab/secp256k1": "^1.2.0",

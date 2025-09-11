@@ -56,7 +56,7 @@
           "404": {
             "description": "Not Found - Resource does not exist",
             "content": {
-              "text/plain; charset=utf-8": {
+              "application/json": {
                 "schema": {
                   "type": "string",
                   "description": "Resource not found error message",
@@ -5379,7 +5379,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": true
+                "schema": {}
               }
             }
           },
@@ -5558,7 +5558,9 @@
               "null"
             ]
           },
-          "on_chain_metadata": true,
+          "on_chain_metadata": {
+
+          },
           "sat": {
             "type": [
               "integer",
@@ -5625,7 +5627,9 @@
               "null"
             ]
           },
-          "raw_properties": true,
+          "raw_properties": {
+
+          },
           "inscribed_by_address": {
             "type": [
               "string",
@@ -5638,7 +5642,9 @@
               "null"
             ]
           },
-          "off_chain_metadata": true,
+          "off_chain_metadata": {
+
+          },
           "collection_name": {
             "type": [
               "string",
@@ -5664,7 +5670,8 @@
           "is_maybe_json",
           "is_bitmap_style",
           "is_recursive",
-          "raw_properties"
+          "raw_properties",
+          "off_chain_metadata"
         ]
       },
       "TrendingItem": {
@@ -6292,7 +6299,9 @@
               "null"
             ]
           },
-          "on_chain_metadata": true,
+          "on_chain_metadata": {
+
+          },
           "sat": {
             "type": [
               "integer",
@@ -6359,7 +6368,9 @@
               "null"
             ]
           },
-          "raw_properties": true,
+          "raw_properties": {
+
+          },
           "inscribed_by_address": {
             "type": [
               "string",
@@ -6372,7 +6383,9 @@
               "null"
             ]
           },
-          "off_chain_metadata": true,
+          "off_chain_metadata": {
+
+          },
           "collection_name": {
             "type": [
               "string",
@@ -6411,7 +6424,8 @@
           "is_maybe_json",
           "is_bitmap_style",
           "is_recursive",
-          "raw_properties"
+          "raw_properties",
+          "off_chain_metadata"
         ]
       },
       "LeaderboardEntry": {
@@ -6483,7 +6497,9 @@
           "is_genesis": {
             "type": "boolean"
           },
-          "burn_metadata": true
+          "burn_metadata": {
+
+          }
         },
         "required": [
           "id",
@@ -6499,7 +6515,8 @@
           "price",
           "tx_fee",
           "tx_size",
-          "is_genesis"
+          "is_genesis",
+          "burn_metadata"
         ]
       },
       "BitcoinAddress": {
@@ -6630,7 +6647,9 @@
             "type": "integer",
             "format": "int64"
           },
-          "off_chain_metadata": true,
+          "off_chain_metadata": {
+
+          },
           "collection_symbol": {
             "type": "string"
           },
@@ -8046,7 +8065,7 @@
                 "const": "query"
               },
               "content": true,
-              "schema": true
+              "schema": {}
             },
             "required": [
               "in",
@@ -8136,7 +8155,7 @@
                 "const": "header"
               },
               "content": true,
-              "schema": true
+              "schema": {}
             },
             "required": [
               "in",
@@ -8226,7 +8245,7 @@
                 "const": "path"
               },
               "content": true,
-              "schema": true
+              "schema": {}
             },
             "required": [
               "in",
@@ -8316,7 +8335,7 @@
                 "const": "cookie"
               },
               "content": true,
-              "schema": true
+              "schema": {}
             },
             "required": [
               "in",
@@ -8577,7 +8596,7 @@
             }
           },
           "content": true,
-          "schema": true
+          "schema": {}
         },
         "oneOf": [
           {
