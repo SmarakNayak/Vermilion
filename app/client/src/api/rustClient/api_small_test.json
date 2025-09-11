@@ -1,0 +1,40 @@
+{  
+  "openapi": "3.1.0",  
+  "info": {  
+    "title": "Repro API",  
+    "version": "1.0.0"  
+  },  
+  "paths": {  
+    "/test": {  
+      "get": {  
+        "responses": {  
+          "200": {  
+            "description": "Success",  
+            "content": {  
+              "application/json": {  
+                "schema": {  
+                  "$ref": "#/components/schemas/TestResponse"  
+                }  
+              }  
+            }  
+          }  
+        }  
+      }  
+    }  
+  },  
+  "components": {  
+    "schemas": {  
+      "TestResponse": {  
+        "type": "object",  
+        "properties": {  
+          "message": {  
+            "type": ["string", "null"]  
+          },  
+          "count": {  
+            "type": ["integer", "null"]  
+          }  
+        }  
+      }  
+    }  
+  }  
+}

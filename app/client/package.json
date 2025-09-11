@@ -7,7 +7,8 @@
     "dev": "bun --hot devServer.js",
     "dev:local-social": "bun --hot devServer.js --local-social",
     "build": "cd ../shared && bun install && cd ../client && bun install && bun build.js",
-    "check": "bun tsc --noEmit"
+    "check": "bun tsc --noEmit",
+    "generate-rust-client": "bun x @tim-smart/openapi-gen --spec src/api/rustClient/api.json --name RustClient"
   },
   "dependencies": {
     "@bitcoinerlab/secp256k1": "^1.2.0",
@@ -34,9 +35,10 @@
     "zustand": "^5.0.3"
   },
   "devDependencies": {
+    "@tim-smart/openapi-gen": "^0.4.13",
+    "@types/bun": "latest",
     "@types/react": "^19",
-    "@types/react-dom": "^19",
-    "@types/bun": "latest"
+    "@types/react-dom": "^19"
   },
   "peerDependencies": {
     "typescript": "^5"
