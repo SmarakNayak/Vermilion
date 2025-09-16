@@ -1,8 +1,8 @@
 import { AtomHttpApi, Result, useAtomValue } from "@effect-atom/atom-react";
 import { FetchHttpClient, HttpClient, HttpClientRequest } from "@effect/platform";
 import { Cause, Effect, Layer } from "effect";
-import { EffectServerApi } from '../../../shared/api/effectServerApi';
-import { type ApiError } from "../../../shared/api/apiErrors";
+import { EffectServerApi } from '../../../shared/api/effectServerApi.js';
+import { type ApiError } from "../../../shared/api/apiErrors.js";
 import type { HttpClientError } from "@effect/platform/HttpClientError";
 import type { ParseResult } from "effect";
 import useStore from '../store/zustand.js';
