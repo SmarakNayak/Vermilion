@@ -6,6 +6,7 @@ import TopBar from '../components/navigation/TopBar';
 import ExploreBlocks from '../pages/ExploreBlocks';
 import ExploreCollections from '../pages/ExploreCollections';
 import ExploreInscriptions from '../pages/ExploreInscriptions';
+import ExploreGalleries from '../pages/ExploreGalleries';
 import Address from '../pages/Address';
 import Block from '../pages/Block';
 import Sat from '../pages/Sat';
@@ -103,6 +104,7 @@ const Navigation = () => {
           <Route path="/explore/inscriptions" element={<TitledComponent title="Inscriptions" Component={ExploreInscriptions} />} />
           <Route path="/explore/blocks" element={<TitledComponent title="Blocks" Component={ExploreBlocks} />} />
           <Route path="/explore/collections" element={<TitledComponent title="Collections" Component={ExploreCollections} />} />
+          <Route path="/explore/galleries" element={<TitledComponent title="Galleries" Component={ExploreGalleries} />} />
 
           <Route 
             path="/address/:address" 

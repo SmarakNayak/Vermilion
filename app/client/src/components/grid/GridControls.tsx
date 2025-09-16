@@ -178,13 +178,13 @@ export const DotButton = styled(GridButton)`
   // Inherit all styles from GridButton
 `;
 
-const NumberToggleContainer = styled.div`
+export const NumberToggleContainer = styled.div`
   display: flex;
   align-items: center;
   gap: .375rem;
 `;
 
-const Switch = styled.button<{ checked: boolean }>`
+export const Switch = styled.button<{ checked: boolean }>`
   width: 2.5rem;
   height: 1.25rem;
   border-radius: .625rem;
@@ -198,7 +198,7 @@ const Switch = styled.button<{ checked: boolean }>`
   position: relative;
 `;
 
-const SwitchCircle = styled.span<{ checked: boolean }>`
+export const SwitchCircle = styled.span<{ checked: boolean }>`
   width: .75rem;
   height: .75rem;
   border-radius: 50%;
@@ -215,7 +215,7 @@ const SwitchCircle = styled.span<{ checked: boolean }>`
       : 'translateX(1.25rem) translateY(-50%)'};
 `;
 
-const SwitchLabel = styled.span`
+export const SwitchLabel = styled.span`
   color: ${theme.colors.text.secondary};
   font-size: 1rem;
   font-weight: 500;

@@ -1,8 +1,8 @@
 import homepage from "./index.html";
 
 const useLocalSocial = process.argv.includes('--local-social');
-const socialTarget = useLocalSocial ? 'http://localhost:1082' : 'https://blue.vermilion.place';
-const effectTarget = useLocalSocial ? 'http://localhost:1083' : 'https://blue.vermilion.place';
+const socialTarget = useLocalSocial ? 'http://localhost:1082' : 'https://green.vermilion.place';
+const effectTarget = useLocalSocial ? 'http://localhost:1083' : 'https://green.vermilion.place';
 
 const server = Bun.serve({
   port: 3000,
@@ -13,16 +13,16 @@ const server = Bun.serve({
   routes: {
     "/*": homepage,
     '/api/*': async req => {
-      return proxyRequest(req, 'https://blue.vermilion.place');
+      return proxyRequest(req, 'https://green.vermilion.place');
     },
     '/content/*': async req => {
-      return proxyRequest(req, 'https://blue.vermilion.place');
+      return proxyRequest(req, 'https://green.vermilion.place');
     },
     '/search_api/*': async req => {
-      return proxyRequest(req, 'https://blue.vermilion.place');
+      return proxyRequest(req, 'https://green.vermilion.place');
     },
     '/bun/*': async req => {
-      return proxyRequest(req, 'https://blue.vermilion.place');
+      return proxyRequest(req, 'https://green.vermilion.place');
     },
     '/bun/social/*': {
       GET: async req => {
@@ -47,16 +47,16 @@ const server = Bun.serve({
       }
     },
     '/r/*': async req => {
-      return proxyRequest(req, 'https://blue.vermilion.place');
+      return proxyRequest(req, 'https://green.vermilion.place');
     },
     '/blockheight/*': async req => {
-      return proxyRequest(req, 'https://blue.vermilion.place');
+      return proxyRequest(req, 'https://green.vermilion.place');
     },
     '/blockhash/*': async req => {
-      return proxyRequest(req, 'https://blue.vermilion.place');
+      return proxyRequest(req, 'https://green.vermilion.place');
     },
     '/blocktime/*': async req => {
-      return proxyRequest(req, 'https://blue.vermilion.place');
+      return proxyRequest(req, 'https://green.vermilion.place');
     }
   },
   fetch(req) {
