@@ -1,6 +1,6 @@
 import PropTypes from 'prop-types'
 import styled from 'styled-components'
-import { BlockIcon, ChevronDownSmallIcon, DiscoverIcon, ExploreIcon, GalleryIcon, GridIcon, SparklesIcon } from '../common/Icon'
+import { BlockIcon, ChevronDownSmallIcon, DiscoverIcon, ExploreIcon, GalleryIcon, GridIcon, LayersIcon, SparklesIcon } from '../common/Icon'
 import { useState } from 'react'
 import theme from '../../styles/theme';
 import { Link } from 'react-router-dom';
@@ -136,8 +136,12 @@ const NavigationLinks = () => {
             Blocks
           </DropdownItem>
           <DropdownItem href="/explore/collections">
-            <GalleryIcon size={'1.25rem'} />  
+            <GalleryIcon size={'1.25rem'} />
             Collections
+          </DropdownItem>
+          <DropdownItem href="/explore/galleries">
+            <LayersIcon size={'1.25rem'} />
+            Galleries
           </DropdownItem>
         </DropdownContainer>
       </NavLinkWrapper>

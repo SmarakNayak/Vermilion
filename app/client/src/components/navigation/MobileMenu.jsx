@@ -1,15 +1,16 @@
 import React, { useEffect, useRef } from 'react';
 import styled from 'styled-components';
 import { Link } from 'react-router-dom';
-import { 
+import {
   AvatarCircleIcon,
-  BlockIcon, 
-  BoostIcon, 
-  CrossIcon, 
-  DiscoverIcon, 
+  BlockIcon,
+  BoostIcon,
+  CrossIcon,
+  DiscoverIcon,
   FireIcon,
-  GridIcon, 
-  GalleryIcon, 
+  GridIcon,
+  GalleryIcon,
+  LayersIcon,
   LoginIcon,
   LogoutIcon,
   QuestionIcon,
@@ -103,17 +104,24 @@ const MobileMenu = ({ isOpen, onClose, onConnectWallet, wallet, onViewProfile, o
             isStandard={true}
             title="Blocks"
           />
-          <MenuListItem 
-            link="/explore/collections" 
-            action={onClose} 
-            icon={GalleryIcon} 
+          <MenuListItem
+            link="/explore/collections"
+            action={onClose}
+            icon={GalleryIcon}
             isStandard={true}
             title="Collections"
           />
-          <MenuListItem 
-            link="/search" 
-            action={onClose} 
-            icon={ScanIcon} 
+          <MenuListItem
+            link="/explore/galleries"
+            action={onClose}
+            icon={LayersIcon}
+            isStandard={true}
+            title="Galleries"
+          />
+          <MenuListItem
+            link="/search"
+            action={onClose}
+            icon={ScanIcon}
             isStandard={true}
             title="Visual Search"
           />
