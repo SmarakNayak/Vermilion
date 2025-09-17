@@ -14,30 +14,30 @@ import {
   CheckIconWrapper
 } from './Dropdown';
 
-interface DropdownCustomProps {
-  onOptionSelect: (option: string) => void;
-  initialOption: string;
-  options: string[];
-  labels: Record<string, string>;
+interface DropdownCustomProps<T extends string> {
+  onOptionSelect: (option: T) => void;
+  initialOption: T;
+  options: T[];
+  labels: Record<T, string>;
   placeholder?: string;
 }
 
-const DropdownCustom = ({
+const DropdownCustom = <T extends string>({
   onOptionSelect,
   initialOption,
   options,
   labels,
   placeholder = "Sort by:"
-}: DropdownCustomProps) => {
+}: DropdownCustomProps<T>) => {
   const [isOpen, setIsOpen] = useState(false);
-  const [selectedOption, setSelectedOption] = useState(initialOption);
+  const [selectedOption, setSelectedOption] = useState<T>(initialOption);
   const wrapperRef = useRef<HTMLDivElement>(null);
 
   const handleToggle = () => {
     setIsOpen(!isOpen);
   };
 
-  const handleOptionSelect = (option: string) => {
+  const handleOptionSelect = (option: T) => {
     setSelectedOption(option);
     setIsOpen(false);
     onOptionSelect(option);

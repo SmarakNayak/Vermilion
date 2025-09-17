@@ -12,7 +12,7 @@
   },
   "dependencies": {
     "@bitcoinerlab/secp256k1": "^1.2.0",
-    "@effect-atom/atom-react": "^0.1.14",
+    "@effect-atom/atom-react": "^0.1.17",
     "@hookform/resolvers": "^5.2.1",
     "@radix-ui/react-toast": "^1.2.14",
     "@radix-ui/react-tooltip": "^1.2.4",

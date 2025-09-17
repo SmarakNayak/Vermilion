@@ -1,60 +1,68 @@
-import React, { useState, useEffect } from 'react';
+import { useState } from 'react';
 import styled from 'styled-components';
-const ReactGA = require('react-ga4').default;
 import theme from '../styles/theme';
 import { InfoCircleIcon } from '../components/common/Icon';
 import Gallery from '../components/Gallery';
 import { HorizontalDivider, RowContainer, GalleryContainer } from '../components/grid/Layout';
 import Stack from '../components/Stack';
 import GridToggle from '../components/grid/GridToggle';
-import GridControls, { NumberToggleContainer, Switch, SwitchCircle, SwitchLabel } from '../components/grid/GridControls';
+import { NumberToggleContainer, Switch, SwitchCircle, SwitchLabel } from '../components/grid/GridControls';
 import DropdownCustom from '../components/DropdownCustom';
+import { Effect, Stream, Option } from 'effect';
+import { Atom, useAtom, Result, useAtomRefresh } from '@effect-atom/atom-react';
+import { rustClientRuntime, RustClientService } from '../atoms/rustAtoms';
+import type { GallerySortBy } from '../api/rustClient/RustClient';
+import { useScrollBottom } from '../hooks/useScrollBottom';
+
+const sortAtom = Atom.make<typeof GallerySortBy.Type>('latest_first_inscribed_date');
+// Single fetch Atom (not-used, here as a reference)
+const galleryInscriptionsAtom = rustClientRuntime.atom((get) => {
+  const sortBy = get(sortAtom);
+  return Effect.gen(function* () {
+    const rustClient = yield* RustClientService;
+    return yield* rustClient["GET/gallery_inscriptions"]({ sort_by: sortBy });
+  }).pipe(
+    //all errors are unexpected here, so model them as defects
+    Effect.catchAll((error) => {
+      return Effect.die(error);
+    }),
+  );
+});
+// Pull-based Atom family for infinite scroll
+const galleryInscriptionsPullAtomFamily = Atom.family((sortBy: typeof GallerySortBy.Type) =>
+  rustClientRuntime.pull((get) => {
+    //const sortBy = get(sortAtom);
+    // Create a stream that yields paginated results
+    return Stream.unfoldEffect(0, (page_number) =>
+      Effect.gen(function* () {
+        const rustClient = yield* RustClientService;
+        const result = yield* rustClient["GET/gallery_inscriptions"]({
+          sort_by: sortBy,
+          page_number,
+          page_size: 20
+        });
+        if (result.length === 0) return Option.none();
+        return Option.some([result, page_number + 1] as const);
+      }).pipe(
+        Effect.catchAll((error) => Effect.die(error))
+      )
+    ).pipe(
+      Stream.takeUntil((chunk) => chunk.length < 20), // Stop after emitting partial chunk
+      Stream.flatMap(Stream.fromIterable), // Return array instead of array of arrays
+    );
+  })
+);
 
 const ExploreGalleries = () => {
-  const [galleryInscriptions, setGalleryInscriptions] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [numberVisibility, setNumberVisibility] = useState(true);
   const [zoomGrid, setZoomGrid] = useState(true);
-  const [selectedSortOption, setSelectedSortOption] = useState('latest_first_inscribed_date');
 
-  // record event in GA
-  useEffect(() => {
-    ReactGA.send({
-      hitType: "pageview",
-      page: location.pathname + location.search
-    });
-  }, [])
+  const [selectedSortOption, setSelectedSortOption] = useAtom(sortAtom);
+  const galleryInscriptionsPullAtom = galleryInscriptionsPullAtomFamily(selectedSortOption);
+  const [galleryInscriptionsResult, pullMoreGalleryInscriptions] = useAtom(galleryInscriptionsPullAtom);
 
-  // Fetch gallery inscriptions with sort option
-  useEffect(() => {
-    const fetchGalleryInscriptions = async () => {
-      try {
-        setLoading(true);
-        const queryParams = new URLSearchParams();
-        if (selectedSortOption) {
-          queryParams.append('sort_by', selectedSortOption);
-        }
+  useScrollBottom(pullMoreGalleryInscriptions);
 
-        const queryString = queryParams.toString();
-        const url = queryString ? `/api/gallery_inscriptions?${queryString}` : '/api/gallery_inscriptions';
-        const response = await fetch(url);
-        if (!response.ok) {
-          throw new Error('Failed to fetch gallery inscriptions');
-        }
-        const data = await response.json();
-        setGalleryInscriptions(data || []);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'An unknown error occurred');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchGalleryInscriptions();
-  }, [selectedSortOption]);
-
-  // function to toggle visibility of inscription numbers
   const toggleNumberVisibility = () => {
     setNumberVisibility(!numberVisibility);
   };
@@ -63,16 +71,16 @@ const ExploreGalleries = () => {
     setZoomGrid(!zoomGrid);
   };
 
-  const handleSortOptionChange = (option: string) => {
+  const handleSortOptionChange = (option: typeof GallerySortBy.Type) => {
     setSelectedSortOption(option);
   };
 
   // Gallery sort options and labels
-  const gallerySortOptions = [
-    'latest_first_inscribed_date',
-    'earliest_first_inscribed_date',
-    'latest_last_inscribed_date',
-    'earliest_last_inscribed_date',
+  const gallerySortOptions: (typeof GallerySortBy.Type)[] = [
+    //'latest_first_inscribed_date',
+    //'earliest_first_inscribed_date',
+    //'latest_last_inscribed_date',
+    //'earliest_last_inscribed_date',
     'biggest_file_size',
     'smallest_file_size',
     'biggest_creation_fee',
@@ -81,9 +89,13 @@ const ExploreGalleries = () => {
     'smallest_supply',
     'most_boosts',
     'least_boosts',
+    //'biggest_on_chain_footprint',
+    //'smallest_on_chain_footprint',
+    //'most_volume',
+    //'least_volume',
   ];
 
-  const gallerySortLabels: Record<string, string> = {
+  const gallerySortLabels: Record<typeof GallerySortBy.Type, string> = {
     latest_first_inscribed_date: 'Newest',
     earliest_first_inscribed_date: 'Oldest',
     latest_last_inscribed_date: 'Latest Activity',
@@ -96,27 +108,11 @@ const ExploreGalleries = () => {
     smallest_supply: 'Smallest Supply',
     most_boosts: 'Most Boosts',
     least_boosts: 'Least Boosts',
+    biggest_on_chain_footprint: 'Largest Footprint',
+    smallest_on_chain_footprint: 'Smallest Footprint',
+    most_volume: 'Most Volume',
+    least_volume: 'Least Volume',
   };
-
-  if (loading) {
-    return (
-      <MainContainer>
-        <PageText>Galleries</PageText>
-        <HorizontalDivider />
-        <LoadingText>Loading gallery inscriptions...</LoadingText>
-      </MainContainer>
-    );
-  }
-
-  if (error) {
-    return (
-      <MainContainer>
-        <PageText>Galleries</PageText>
-        <HorizontalDivider />
-        <ErrorText>Error: {error}</ErrorText>
-      </MainContainer>
-    );
-  }
 
   return (
     <MainContainer>
@@ -124,50 +120,66 @@ const ExploreGalleries = () => {
         <PageText>Galleries</PageText>
       </RowContainer>
       <HorizontalDivider />
-      <Stack horizontal={false} center={false} style={{gap: '1.5rem', width: '100%'}}>
-        <NoteContainer>
-          <IconWrapper>
-            <InfoCircleIcon size={'1.25rem'} color={theme.colors.text.secondary} />
-          </IconWrapper>
-          <NoteText>
-            Explore inscriptions from curated onchain galleries. Note that galleries do not imply provenance and can be inscribed by anyone.
-          </NoteText>
-        </NoteContainer>
-        <RowContainer>
-          <Stack horizontal={true} center={true} style={{gap: '.75rem'}}>
-            <GridToggle value={zoomGrid} onToggle={toggleGridType} />
-            <NumberToggleContainer>
-              <Switch
-                checked={numberVisibility}
-                onClick={toggleNumberVisibility}
-                aria-label="Toggle number visibility"
-              >
-                <SwitchCircle checked={numberVisibility} />
-              </Switch>
-              <SwitchLabel>Hide info</SwitchLabel>
-            </NumberToggleContainer>
+      {Result.builder(galleryInscriptionsResult)
+        .onInitial(() => (
+          <LoadingText>Loading gallery inscriptions...</LoadingText>
+        ))
+        .onDefect((cause) => {
+          console.error('Error fetching gallery inscriptions:', cause);
+          return (
+            <ErrorText>Error loading gallery inscriptions. Please try again.</ErrorText>
+          );
+        })
+        .onSuccess((galleryInscriptions) => (
+          <Stack horizontal={false} center={false} style={{gap: '1.5rem', width: '100%'}}>
+            <NoteContainer>
+              <IconWrapper>
+                <InfoCircleIcon size={'1.25rem'} color={theme.colors.text.secondary} />
+              </IconWrapper>
+              <NoteText>
+                Explore inscriptions from curated onchain galleries. Note that galleries do not imply provenance and can be inscribed by anyone.
+              </NoteText>
+            </NoteContainer>
+            <RowContainer>
+              <Stack horizontal={true} center={true} style={{gap: '.75rem'}}>
+                <GridToggle value={zoomGrid} onToggle={toggleGridType} />
+                <NumberToggleContainer>
+                  <Switch
+                    checked={numberVisibility}
+                    onClick={toggleNumberVisibility}
+                    aria-label="Toggle number visibility"
+                  >
+                    <SwitchCircle checked={numberVisibility} />
+                  </Switch>
+                  <SwitchLabel>Hide info</SwitchLabel>
+                </NumberToggleContainer>
+              </Stack>
+              <DropdownCustom<typeof GallerySortBy.Type>
+                onOptionSelect={handleSortOptionChange}
+                initialOption={selectedSortOption}
+                options={gallerySortOptions}
+                labels={gallerySortLabels}
+                placeholder="Sort by:"
+              />
+            </RowContainer>
+            <GalleryContainer>
+              <Gallery
+                inscriptionList={galleryInscriptions.items}
+                numberVisibility={numberVisibility}
+                zoomGrid={zoomGrid}
+              />
+              {galleryInscriptions.items.length === 0 && (
+                <EmptyState>
+                  <EmptyText>No gallery inscriptions found</EmptyText>
+                </EmptyState>
+              )}
+            </GalleryContainer>
+            {galleryInscriptionsResult.waiting && (
+              <LoadingText>Loading more gallery inscriptions...</LoadingText>
+            )}
           </Stack>
-          <DropdownCustom
-            onOptionSelect={handleSortOptionChange}
-            initialOption={selectedSortOption}
-            options={gallerySortOptions}
-            labels={gallerySortLabels}
-            placeholder="Sort by:"
-          />
-        </RowContainer>
-        <GalleryContainer>
-          <Gallery
-            inscriptionList={galleryInscriptions}
-            numberVisibility={numberVisibility}
-            zoomGrid={zoomGrid}
-          />
-          {galleryInscriptions.length === 0 && !loading && (
-            <EmptyState>
-              <EmptyText>No gallery inscriptions found</EmptyText>
-            </EmptyState>
-          )}
-        </GalleryContainer>
-      </Stack>
+        ))
+        .render()}
     </MainContainer>
   )
 }
