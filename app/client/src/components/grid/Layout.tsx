@@ -111,7 +111,7 @@ export const TabText = styled.div<{ isActive: boolean }>`
   line-height: 16px; /* 100% */
   cursor: pointer;
   ${props => props.isActive ? 'border-bottom: 2px solid ' + theme.colors.background.verm : ''};
-  
+
   &:hover {
     color: ${theme.colors.background.verm};
     svg {
@@ -121,4 +121,12 @@ export const TabText = styled.div<{ isActive: boolean }>`
   &:active {
     transform: scale(0.96);
   }
+`;
+
+export const LoadingContainer = styled.div`
+  width: 100%;
+  height: 4rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 `;

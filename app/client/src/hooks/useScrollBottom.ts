@@ -28,5 +28,6 @@ export function useScrollBottom(f: () => void) {
     return () => {
       window.removeEventListener("scroll", onscroll)
     }
-  }, [bottomRef])
+  }, [bottomRef, f]) // added f dependency in case f changes (i.e. in the case of Atom families)
 }
+// Source: https://github.com/tim-smart/bunnings-lite/blob/b344d4591fe417dd5748608041f852b1eca42a4d/src/lib/useScrollBottom.ts

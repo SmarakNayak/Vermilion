@@ -3,11 +3,12 @@ import styled from 'styled-components';
 import theme from '../styles/theme';
 import { InfoCircleIcon } from '../components/common/Icon';
 import Gallery from '../components/Gallery';
-import { HorizontalDivider, RowContainer, GalleryContainer } from '../components/grid/Layout';
+import { HorizontalDivider, RowContainer, GalleryContainer, LoadingContainer } from '../components/grid/Layout';
 import Stack from '../components/Stack';
 import GridToggle from '../components/grid/GridToggle';
 import { NumberToggleContainer, Switch, SwitchCircle, SwitchLabel } from '../components/grid/GridControls';
 import DropdownCustom from '../components/DropdownCustom';
+import Spinner from '../components/Spinner';
 import { Effect, Stream, Option } from 'effect';
 import { Atom, useAtom, Result, useAtomRefresh } from '@effect-atom/atom-react';
 import { rustClientRuntime, RustClientService } from '../atoms/rustAtoms';
@@ -15,7 +16,7 @@ import type { GallerySortBy } from '../api/rustClient/RustClient';
 import { useScrollBottom } from '../hooks/useScrollBottom';
 
 const sortAtom = Atom.make<typeof GallerySortBy.Type>('latest_first_inscribed_date');
-// Single fetch Atom (not-used, here as a reference)
+// Single fetch Atom (not-used, leaving here as a reference)
 const galleryInscriptionsAtom = rustClientRuntime.atom((get) => {
   const sortBy = get(sortAtom);
   return Effect.gen(function* () {
@@ -62,6 +63,7 @@ const ExploreGalleries = () => {
   const [galleryInscriptionsResult, pullMoreGalleryInscriptions] = useAtom(galleryInscriptionsPullAtom);
 
   useScrollBottom(pullMoreGalleryInscriptions);
+
 
   const toggleNumberVisibility = () => {
     setNumberVisibility(!numberVisibility);
@@ -120,66 +122,57 @@ const ExploreGalleries = () => {
         <PageText>Galleries</PageText>
       </RowContainer>
       <HorizontalDivider />
-      {Result.builder(galleryInscriptionsResult)
-        .onInitial(() => (
-          <LoadingText>Loading gallery inscriptions...</LoadingText>
-        ))
-        .onDefect((cause) => {
-          console.error('Error fetching gallery inscriptions:', cause);
-          return (
-            <ErrorText>Error loading gallery inscriptions. Please try again.</ErrorText>
-          );
-        })
-        .onSuccess((galleryInscriptions) => (
-          <Stack horizontal={false} center={false} style={{gap: '1.5rem', width: '100%'}}>
-            <NoteContainer>
-              <IconWrapper>
-                <InfoCircleIcon size={'1.25rem'} color={theme.colors.text.secondary} />
-              </IconWrapper>
-              <NoteText>
-                Explore inscriptions from curated onchain galleries. Note that galleries do not imply provenance and can be inscribed by anyone.
-              </NoteText>
-            </NoteContainer>
-            <RowContainer>
-              <Stack horizontal={true} center={true} style={{gap: '.75rem'}}>
-                <GridToggle value={zoomGrid} onToggle={toggleGridType} />
-                <NumberToggleContainer>
-                  <Switch
-                    checked={numberVisibility}
-                    onClick={toggleNumberVisibility}
-                    aria-label="Toggle number visibility"
-                  >
-                    <SwitchCircle checked={numberVisibility} />
-                  </Switch>
-                  <SwitchLabel>Hide info</SwitchLabel>
-                </NumberToggleContainer>
-              </Stack>
-              <DropdownCustom<typeof GallerySortBy.Type>
-                onOptionSelect={handleSortOptionChange}
-                initialOption={selectedSortOption}
-                options={gallerySortOptions}
-                labels={gallerySortLabels}
-                placeholder="Sort by:"
-              />
-            </RowContainer>
-            <GalleryContainer>
-              <Gallery
-                inscriptionList={galleryInscriptions.items}
-                numberVisibility={numberVisibility}
-                zoomGrid={zoomGrid}
-              />
-              {galleryInscriptions.items.length === 0 && (
-                <EmptyState>
-                  <EmptyText>No gallery inscriptions found</EmptyText>
-                </EmptyState>
-              )}
-            </GalleryContainer>
-            {galleryInscriptionsResult.waiting && (
-              <LoadingText>Loading more gallery inscriptions...</LoadingText>
-            )}
-          </Stack>
-        ))
-        .render()}
+        <Stack horizontal={false} center={false} style={{gap: '1.5rem', width: '100%'}}>
+          <NoteContainer>
+            <IconWrapper>
+              <InfoCircleIcon size={'1.25rem'} color={theme.colors.text.secondary} />
+            </IconWrapper>
+            <NoteText>
+              Explore inscriptions from curated onchain galleries. Note that galleries do not imply provenance and can be inscribed by anyone.
+            </NoteText>
+          </NoteContainer>
+          <RowContainer>
+            <Stack horizontal={true} center={true} style={{gap: '.75rem'}}>
+              <GridToggle value={zoomGrid} onToggle={toggleGridType} />
+              <NumberToggleContainer>
+                <Switch
+                  checked={numberVisibility}
+                  onClick={toggleNumberVisibility}
+                  aria-label="Toggle number visibility"
+                >
+                  <SwitchCircle checked={numberVisibility} />
+                </Switch>
+                <SwitchLabel>Hide info</SwitchLabel>
+              </NumberToggleContainer>
+            </Stack>
+            <DropdownCustom<typeof GallerySortBy.Type>
+              onOptionSelect={handleSortOptionChange}
+              initialOption={selectedSortOption}
+              options={gallerySortOptions}
+              labels={gallerySortLabels}
+              placeholder="Sort by:"
+            />
+          </RowContainer>
+          <GalleryContainer>
+            {Result.builder(galleryInscriptionsResult)
+              .onInitial(() => <LoadingContainer><Spinner /></LoadingContainer>)
+              .onFailure((error) => <ErrorText>Error loading gallery inscriptions. Please refresh and try again</ErrorText>)
+              .onSuccess((galleryInscriptions) =>
+                <>
+                  <Gallery
+                    inscriptionList={galleryInscriptions.items}
+                    numberVisibility={numberVisibility}
+                    zoomGrid={zoomGrid}
+                  />
+                  {galleryInscriptionsResult.waiting && (
+                    <LoadingContainer><Spinner /></LoadingContainer>
+                  )}
+                </>
+              )
+              .render()
+            }
+          </GalleryContainer>
+        </Stack>
     </MainContainer>
   )
 }
@@ -231,14 +224,6 @@ const NoteText = styled.p`
   margin: 0;
   padding: 0;
   flex: 1;
-`;
-
-const LoadingText = styled.p`
-  font-family: ${theme.typography.fontFamilies.medium};
-  font-size: 1rem;
-  color: ${theme.colors.text.secondary};
-  text-align: center;
-  margin: 2rem 0;
 `;
 
 const ErrorText = styled.p`
