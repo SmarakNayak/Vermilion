@@ -176,7 +176,7 @@ const GridItemContainer = (props: any) => {
     {props.numberVisibility && (
       <InfoContainer applySpace={shouldApplySpace}>
         <TextLink to={'/inscription/' + props.number} >
-          <ItemText>{props.isCollectionPage ? displayName : addCommas(props.number)}</ItemText>
+          <ItemText>{props.isCollectionPage || props.isGalleryPage ? displayName : addCommas(props.number)}</ItemText>
         </TextLink>
         <TagContainer>
           {props.isCollectionPage && props.item_name?.length > 0 && (
@@ -198,15 +198,9 @@ const GridItemContainer = (props: any) => {
               value={props.rune}
             />
           )}
-          {props.onChainTitle && (
-            <GridTag
-              color={theme.colors.background.verm}
-              value={props.onChainTitle}
-            />
-          )}
           {props.onChainArtist && (
             <GridTag
-              color={theme.colors.background.purp}
+              color={theme.colors.background.verm}
               value={props.onChainArtist}
             />
           )}

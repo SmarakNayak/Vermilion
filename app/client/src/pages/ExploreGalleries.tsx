@@ -168,11 +168,8 @@ const ExploreGalleries = () => {
                   <GridContainer zoomGrid={zoomGrid}>
                     {galleryInscriptions.items.map(
                       entry => {
-                        const onChainMetadata = (entry as any).on_chain_metadata;
-                        const onChainArtist = extractArtistFromMetadata(onChainMetadata);
-                        const onChainTitle = extractTitleFromMetadata(onChainMetadata);
-                        console.log("hello", entry);
-                        console.log(onChainMetadata, onChainArtist, onChainTitle);
+                        const onChainArtist = extractArtistFromMetadata(entry.on_chain_metadata);
+                        const onChainTitle = extractTitleFromMetadata(entry.on_chain_metadata);
 
                         return (
                           <GridItemContainer
@@ -183,13 +180,14 @@ const ExploreGalleries = () => {
                             is_boost={entry.delegate}
                             is_child={entry.parents?.length > 0}
                             is_recursive={entry.is_recursive}
-                            item_name={undefined}
+                            item_name={onChainTitle}
                             key={entry.number}
                             number={entry.number}
                             numberVisibility={numberVisibility}
                             onChainTitle={onChainTitle}
                             onChainArtist={onChainArtist}
                             rune={entry.spaced_rune}
+                            isGalleryPage={true} // to show title instead of number if available
                           />
                         );
                       }
