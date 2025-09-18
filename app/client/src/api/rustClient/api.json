@@ -7559,6 +7559,165 @@
         }
       }
     },
+    "/gallery_inscriptions": {
+      "get": {
+        "parameters": [
+          {
+            "in": "query",
+            "name": "sort_by",
+            "description": "Sort order for gallery results",
+            "schema": {
+              "description": "Sort order for gallery results",
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/GallerySortBy"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "style": "form"
+          },
+          {
+            "in": "query",
+            "name": "page_number",
+            "description": "Page number for pagination, starting from 0",
+            "schema": {
+              "description": "Page number for pagination, starting from 0",
+              "type": [
+                "integer",
+                "null"
+              ],
+              "format": "uint",
+              "minimum": 0,
+              "examples": [
+                "0"
+              ]
+            },
+            "style": "form"
+          },
+          {
+            "in": "query",
+            "name": "page_size",
+            "description": "Number of items per page, maximum 100",
+            "schema": {
+              "description": "Number of items per page, maximum 100",
+              "type": [
+                "integer",
+                "null"
+              ],
+              "format": "uint",
+              "minimum": 1,
+              "examples": [
+                "20"
+              ],
+              "maximum": 100
+            },
+            "style": "form"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/FullMetadata"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request - Invalid input parameters",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "example": "BadRequest"
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Invalid parameter value"
+                    }
+                  },
+                  "required": [
+                    "error",
+                    "message"
+                  ],
+                  "example": {
+                    "error": "BadRequest",
+                    "message": "Invalid parameter value"
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found - Resource does not exist",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "example": "NotFound"
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Resource not found"
+                    }
+                  },
+                  "required": [
+                    "error",
+                    "message"
+                  ],
+                  "example": {
+                    "error": "NotFound",
+                    "message": "Resource not found"
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error - Server encountered an error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "example": "InternalServerError"
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Internal server error occurred"
+                    }
+                  },
+                  "required": [
+                    "error",
+                    "message"
+                  ],
+                  "example": {
+                    "error": "InternalServerError",
+                    "message": "Internal server error occurred"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/galleries_summary": {
       "get": {
         "parameters": [
@@ -7727,165 +7886,6 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/GallerySummary"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Bad Request - Invalid input parameters",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "error": {
-                      "type": "string",
-                      "example": "BadRequest"
-                    },
-                    "message": {
-                      "type": "string",
-                      "example": "Invalid parameter value"
-                    }
-                  },
-                  "required": [
-                    "error",
-                    "message"
-                  ],
-                  "example": {
-                    "error": "BadRequest",
-                    "message": "Invalid parameter value"
-                  }
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Not Found - Resource does not exist",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "error": {
-                      "type": "string",
-                      "example": "NotFound"
-                    },
-                    "message": {
-                      "type": "string",
-                      "example": "Resource not found"
-                    }
-                  },
-                  "required": [
-                    "error",
-                    "message"
-                  ],
-                  "example": {
-                    "error": "NotFound",
-                    "message": "Resource not found"
-                  }
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "Internal Server Error - Server encountered an error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "error": {
-                      "type": "string",
-                      "example": "InternalServerError"
-                    },
-                    "message": {
-                      "type": "string",
-                      "example": "Internal server error occurred"
-                    }
-                  },
-                  "required": [
-                    "error",
-                    "message"
-                  ],
-                  "example": {
-                    "error": "InternalServerError",
-                    "message": "Internal server error occurred"
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/gallery_inscriptions": {
-      "get": {
-        "parameters": [
-          {
-            "in": "query",
-            "name": "sort_by",
-            "description": "Sort order for gallery results",
-            "schema": {
-              "description": "Sort order for gallery results",
-              "anyOf": [
-                {
-                  "$ref": "#/components/schemas/GallerySortBy"
-                },
-                {
-                  "type": "null"
-                }
-              ]
-            },
-            "style": "form"
-          },
-          {
-            "in": "query",
-            "name": "page_number",
-            "description": "Page number for pagination, starting from 0",
-            "schema": {
-              "description": "Page number for pagination, starting from 0",
-              "type": [
-                "integer",
-                "null"
-              ],
-              "format": "uint",
-              "minimum": 0,
-              "examples": [
-                "0"
-              ]
-            },
-            "style": "form"
-          },
-          {
-            "in": "query",
-            "name": "page_size",
-            "description": "Number of items per page, maximum 100",
-            "schema": {
-              "description": "Number of items per page, maximum 100",
-              "type": [
-                "integer",
-                "null"
-              ],
-              "format": "uint",
-              "minimum": 1,
-              "examples": [
-                "20"
-              ],
-              "maximum": 100
-            },
-            "style": "form"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/FullMetadata"
-                  }
                 }
               }
             }
@@ -9221,7 +9221,6 @@
               "null"
             ]
           },
-          "raw_properties": {},
           "inscribed_by_address": {
             "type": [
               "string",
@@ -9260,7 +9259,6 @@
           "is_maybe_json",
           "is_bitmap_style",
           "is_recursive",
-          "raw_properties",
           "off_chain_metadata"
         ]
       },
@@ -9591,7 +9589,8 @@
           "video",
           "html",
           "json",
-          "namespace"
+          "namespace",
+          "javascript"
         ]
       },
       "SatributeType": {
@@ -9956,7 +9955,6 @@
               "null"
             ]
           },
-          "raw_properties": {},
           "inscribed_by_address": {
             "type": [
               "string",
@@ -10008,7 +10006,6 @@
           "is_maybe_json",
           "is_bitmap_style",
           "is_recursive",
-          "raw_properties",
           "off_chain_metadata"
         ]
       },
@@ -10970,7 +10967,9 @@
           "biggest_supply",
           "smallest_supply",
           "most_boosts",
-          "least_boosts"
+          "least_boosts",
+          "newest",
+          "oldest"
         ]
       },
       "GallerySummary": {
@@ -11001,6 +11000,13 @@
             "format": "int64"
           },
           "last_inscribed_date": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int64"
+          },
+          "gallery_inscribed_date": {
             "type": [
               "integer",
               "null"

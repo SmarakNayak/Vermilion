@@ -290,7 +290,7 @@ export class InscriptionEditionsSha256Sha256500 extends S.Struct({
   "message": S.String
 }) {}
 
-export class ContentType extends S.Literal("text", "image", "gif", "audio", "video", "html", "json", "namespace") {}
+export class ContentType extends S.Literal("text", "image", "gif", "audio", "video", "html", "json", "namespace", "javascript") {}
 
 export class SatributeType extends S.Literal("vintage", "nakamoto", "firsttransaction", "palindrome", "pizza", "block9", "block9_450", "block78", "alpha", "omega", "uniform_palinception", "perfect_palinception", "block286", "jpeg", "uncommon", "rare", "epic", "legendary", "mythic", "black_uncommon", "black_rare", "black_epic", "black_legendary") {}
 
@@ -1598,7 +1598,39 @@ export class InscriptionsInOnChainCollectionParents500 extends S.Struct({
   "message": S.String
 }) {}
 
-export class GallerySortBy extends S.Literal("biggest_on_chain_footprint", "smallest_on_chain_footprint", "most_volume", "least_volume", "biggest_file_size", "smallest_file_size", "biggest_creation_fee", "smallest_creation_fee", "earliest_first_inscribed_date", "latest_first_inscribed_date", "earliest_last_inscribed_date", "latest_last_inscribed_date", "biggest_supply", "smallest_supply", "most_boosts", "least_boosts") {}
+export class GallerySortBy extends S.Literal("biggest_on_chain_footprint", "smallest_on_chain_footprint", "most_volume", "least_volume", "biggest_file_size", "smallest_file_size", "biggest_creation_fee", "smallest_creation_fee", "earliest_first_inscribed_date", "latest_first_inscribed_date", "earliest_last_inscribed_date", "latest_last_inscribed_date", "biggest_supply", "smallest_supply", "most_boosts", "least_boosts", "newest", "oldest") {}
+
+export class GalleryInscriptionsParams extends S.Struct({
+  /**
+* Sort order for gallery results
+*/
+"sort_by": S.optionalWith(GallerySortBy, { nullable: true }),
+  /**
+* Page number for pagination, starting from 0
+*/
+"page_number": S.optionalWith(S.Int.pipe(S.greaterThanOrEqualTo(0)), { nullable: true }),
+  /**
+* Number of items per page, maximum 100
+*/
+"page_size": S.optionalWith(S.Int.pipe(S.greaterThanOrEqualTo(1), S.lessThanOrEqualTo(100)), { nullable: true })
+}) {}
+
+export class GalleryInscriptions200 extends S.Array(FullMetadata) {}
+
+export class GalleryInscriptions400 extends S.Struct({
+  "error": S.String,
+  "message": S.String
+}) {}
+
+export class GalleryInscriptions404 extends S.Struct({
+  "error": S.String,
+  "message": S.String
+}) {}
+
+export class GalleryInscriptions500 extends S.Struct({
+  "error": S.String,
+  "message": S.String
+}) {}
 
 export class GalleriesSummaryParams extends S.Struct({
   /**
@@ -1621,6 +1653,7 @@ export class GallerySummary extends S.Class<GallerySummary>("GallerySummary")({
   "total_inscription_size": S.optionalWith(S.Int, { nullable: true }),
   "first_inscribed_date": S.optionalWith(S.Int, { nullable: true }),
   "last_inscribed_date": S.optionalWith(S.Int, { nullable: true }),
+  "gallery_inscribed_date": S.optionalWith(S.Int, { nullable: true }),
   "supply": S.optionalWith(S.Int, { nullable: true }),
   "range_start": S.optionalWith(S.Int, { nullable: true }),
   "range_end": S.optionalWith(S.Int, { nullable: true }),
@@ -1660,38 +1693,6 @@ export class GallerySummaryGalleryId404 extends S.Struct({
 }) {}
 
 export class GallerySummaryGalleryId500 extends S.Struct({
-  "error": S.String,
-  "message": S.String
-}) {}
-
-export class GalleryInscriptionsParams extends S.Struct({
-  /**
-* Sort order for gallery results
-*/
-"sort_by": S.optionalWith(GallerySortBy, { nullable: true }),
-  /**
-* Page number for pagination, starting from 0
-*/
-"page_number": S.optionalWith(S.Int.pipe(S.greaterThanOrEqualTo(0)), { nullable: true }),
-  /**
-* Number of items per page, maximum 100
-*/
-"page_size": S.optionalWith(S.Int.pipe(S.greaterThanOrEqualTo(1), S.lessThanOrEqualTo(100)), { nullable: true })
-}) {}
-
-export class GalleryInscriptions200 extends S.Array(FullMetadata) {}
-
-export class GalleryInscriptions400 extends S.Struct({
-  "error": S.String,
-  "message": S.String
-}) {}
-
-export class GalleryInscriptions404 extends S.Struct({
-  "error": S.String,
-  "message": S.String
-}) {}
-
-export class GalleryInscriptions500 extends S.Struct({
   "error": S.String,
   "message": S.String
 }) {}
@@ -2686,6 +2687,16 @@ export const make = (
       orElse: unexpectedStatus
     }))
   ),
+  "GET/gallery_inscriptions": (options) => HttpClientRequest.get(`/gallery_inscriptions`).pipe(
+    HttpClientRequest.setUrlParams({ "sort_by": options?.["sort_by"] as any, "page_number": options?.["page_number"] as any, "page_size": options?.["page_size"] as any }),
+    withResponse(HttpClientResponse.matchStatus({
+      "2xx": decodeSuccess(GalleryInscriptions200),
+      "400": decodeError("GalleryInscriptions400", GalleryInscriptions400),
+      "404": decodeError("GalleryInscriptions404", GalleryInscriptions404),
+      "500": decodeError("GalleryInscriptions500", GalleryInscriptions500),
+      orElse: unexpectedStatus
+    }))
+  ),
   "GET/galleries_summary": (options) => HttpClientRequest.get(`/galleries_summary`).pipe(
     HttpClientRequest.setUrlParams({ "sort_by": options?.["sort_by"] as any, "page_number": options?.["page_number"] as any, "page_size": options?.["page_size"] as any }),
     withResponse(HttpClientResponse.matchStatus({
@@ -2702,16 +2713,6 @@ export const make = (
       "400": decodeError("GallerySummaryGalleryId400", GallerySummaryGalleryId400),
       "404": decodeError("GallerySummaryGalleryId404", GallerySummaryGalleryId404),
       "500": decodeError("GallerySummaryGalleryId500", GallerySummaryGalleryId500),
-      orElse: unexpectedStatus
-    }))
-  ),
-  "GET/gallery_inscriptions": (options) => HttpClientRequest.get(`/gallery_inscriptions`).pipe(
-    HttpClientRequest.setUrlParams({ "sort_by": options?.["sort_by"] as any, "page_number": options?.["page_number"] as any, "page_size": options?.["page_size"] as any }),
-    withResponse(HttpClientResponse.matchStatus({
-      "2xx": decodeSuccess(GalleryInscriptions200),
-      "400": decodeError("GalleryInscriptions400", GalleryInscriptions400),
-      "404": decodeError("GalleryInscriptions404", GalleryInscriptions404),
-      "500": decodeError("GalleryInscriptions500", GalleryInscriptions500),
       orElse: unexpectedStatus
     }))
   ),
@@ -2857,9 +2858,9 @@ export interface RustClient {
   readonly "GET/on_chain_collection_summary/{parents}": (parents: string) => Effect.Effect<typeof OnChainCollectionSummary.Type, HttpClientError.HttpClientError | ParseError | RustClientError<"OnChainCollectionSummaryParents400", typeof OnChainCollectionSummaryParents400.Type> | RustClientError<"OnChainCollectionSummaryParents404", typeof OnChainCollectionSummaryParents404.Type> | RustClientError<"OnChainCollectionSummaryParents500", typeof OnChainCollectionSummaryParents500.Type>>
   readonly "GET/on_chain_collection_holders/{parents}": (parents: string, options?: typeof OnChainCollectionHoldersParentsParams.Encoded | undefined) => Effect.Effect<typeof OnChainCollectionHoldersParents200.Type, HttpClientError.HttpClientError | ParseError | RustClientError<"OnChainCollectionHoldersParents400", typeof OnChainCollectionHoldersParents400.Type> | RustClientError<"OnChainCollectionHoldersParents404", typeof OnChainCollectionHoldersParents404.Type> | RustClientError<"OnChainCollectionHoldersParents500", typeof OnChainCollectionHoldersParents500.Type>>
   readonly "GET/inscriptions_in_on_chain_collection/{parents}": (parents: string, options?: typeof InscriptionsInOnChainCollectionParentsParams.Encoded | undefined) => Effect.Effect<typeof InscriptionsInOnChainCollectionParents200.Type, HttpClientError.HttpClientError | ParseError | RustClientError<"InscriptionsInOnChainCollectionParents400", typeof InscriptionsInOnChainCollectionParents400.Type> | RustClientError<"InscriptionsInOnChainCollectionParents404", typeof InscriptionsInOnChainCollectionParents404.Type> | RustClientError<"InscriptionsInOnChainCollectionParents500", typeof InscriptionsInOnChainCollectionParents500.Type>>
+  readonly "GET/gallery_inscriptions": (options?: typeof GalleryInscriptionsParams.Encoded | undefined) => Effect.Effect<typeof GalleryInscriptions200.Type, HttpClientError.HttpClientError | ParseError | RustClientError<"GalleryInscriptions400", typeof GalleryInscriptions400.Type> | RustClientError<"GalleryInscriptions404", typeof GalleryInscriptions404.Type> | RustClientError<"GalleryInscriptions500", typeof GalleryInscriptions500.Type>>
   readonly "GET/galleries_summary": (options?: typeof GalleriesSummaryParams.Encoded | undefined) => Effect.Effect<typeof GalleriesSummary200.Type, HttpClientError.HttpClientError | ParseError | RustClientError<"GalleriesSummary400", typeof GalleriesSummary400.Type> | RustClientError<"GalleriesSummary404", typeof GalleriesSummary404.Type> | RustClientError<"GalleriesSummary500", typeof GalleriesSummary500.Type>>
   readonly "GET/gallery_summary/{gallery_id}": (galleryId: string) => Effect.Effect<typeof GallerySummary.Type, HttpClientError.HttpClientError | ParseError | RustClientError<"GallerySummaryGalleryId400", typeof GallerySummaryGalleryId400.Type> | RustClientError<"GallerySummaryGalleryId404", typeof GallerySummaryGalleryId404.Type> | RustClientError<"GallerySummaryGalleryId500", typeof GallerySummaryGalleryId500.Type>>
-  readonly "GET/gallery_inscriptions": (options?: typeof GalleryInscriptionsParams.Encoded | undefined) => Effect.Effect<typeof GalleryInscriptions200.Type, HttpClientError.HttpClientError | ParseError | RustClientError<"GalleryInscriptions400", typeof GalleryInscriptions400.Type> | RustClientError<"GalleryInscriptions404", typeof GalleryInscriptions404.Type> | RustClientError<"GalleryInscriptions500", typeof GalleryInscriptions500.Type>>
   readonly "GET/gallery_holders/{gallery_id}": (galleryId: string, options?: typeof GalleryHoldersGalleryIdParams.Encoded | undefined) => Effect.Effect<typeof GalleryHoldersGalleryId200.Type, HttpClientError.HttpClientError | ParseError | RustClientError<"GalleryHoldersGalleryId400", typeof GalleryHoldersGalleryId400.Type> | RustClientError<"GalleryHoldersGalleryId404", typeof GalleryHoldersGalleryId404.Type> | RustClientError<"GalleryHoldersGalleryId500", typeof GalleryHoldersGalleryId500.Type>>
   readonly "GET/inscriptions_in_gallery/{gallery_id}": (galleryId: string, options?: typeof InscriptionsInGalleryGalleryIdParams.Encoded | undefined) => Effect.Effect<typeof InscriptionsInGalleryGalleryId200.Type, HttpClientError.HttpClientError | ParseError | RustClientError<"InscriptionsInGalleryGalleryId400", typeof InscriptionsInGalleryGalleryId400.Type> | RustClientError<"InscriptionsInGalleryGalleryId404", typeof InscriptionsInGalleryGalleryId404.Type> | RustClientError<"InscriptionsInGalleryGalleryId500", typeof InscriptionsInGalleryGalleryId500.Type>>
   readonly "GET/search/{search_by_query}": (searchByQuery: string) => Effect.Effect<typeof SearchResult.Type, HttpClientError.HttpClientError | ParseError | RustClientError<"SearchSearchByQuery400", typeof SearchSearchByQuery400.Type> | RustClientError<"SearchSearchByQuery404", typeof SearchSearchByQuery404.Type> | RustClientError<"SearchSearchByQuery500", typeof SearchSearchByQuery500.Type>>
