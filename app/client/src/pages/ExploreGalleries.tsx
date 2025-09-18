@@ -2,7 +2,9 @@ import { useState } from 'react';
 import styled from 'styled-components';
 import theme from '../styles/theme';
 import { InfoCircleIcon } from '../components/common/Icon';
-import Gallery from '../components/Gallery';
+import GridItemContainer from '../components/GridItemContainer';
+import { GridContainer } from '../components/GalleryInfiniteScroll';
+import { extractArtistFromMetadata, extractTitleFromMetadata } from '../utils/metadata';
 import { HorizontalDivider, RowContainer, GalleryContainer, LoadingContainer } from '../components/grid/Layout';
 import Stack from '../components/Stack';
 import GridToggle from '../components/grid/GridToggle';
@@ -163,11 +165,36 @@ const ExploreGalleries = () => {
               .onFailure((error) => <ErrorText>Error loading gallery inscriptions. Please refresh and try again</ErrorText>)
               .onSuccess((galleryInscriptions) =>
                 <>
-                  <Gallery
-                    inscriptionList={galleryInscriptions.items}
-                    numberVisibility={numberVisibility}
-                    zoomGrid={zoomGrid}
-                  />
+                  <GridContainer zoomGrid={zoomGrid}>
+                    {galleryInscriptions.items.map(
+                      entry => {
+                        const onChainMetadata = (entry as any).on_chain_metadata;
+                        const onChainArtist = extractArtistFromMetadata(onChainMetadata);
+                        const onChainTitle = extractTitleFromMetadata(onChainMetadata);
+                        console.log("hello", entry);
+                        console.log(onChainMetadata, onChainArtist, onChainTitle);
+
+                        return (
+                          <GridItemContainer
+                            collection={entry.collection_name}
+                            collection_symbol={entry.collection_symbol}
+                            content_length={entry.content_length}
+                            id={entry.id}
+                            is_boost={entry.delegate}
+                            is_child={entry.parents?.length > 0}
+                            is_recursive={entry.is_recursive}
+                            item_name={undefined}
+                            key={entry.number}
+                            number={entry.number}
+                            numberVisibility={numberVisibility}
+                            onChainTitle={onChainTitle}
+                            onChainArtist={onChainArtist}
+                            rune={entry.spaced_rune}
+                          />
+                        );
+                      }
+                    )}
+                  </GridContainer>
                   {galleryInscriptionsResult.waiting && (
                     <LoadingContainer><Spinner /></LoadingContainer>
                   )}
@@ -252,6 +279,5 @@ const EmptyText = styled.p`
   color: ${theme.colors.text.tertiary};
   margin: 0;
 `;
-
 
 export default ExploreGalleries;

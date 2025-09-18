@@ -198,6 +198,18 @@ const GridItemContainer = (props: any) => {
               value={props.rune}
             />
           )}
+          {props.onChainTitle && (
+            <GridTag
+              color={theme.colors.background.verm}
+              value={props.onChainTitle}
+            />
+          )}
+          {props.onChainArtist && (
+            <GridTag
+              color={theme.colors.background.purp}
+              value={props.onChainArtist}
+            />
+          )}
           {props.is_child && (
             <GridTag
               color={theme.colors.text.secondary}
