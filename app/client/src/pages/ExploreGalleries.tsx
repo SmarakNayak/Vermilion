@@ -15,7 +15,7 @@ import { rustClientRuntime, RustClientService } from '../atoms/rustAtoms';
 import type { GallerySortBy } from '../api/rustClient/RustClient';
 import { useScrollBottom } from '../hooks/useScrollBottom';
 
-const sortAtom = Atom.make<typeof GallerySortBy.Type>('latest_first_inscribed_date');
+const sortAtom = Atom.make<typeof GallerySortBy.Type>('newest');
 // Single fetch Atom (not-used, leaving here as a reference)
 const galleryInscriptionsAtom = rustClientRuntime.atom((get) => {
   const sortBy = get(sortAtom);
@@ -83,10 +83,12 @@ const ExploreGalleries = () => {
     //'earliest_first_inscribed_date',
     //'latest_last_inscribed_date',
     //'earliest_last_inscribed_date',
-    'biggest_file_size',
-    'smallest_file_size',
-    'biggest_creation_fee',
-    'smallest_creation_fee',
+    // 'biggest_file_size',
+    // 'smallest_file_size',
+    // 'biggest_creation_fee',
+    // 'smallest_creation_fee',
+    'newest',
+    'oldest',
     'biggest_supply',
     'smallest_supply',
     'most_boosts',
@@ -98,8 +100,8 @@ const ExploreGalleries = () => {
   ];
 
   const gallerySortLabels: Record<typeof GallerySortBy.Type, string> = {
-    latest_first_inscribed_date: 'Newest',
-    earliest_first_inscribed_date: 'Oldest',
+    latest_first_inscribed_date: 'Recent',
+    earliest_first_inscribed_date: 'Historic',
     latest_last_inscribed_date: 'Latest Activity',
     earliest_last_inscribed_date: 'Earliest Activity',
     biggest_file_size: 'Largest File',
@@ -114,6 +116,8 @@ const ExploreGalleries = () => {
     smallest_on_chain_footprint: 'Smallest Footprint',
     most_volume: 'Most Volume',
     least_volume: 'Least Volume',
+    newest: 'Newest',
+    oldest: 'Oldest',
   };
 
   return (
