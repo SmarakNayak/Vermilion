@@ -49,7 +49,7 @@ import type { ContentType, SatributeType, CharmType } from '../api/rustClient/Ru
 import { InscriptionSortBy } from '../api/rustClient/RustClient';
 import { useScrollBottom } from '../hooks/useScrollBottom';
 import { extractArtistFromMetadata, extractTitleFromMetadata } from '../utils/metadata';
-import { gallerySummaryAtomFamily } from '../atoms/rustFamilyAtomics';
+import { gallerySummaryAtomFamily, inscriptionMetadataAtomFamily } from '../atoms/rustFamilyAtomics';
 
 class GalleryInscriptionsParams extends Data.Class<{
   readonly galleryId: string | undefined;
@@ -103,7 +103,9 @@ const Gallery = () => {
     "Charms": [] as ReadonlyArray<typeof CharmType.Type>
   });
 
-  const gallerySummaryResult = useAtomValue(gallerySummaryAtomFamily(gallery_id || ''));
+  const gallerySummaryResult = useAtomValue(gallerySummaryAtomFamily(gallery_id));
+  const galleryInscriptionMetadataResult = useAtomValue(inscriptionMetadataAtomFamily(gallery_id));
+
 
   // Create the pull atom for the current gallery and filters
   const galleryInscriptionsPullAtom = galleryInscriptionsPullAtomFamily(new GalleryInscriptionsParams({
@@ -136,7 +138,7 @@ const Gallery = () => {
     setSelectedSortOption(option);
   };
 
-  const handleFilterOptionChange = (filterOptions: {
+  const handleFilterOptionsChange = (filterOptions: {
     "ContentType": ReadonlyArray<typeof ContentType.Type>;
     "Satributes": ReadonlyArray<typeof SatributeType.Type>;
     "Charms": ReadonlyArray<typeof CharmType.Type>;
@@ -146,180 +148,97 @@ const Gallery = () => {
 
   return (
     <PageContainer>
-      <MainContentStack>
-        <HeaderContainer>
-          <DetailsStack>
-            <RowContainer style={{justifyContent: 'flex-start'}}>
-              <Link to="/galleries" style={{textDecoration: 'none', color: 'inherit'}}>
-                <MainText style={{color: theme.colors.text.tertiary}}>Galleries</MainText>
-              </Link>
-              <ChevronRightSmallIcon size={'1rem'} color={theme.colors.text.tertiary} className="" />
-              <MainText>{gallery_id || 'Loading...'}</MainText>
+      {Result.builder(gallerySummaryResult)
+        .onInitial(
+          () => <GridHeaderSkeleton 
+            pageType={'Onchain Collection'} 
+            hasDescription={false} 
+            numTags={5}
+            isProfile={undefined}
+            removeInfoText={undefined}
+            removeTags={undefined}
+          />
+        )
+        .onSuccess((gallerySummary) => 
+          <>
+            <HeaderContainer>
+              <MainContentStack>
+                <InfoText>Onchain Collection</InfoText>
+                <DetailsStack>
+                  <ImageContainer>
+                    <InscriptionIcon endpoint={"/api/inscription/"+gallery_id} useBlockIconDefault={false} size={'8rem'} />
+                  </ImageContainer>
+                  <Stack gap={'.5rem'}>
+                    <MainText>Unnamed Gallery</MainText>
+                    <InfoText>Inscribed {shortenDate(gallerySummary.gallery_inscribed_date)}</InfoText>
+                  </Stack>
+                </DetailsStack>
+              </MainContentStack>
+            </HeaderContainer>
+            <RowContainer style={{gap: '.5rem', flexFlow: 'wrap'}}>
+              <Tag isLarge={true} value={gallerySummary.supply ? addCommas(gallerySummary.supply) : 0} category={'Supply'} />
+              <Tag isLarge={true} value={gallerySummary.total_volume ? formatSatsString(gallerySummary.total_volume) : "0 BTC"} category={'Traded Volume'} />
+              <Tag isLarge={true} value={gallerySummary.range_start ? addCommas(gallerySummary.range_start) + " to " + addCommas(gallerySummary.range_end) : ""} category={'Range'} />
+              <Tag isLarge={true} value={gallerySummary.total_inscription_size ? shortenBytesString(gallerySummary.total_inscription_size) : 0} category={'Total Size'} />
+              <Tag isLarge={true} value={gallerySummary.total_inscription_fees ? formatSatsString(gallerySummary.total_inscription_fees) : "0 BTC"} category={'Total Fees'} />
             </RowContainer>
-
-            {Result.builder(gallerySummaryResult)
-              .onInitial(() =>
-                <GridHeaderSkeleton
-                  pageType={'Gallery'}
-                  isProfile={false}
-                  removeInfoText={false}
-                  hasDescription={true}
-                  numTags={1}
-                  removeTags={false}
-                />
-              )
-              .onSuccess((summary: any) => summary ? (
-                <Stack horizontal={false} center={false} style={{gap: '1rem', width: '100%'}}>
-                  <RowContainer style={{justifyContent: 'flex-start'}}>
-                    <ImageContainer>
-                      <InscriptionIcon
-                        endpoint={`/bun/rendered_content_id/${gallery_id}`}
-                        useBlockIconDefault={true}
-                        size={'4rem'}
-                      />
-                    </ImageContainer>
-                    <DetailsStack>
-                      <RowContainer style={{justifyContent: 'flex-start'}}>
-                        <Tag
-                          category=""
-                          isLarge={false}
-                          value="Gallery"
-                        />
-                      </RowContainer>
-                      <InfoText>
-                        {summary?.supply ? addCommas(summary.supply) : 0} inscriptions
-                        {summary?.gallery_inscribed_date && ` • Inscribed ${shortenDate(summary.gallery_inscribed_date * 1000)}`}
-                        {summary?.boost_count && ` • ${addCommas(summary.boost_count)} boosts`}
-                      </InfoText>
-                    </DetailsStack>
-                  </RowContainer>
-
-                  {summary && (
-                    <RowContainer style={{justifyContent: 'flex-start'}}>
-                      <CollapsibleButton
-                        onClick={toggleMetadataVisibility}
-                        style={{
-                          transform: metadataVisibility ? 'rotate(180deg)' : 'rotate(0deg)',
-                        }}
-                      >
-                        <InfoText style={{margin: 0}}>Details</InfoText>
-                        <ChevronDownSmallIcon size={'1rem'} color={theme.colors.text.secondary} className="" />
-                      </CollapsibleButton>
-                    </RowContainer>
-                  )}
-
-                  <MetadataContainer visible={metadataVisibility}>
-                    {summary && (
-                      <MetadataGrid>
-                        <MetadataItem>
-                          <InfoText style={{color: theme.colors.text.secondary}}>Gallery ID</InfoText>
-                          <InfoText>{gallery_id}</InfoText>
-                        </MetadataItem>
-
-                        {summary.range_start && summary.range_end && (
-                          <MetadataItem>
-                            <InfoText style={{color: theme.colors.text.secondary}}>Range</InfoText>
-                            <InfoText>{addCommas(summary.range_start)} - {addCommas(summary.range_end)}</InfoText>
-                          </MetadataItem>
-                        )}
-
-                        {summary.first_inscribed_date && (
-                          <MetadataItem>
-                            <InfoText style={{color: theme.colors.text.secondary}}>First Inscribed</InfoText>
-                            <InfoText>{formatTimestampMs(summary.first_inscribed_date * 1000)}</InfoText>
-                          </MetadataItem>
-                        )}
-
-                        {summary.last_inscribed_date && (
-                          <MetadataItem>
-                            <InfoText style={{color: theme.colors.text.secondary}}>Last Inscribed</InfoText>
-                            <InfoText>{formatTimestampMs(summary.last_inscribed_date * 1000)}</InfoText>
-                          </MetadataItem>
-                        )}
-
-                        {summary.total_inscription_fees && (
-                          <MetadataItem>
-                            <InfoText style={{color: theme.colors.text.secondary}}>Total Fees</InfoText>
-                            <InfoText>{formatSatsString(summary.total_inscription_fees)} BTC</InfoText>
-                          </MetadataItem>
-                        )}
-
-                        {summary.total_volume && (
-                          <MetadataItem>
-                            <InfoText style={{color: theme.colors.text.secondary}}>Volume</InfoText>
-                            <InfoText>{formatSatsString(summary.total_volume)} BTC</InfoText>
-                          </MetadataItem>
-                        )}
-                      </MetadataGrid>
-                    )}
+            {(galleryInscriptionMetadataResult._tag === 'Success' && Object.keys(galleryInscriptionMetadataResult.value.on_chain_metadata as any).length > 0) && (
+              <RowContainer style={{gap: '.5rem', flexFlow: 'wrap'}}>
+                <MetadataButton onClick={() => setMetadataVisibility(!metadataVisibility)}>
+                  {metadataVisibility ? <ChevronDownSmallIcon size={'1.25rem'} /> : <ChevronRightSmallIcon size={'1.25rem'} />}
+                  Onchain Metadata
+                </MetadataButton>
+                {metadataVisibility && (
+                  <MetadataContainer>
+                    <BorderedTagSection />
+                    <TextContainer>
+                      {typeof inscriptionMetadata?.on_chain_metadata === 'string' ? (
+                        <MetadataValue>{inscriptionMetadata.on_chain_metadata}</MetadataValue>
+                      ) : (
+                        Object.entries(inscriptionMetadata?.on_chain_metadata || {}).map(([key, value]) => {
+                          // Skip entries that are arrays or objects
+                          if (Array.isArray(value) || (typeof value === 'object' && value !== null)) {
+                            return null;
+                          }
+                          
+                          return (
+                            <MetadataText key={key}>
+                              {key}
+                              <MetadataValue> {value}</MetadataValue>
+                            </MetadataText>
+                          );
+                        }).filter(Boolean)
+                      )}
+                    </TextContainer>
                   </MetadataContainer>
-                </Stack>
-              ) : <InfoText>Gallery not found</InfoText>)
-              .render()
-            }
-          </DetailsStack>
-        </HeaderContainer>
-
-        <HorizontalDivider />
-
-        <GridControls
-          numberVisibility={numberVisibility}
-          toggleNumberVisibility={toggleNumberVisibility}
-          filterVisibility={filterVisibility}
-          toggleFilterVisibility={toggleFilterVisibility}
-          zoomGrid={zoomGrid}
-          toggleGridType={toggleGridType}
-          handleSortOptionChange={handleSortOptionChange}
-          selectedFilterOptions={selectedFilterOptions}
-          handleFilterOptionsChange={handleFilterOptionChange}
-          filtersEnabled={true}
-          initialOption={selectedSortOption}
-          includeRelevance={false}
-          sortByEnabled={true}
-        />
-
-        <GalleryContainer>
-          {Result.builder(galleryInscriptionsResult)
-            .onInitial(() => <LoadingContainer><Spinner /></LoadingContainer>)
-            .onSuccess((galleryInscriptions) =>
-              <>
-                <GridContainer zoomGrid={zoomGrid}>
-                  {galleryInscriptions.items.map(
-                    entry => {
-                      const onChainArtist = extractArtistFromMetadata(entry.on_chain_metadata);
-                      const onChainTitle = extractTitleFromMetadata(entry.on_chain_metadata);
-
-                      return (
-                        <GridItemContainer
-                          collection={entry.collection_name}
-                          collection_symbol={entry.collection_symbol}
-                          content_length={entry.content_length}
-                          id={entry.id}
-                          is_boost={entry.delegate}
-                          is_child={entry.parents?.length > 0}
-                          is_recursive={entry.is_recursive}
-                          item_name={onChainTitle}
-                          key={entry.number}
-                          number={entry.number}
-                          numberVisibility={numberVisibility}
-                          onChainTitle={onChainTitle}
-                          onChainArtist={onChainArtist}
-                          rune={entry.spaced_rune}
-                          isGalleryPage={true} // to show title instead of number if available
-                        />
-                      );
-                    }
-                  )}
-                </GridContainer>
-                {galleryInscriptionsResult.waiting && (
-                  <LoadingContainer><Spinner /></LoadingContainer>
                 )}
-              </>
-            )
-            .render()
-          }
+              </RowContainer>
+            )}
+          </>
+        )
+        .render()
+      }
+      <HorizontalDivider></HorizontalDivider>
+      <GridControls 
+        filterVisibility={filterVisibility} 
+        toggleFilterVisibility={toggleFilterVisibility} 
+        numberVisibility={numberVisibility} 
+        toggleNumberVisibility={toggleNumberVisibility} 
+        zoomGrid={zoomGrid} 
+        toggleGridType={toggleGridType} 
+        handleSortOptionChange={handleSortOptionChange} 
+        handleFilterOptionsChange={handleFilterOptionsChange} 
+        selectedFilterOptions={selectedFilterOptions}
+        filtersEnabled={true}
+        initialOption={'newest'}
+        includeRelevance={false}
+      />
+      <RowContainer>
+        <FilterMenu isOpen={filterVisibility} onSelectionChange ={handleFilterOptionsChange} onClose={toggleFilterVisibility} initialSelection={selectedFilterOptions}></FilterMenu>
+        <GalleryContainer>
+          <GalleryInfiniteScroll baseApi={baseApi} numberVisibility={numberVisibility} zoomGrid={zoomGrid} />
         </GalleryContainer>
-      </MainContentStack>
+      </RowContainer>
     </PageContainer>
   );
 };
