@@ -210,7 +210,7 @@ const OnChainCollection = ({ setParentNumbers }) => {
   );
 };
 
-const MetadataContainer = styled.div`
+export const MetadataContainer = styled.div`
   display: flex;
   flex-direction: row;
   width: 100%;
@@ -219,7 +219,7 @@ const MetadataContainer = styled.div`
   border-radius: 0.25rem;
 `;
 
-const MetadataButton = styled.button`
+export const MetadataButton = styled.button`
   display: flex;
   flex-direction: row;
   align-items: center;
@@ -253,11 +253,11 @@ const MetadataButton = styled.button`
   }
 `;
 
-const BorderedTagSection = styled.div`
+export const BorderedTagSection = styled.div`
   display: flex;
   position: relative;
   padding-left: calc(2px + 0.75rem);
-  
+
   &::before {
     content: '';
     position: absolute;
@@ -270,7 +270,7 @@ const BorderedTagSection = styled.div`
   }
 `;
 
-const TextContainer = styled.div`
+export const TextContainer = styled.div`
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
@@ -278,7 +278,7 @@ const TextContainer = styled.div`
   margin: 0;
 `;
 
-const MetadataText = styled.p`
+export const MetadataText = styled.p`
   font-family: ${theme.typography.fontFamilies.medium};
   font-size: 1rem;
   line-height: 1.5rem;
@@ -287,7 +287,7 @@ const MetadataText = styled.p`
   padding: 0;
 `;
 
-const MetadataValue = styled.span`
+export const MetadataValue = styled.span`
   font-family: ${theme.typography.fontFamilies.medium};
   font-size: 1rem;
   line-height: 1.5rem;

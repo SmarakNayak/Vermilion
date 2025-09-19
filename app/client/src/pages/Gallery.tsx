@@ -21,6 +21,7 @@ import MainText from '../components/common/text/MainText';
 import InfoText from '../components/common/text/InfoText';
 import Stack from '../components/Stack';
 import FilterMenu from '../components/FilterMenu';
+import GalleryInfiniteScroll from '../components/GalleryInfiniteScroll';
 import { GridContainer } from '../components/GalleryInfiniteScroll';
 import GridItemContainer from '../components/GridItemContainer';
 import InscriptionIcon from '../components/InscriptionIcon';
@@ -28,7 +29,7 @@ import Tag from '../components/Tag';
 import Spinner from '../components/Spinner';
 
 // import icons
-import { ChevronDownSmallIcon, GalleryIcon } from '../components/common/Icon';
+import { ChevronDownSmallIcon } from '../components/common/Icon';
 import { ChevronRightSmallIcon } from '../components/common/Icon/icons/ChevronRightSmallIcon';
 
 // import utils
@@ -50,6 +51,7 @@ import { InscriptionSortBy } from '../api/rustClient/RustClient';
 import { useScrollBottom } from '../hooks/useScrollBottom';
 import { extractArtistFromMetadata, extractTitleFromMetadata } from '../utils/metadata';
 import { gallerySummaryAtomFamily, inscriptionMetadataAtomFamily } from '../atoms/rustFamilyAtomics';
+import { MetadataContainer, MetadataButton, BorderedTagSection, TextContainer, MetadataText, MetadataValue } from './OnChainCollection';
 
 class GalleryInscriptionsParams extends Data.Class<{
   readonly galleryId: string | undefined;
@@ -151,7 +153,7 @@ const Gallery = () => {
       {Result.builder(gallerySummaryResult)
         .onInitial(
           () => <GridHeaderSkeleton 
-            pageType={'Onchain Collection'} 
+            pageType={'Onchain Gallery'} 
             hasDescription={false} 
             numTags={5}
             isProfile={undefined}
@@ -163,14 +165,14 @@ const Gallery = () => {
           <>
             <HeaderContainer>
               <MainContentStack>
-                <InfoText>Onchain Collection</InfoText>
+                <InfoText>Onchain Gallery</InfoText>
                 <DetailsStack>
                   <ImageContainer>
                     <InscriptionIcon endpoint={"/api/inscription/"+gallery_id} useBlockIconDefault={false} size={'8rem'} />
                   </ImageContainer>
                   <Stack gap={'.5rem'}>
                     <MainText>Unnamed Gallery</MainText>
-                    <InfoText>Inscribed {shortenDate(gallerySummary.gallery_inscribed_date)}</InfoText>
+                    <InfoText>Gallery inscribed {shortenDate(gallerySummary.gallery_inscribed_date)}</InfoText>
                   </Stack>
                 </DetailsStack>
               </MainContentStack>
@@ -181,6 +183,7 @@ const Gallery = () => {
               <Tag isLarge={true} value={gallerySummary.range_start ? addCommas(gallerySummary.range_start) + " to " + addCommas(gallerySummary.range_end) : ""} category={'Range'} />
               <Tag isLarge={true} value={gallerySummary.total_inscription_size ? shortenBytesString(gallerySummary.total_inscription_size) : 0} category={'Total Size'} />
               <Tag isLarge={true} value={gallerySummary.total_inscription_fees ? formatSatsString(gallerySummary.total_inscription_fees) : "0 BTC"} category={'Total Fees'} />
+              <Tag isLarge={true} value={gallerySummary.boost_count} category={'Total Boosts'} />
             </RowContainer>
             {(galleryInscriptionMetadataResult._tag === 'Success' && Object.keys(galleryInscriptionMetadataResult.value.on_chain_metadata as any).length > 0) && (
               <RowContainer style={{gap: '.5rem', flexFlow: 'wrap'}}>
@@ -192,10 +195,10 @@ const Gallery = () => {
                   <MetadataContainer>
                     <BorderedTagSection />
                     <TextContainer>
-                      {typeof inscriptionMetadata?.on_chain_metadata === 'string' ? (
-                        <MetadataValue>{inscriptionMetadata.on_chain_metadata}</MetadataValue>
+                      {typeof galleryInscriptionMetadataResult.value.on_chain_metadata === 'string' ? (
+                        <MetadataValue>{galleryInscriptionMetadataResult.value.on_chain_metadata}</MetadataValue>
                       ) : (
-                        Object.entries(inscriptionMetadata?.on_chain_metadata || {}).map(([key, value]) => {
+                        Object.entries(galleryInscriptionMetadataResult.value.on_chain_metadata || {}).map(([key, value]) => {
                           // Skip entries that are arrays or objects
                           if (Array.isArray(value) || (typeof value === 'object' && value !== null)) {
                             return null;
@@ -236,46 +239,59 @@ const Gallery = () => {
       <RowContainer>
         <FilterMenu isOpen={filterVisibility} onSelectionChange ={handleFilterOptionsChange} onClose={toggleFilterVisibility} initialSelection={selectedFilterOptions}></FilterMenu>
         <GalleryContainer>
-          <GalleryInfiniteScroll baseApi={baseApi} numberVisibility={numberVisibility} zoomGrid={zoomGrid} />
+          {Result.builder(galleryInscriptionsResult)
+            .onInitial(() => <LoadingContainer><Spinner /></LoadingContainer>)
+            .onFailure((error) => <ErrorText>Error loading gallery inscriptions. Please refresh and try again</ErrorText>)
+            .onSuccess((galleryInscriptions) =>
+              <>
+                <GridContainer zoomGrid={zoomGrid}>
+                  {galleryInscriptions.items.map(
+                    entry => {
+                      const onChainArtist = extractArtistFromMetadata(entry.on_chain_metadata);
+                      const onChainTitle = extractTitleFromMetadata(entry.on_chain_metadata);
+
+                      return (
+                        <GridItemContainer
+                          collection={entry.collection_name}
+                          collection_symbol={entry.collection_symbol}
+                          content_length={entry.content_length}
+                          id={entry.id}
+                          is_boost={entry.delegate}
+                          is_child={entry.parents?.length > 0}
+                          is_recursive={entry.is_recursive}
+                          item_name={onChainTitle}
+                          key={entry.number}
+                          number={entry.number}
+                          numberVisibility={numberVisibility}
+                          //onChainTitle={onChainTitle}
+                          //onChainArtist={onChainArtist}
+                          rune={entry.spaced_rune}
+                          //isGalleryPage={true} // to show title instead of number if available
+                        />
+                      );
+                    }
+                  )}
+                </GridContainer>
+                {galleryInscriptionsResult.waiting && (
+                  <LoadingContainer><Spinner /></LoadingContainer>
+                )}
+              </>
+            )
+            .render()
+          }
         </GalleryContainer>
       </RowContainer>
     </PageContainer>
   );
 };
 
-const CollapsibleButton = styled.button`
-  background: none;
-  border: none;
-  padding: 0;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  transition: transform 0.2s ease;
 
-  &:hover {
-    opacity: 0.8;
-  }
-`;
-
-const MetadataContainer = styled.div<{visible: boolean}>`
-  width: 100%;
-  max-height: ${props => props.visible ? '500px' : '0px'};
-  overflow: hidden;
-  transition: max-height 0.3s ease;
-`;
-
-const MetadataGrid = styled.div`
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 1rem;
-  padding: 1rem 0;
-`;
-
-const MetadataItem = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
+const ErrorText = styled.p`
+  font-family: ${theme.typography.fontFamilies.medium};
+  font-size: 1rem;
+  color: ${theme.colors.background.verm};
+  text-align: center;
+  margin: 2rem 0;
 `;
 
 export default Gallery;
