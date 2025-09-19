@@ -132,7 +132,7 @@ const OnChainCollection = ({ setParentNumbers }) => {
               <DetailsStack>
                 <ImageContainer>
                   {metadata?.parent_numbers?.length === 1 ? (
-                    <InscriptionIcon endpoint={"/api/inscription_number/"+metadata.parent_numbers[0]} useBlockIconDefault={false} size={'8rem'} />
+                    <InscriptionIcon endpoint={"/bun/rendered_content_number/"+metadata.parent_numbers[0]} useBlockIconDefault={false} size={'8rem'} />
                   ) : (
                     <GalleryIcon size={'2rem'} color={theme.colors.background.verm} />
                   )}

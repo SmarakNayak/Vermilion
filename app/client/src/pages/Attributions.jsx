@@ -115,7 +115,7 @@ const Attributions = () => {
               <InfoText>Attributions</InfoText>
               <DetailsStack>
                 <ImageContainer>
-                  <InscriptionIcon endpoint={"/api/inscription_number/"+number} useBlockIconDefault={false} size={'8rem'} />
+                  <InscriptionIcon endpoint={"/bun/rendered_content_number/"+number} useBlockIconDefault={false} size={'8rem'} />
                 </ImageContainer>
                 <Stack gap={'.5rem'}>
                   <MainText>{addCommas(number)}</MainText>

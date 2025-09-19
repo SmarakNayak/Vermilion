@@ -123,7 +123,7 @@ const Children = ({ setParentNumbers }) => {
               <InfoText>Children</InfoText>
               <DetailsStack>
                 <ImageContainer>
-                  <InscriptionIcon endpoint={"/api/inscription_number/"+number} useBlockIconDefault={false} size={'8rem'} />
+                  <InscriptionIcon endpoint={"/bun/rendered_content_number/"+number} useBlockIconDefault={false} size={'8rem'} />
                 </ImageContainer>
                 <Stack gap={'.5rem'}>
                   <MainText>Children of {addCommas(number)}</MainText>

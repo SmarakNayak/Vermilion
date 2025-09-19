@@ -166,7 +166,7 @@ const Gallery = () => {
                 <InfoText>Onchain Gallery</InfoText>
                 <DetailsStack>
                   <ImageContainer>
-                    <InscriptionIcon endpoint={"/api/inscription/"+gallery_id} useBlockIconDefault={false} size={'8rem'} />
+                    <InscriptionIcon endpoint={`/bun/rendered_content/${gallery_id}`} useBlockIconDefault={false} size={'8rem'} />
                   </ImageContainer>
                   <Stack gap={'.5rem'}>
                     <MainText>Unnamed Gallery</MainText>

@@ -129,7 +129,7 @@ const Collection = () => {
               <DetailsStack>
                 <ImageContainer>
                   {collectionSummary?.range_start && (
-                    <InscriptionIcon endpoint={`/api/inscription_number/${collectionSummary?.range_start}`} useBlockIconDefault={false} size={'8rem'} />
+                    <InscriptionIcon endpoint={`/bun/rendered_content_number/${collectionSummary?.range_start}`} useBlockIconDefault={false} size={'8rem'} />
                   )}
                 </ImageContainer>
                 <Stack gap={'.5rem'}>

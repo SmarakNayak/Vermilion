@@ -109,7 +109,7 @@ const SatBlock = () => {
               <InfoText>Sat Creation Block</InfoText>
               <DetailsStack>
                 <ImageContainer>
-                  <InscriptionIcon endpoint={"/api/block_icon/"+number} useBlockIconDefault={true} size={'8rem'} />
+                  <InscriptionIcon endpoint={"/bun/sat_block_icon/"+number} useBlockIconDefault={true} size={'8rem'} />
                 </ImageContainer>
                 <Stack gap={'.5rem'}>
                   <MainText>{addCommas(number)}</MainText>
