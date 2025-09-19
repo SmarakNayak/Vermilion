@@ -1,16 +1,16 @@
 import { useParams } from "react-router-dom";
 import PageContainer from "../components/layout/PageContainer";
-import { Atom, Result, useAtomValue } from "@effect-atom/atom-react";
+import { Atom, Result, useAtomValue, useAtomSet } from "@effect-atom/atom-react";
 import { folderAtomFamily, folderInscriptionsAtomFamily, profileFromIdAtomFamily } from "../atoms/familyAtomics";
 import GridHeaderSkeleton from "../components/grid/GridHeaderSkeleton";
 import { HeaderContainer, MainContentStack, RowContainer, SocialStack } from "../components/grid/Layout";
 import InfoText from "../components/common/text/InfoText";
-import { Cause } from "effect";
-import { flatMap } from "../atoms/atomHelpers";
+import { Cause, Exit } from "effect";
+import { flatMap, cleanErrorExit } from "../atoms/atomHelpers";
 import MainText from "../components/common/text/MainText";
 import { ItemText, TextLink } from "../components/common/GridItemStyles";
 import styled from "styled-components";
-import { AvatarCircleIcon, CheckIcon, EditIcon, LinkIcon } from "../components/common/Icon";
+import { AvatarCircleIcon, CheckIcon, EditIcon, LinkIcon, CrossIcon } from "../components/common/Icon";
 import Tooltip from '../components/common/Tooltip';
 import IconButton from "../components/common/buttons/IconButton";
 import theme from "../styles/theme";
@@ -22,6 +22,8 @@ import { BookmarkModal } from "../components/modals/BookmarkModal";
 import { useModal } from "../hooks/useModal";
 import GridControls from "../components/grid/GridControls";
 import { useGridControls } from "../hooks/useGridControls";
+import { AuthSocialClient, getErrorMessage } from "../api/EffectApi";
+import { toast } from "sonner";
 
 const profileFromFolderAtomFamily = Atom.family((folderId?: string) =>
   Atom.make((get) => {
@@ -61,6 +63,56 @@ const ButtonWrapper = styled.div`
   margin: 0;
 `;
 
+const GridItemWrapper = styled.div`
+  position: relative;
+`;
+
+const RemoveOverlay = styled.div`
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  z-index: 10;
+  border-radius: 8px;
+`;
+
+const RemoveButton = styled.button`
+  background: ${theme.colors.background.verm};
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 12px 20px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background: #cc3333;
+    transform: scale(1.05);
+  }
+
+  &:active {
+    transform: scale(0.98);
+  }
+`;
+
+const GridItemWithRemove = styled(GridItemWrapper)<{ canEdit: boolean }>`
+  &:hover ${RemoveOverlay} {
+    opacity: ${props => props.canEdit ? 1 : 0};
+  }
+`;
+
 const Folder = () => {
   const { folderId } = useParams<{ folderId: string }>();
   const folder = useAtomValue(folderAtomFamily(folderId));
@@ -70,6 +122,35 @@ const Folder = () => {
   const { copied, copy } = useCopy();
   const { isOpen: isEditModalOpen, open: openEditModal, close: closeEditModal } = useModal();
   const { zoomGrid, numberVisibility, toggleNumberVisibility, toggleGridType } = useGridControls();
+
+  const deleteFromPlaylist = useAtomSet(AuthSocialClient.mutation("playlists", "deletePlaylistInscriptions"), { mode: 'promiseExit' });
+
+  const handleRemoveInscription = async (inscriptionId: string) => {
+    if (!folderId) return;
+
+    const result = await deleteFromPlaylist({
+      path: { playlist_id: folderId },
+      payload: [inscriptionId],
+      reactivityKeys: ['userFolders', folderId]
+    });
+
+    result.pipe(
+      cleanErrorExit,
+      Exit.match({
+        onSuccess: () => {
+          toast.success("Inscription removed from folder successfully!");
+        },
+        onFailure: (cause) => {
+          toast.error(`Failed to remove inscription from folder${getErrorMessage(cause)}`);
+        },
+      })
+    );
+  };
+
+  // Check if the current user owns this folder
+  const canEdit = folder._tag === 'Success' &&
+                  auth.state === 'signed-in-with-profile' &&
+                  auth.profile.user_id === folder.value.user_id;
 
   return (
     <PageContainer>
@@ -151,13 +232,13 @@ const Folder = () => {
               .onSuccess((inscriptions) => {
                 return (
                   <GridContainer zoomGrid={zoomGrid}>
-                    {inscriptions.map(
-                      (entry) => 
-                        <GridItemContainer 
-                          collection={entry.collection_name} 
+                    {inscriptions.map((entry) => (
+                      <GridItemWithRemove key={entry.number} canEdit={canEdit}>
+                        <GridItemContainer
+                          collection={entry.collection_name}
                           collection_symbol={entry.collection_symbol}
                           content_length={entry.content_length}
-                          id={entry.id} 
+                          id={entry.id}
                           is_boost={entry.delegate}
                           is_child={entry.parents.length > 0}
                           is_recursive={entry.is_recursive}
@@ -168,7 +249,27 @@ const Folder = () => {
                           numberVisibility={numberVisibility} 
                           rune={entry.spaced_rune}
                         />
-                    )}
+                        {canEdit && (
+                          <RemoveOverlay
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                            }}
+                          >
+                            <RemoveButton
+                              onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                handleRemoveInscription(entry.id);
+                              }}
+                            >
+                              <CrossIcon size={'1rem'} color="white" />
+                              Remove
+                            </RemoveButton>
+                          </RemoveOverlay>
+                        )}
+                      </GridItemWithRemove>
+                    ))}
                   </GridContainer>
                 )
               })
