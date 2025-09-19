@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import styled from 'styled-components';
-import { useParams, Link } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import { theme } from '../styles/theme';
 
 // import components
@@ -21,7 +21,6 @@ import MainText from '../components/common/text/MainText';
 import InfoText from '../components/common/text/InfoText';
 import Stack from '../components/Stack';
 import FilterMenu from '../components/FilterMenu';
-import GalleryInfiniteScroll from '../components/GalleryInfiniteScroll';
 import { GridContainer } from '../components/GalleryInfiniteScroll';
 import GridItemContainer from '../components/GridItemContainer';
 import InscriptionIcon from '../components/InscriptionIcon';
@@ -35,9 +34,7 @@ import { ChevronRightSmallIcon } from '../components/common/Icon/icons/ChevronRi
 // import utils
 import {
   addCommas,
-  formatAddress,
   formatSatsString,
-  formatTimestampMs,
   shortenBytesString,
   shortenDate
 } from '../utils/format';
@@ -56,11 +53,9 @@ import { MetadataContainer, MetadataButton, BorderedTagSection, TextContainer, M
 class GalleryInscriptionsParams extends Data.Class<{
   readonly galleryId: string | undefined;
   readonly sortBy: typeof InscriptionSortBy.Type;
-  readonly filters: {
-    readonly "ContentType": ReadonlyArray<typeof ContentType.Type>;
-    readonly "Satributes": ReadonlyArray<typeof SatributeType.Type>;
-    readonly "Charms": ReadonlyArray<typeof CharmType.Type>;
-  };
+  readonly contentTypes: ReadonlyArray<typeof ContentType.Type>;
+  readonly satributes: ReadonlyArray<typeof SatributeType.Type>;
+  readonly charms: ReadonlyArray<typeof CharmType.Type>;
 }> {}
 
 // Pull-based Atom family for infinite scroll gallery inscriptions
@@ -69,15 +64,16 @@ const galleryInscriptionsPullAtomFamily = Atom.family((params: GalleryInscriptio
     // Create a stream that yields paginated results
     return Stream.unfoldEffect(0, (page_number) =>
       Effect.gen(function* () {
+        console.log("Params", params);
         if (!params.galleryId) return Option.none();
         const rustClient = yield* RustClientService;
         const result = yield* rustClient["GET/inscriptions_in_gallery/{gallery_id}"](params.galleryId, {
           sort_by: params.sortBy,
           page_number,
           page_size: 20,
-          content_types: params.filters["ContentType"],
-          satributes: params.filters["Satributes"],
-          charms: params.filters["Charms"],
+          content_types: params.contentTypes,
+          satributes: params.satributes,
+          charms: params.charms,
         });
         if (result.length === 0) return Option.none();
         return Option.some([result, page_number + 1] as const);
@@ -113,7 +109,9 @@ const Gallery = () => {
   const galleryInscriptionsPullAtom = galleryInscriptionsPullAtomFamily(new GalleryInscriptionsParams({
     galleryId: gallery_id,
     sortBy: selectedSortOption,
-    filters: selectedFilterOptions
+    contentTypes: selectedFilterOptions.ContentType,
+    satributes: selectedFilterOptions.Satributes,
+    charms: selectedFilterOptions.Charms,
   }));
 
   const [galleryInscriptionsResult, pullMoreInscriptions] = useAtom(galleryInscriptionsPullAtom);
