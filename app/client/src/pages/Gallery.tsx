@@ -21,14 +21,14 @@ import MainText from '../components/common/text/MainText';
 import InfoText from '../components/common/text/InfoText';
 import Stack from '../components/Stack';
 import FilterMenu from '../components/FilterMenu';
-import { GridContainer } from '../components/GalleryInfiniteScroll';
+import { GridContainer, EmptyStateContainer } from '../components/GalleryInfiniteScroll';
 import GridItemContainer from '../components/GridItemContainer';
 import InscriptionIcon from '../components/InscriptionIcon';
 import Tag from '../components/Tag';
 import Spinner from '../components/Spinner';
 
 // import icons
-import { ChevronDownSmallIcon } from '../components/common/Icon';
+import { ChevronDownSmallIcon, ImageBadgeIcon } from '../components/common/Icon';
 import { ChevronRightSmallIcon } from '../components/common/Icon/icons/ChevronRightSmallIcon';
 
 // import utils
@@ -53,9 +53,9 @@ import { MetadataContainer, MetadataButton, BorderedTagSection, TextContainer, M
 class GalleryInscriptionsParams extends Data.Class<{
   readonly galleryId: string | undefined;
   readonly sortBy: typeof InscriptionSortBy.Type;
-  readonly contentTypes: ReadonlyArray<typeof ContentType.Type>;
-  readonly satributes: ReadonlyArray<typeof SatributeType.Type>;
-  readonly charms: ReadonlyArray<typeof CharmType.Type>;
+  readonly "Content Type": ReadonlyArray<typeof ContentType.Type>;
+  readonly "Satributes": ReadonlyArray<typeof SatributeType.Type>;
+  readonly "Charms": ReadonlyArray<typeof CharmType.Type>;
 }> {}
 
 // Pull-based Atom family for infinite scroll gallery inscriptions
@@ -71,9 +71,9 @@ const galleryInscriptionsPullAtomFamily = Atom.family((params: GalleryInscriptio
           sort_by: params.sortBy,
           page_number,
           page_size: 20,
-          content_types: params.contentTypes,
-          satributes: params.satributes,
-          charms: params.charms,
+          content_types: params["Content Type"],
+          satributes: params["Satributes"],
+          charms: params["Charms"],
         });
         if (result.length === 0) return Option.none();
         return Option.some([result, page_number + 1] as const);
@@ -96,7 +96,7 @@ const Gallery = () => {
 
   const [selectedSortOption, setSelectedSortOption] = useState<typeof InscriptionSortBy.Type>('newest');
   const [selectedFilterOptions, setSelectedFilterOptions] = useState({
-    "ContentType": [] as ReadonlyArray<typeof ContentType.Type>,
+    "Content Type": [] as ReadonlyArray<typeof ContentType.Type>,
     "Satributes": [] as ReadonlyArray<typeof SatributeType.Type>,
     "Charms": [] as ReadonlyArray<typeof CharmType.Type>
   });
@@ -109,9 +109,9 @@ const Gallery = () => {
   const galleryInscriptionsPullAtom = galleryInscriptionsPullAtomFamily(new GalleryInscriptionsParams({
     galleryId: gallery_id,
     sortBy: selectedSortOption,
-    contentTypes: selectedFilterOptions.ContentType,
-    satributes: selectedFilterOptions.Satributes,
-    charms: selectedFilterOptions.Charms,
+    "Content Type": selectedFilterOptions["Content Type"],
+    "Satributes": selectedFilterOptions.Satributes,
+    "Charms": selectedFilterOptions.Charms,
   }));
 
   const [galleryInscriptionsResult, pullMoreInscriptions] = useAtom(galleryInscriptionsPullAtom);
@@ -139,7 +139,7 @@ const Gallery = () => {
   };
 
   const handleFilterOptionsChange = (filterOptions: {
-    "ContentType": ReadonlyArray<typeof ContentType.Type>;
+    "Content Type": ReadonlyArray<typeof ContentType.Type>;
     "Satributes": ReadonlyArray<typeof SatributeType.Type>;
     "Charms": ReadonlyArray<typeof CharmType.Type>;
   }) => {
@@ -239,7 +239,14 @@ const Gallery = () => {
         <GalleryContainer>
           {Result.builder(galleryInscriptionsResult)
             .onInitial(() => <LoadingContainer><Spinner /></LoadingContainer>)
-            .onFailure((error) => <ErrorText>Error loading gallery inscriptions. Please refresh and try again</ErrorText>)
+            .onErrorTag('NoSuchElementException', () =>  
+              <EmptyStateContainer>
+                <ImageBadgeIcon size={'1.5rem'} color={theme.colors.text.secondary} />
+                <h2>No inscriptions found</h2>
+                <p>We could not find any inscriptions that match your search criteria</p>
+              </EmptyStateContainer>
+            )
+            .onDefect((error) => <ErrorText> {'Error loading gallery inscriptions. Please refresh and try again' + error}</ErrorText>)
             .onSuccess((galleryInscriptions) =>
               <>
                 <GridContainer zoomGrid={zoomGrid}>
