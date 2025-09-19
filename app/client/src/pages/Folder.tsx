@@ -10,7 +10,7 @@ import { flatMap, cleanErrorExit } from "../atoms/atomHelpers";
 import MainText from "../components/common/text/MainText";
 import { ItemText, TextLink } from "../components/common/GridItemStyles";
 import styled from "styled-components";
-import { AvatarCircleIcon, CheckIcon, EditIcon, LinkIcon, CrossIcon } from "../components/common/Icon";
+import { AvatarCircleIcon, CheckIcon, EditIcon, LinkIcon } from "../components/common/Icon";
 import Tooltip from '../components/common/Tooltip';
 import IconButton from "../components/common/buttons/IconButton";
 import theme from "../styles/theme";
@@ -24,6 +24,7 @@ import GridControls from "../components/grid/GridControls";
 import { useGridControls } from "../hooks/useGridControls";
 import { AuthSocialClient, getErrorMessage } from "../api/EffectApi";
 import { toast } from "sonner";
+import { RemoveOverlay } from "../components/common/RemoveOverlay";
 
 const profileFromFolderAtomFamily = Atom.family((folderId?: string) =>
   Atom.make((get) => {
@@ -63,56 +64,6 @@ const ButtonWrapper = styled.div`
   margin: 0;
 `;
 
-const GridItemWrapper = styled.div`
-  position: relative;
-`;
-
-const RemoveOverlay = styled.div`
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.7);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  opacity: 0;
-  transition: opacity 0.2s ease;
-  z-index: 10;
-  border-radius: 8px;
-`;
-
-const RemoveButton = styled.button`
-  background: ${theme.colors.background.verm};
-  color: white;
-  border: none;
-  border-radius: 8px;
-  padding: 12px 20px;
-  font-size: 0.9rem;
-  font-weight: 600;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  transition: all 0.2s ease;
-
-  &:hover {
-    background: #cc3333;
-    transform: scale(1.05);
-  }
-
-  &:active {
-    transform: scale(0.98);
-  }
-`;
-
-const GridItemWithRemove = styled(GridItemWrapper)<{ canEdit: boolean }>`
-  &:hover ${RemoveOverlay} {
-    opacity: ${props => props.canEdit ? 1 : 0};
-  }
-`;
-
 const Folder = () => {
   const { folderId } = useParams<{ folderId: string }>();
   const folder = useAtomValue(folderAtomFamily(folderId));
@@ -131,7 +82,7 @@ const Folder = () => {
     const result = await deleteFromPlaylist({
       path: { playlist_id: folderId },
       payload: [inscriptionId],
-      reactivityKeys: ['userFolders', folderId]
+      reactivityKeys: [folderId]
     });
 
     result.pipe(
@@ -233,7 +184,11 @@ const Folder = () => {
                 return (
                   <GridContainer zoomGrid={zoomGrid}>
                     {inscriptions.map((entry) => (
-                      <GridItemWithRemove key={entry.number} canEdit={canEdit}>
+                      <RemoveOverlay
+                        key={entry.number}
+                        canRemove={canEdit}
+                        onRemove={() => handleRemoveInscription(entry.id)}
+                      >
                         <GridItemContainer
                           collection={entry.collection_name}
                           collection_symbol={entry.collection_symbol}
@@ -244,31 +199,12 @@ const Folder = () => {
                           is_recursive={entry.is_recursive}
                           isCollectionPage={false}
                           item_name={(entry.off_chain_metadata as any)?.name}
-                          key={entry.number} 
-                          number={entry.number} 
-                          numberVisibility={numberVisibility} 
+                          key={entry.number}
+                          number={entry.number}
+                          numberVisibility={numberVisibility}
                           rune={entry.spaced_rune}
                         />
-                        {canEdit && (
-                          <RemoveOverlay
-                            onClick={(e) => {
-                              e.preventDefault();
-                              e.stopPropagation();
-                            }}
-                          >
-                            <RemoveButton
-                              onClick={(e) => {
-                                e.preventDefault();
-                                e.stopPropagation();
-                                handleRemoveInscription(entry.id);
-                              }}
-                            >
-                              <CrossIcon size={'1rem'} color="white" />
-                              Remove
-                            </RemoveButton>
-                          </RemoveOverlay>
-                        )}
-                      </GridItemWithRemove>
+                      </RemoveOverlay>
                     ))}
                   </GridContainer>
                 )

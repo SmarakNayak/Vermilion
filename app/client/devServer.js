@@ -1,8 +1,8 @@
 import homepage from "./index.html";
 
 const useLocalSocial = process.argv.includes('--local-social');
-const socialTarget = useLocalSocial ? 'http://localhost:1082' : 'https://green.vermilion.place';
-const effectTarget = useLocalSocial ? 'http://localhost:1083' : 'https://green.vermilion.place';
+const socialTarget = useLocalSocial ? 'http://localhost:1082' : 'https://green.vermilion.place/bun/';
+const effectTarget = useLocalSocial ? 'http://localhost:1083' : 'https://green.vermilion.place/effect/';
 
 const server = Bun.serve({
   port: 3000,
@@ -97,6 +97,7 @@ async function proxyRequest(req, targetHost, rewrite, strip) {
   }
 
   const targetUrl = `${targetHost}${path}${url.search}`;
+  console.log(`Proxying request to: ${targetUrl}`);
 
   // clone incoming headers and add auth
   const headers = new Headers();

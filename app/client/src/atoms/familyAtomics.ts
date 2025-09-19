@@ -43,7 +43,8 @@ export const foldersAtomFamily = Atom.family((user_address?: string) =>
         onSome: (profile) => {
           const user_id = profile.user_id;
           return get(AuthSocialClient.query("playlists", "getPlaylistsByUserIdPreview", {
-            path: { user_id }
+            path: { user_id },
+            reactivityKeys: ['userFolders']
           })).pipe(cleanErrorResult);
         },
         onNone: () => Result.success([]),
@@ -68,7 +69,8 @@ export const folderInscriptionsAtomFamily = Atom.family((playlist_id?: string) =
   Atom.make((get) => {
     if (!playlist_id) return Result.success([]);
     const inscriptions = get(AuthSocialClient.query("playlists", 'getPlaylistInscriptions', {
-      path: { playlist_id }
+      path: { playlist_id },
+      reactivityKeys: [playlist_id]
     })).pipe(cleanErrorResult);
     return inscriptions;
   })

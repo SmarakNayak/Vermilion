@@ -1,6 +1,6 @@
 import { GridContainer } from "./GalleryInfiniteScroll";
 import { foldersAtomFamily } from "../atoms/familyAtomics";
-import { useAtomValue, Result } from "@effect-atom/atom-react";
+import { useAtomValue, Result, useAtomSet } from "@effect-atom/atom-react";
 ////////////////////////////////////////////////////////////////
 import theme from '../styles/theme';
 import styled from 'styled-components';
@@ -22,6 +22,12 @@ import { useState } from "react";
 import { RowContainer } from "./grid/Layout";
 import Stack from "./Stack";
 import { useGridControls } from "../hooks/useGridControls";
+import { AuthSocialClient, getErrorMessage } from "../api/EffectApi";
+import { toast } from "sonner";
+import { Cause, Exit } from "effect";
+import { flatMap, cleanErrorExit } from "../atoms/atomHelpers";
+import { useAuth } from "../hooks/useAuth";
+import { RemoveOverlay } from "./common/RemoveOverlay";
 
 const FolderInfo = styled.p`
   color: ${theme.colors.text.secondary};
@@ -74,32 +80,73 @@ const RearPreview = styled.img<{ renderedSrc: string }>`
   height: 70%;
   position: absolute;
   transform: scale(0.8) translate(0%, -15%);
-`
+`;
 
-const FolderItemContainer = ({ folder }: { folder: Schema.Type<typeof PlaylistPreviewSchema> }) => {
+
+const FolderItemContainer = ({
+  folder,
+  canDelete,
+  onDelete
+}: {
+  folder: Schema.Type<typeof PlaylistPreviewSchema>;
+  canDelete: boolean;
+  onDelete?: (folderId: string, folderName: string) => void;
+}) => {
   return (
-    <ItemContainer>
-      <UnstyledLink to={`/folder/${folder.playlist_id}`}>
-        <MediaContainer>
-          {folder.inscription_previews.length === 0 && FolderIcon({ size: '10rem', color: theme.colors.text.secondary })}
-          {folder.inscription_previews[2] && <RearPreview renderedSrc={'/bun/rendered_content/' + folder.inscription_previews[2]} />}
-          {folder.inscription_previews[1] && <MidPreview renderedSrc={'/bun/rendered_content/' + folder.inscription_previews[1]} />}
-          {folder.inscription_previews[0] && <FrontPreview renderedSrc={'/bun/rendered_content/' + folder.inscription_previews[0]} />}
-        </MediaContainer>
-      </UnstyledLink>
-      <InfoContainer>
-        <TextLink to={`/folder/${folder.playlist_id}`}>
-          <ItemText>{folder.playlist_name}</ItemText>
-        </TextLink>
-        <FolderInfo>{folder.count > 0 ? folder.count + ' items' : null}</FolderInfo>
-      </InfoContainer>
-    </ItemContainer>
+    <RemoveOverlay
+      canRemove={canDelete}
+      onRemove={() => onDelete?.(folder.playlist_id, folder.playlist_name)}
+    >
+      <ItemContainer>
+        <UnstyledLink to={`/folder/${folder.playlist_id}`}>
+          <MediaContainer>
+            {folder.inscription_previews.length === 0 && FolderIcon({ size: '10rem', color: theme.colors.text.secondary })}
+            {folder.inscription_previews[2] && <RearPreview renderedSrc={'/bun/rendered_content/' + folder.inscription_previews[2]} />}
+            {folder.inscription_previews[1] && <MidPreview renderedSrc={'/bun/rendered_content/' + folder.inscription_previews[1]} />}
+            {folder.inscription_previews[0] && <FrontPreview renderedSrc={'/bun/rendered_content/' + folder.inscription_previews[0]} />}
+          </MediaContainer>
+        </UnstyledLink>
+        <InfoContainer>
+          <TextLink to={`/folder/${folder.playlist_id}`}>
+            <ItemText>{folder.playlist_name}</ItemText>
+          </TextLink>
+          <FolderInfo>{folder.count > 0 ? folder.count + ' items' : null}</FolderInfo>
+        </InfoContainer>
+      </ItemContainer>
+    </RemoveOverlay>
   );
 }
 
 export const FolderInfiniteScroll = ({ address}: {address: string | undefined }) => {
   const folders = useAtomValue(foldersAtomFamily(address));
   const [zoomGrid, setZoomGrid] = useState(false);
+  const auth = useAuth();
+
+  const deletePlaylist = useAtomSet(AuthSocialClient.mutation("playlists", "deletePlaylist"), { mode: 'promiseExit' });
+
+  const handleDeleteFolder = async (folderId: string, folderName: string) => {
+    const result = await deletePlaylist({
+      path: { playlist_id: folderId },
+      reactivityKeys: ['userFolders']
+    });
+
+    result.pipe(
+      cleanErrorExit,
+      Exit.match({
+        onSuccess: () => {
+          toast.success(`Folder "${folderName}" deleted successfully!`);
+        },
+        onFailure: (cause) => {
+          toast.error(`Failed to delete folder "${folderName}"${getErrorMessage(cause)}`);
+        },
+      })
+    );
+  };
+
+  // Check if the current user can delete folders (viewing their own profile)
+  const canDelete = auth.state === 'signed-in-with-profile' &&
+                    auth.profile.user_addresses.includes(address || '');
+
   return (
     <>
       <RowContainer>
@@ -120,7 +167,12 @@ export const FolderInfiniteScroll = ({ address}: {address: string | undefined })
             )}
             <GridContainer zoomGrid={zoomGrid}>
               {folders.map((folder) => (
-                <FolderItemContainer key={folder.playlist_id} folder={folder} />
+                <FolderItemContainer
+                  key={folder.playlist_id}
+                  folder={folder}
+                  canDelete={canDelete}
+                  onDelete={handleDeleteFolder}
+                />
               ))}
             </GridContainer>
           </>
