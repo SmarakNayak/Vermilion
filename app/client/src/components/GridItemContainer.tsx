@@ -153,7 +153,7 @@ const GridItemContainer = (props: any) => {
   return(
   <ItemContainer>
     <UnstyledLink 
-      to={'/inscription/' + props.number}
+      to={props.isGalleryPage ? '/gallery/' + props.id : '/inscription/' + props.number}
     >
       <MediaContainer>
         {/*@ts-ignore*/}
@@ -175,7 +175,7 @@ const GridItemContainer = (props: any) => {
     
     {props.numberVisibility && (
       <InfoContainer applySpace={shouldApplySpace}>
-        <TextLink to={'/inscription/' + props.number} >
+        <TextLink to={props.isGalleryPage ? '/gallery/' + props.id : '/inscription/' + props.number} >
           <ItemText>{props.isCollectionPage || props.isGalleryPage ? displayName : addCommas(props.number)}</ItemText>
         </TextLink>
         <TagContainer>

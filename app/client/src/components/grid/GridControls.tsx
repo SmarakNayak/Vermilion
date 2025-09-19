@@ -9,44 +9,45 @@ import { theme } from '../../styles/theme';
 import { FilterIcon, EyeIcon, GridIcon, DotGridIcon, ArrowLeftIcon, ChevronRightIcon, ChevronLeftSmallIcon } from '../common/Icon';
 import TextButton from '../common/buttons/TextButton';
 import GridToggle from './GridToggle';
+import type { ContentType, SatributeType, CharmType, InscriptionSortBy } from '../../api/rustClient/RustClient';
 
-interface GridControlsProps {
+interface GridControlsProps<TSortOption extends string = string, TFilterOptions = Record<string, string[]>> {
   // Always required props
   numberVisibility: boolean;
   toggleNumberVisibility: () => void;
   zoomGrid: boolean;
   toggleGridType: () => void;
-  handleSortOptionChange: (option: string) => void;
+  handleSortOptionChange: (option: TSortOption) => void;
   filtersEnabled: boolean;
-  initialOption: string;
+  initialOption: TSortOption;
   includeRelevance: boolean;
-  
+
   // Optional props - not all pages use filters
   filterVisibility?: boolean;
   toggleFilterVisibility?: () => void;
-  handleFilterOptionsChange?: (options: Record<string, string[]>) => void;
-  selectedFilterOptions?: Record<string, string[]>;
+  handleFilterOptionsChange?: (options: TFilterOptions) => void;
+  selectedFilterOptions?: TFilterOptions;
   sortByEnabled?: boolean;
 }
 
-const GridControls = ({ 
-  filterVisibility, 
-  toggleFilterVisibility = () => {}, 
-  numberVisibility, 
-  toggleNumberVisibility, 
+const GridControls = <TSortOption extends string = string, TFilterOptions = Record<string, string[]>>({
+  filterVisibility,
+  toggleFilterVisibility = () => {},
+  numberVisibility,
+  toggleNumberVisibility,
   zoomGrid,
-  toggleGridType, 
-  handleSortOptionChange, 
-  handleFilterOptionsChange, 
+  toggleGridType,
+  handleSortOptionChange,
+  handleFilterOptionsChange,
   selectedFilterOptions,
   filtersEnabled,
   initialOption,
   includeRelevance,
   sortByEnabled = true,
-}: GridControlsProps) => {
+}: GridControlsProps<TSortOption, TFilterOptions>) => {
 
   const filterCount = Object.values(selectedFilterOptions || {})
-    .reduce((acc, arr) => acc + (Array.isArray(arr) ? arr.length : 0), 0);
+    .reduce((acc: number, arr) => acc + (Array.isArray(arr) ? arr.length : 0), 0);
   
   return (
     <RowContainer>
@@ -81,8 +82,8 @@ const GridControls = ({
           <SwitchLabel>Hide info</SwitchLabel>
         </NumberToggleContainer>
       </Stack>
-      {sortByEnabled && <SortbyDropdown 
-        onOptionSelect={handleSortOptionChange} 
+      {sortByEnabled && <SortbyDropdown
+        onOptionSelect={(option: string) => handleSortOptionChange(option as TSortOption)}
         initialOption={initialOption}
         includeRelevance={includeRelevance}
       />}

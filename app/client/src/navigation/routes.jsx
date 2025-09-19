@@ -7,6 +7,7 @@ import ExploreBlocks from '../pages/ExploreBlocks';
 import ExploreCollections from '../pages/ExploreCollections';
 import ExploreInscriptions from '../pages/ExploreInscriptions';
 import ExploreGalleries from '../pages/ExploreGalleries';
+import Gallery from '../pages/Gallery';
 import Address from '../pages/Address';
 import Block from '../pages/Block';
 import Sat from '../pages/Sat';
@@ -105,15 +106,24 @@ const Navigation = () => {
           <Route path="/explore/blocks" element={<TitledComponent title="Blocks" Component={ExploreBlocks} />} />
           <Route path="/explore/collections" element={<TitledComponent title="Collections" Component={ExploreCollections} />} />
           <Route path="/explore/galleries" element={<TitledComponent title="Galleries" Component={ExploreGalleries} />} />
-
-          <Route 
-            path="/address/:address" 
+          <Route
+            path="/gallery/:gallery_id"
             element={
-              <TitledComponent 
-                title={(params) => `Address ${formatAddress(params.address)}`} 
-                Component={Address} 
+              <TitledComponent
+                title={(params) => `Gallery ${params.gallery_id}`}
+                Component={Gallery}
               />
-            } 
+            }
+          />
+
+          <Route
+            path="/address/:address"
+            element={
+              <TitledComponent
+                title={(params) => `Address ${formatAddress(params.address)}`}
+                Component={Address}
+              />
+            }
           />
           <Route 
             path="/block/:number" 
