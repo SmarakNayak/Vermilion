@@ -46,7 +46,7 @@ import { rustClientRuntime, RustClientService } from '../atoms/rustAtoms';
 import type { ContentType, SatributeType, CharmType } from '../api/rustClient/RustClient';
 import { InscriptionSortBy } from '../api/rustClient/RustClient';
 import { useScrollBottom } from '../hooks/useScrollBottom';
-import { extractArtistFromMetadata, extractTitleFromMetadata } from '../utils/metadata';
+import { extractArtistFromMetadata, extractCollectionTitleFromMetadata } from '../utils/metadata';
 import { gallerySummaryAtomFamily, inscriptionMetadataAtomFamily } from '../atoms/rustFamilyAtomics';
 import { MetadataContainer, MetadataButton, BorderedTagSection, TextContainer, MetadataText, MetadataValue } from './OnChainCollection';
 
@@ -103,6 +103,10 @@ const Gallery = () => {
 
   const gallerySummaryResult = useAtomValue(gallerySummaryAtomFamily(gallery_id));
   const galleryInscriptionMetadataResult = useAtomValue(inscriptionMetadataAtomFamily(gallery_id));
+  const combinedGallerySummaryResult = Result.all({
+    gallerySummary: gallerySummaryResult,
+    galleryMetadata: galleryInscriptionMetadataResult
+  }); // Combine both results to handle loading and error states together
 
 
   // Create the pull atom for the current gallery and filters
@@ -148,7 +152,7 @@ const Gallery = () => {
 
   return (
     <PageContainer>
-      {Result.builder(gallerySummaryResult)
+      {Result.builder(combinedGallerySummaryResult)
         .onInitial(
           () => <GridHeaderSkeleton 
             pageType={'Onchain Gallery'} 
@@ -159,7 +163,7 @@ const Gallery = () => {
             removeTags={undefined}
           />
         )
-        .onSuccess((gallerySummary) => 
+        .onSuccess(({ gallerySummary, galleryMetadata }) => 
           <>
             <HeaderContainer>
               <MainContentStack>
@@ -169,7 +173,9 @@ const Gallery = () => {
                     <InscriptionIcon endpoint={`/bun/rendered_content/${gallery_id}`} useBlockIconDefault={false} size={'8rem'} />
                   </ImageContainer>
                   <Stack gap={'.5rem'}>
-                    <MainText>Unnamed Gallery</MainText>
+                    <MainText>
+                      {extractCollectionTitleFromMetadata(galleryMetadata.on_chain_metadata) || 'Gallery ' + addCommas(galleryMetadata.number)}
+                    </MainText>
                     <InfoText>Gallery inscribed {shortenDate(gallerySummary.gallery_inscribed_date)}</InfoText>
                   </Stack>
                 </DetailsStack>
@@ -183,7 +189,7 @@ const Gallery = () => {
               <Tag isLarge={true} value={gallerySummary.total_inscription_fees ? formatSatsString(gallerySummary.total_inscription_fees) : "0 BTC"} category={'Total Fees'} />
               <Tag isLarge={true} value={gallerySummary.boost_count} category={'Total Boosts'} />
             </RowContainer>
-            {(galleryInscriptionMetadataResult._tag === 'Success' && Object.keys(galleryInscriptionMetadataResult.value.on_chain_metadata as any).length > 0) && (
+            {(galleryMetadata.on_chain_metadata && Object.keys(galleryMetadata.on_chain_metadata as any)?.length > 0) && (
               <RowContainer style={{gap: '.5rem', flexFlow: 'wrap'}}>
                 <MetadataButton onClick={() => setMetadataVisibility(!metadataVisibility)}>
                   {metadataVisibility ? <ChevronDownSmallIcon size={'1.25rem'} /> : <ChevronRightSmallIcon size={'1.25rem'} />}
@@ -193,10 +199,10 @@ const Gallery = () => {
                   <MetadataContainer>
                     <BorderedTagSection />
                     <TextContainer>
-                      {typeof galleryInscriptionMetadataResult.value.on_chain_metadata === 'string' ? (
-                        <MetadataValue>{galleryInscriptionMetadataResult.value.on_chain_metadata}</MetadataValue>
+                      {typeof galleryMetadata.on_chain_metadata === 'string' ? (
+                        <MetadataValue>{galleryMetadata.on_chain_metadata}</MetadataValue>
                       ) : (
-                        Object.entries(galleryInscriptionMetadataResult.value.on_chain_metadata || {}).map(([key, value]) => {
+                        Object.entries(galleryMetadata.on_chain_metadata || {}).map(([key, value]) => {
                           // Skip entries that are arrays or objects
                           if (Array.isArray(value) || (typeof value === 'object' && value !== null)) {
                             return null;
@@ -253,7 +259,7 @@ const Gallery = () => {
                   {galleryInscriptions.items.map(
                     entry => {
                       const onChainArtist = extractArtistFromMetadata(entry.on_chain_metadata);
-                      const onChainTitle = extractTitleFromMetadata(entry.on_chain_metadata);
+                      const onChainTitle = extractCollectionTitleFromMetadata(entry.on_chain_metadata);
 
                       return (
                         <GridItemContainer

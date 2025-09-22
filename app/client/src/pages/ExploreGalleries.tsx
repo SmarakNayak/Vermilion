@@ -4,7 +4,7 @@ import theme from '../styles/theme';
 import { InfoCircleIcon } from '../components/common/Icon';
 import GridItemContainer from '../components/GridItemContainer';
 import { GridContainer } from '../components/GalleryInfiniteScroll';
-import { extractArtistFromMetadata, extractTitleFromMetadata } from '../utils/metadata';
+import { extractArtistFromMetadata, extractCollectionTitleFromMetadata } from '../utils/metadata';
 import { HorizontalDivider, RowContainer, GalleryContainer, LoadingContainer } from '../components/grid/Layout';
 import Stack from '../components/Stack';
 import GridToggle from '../components/grid/GridToggle';
@@ -169,7 +169,7 @@ const ExploreGalleries = () => {
                     {galleryInscriptions.items.map(
                       entry => {
                         const onChainArtist = extractArtistFromMetadata(entry.on_chain_metadata);
-                        const onChainTitle = extractTitleFromMetadata(entry.on_chain_metadata);
+                        const onChainTitle = extractCollectionTitleFromMetadata(entry.on_chain_metadata);
 
                         return (
                           <GridItemContainer
