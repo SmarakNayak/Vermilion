@@ -51,7 +51,7 @@ const AuthGuardSaveButton = ({ children, actionLabel = "use this feature" } :{
     return (
       <>
         <SaveButton type="button" onClick={handleProfileClick}>
-          <AvatarPlusIcon size="2rem" color={theme.colors.background.white} />
+          <AvatarPlusIcon size="1.25rem" color={theme.colors.background.white} />
           Create a profile to {actionLabel}
         </SaveButton>
         <ProfileCreationModal isOpen={showProfileModal} onClose={closeProfileModal} />
