@@ -119,7 +119,6 @@ const FolderItemContainer = ({
 
 export const FolderInfiniteScroll = ({ address}: {address: string | undefined }) => {
   const folders = useAtomValue(foldersAtomFamily(address));
-  const [zoomGrid, setZoomGrid] = useState(false);
   const auth = useAuth();
 
   const deletePlaylist = useAtomSet(AuthSocialClient.mutation("playlists", "deletePlaylist"), { mode: 'promiseExit' });
@@ -149,11 +148,6 @@ export const FolderInfiniteScroll = ({ address}: {address: string | undefined })
 
   return (
     <>
-      <RowContainer>
-        <Stack horizontal={true} center={true} style={{gap: '.75rem'}}>
-          <GridToggle value={zoomGrid} onToggle={() => setZoomGrid(!zoomGrid)} />
-        </Stack>
-      </RowContainer>
       {Result.builder(folders)
         .onInitial(() => <p>Loading...</p>)
         .onSuccess((folders) => (
@@ -165,7 +159,7 @@ export const FolderInfiniteScroll = ({ address}: {address: string | undefined })
                 <p>This user has not made any bookmarks</p>
               </EmptyStateContainer>
             )}
-            <GridContainer zoomGrid={zoomGrid}>
+            <GridContainer zoomGrid={true}>
               {folders.map((folder) => (
                 <FolderItemContainer
                   key={folder.playlist_id}
