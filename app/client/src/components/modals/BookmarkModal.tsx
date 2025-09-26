@@ -31,6 +31,7 @@ import { Option } from 'effect';
 type FolderModalProps = {
   isOpen: boolean;
   onClose: () => void;
+  onSuccess: () => void;
 } & ({
   mode: 'create';
 } | {
@@ -39,7 +40,7 @@ type FolderModalProps = {
 });
 
 export const BookmarkModal = (props: FolderModalProps) => {
-  const { isOpen, onClose, mode } = props;
+  const { isOpen, onClose, onSuccess, mode } = props;
   const modalFormRef = useRef<HTMLFormElement>(null);
   useModalScrollLock(isOpen, modalFormRef);
 
@@ -99,7 +100,7 @@ export const BookmarkModal = (props: FolderModalProps) => {
         Exit.match({
           onSuccess: () => {
             toast.success(`Bookmark folder "${data.playlist_name}" created successfully!`);
-            onClose();
+            onSuccess();
           },
           onFailure: (cause) => {
             toast.error(`Failed to create bookmark folder "${data.playlist_name}"${getErrorMessage(cause)}`);
@@ -117,7 +118,7 @@ export const BookmarkModal = (props: FolderModalProps) => {
         Exit.match({
           onSuccess: () => {
             toast.success(`Bookmark folder "${data.playlist_name}" updated successfully!`);
-            onClose();
+            onSuccess();
           },
           onFailure: (cause) => {
             toast.error(`Failed to update bookmark folder "${data.playlist_name}"${getErrorMessage(cause)}`);

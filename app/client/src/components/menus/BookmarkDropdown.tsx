@@ -128,6 +128,11 @@ export const BookmarkDropdown = ({ref, inscriptionId, onClose}: {
   const handleCreateFolderClick = () => {
     setIsBookmarkModalOpen(true);
   };
+
+  const onCreateFolderSuccess = () => {
+    setIsBookmarkModalOpen(false);
+    onClose();
+  };
   
   const folderList = useAtomValue(userFoldersAtom);
   const [insertResult, insertInscription] = useAtom(AuthSocialClient.mutation("playlists", "insertPlaylistInscriptions"), { mode: 'promiseExit' });
@@ -153,7 +158,7 @@ export const BookmarkDropdown = ({ref, inscriptionId, onClose}: {
 
   return (
     <BookmarkMenuContainer ref={ref}>
-      <BookmarkModal mode='create' isOpen={isBookmarkModalOpen} onClose={() => setIsBookmarkModalOpen(false)} />
+      <BookmarkModal mode='create' isOpen={isBookmarkModalOpen} onClose={() => setIsBookmarkModalOpen(false)} onSuccess={onCreateFolderSuccess}/>
       <BookmarkMenuTitle>Add to folder</BookmarkMenuTitle>
       <BookmarkMenuEntryContainer onClick={handleCreateFolderClick}>
         <FolderIconContainer>
