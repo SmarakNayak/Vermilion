@@ -208,7 +208,7 @@ const AddressButton = styled.button`
   }
 `;
 
-const OptionButton = styled.button`
+export const OptionButton = styled.button`
   display: flex;
   align-items: center;
   justify-content: center;

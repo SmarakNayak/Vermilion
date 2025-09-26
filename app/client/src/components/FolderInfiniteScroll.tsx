@@ -28,6 +28,7 @@ import { Cause, Exit } from "effect";
 import { flatMap, cleanErrorExit } from "../atoms/atomHelpers";
 import { useAuth } from "../hooks/useAuth";
 import { RemoveOverlay } from "./common/RemoveOverlay";
+import { InlineActionDropdown } from "./common/InlineActionDropdown";
 
 const FolderInfo = styled.p`
   color: ${theme.colors.text.secondary};
@@ -37,6 +38,24 @@ const FolderInfo = styled.p`
   font-weight: 500;
   line-height: normal;
   margin: 0;
+`;
+
+const InfoTopRowContainer = styled.div`
+  width: 98%; // slightly less than full width to ensure action menu not too close to edge
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+`;
+
+const HoverableItemContainer = styled(ItemContainer)`
+  .inline-action-menu {
+    opacity: 0;
+    transition: opacity 0.2s ease;
+  }
+  &:hover .inline-action-menu {
+    opacity: 1;
+  }
 `;
 
 const FrontPreview = styled.img<{ renderedSrc: string }>`
@@ -93,27 +112,25 @@ const FolderItemContainer = ({
   onDelete?: (folderId: string, folderName: string) => void;
 }) => {
   return (
-    <RemoveOverlay
-      canRemove={canDelete}
-      onRemove={() => onDelete?.(folder.playlist_id, folder.playlist_name)}
-    >
-      <ItemContainer>
-        <UnstyledLink to={`/folder/${folder.playlist_id}`}>
-          <MediaContainer>
-            {folder.inscription_previews.length === 0 && FolderIcon({ size: '10rem', color: theme.colors.text.secondary })}
-            {folder.inscription_previews[2] && <RearPreview renderedSrc={'/bun/rendered_content/' + folder.inscription_previews[2]} />}
-            {folder.inscription_previews[1] && <MidPreview renderedSrc={'/bun/rendered_content/' + folder.inscription_previews[1]} />}
-            {folder.inscription_previews[0] && <FrontPreview renderedSrc={'/bun/rendered_content/' + folder.inscription_previews[0]} />}
-          </MediaContainer>
-        </UnstyledLink>
-        <InfoContainer>
+    <HoverableItemContainer>
+      <UnstyledLink to={`/folder/${folder.playlist_id}`}>
+        <MediaContainer>
+          {folder.inscription_previews.length === 0 && FolderIcon({ size: '10rem', color: theme.colors.text.secondary })}
+          {folder.inscription_previews[2] && <RearPreview renderedSrc={'/bun/rendered_content/' + folder.inscription_previews[2]} />}
+          {folder.inscription_previews[1] && <MidPreview renderedSrc={'/bun/rendered_content/' + folder.inscription_previews[1]} />}
+          {folder.inscription_previews[0] && <FrontPreview renderedSrc={'/bun/rendered_content/' + folder.inscription_previews[0]} />}
+        </MediaContainer>
+      </UnstyledLink>
+      <InfoContainer>
+        <InfoTopRowContainer>
           <TextLink to={`/folder/${folder.playlist_id}`}>
             <ItemText>{folder.playlist_name}</ItemText>
           </TextLink>
-          <FolderInfo>{folder.count > 0 ? folder.count + ' items' : null}</FolderInfo>
-        </InfoContainer>
-      </ItemContainer>
-    </RemoveOverlay>
+          <InlineActionDropdown />
+        </InfoTopRowContainer>
+        <FolderInfo>{folder.count > 0 ? folder.count + ' items' : null}</FolderInfo>
+      </InfoContainer>
+    </HoverableItemContainer>
   );
 }
 
