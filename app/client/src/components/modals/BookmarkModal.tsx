@@ -31,7 +31,7 @@ import { Option } from 'effect';
 type FolderModalProps = {
   isOpen: boolean;
   onClose: () => void;
-  onSuccess: () => void;
+  onSuccess?: () => void;
 } & ({
   mode: 'create';
 } | {
@@ -40,7 +40,7 @@ type FolderModalProps = {
 });
 
 export const BookmarkModal = (props: FolderModalProps) => {
-  const { isOpen, onClose, onSuccess, mode } = props;
+  const { isOpen, onClose, onSuccess = onClose, mode } = props;
   const modalFormRef = useRef<HTMLFormElement>(null);
   useModalScrollLock(isOpen, modalFormRef);
 

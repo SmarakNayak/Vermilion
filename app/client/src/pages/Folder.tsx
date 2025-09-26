@@ -219,7 +219,7 @@ const Folder = () => {
       {folderId && (
         <BookmarkModal 
           isOpen={isEditModalOpen} 
-          onClose={closeEditModal} 
+          onClose={closeEditModal}
           mode="edit" 
           folderId={folderId} 
         />
