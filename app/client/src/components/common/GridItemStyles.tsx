@@ -108,3 +108,24 @@ export const TagContainer = styled.div`
     min-width: 0; /* Allow complete shrinking if needed */
   }
 `;
+
+export const InfoTopRowContainer = styled.div`
+  width: 98%; // slightly less than full width to ensure action menu not too close to edge
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+`;
+
+export const HoverableItemContainer = styled(ItemContainer)`
+  .inline-action-menu {
+    opacity: 0;
+    transition: opacity 0.2s ease;
+  }
+  .inline-action-menu.open {
+    opacity: 1;
+  }
+  &:hover .inline-action-menu {
+    opacity: 1;
+  }
+`;

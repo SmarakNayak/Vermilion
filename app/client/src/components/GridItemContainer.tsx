@@ -11,8 +11,12 @@ import {
   ContentOverlay,
   ItemText,
   InfoContainer,
-  TagContainer
+  TagContainer,
+  InfoTopRowContainer,
+  HoverableItemContainer
 } from './common/GridItemStyles';
+import { DeleteIcon } from './common/Icon/icons/DeleteIcon';
+import { InlineActionDropdown, ActionDropdownItem } from './common/InlineActionDropdown';
 
 const GridItemContainer = (props: any) => {
   const [binaryContent, setBinaryContent] = useState<Blob|null>(null);
@@ -149,9 +153,11 @@ const GridItemContainer = (props: any) => {
   const shouldApplySpace = props.isCollectionPage
   ? (props.numberVisibility && !props.rune && !props.is_boost && !props.is_child && !props.is_recursive && !(props.content_length > 2000000) && !(props.item_name?.length > 0))
   : (props.numberVisibility && !props.collection && !props.rune && !props.is_boost && !props.is_child && !props.is_recursive && !(props.content_length > 2000000));
+
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   
   return(
-  <ItemContainer>
+  <HoverableItemContainer>
     <UnstyledLink 
       to={props.isGalleryPage ? '/gallery/' + props.id : '/inscription/' + props.number}
     >
@@ -175,9 +181,18 @@ const GridItemContainer = (props: any) => {
     
     {props.numberVisibility && (
       <InfoContainer applySpace={shouldApplySpace}>
-        <TextLink to={props.isGalleryPage ? '/gallery/' + props.id : '/inscription/' + props.number} >
-          <ItemText>{props.isCollectionPage || props.isGalleryPage ? displayName : addCommas(props.number)}</ItemText>
-        </TextLink>
+        <InfoTopRowContainer>
+          <TextLink to={props.isGalleryPage ? '/gallery/' + props.id : '/inscription/' + props.number} >
+            <ItemText>{props.isCollectionPage || props.isGalleryPage ? displayName : addCommas(props.number)}</ItemText>
+          </TextLink>
+          {props?.showInlineActionDropdown && (
+            <InlineActionDropdown isOpen={isDropdownOpen} setIsOpen={setIsDropdownOpen}>
+              <ActionDropdownItem onClick={(e) => props?.onDeleteClick() }>
+                <DeleteIcon size ='1.25rem'/>Remove inscription
+              </ActionDropdownItem>
+            </InlineActionDropdown>
+          )}
+        </InfoTopRowContainer>
         <TagContainer>
           {props.isCollectionPage && props.item_name?.length > 0 && (
             <GridTag
@@ -231,7 +246,7 @@ const GridItemContainer = (props: any) => {
         </TagContainer>
       </InfoContainer>
     )}
-  </ItemContainer>
+  </HoverableItemContainer>
   )
 }
 

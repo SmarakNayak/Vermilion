@@ -24,7 +24,8 @@ import GridControls from "../components/grid/GridControls";
 import { useGridControls } from "../hooks/useGridControls";
 import { AuthSocialClient, getErrorMessage } from "../api/EffectApi";
 import { toast } from "sonner";
-import { RemoveOverlay } from "../components/common/RemoveOverlay";
+import { DeleteConfirmModal } from "../components/modals/DeleteConfirmModal";
+import { useState } from "react";
 
 const profileFromFolderAtomFamily = Atom.family((folderId?: string) =>
   Atom.make((get) => {
@@ -72,12 +73,15 @@ const Folder = () => {
   const auth = useAuth();
   const { copied, copy } = useCopy();
   const { isOpen: isEditModalOpen, open: openEditModal, close: closeEditModal } = useModal();
+  const { isOpen: isDeleteModalOpen, open: openDeleteModal, close: closeDeleteModal } = useModal();
   const { zoomGrid, numberVisibility, toggleNumberVisibility, toggleGridType } = useGridControls();
 
+  const [inscriptionToDelete, setInscriptionToDelete] = useState<string | null>(null);
   const deleteFromPlaylist = useAtomSet(AuthSocialClient.mutation("playlists", "deletePlaylistInscriptions"), { mode: 'promiseExit' });
 
-  const handleRemoveInscription = async (inscriptionId: string) => {
+  const handleRemoveInscription = async (inscriptionId: string | null) => {
     if (!folderId) return;
+    if (!inscriptionId) return;
 
     const result = await deleteFromPlaylist({
       path: { playlist_id: folderId },
@@ -90,6 +94,7 @@ const Folder = () => {
       Exit.match({
         onSuccess: () => {
           toast.success("Inscription removed from folder successfully!");
+          closeDeleteModal();
         },
         onFailure: (cause) => {
           toast.error(`Failed to remove inscription from folder${getErrorMessage(cause)}`);
@@ -97,6 +102,11 @@ const Folder = () => {
       })
     );
   };
+
+  const openConfirmDelete = (inscriptionId: string) => {
+    openDeleteModal();
+    setInscriptionToDelete(inscriptionId);
+  }
 
   // Check if the current user owns this folder
   const canEdit = folder._tag === 'Success' &&
@@ -184,33 +194,36 @@ const Folder = () => {
                 return (
                   <GridContainer zoomGrid={zoomGrid}>
                     {inscriptions.map((entry) => (
-                      <RemoveOverlay
+                      <GridItemContainer
+                        collection={entry.collection_name}
+                        collection_symbol={entry.collection_symbol}
+                        content_length={entry.content_length}
+                        id={entry.id}
+                        is_boost={entry.delegate}
+                        is_child={entry.parents.length > 0}
+                        is_recursive={entry.is_recursive}
+                        isCollectionPage={false}
+                        item_name={(entry.off_chain_metadata as any)?.name}
                         key={entry.number}
-                        canRemove={canEdit}
-                        onRemove={() => handleRemoveInscription(entry.id)}
-                      >
-                        <GridItemContainer
-                          collection={entry.collection_name}
-                          collection_symbol={entry.collection_symbol}
-                          content_length={entry.content_length}
-                          id={entry.id}
-                          is_boost={entry.delegate}
-                          is_child={entry.parents.length > 0}
-                          is_recursive={entry.is_recursive}
-                          isCollectionPage={false}
-                          item_name={(entry.off_chain_metadata as any)?.name}
-                          key={entry.number}
-                          number={entry.number}
-                          numberVisibility={numberVisibility}
-                          rune={entry.spaced_rune}
-                        />
-                      </RemoveOverlay>
+                        number={entry.number}
+                        numberVisibility={numberVisibility}
+                        rune={entry.spaced_rune}
+                        showInlineActionDropdown={canEdit}
+                        onDeleteClick={() => openConfirmDelete(entry.id)}
+                      />
                     ))}
                   </GridContainer>
                 )
               })
               .orNull()
             }
+            <DeleteConfirmModal 
+              isOpen={isDeleteModalOpen} 
+              onClose={closeDeleteModal}
+              onDelete={() => {handleRemoveInscription(inscriptionToDelete)}}
+              modalText="You may add this inscription back later if you'd like."
+              buttonText="Remove inscription"
+            />
           </>
         ))
         .onDefect((defect) => <p>Something went wrong</p>)

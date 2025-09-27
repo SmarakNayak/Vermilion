@@ -14,25 +14,18 @@ import {
 } from './common/GridItemStyles';
 import { PlaylistPreviewSchema } from '../../../shared/types/playlist';
 import type { Schema } from 'effect/Schema';
-import { DotGridIcon, EditIcon, GridIcon, ImageBadgeIcon } from './common/Icon';
+import { EditIcon, FolderIcon, ImageBadgeIcon } from './common/Icon';
 import { EmptyStateContainer } from "./GalleryInfiniteScroll";
-import { FolderIcon } from "./common/Icon";
-import GridToggle from "./grid/GridToggle";
 import { useState } from "react";
-import { RowContainer } from "./grid/Layout";
-import Stack from "./Stack";
-import { useGridControls } from "../hooks/useGridControls";
 import { AuthSocialClient, getErrorMessage } from "../api/EffectApi";
 import { toast } from "sonner";
 import { Cause, Exit } from "effect";
 import { flatMap, cleanErrorExit } from "../atoms/atomHelpers";
 import { useAuth } from "../hooks/useAuth";
-import { RemoveOverlay } from "./common/RemoveOverlay";
 import { InlineActionDropdown, ActionDropdownItem } from "./common/InlineActionDropdown";
 import { DeleteIcon } from "./common/Icon/icons/DeleteIcon";
 import { DeleteConfirmModal } from "./modals/DeleteConfirmModal";
 import { useModal } from "../hooks/useModal";
-import { cons } from "effect/List";
 
 const FolderInfo = styled.p`
   color: ${theme.colors.text.secondary};
