@@ -187,6 +187,7 @@ export const DropdownItem = styled.li`
   display: flex;
   align-items: center;
   min-width: 6rem;
+  gap: .375rem;
 
   &:hover {
     color: ${theme.colors.text.primary};

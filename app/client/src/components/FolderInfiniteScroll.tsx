@@ -14,7 +14,7 @@ import {
 } from './common/GridItemStyles';
 import { PlaylistPreviewSchema } from '../../../shared/types/playlist';
 import type { Schema } from 'effect/Schema';
-import { DotGridIcon, GridIcon, ImageBadgeIcon } from './common/Icon';
+import { DotGridIcon, EditIcon, GridIcon, ImageBadgeIcon } from './common/Icon';
 import { EmptyStateContainer } from "./GalleryInfiniteScroll";
 import { FolderIcon } from "./common/Icon";
 import GridToggle from "./grid/GridToggle";
@@ -28,7 +28,8 @@ import { Cause, Exit } from "effect";
 import { flatMap, cleanErrorExit } from "../atoms/atomHelpers";
 import { useAuth } from "../hooks/useAuth";
 import { RemoveOverlay } from "./common/RemoveOverlay";
-import { InlineActionDropdown } from "./common/InlineActionDropdown";
+import { InlineActionDropdown, ActionDropdownItem } from "./common/InlineActionDropdown";
+import { DeleteIcon } from "./common/Icon/icons/DeleteIcon";
 
 const FolderInfo = styled.p`
   color: ${theme.colors.text.secondary};
@@ -52,6 +53,9 @@ const HoverableItemContainer = styled(ItemContainer)`
   .inline-action-menu {
     opacity: 0;
     transition: opacity 0.2s ease;
+  }
+  .inline-action-menu.open {
+    opacity: 1;
   }
   &:hover .inline-action-menu {
     opacity: 1;
@@ -111,6 +115,8 @@ const FolderItemContainer = ({
   canDelete: boolean;
   onDelete?: (folderId: string, folderName: string) => void;
 }) => {
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  
   return (
     <HoverableItemContainer>
       <UnstyledLink to={`/folder/${folder.playlist_id}`}>
@@ -126,7 +132,14 @@ const FolderItemContainer = ({
           <TextLink to={`/folder/${folder.playlist_id}`}>
             <ItemText>{folder.playlist_name}</ItemText>
           </TextLink>
-          <InlineActionDropdown />
+          <InlineActionDropdown isOpen={isDropdownOpen} setIsOpen={setIsDropdownOpen}>
+            <ActionDropdownItem>
+              <EditIcon size ='1.25rem'/>Edit folder
+            </ActionDropdownItem>
+            <ActionDropdownItem>
+              <DeleteIcon size ='1.25rem'/>Delete folder
+            </ActionDropdownItem>
+          </InlineActionDropdown>
         </InfoTopRowContainer>
         <FolderInfo>{folder.count > 0 ? folder.count + ' items' : null}</FolderInfo>
       </InfoContainer>
