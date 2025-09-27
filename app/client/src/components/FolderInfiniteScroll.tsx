@@ -30,6 +30,9 @@ import { useAuth } from "../hooks/useAuth";
 import { RemoveOverlay } from "./common/RemoveOverlay";
 import { InlineActionDropdown, ActionDropdownItem } from "./common/InlineActionDropdown";
 import { DeleteIcon } from "./common/Icon/icons/DeleteIcon";
+import { DeleteConfirmModal } from "./modals/DeleteConfirmModal";
+import { useModal } from "../hooks/useModal";
+import { cons } from "effect/List";
 
 const FolderInfo = styled.p`
   color: ${theme.colors.text.secondary};
@@ -109,11 +112,11 @@ const RearPreview = styled.img<{ renderedSrc: string }>`
 const FolderItemContainer = ({
   folder,
   canDelete,
-  onDelete
+  onDeleteClick
 }: {
   folder: Schema.Type<typeof PlaylistPreviewSchema>;
   canDelete: boolean;
-  onDelete?: (folderId: string, folderName: string) => void;
+  onDeleteClick: () => void;
 }) => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   
@@ -132,14 +135,14 @@ const FolderItemContainer = ({
           <TextLink to={`/folder/${folder.playlist_id}`}>
             <ItemText>{folder.playlist_name}</ItemText>
           </TextLink>
-          <InlineActionDropdown isOpen={isDropdownOpen} setIsOpen={setIsDropdownOpen}>
-            <ActionDropdownItem>
+          {canDelete && <InlineActionDropdown isOpen={isDropdownOpen} setIsOpen={setIsDropdownOpen}>
+            {/* <ActionDropdownItem>
               <EditIcon size ='1.25rem'/>Edit folder
-            </ActionDropdownItem>
-            <ActionDropdownItem>
+            </ActionDropdownItem> */}
+            <ActionDropdownItem onClick={(e) => onDeleteClick() }>
               <DeleteIcon size ='1.25rem'/>Delete folder
             </ActionDropdownItem>
-          </InlineActionDropdown>
+          </InlineActionDropdown>}
         </InfoTopRowContainer>
         <FolderInfo>{folder.count > 0 ? folder.count + ' items' : null}</FolderInfo>
       </InfoContainer>
@@ -147,13 +150,21 @@ const FolderItemContainer = ({
   );
 }
 
+type FolderToDelete = {
+  folderId: string;
+  folderName: string;
+} | null;
+
 export const FolderInfiniteScroll = ({ address}: {address: string | undefined }) => {
   const folders = useAtomValue(foldersAtomFamily(address));
   const auth = useAuth();
+  const { isOpen: showDeleteModal, open: openDeleteModal, close: closeDeleteModal } = useModal();
+  const [ folderToDelete, setFolderToDelete ] = useState<FolderToDelete>(null);
 
   const deletePlaylist = useAtomSet(AuthSocialClient.mutation("playlists", "deletePlaylist"), { mode: 'promiseExit' });
-
-  const handleDeleteFolder = async (folderId: string, folderName: string) => {
+  const handleDeleteFolder = async () => {
+    if (!folderToDelete) return;
+    const { folderId, folderName } = folderToDelete;
     const result = await deletePlaylist({
       path: { playlist_id: folderId },
       reactivityKeys: ['userFolders']
@@ -164,6 +175,7 @@ export const FolderInfiniteScroll = ({ address}: {address: string | undefined })
       Exit.match({
         onSuccess: () => {
           toast.success(`Folder "${folderName}" deleted successfully!`);
+          closeDeleteModal();
         },
         onFailure: (cause) => {
           toast.error(`Failed to delete folder "${folderName}"${getErrorMessage(cause)}`);
@@ -171,6 +183,11 @@ export const FolderInfiniteScroll = ({ address}: {address: string | undefined })
       })
     );
   };
+
+  const openConfirmDelete = (folderId: string, folderName: string) => {
+    setFolderToDelete({ folderId, folderName });
+    openDeleteModal();
+  }
 
   // Check if the current user can delete folders (viewing their own profile)
   const canDelete = auth.state === 'signed-in-with-profile' &&
@@ -195,10 +212,17 @@ export const FolderInfiniteScroll = ({ address}: {address: string | undefined })
                   key={folder.playlist_id}
                   folder={folder}
                   canDelete={canDelete}
-                  onDelete={handleDeleteFolder}
+                  onDeleteClick={() => openConfirmDelete(folder.playlist_id, folder.playlist_name)}
                 />
               ))}
             </GridContainer>
+            <DeleteConfirmModal 
+              isOpen={showDeleteModal} 
+              onClose={closeDeleteModal}
+              onDelete={handleDeleteFolder}
+              modalText="Deleting this folder is permanent and irreversible."
+              buttonText="Delete folder"
+            />
           </>
         ))
         .orNull()}

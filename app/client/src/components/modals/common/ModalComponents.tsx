@@ -45,6 +45,27 @@ const ModalContainer = styled.div<{isOpen: boolean}>`
   }
 `;
 
+const MiniModalContainer = styled.div<{isOpen: boolean}>`
+  background: ${theme.colors.background.white};
+  border-radius: 1.5rem;
+  width: 90vw;
+  max-width: 400px;
+  height: auto;
+  max-height: 95vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  opacity: ${props => (props.isOpen ? 1 : 0)};
+  visibility: ${props => (props.isOpen ? 'visible' : 'hidden')};
+
+  transform: ${props => (props.isOpen ? '' : 'scale(0.92)')};
+  transition: opacity 200ms ease, visibility 200ms ease, transform 200ms ease;
+
+  @media (max-width: 500px) {
+    max-width: 90vw;
+  }
+`;
+
 const ModalHeaderContainer = styled.div`
   display: flex;
   justify-content: space-between;
@@ -145,6 +166,14 @@ export const ModalSectionTitle = styled.p`
   margin: 0;
 `;
 
+export const ModalText = styled.p`
+  font-family: ${theme.typography.fontFamilies.medium};
+  font-size: 1rem;
+  line-height: 1.5rem;
+  color: ${theme.colors.text.secondary};
+  margin: 0;
+`;
+
 /**
  * A portal-based modal component that renders outside the React component tree
  * 
@@ -174,6 +203,23 @@ export const PortalModal = ({ isOpen, onClose, children }: {
       <ModalContainer isOpen={true} onClick={(e) => e.stopPropagation()}>
         {children}
       </ModalContainer>
+    </ModalOverlay>,
+    document.body
+  );
+};
+
+export const MiniModal = ({ isOpen, onClose, children }: {
+  isOpen: boolean;
+  onClose: () => void;
+  children: React.ReactNode;
+}) => {
+  if (!isOpen) return null;
+
+  return createPortal(
+    <ModalOverlay isOpen={true} onClick={onClose}>
+      <MiniModalContainer isOpen={true} onClick={(e) => e.stopPropagation()}>
+        {children}
+      </MiniModalContainer>
     </ModalOverlay>,
     document.body
   );
