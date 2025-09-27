@@ -11,6 +11,7 @@ import { cleanErrorResult, cleanErrorExit, flatMap } from "../../atoms/atomHelpe
 import { Option, Exit } from "effect";
 import { AuthSocialClient, getErrorMessage } from "../../api/EffectApi";
 import { toast } from "sonner";
+import { InlineToastLink } from "../toast/ToastStyles";
 
 const BookmarkMenuContainer = styled.div`
   //layout  
@@ -146,7 +147,13 @@ export const BookmarkDropdown = ({ref, inscriptionId, onClose}: {
       cleanErrorExit,
       Exit.match({
         onSuccess: () => {
-          toast.success(`Inscription added to "${playlistName}" successfully!`);
+          toast.success(
+            <>
+              Inscription added to{' '}
+              <InlineToastLink href={`/folder/${playlistId}`} target="_blank">"{playlistName}"</InlineToastLink>
+              {' '}successfully!
+            </>
+          );
           onClose();
         },
         onFailure: (cause) => {
