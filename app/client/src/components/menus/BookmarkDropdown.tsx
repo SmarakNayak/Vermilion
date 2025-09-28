@@ -51,7 +51,7 @@ const BookmarkMenuEntryContainer = styled.div`
   //Style
   border-radius: 8px;
   &:hover {
-    background-color: ${theme.colors.background.secondary};
+    background-color: ${theme.colors.background.primary};
     cursor: pointer;
   }
 `;
