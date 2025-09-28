@@ -65,8 +65,8 @@ const FrontPreview = styled.img<{ renderedSrc: string }>`
   background: url(${props => props.renderedSrc}) lightgray 50% / cover no-repeat;
   box-shadow: 0 1px 6px 0 rgba(0, 0, 0, 0.09);
   // stack effect
-  width: 70%;
   height: 70%;
+  aspect-ratio: 1 / 1;
   z-index: 3;
   position: absolute;
   transform: scale(1) translate(0%, 5%);
@@ -80,8 +80,8 @@ const MidPreview = styled.img<{ renderedSrc: string }>`
   box-shadow: 0 1px 6px 0 rgba(0, 0, 0, 0.09);
   // stack effect
   z-index: 2;
-  width: 70%;
   height: 70%;
+  aspect-ratio: 1 / 1;
   position: absolute;
   transform: scale(0.9) translate(0%, -5%);
 
@@ -95,8 +95,8 @@ const RearPreview = styled.img<{ renderedSrc: string }>`
   box-shadow: 0 1px 6px 0 rgba(0, 0, 0, 0.09);
   // stack effect
   z-index: 1;
-  width: 70%;
   height: 70%;
+  aspect-ratio: 1 / 1;
   position: absolute;
   transform: scale(0.8) translate(0%, -15%);
 `;
