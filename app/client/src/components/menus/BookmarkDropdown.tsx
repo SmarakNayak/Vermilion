@@ -53,6 +53,7 @@ const BookmarkMenuEntryContainer = styled.div`
   &:hover {
     background-color: ${theme.colors.background.primary};
     cursor: pointer;
+    transition: all 150ms ease;
   }
 `;
 
