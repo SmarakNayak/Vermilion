@@ -20,7 +20,6 @@ const BookmarkMenuContainer = styled.div`
   padding: 16px 8px 8px 8px;
   flex-direction: column;
   align-items: flex-start;
-  gap: 8px;
   //position
   position: absolute;
   top: 48px;
@@ -34,6 +33,8 @@ const BookmarkMenuContainer = styled.div`
 const BookmarkMenuTitle = styled.div`
   //layout
   flex: 1 0 0;
+  margin-left: 8px;
+  margin-bottom: 8px;
   //Typography
   color: ${theme.colors.text.secondary};
   font-family: ${theme.typography.fontFamilies.medium};
