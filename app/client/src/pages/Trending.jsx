@@ -518,9 +518,10 @@ const ContentContainer = styled.div`
 `;
 
 const InscriptionContainer = styled.div`
-  display: flex;
-  align-items: center;
-  justify-content: center;  
+  // commented out to match Discover page - when display is flex skeleton doesnt size properly (sizes as 0x0)
+  // display: flex;
+  // align-items: center;
+  // justify-content: center;  
   width: 32rem;
   max-width: 32rem;
   height: auto;
