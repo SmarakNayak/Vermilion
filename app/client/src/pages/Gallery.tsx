@@ -156,7 +156,7 @@ const Gallery = () => {
 
   const artistText = (onChainMetatdata: any) => {
     const artist = extractArtistFromMetadata(onChainMetatdata);
-    return artist ? ` • Created by ${artist}` : '';
+    return artist ? `Created by ${artist} • ` : '';
   }
 
   return (
@@ -182,7 +182,7 @@ const Gallery = () => {
                     <MainText>
                       {extractCollectionTitleFromMetadata(galleryMetadata.on_chain_metadata) || 'Gallery ' + addCommas(galleryMetadata.number)}
                     </MainText>
-                    <InfoText>Gallery inscribed {shortenDate(gallerySummary.gallery_inscribed_date)}{artistText(galleryMetadata.on_chain_metadata)}</InfoText>
+                    <InfoText>{artistText(galleryMetadata.on_chain_metadata)}Gallery inscribed {shortenDate(gallerySummary.gallery_inscribed_date)}</InfoText>
                   </Stack>
                 </DetailsStack>
               </MainContentStack>

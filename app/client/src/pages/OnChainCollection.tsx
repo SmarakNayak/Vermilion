@@ -127,7 +127,7 @@ const OnChainCollection = ({
 
   const artistText = (onChainMetadata: any) => {
     const artist = extractArtistFromMetadata(onChainMetadata);
-    return artist ? ` • Created by ${artist}` : '';
+    return artist ? `Created by ${artist} • ` : '';
   };
 
   return (
@@ -155,7 +155,7 @@ const OnChainCollection = ({
                   <MainText>
                     {extractCollectionTitleFromMetadata(inscriptionMetadata?.on_chain_metadata) || `Collection of ${metadata?.parent_numbers ? metadata.parent_numbers.map((num: number) => addCommas(num)).join(' • ') : ''}`}
                   </MainText>
-                  <InfoText>First Inscribed {shortenDate(metadata?.first_inscribed_date)} • Last Inscribed {shortenDate(metadata?.last_inscribed_date)}{artistText(inscriptionMetadata?.on_chain_metadata)}</InfoText>
+                  <InfoText>{artistText(inscriptionMetadata?.on_chain_metadata)}First Inscribed {shortenDate(metadata?.first_inscribed_date)} • Last Inscribed {shortenDate(metadata?.last_inscribed_date)}</InfoText>
                 </Stack>
               </DetailsStack>
             </MainContentStack>
