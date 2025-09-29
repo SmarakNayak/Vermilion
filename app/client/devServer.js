@@ -97,7 +97,7 @@ async function proxyRequest(req, targetHost, rewrite, strip) {
   }
 
   const targetUrl = `${targetHost}${path}${url.search}`;
-  console.log(`Proxying request to: ${targetUrl}`);
+  //console.log(`Proxying request to: ${targetUrl}`);
 
   // clone incoming headers and add auth
   const headers = new Headers();

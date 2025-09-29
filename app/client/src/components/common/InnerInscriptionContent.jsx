@@ -32,7 +32,7 @@ const InnerInscriptionContent = ({
   // Add effect to handle recursive SVGs
   useEffect(() => {
     // Check if this is a recursive SVG that needs special handling
-    if(metadata?.is_recursive && contentType=="svg") {
+    if(metadata?.is_recursive && (contentType=="svg" || contentType=="svg-recursive")) {
       setContentType("svg-recursive")
     } else {
       setContentType(initialContentType);
