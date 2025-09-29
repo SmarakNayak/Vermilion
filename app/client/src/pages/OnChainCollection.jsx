@@ -28,14 +28,15 @@ import Tag from '../components/Tag';
 import { ChevronDownSmallIcon, GalleryIcon } from '../components/common/Icon';
 
 // import utils
-import { 
-  addCommas, 
+import {
+  addCommas,
   formatAddress,
-  formatSatsString, 
-  formatTimestampMs, 
+  formatSatsString,
+  formatTimestampMs,
   shortenBytesString,
-  shortenDate 
+  shortenDate
 } from '../utils/format';
+import { extractArtistFromMetadata, extractCollectionTitleFromMetadata } from '../utils/metadata';
 import { ChevronRightSmallIcon } from '../components/common/Icon/icons/ChevronRightSmallIcon';
 
 const OnChainCollection = ({ setParentNumbers }) => {
@@ -116,6 +117,11 @@ const OnChainCollection = ({ setParentNumbers }) => {
     setSelectedFilterOptions(filterOptions);
   };
 
+  const artistText = (onChainMetadata) => {
+    const artist = extractArtistFromMetadata(onChainMetadata);
+    return artist ? ` • Created by ${artist}` : '';
+  };
+
   return (
     <PageContainer>
       {loading ? (
@@ -138,8 +144,10 @@ const OnChainCollection = ({ setParentNumbers }) => {
                   )}
                 </ImageContainer>
                 <Stack gap={'.5rem'}>
-                  <MainText>Collection of {metadata?.parent_numbers ? metadata.parent_numbers.map(num => addCommas(num)).join(' • ') : ''}</MainText>
-                  <InfoText>First Inscribed {shortenDate(metadata?.first_inscribed_date)} • Last Inscribed {shortenDate(metadata?.last_inscribed_date)}</InfoText>
+                  <MainText>
+                    {extractCollectionTitleFromMetadata(inscriptionMetadata?.on_chain_metadata) || `Collection of ${metadata?.parent_numbers ? metadata.parent_numbers.map(num => addCommas(num)).join(' • ') : ''}`}
+                  </MainText>
+                  <InfoText>First Inscribed {shortenDate(metadata?.first_inscribed_date)} • Last Inscribed {shortenDate(metadata?.last_inscribed_date)}{artistText(inscriptionMetadata?.on_chain_metadata)}</InfoText>
                 </Stack>
               </DetailsStack>
             </MainContentStack>

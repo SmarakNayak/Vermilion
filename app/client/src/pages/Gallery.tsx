@@ -14,6 +14,7 @@ import {
   ImageContainer,
   HorizontalDivider,
   LoadingContainer,
+  SocialStack,
 } from '../components/grid/Layout';
 import GridControls from '../components/grid/GridControls';
 import { GridHeaderSkeleton } from '../components/grid/GridHeaderSkeleton';
@@ -28,7 +29,7 @@ import Tag from '../components/Tag';
 import Spinner from '../components/Spinner';
 
 // import icons
-import { ChevronDownSmallIcon, ImageBadgeIcon } from '../components/common/Icon';
+import { ArrowSquareIcon, ChevronDownSmallIcon, ImageBadgeIcon } from '../components/common/Icon';
 import { ChevronRightSmallIcon } from '../components/common/Icon/icons/ChevronRightSmallIcon';
 
 // import utils
@@ -49,6 +50,9 @@ import { useScrollBottom } from '../hooks/useScrollBottom';
 import { extractArtistFromMetadata, extractCollectionTitleFromMetadata } from '../utils/metadata';
 import { gallerySummaryAtomFamily, inscriptionMetadataAtomFamily } from '../atoms/rustFamilyAtomics';
 import { MetadataContainer, MetadataButton, BorderedTagSection, TextContainer, MetadataText, MetadataValue } from './OnChainCollection';
+import Tooltip from '../components/common/Tooltip';
+import IconButton from '../components/common/buttons/IconButton';
+import { ButtonWrapper } from '../components/common/buttons/ButtonWrapper';
 
 class GalleryInscriptionsParams extends Data.Class<{
   readonly galleryId: string | undefined;
@@ -150,6 +154,11 @@ const Gallery = () => {
     setSelectedFilterOptions(filterOptions);
   };
 
+  const artistText = (onChainMetatdata: any) => {
+    const artist = extractArtistFromMetadata(onChainMetatdata);
+    return artist ? ` • Created by ${artist}` : '';
+  }
+
   return (
     <PageContainer>
       {Result.builder(combinedGallerySummaryResult)
@@ -176,10 +185,19 @@ const Gallery = () => {
                     <MainText>
                       {extractCollectionTitleFromMetadata(galleryMetadata.on_chain_metadata) || 'Gallery ' + addCommas(galleryMetadata.number)}
                     </MainText>
-                    <InfoText>Gallery inscribed {shortenDate(gallerySummary.gallery_inscribed_date)}</InfoText>
+                    <InfoText>Gallery inscribed {shortenDate(gallerySummary.gallery_inscribed_date)}{artistText(galleryMetadata.on_chain_metadata)}</InfoText>
                   </Stack>
                 </DetailsStack>
               </MainContentStack>
+              <SocialStack>
+                <Tooltip content={"View original gallery inscription"}>
+                  <ButtonWrapper>
+                    <IconButton onClick={() => window.open('/inscription/' + galleryMetadata.number, '_blank', 'noopener noreferrer')}>
+                      <ArrowSquareIcon size={'1.25rem'} />
+                    </IconButton>
+                  </ButtonWrapper>
+                </Tooltip>
+              </SocialStack>
             </HeaderContainer>
             <RowContainer style={{gap: '.5rem', flexFlow: 'wrap'}}>
               <Tag isLarge={true} value={gallerySummary.supply ? addCommas(gallerySummary.supply) : 0} category={'Supply'} />
