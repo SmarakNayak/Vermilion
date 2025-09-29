@@ -28,13 +28,22 @@ const SkeletonBase = styled.div`
   animation: ${pulse} 2s ease-in-out infinite;
 `;
 
-const SkeletonRect = styled(SkeletonBase)`
+const SkeletonRect = styled(SkeletonBase)<{ width: string; height: string; isProfile?: boolean | undefined }>`
   width: ${props => props.width || '100%'};
   height: ${props => props.height || '1rem'};
   border-radius: ${props => props.isProfile ? '4rem' : '4px'};
 `;
 
-export const GridHeaderSkeleton = ({ pageType, isProfile, removeInfoText, hasDescription, numTags, removeTags }) => (
+interface GridHeaderSkeletonProps {
+  pageType: string;
+  isProfile?: boolean;
+  removeInfoText?: boolean;
+  hasDescription?: boolean;
+  numTags?: number;
+  removeTags?: boolean;
+}
+
+export const GridHeaderSkeleton = ({ pageType, isProfile, removeInfoText, hasDescription, numTags, removeTags }: GridHeaderSkeletonProps) => (
   <>
     <HeaderContainer>
       <MainContentStack>

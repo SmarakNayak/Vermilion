@@ -13,6 +13,7 @@ import {
   GalleryContainer,
   ImageContainer,
   HorizontalDivider,
+  SocialStack,
 } from '../components/grid/Layout';
 import GridControls from '../components/grid/GridControls';
 import { GridHeaderSkeleton } from '../components/grid/GridHeaderSkeleton';
@@ -25,7 +26,7 @@ import InscriptionIcon from '../components/InscriptionIcon';
 import Tag from '../components/Tag';
 
 // import icons
-import { ChevronDownSmallIcon, GalleryIcon } from '../components/common/Icon';
+import { ArrowSquareIcon, ChevronDownSmallIcon, GalleryIcon } from '../components/common/Icon';
 
 // import utils
 import {
@@ -38,12 +39,19 @@ import {
 } from '../utils/format';
 import { extractArtistFromMetadata, extractCollectionTitleFromMetadata } from '../utils/metadata';
 import { ChevronRightSmallIcon } from '../components/common/Icon/icons/ChevronRightSmallIcon';
+import Tooltip from '../components/common/Tooltip';
+import { ButtonWrapper } from '../components/common/buttons/ButtonWrapper';
+import IconButton from '../components/common/buttons/IconButton';
 
-const OnChainCollection = ({ setParentNumbers }) => {
-  const [baseApi, setBaseApi] = useState(null); 
+const OnChainCollection = ({ 
+  setParentNumbers 
+}: {
+  setParentNumbers: any;
+}) => {
+  const [baseApi, setBaseApi] = useState<null|string>(null); 
   let { number } = useParams();
-  const [metadata, setMetadata] = useState(null);
-  const [inscriptionMetadata, setInscriptionMetadata] = useState(null);
+  const [metadata, setMetadata] = useState<any>(null);
+  const [inscriptionMetadata, setInscriptionMetadata] = useState<any>(null);
   const [metadataVisibility, setMetadataVisibility] = useState(false);
   const [numberVisibility, setNumberVisibility] = useState(true);
   const [filterVisibility, setFilterVisibility] = useState(false);
@@ -109,15 +117,15 @@ const OnChainCollection = ({ setParentNumbers }) => {
     setZoomGrid(!zoomGrid);
   };
 
-  const handleSortOptionChange = (option) => {
+  const handleSortOptionChange = (option: any) => {
     setSelectedSortOption(option);
   };
 
-  const handleFilterOptionsChange = (filterOptions) => {
+  const handleFilterOptionsChange = (filterOptions: any) => {
     setSelectedFilterOptions(filterOptions);
   };
 
-  const artistText = (onChainMetadata) => {
+  const artistText = (onChainMetadata: any) => {
     const artist = extractArtistFromMetadata(onChainMetadata);
     return artist ? ` • Created by ${artist}` : '';
   };
@@ -145,12 +153,21 @@ const OnChainCollection = ({ setParentNumbers }) => {
                 </ImageContainer>
                 <Stack gap={'.5rem'}>
                   <MainText>
-                    {extractCollectionTitleFromMetadata(inscriptionMetadata?.on_chain_metadata) || `Collection of ${metadata?.parent_numbers ? metadata.parent_numbers.map(num => addCommas(num)).join(' • ') : ''}`}
+                    {extractCollectionTitleFromMetadata(inscriptionMetadata?.on_chain_metadata) || `Collection of ${metadata?.parent_numbers ? metadata.parent_numbers.map((num: number) => addCommas(num)).join(' • ') : ''}`}
                   </MainText>
                   <InfoText>First Inscribed {shortenDate(metadata?.first_inscribed_date)} • Last Inscribed {shortenDate(metadata?.last_inscribed_date)}{artistText(inscriptionMetadata?.on_chain_metadata)}</InfoText>
                 </Stack>
               </DetailsStack>
             </MainContentStack>
+            {inscriptionMetadata && <SocialStack>
+              <Tooltip content={"View parent inscription"}>
+                <ButtonWrapper>
+                  <IconButton onClick={() => window.open('/inscription/' + inscriptionMetadata.number, '_blank')}>
+                    <ArrowSquareIcon size={'1.25rem'} />
+                  </IconButton>
+                </ButtonWrapper>
+              </Tooltip>
+            </SocialStack>}
           </HeaderContainer>
           <RowContainer style={{gap: '.5rem', flexFlow: 'wrap'}}>
             <Tag isLarge={true} value={metadata?.supply ? addCommas(metadata?.supply) : 0} category={'Supply'} />
@@ -172,7 +189,7 @@ const OnChainCollection = ({ setParentNumbers }) => {
                     {typeof inscriptionMetadata?.on_chain_metadata === 'string' ? (
                       <MetadataValue>{inscriptionMetadata.on_chain_metadata}</MetadataValue>
                     ) : (
-                      Object.entries(inscriptionMetadata?.on_chain_metadata || {}).map(([key, value]) => {
+                      Object.entries(inscriptionMetadata?.on_chain_metadata || {}).map(([key, value]: [string, any]) => {
                         // Skip entries that are arrays or objects
                         if (Array.isArray(value) || (typeof value === 'object' && value !== null)) {
                           return null;

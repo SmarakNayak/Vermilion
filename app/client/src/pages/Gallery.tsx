@@ -167,9 +167,6 @@ const Gallery = () => {
             pageType={'Onchain Gallery'} 
             hasDescription={false} 
             numTags={5}
-            isProfile={undefined}
-            removeInfoText={undefined}
-            removeTags={undefined}
           />
         )
         .onSuccess(({ gallerySummary, galleryMetadata }) => 

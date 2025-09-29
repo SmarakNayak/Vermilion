@@ -7,7 +7,7 @@ import theme from '../styles/theme';
 import { ImageBadgeIcon } from './common/Icon';
 
 interface GalleryInfiniteScrollProps {
-  baseApi: string;
+  baseApi: string | null;
   isCollectionPage?: boolean;
   numberVisibility: boolean;
   zoomGrid: boolean;
@@ -27,6 +27,7 @@ const GalleryInfiniteScroll = ({ baseApi, isCollectionPage, numberVisibility, zo
   },[baseApi])
 
   const fetchInital = async () => {
+    if (!baseApi) return;
     const query_string = baseApi + "&page_size=" + pageSize + "&page_number=0";
     // console.log(query_string); // Query string for debugging - not visible in console
     const response = await fetch(query_string);
