@@ -1,4 +1,4 @@
-import React, { use, useEffect, useRef, useState } from 'react';
+import React, { use, useEffect, useRef, useState, useMemo } from 'react';
 import styled, { keyframes } from 'styled-components';
 import { BlockIcon, ImageIcon } from './Icon';
 import theme from '../../styles/theme';
@@ -18,26 +18,21 @@ const InnerInscriptionContent = ({
   // isLoading,
   // isCentered = false,
 }) => {
+  // Calculate final content type based on initial type and metadata
+  const contentType = useMemo(() => {
+    if (metadata?.is_recursive && initialContentType === "svg") {
+      return "svg-recursive";
+    }
+    return initialContentType;
+  }, [initialContentType, metadata?.is_recursive]);
 
-  // Add state to track the actual content type
-  const [contentType, setContentType] = useState(initialContentType);
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     if (useFeedStyles) {
       setIsLoading(true);
     }
-  }, [useFeedStyles]);
-
-  // Add effect to handle recursive SVGs
-  useEffect(() => {
-    // Check if this is a recursive SVG that needs special handling
-    if(metadata?.is_recursive && (contentType=="svg" || contentType=="svg-recursive")) {
-      setContentType("svg-recursive")
-    } else {
-      setContentType(initialContentType);
-    }
-  }, [initialContentType, metadata]);  
+  }, [useFeedStyles]);  
 
   // Reference for 3D model viewer
   const modelViewerRef = useRef(null);

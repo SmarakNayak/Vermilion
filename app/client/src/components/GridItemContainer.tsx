@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useMemo, useReducer } from 'react';
 import InnerInscriptionContent from './common/InnerInscriptionContent';
 import GridTag from './common/GridTag';
 import { addCommas, shortenBytesString } from '../utils/format';
@@ -18,16 +18,49 @@ import {
 import { DeleteIcon } from './common/Icon/icons/DeleteIcon';
 import { InlineActionDropdown, ActionDropdownItem } from './common/InlineActionDropdown';
 
-const GridItemContainer = (props: any) => {
-  const [binaryContent, setBinaryContent] = useState<Blob|null>(null);
-  const [blobUrl, setBlobUrl] = useState<string|null>(null);
-  const [textContent, setTextContent] = useState<string|null>(null);
-  const [rawContentType, setRawContentType] =useState<string|null>(null);
-  const [contentType, setContentType] = useState<string|null>(null);
+type ContentState = {
+  blobUrl: string | null;
+  textContent: string | null;
+  rawContentType: string | null;
+  contentType: string | null;
+  modelUrl: string | null;
+};
 
-  // state for 3d
-  const [modelUrl, setModelUrl] = useState<string|null>(null);
-  const modelViewerRef = useRef(null);
+type ContentAction =
+  | { type: 'SET_LOADING' }
+  | { type: 'SET_CONTENT'; payload: Partial<ContentState> };
+
+const contentReducer = (state: ContentState, action: ContentAction): ContentState => {
+  switch (action.type) {
+    case 'SET_LOADING':
+      return {
+        ...state,
+        blobUrl: null,
+        textContent: null,
+        contentType: 'loading'
+      };
+    case 'SET_CONTENT':
+      return {
+        ...state,
+        ...action.payload
+      };
+    default:
+      return state;
+  }
+};
+
+const GridItemContainer = (props: any) => {
+  // we use a reducer to save re-renders
+  // when they were separate states, it re-rendered on every setState call
+  const [contentState, dispatch] = useReducer(contentReducer, {
+    blobUrl: null,
+    textContent: null,
+    rawContentType: null,
+    contentType: null,
+    modelUrl: null
+  });
+
+  const { blobUrl, textContent, rawContentType, contentType, modelUrl } = contentState;
 
   // state for display name
   const displayName = props.item_name && props.item_name.trim() !== "" ? props.item_name : addCommas(props.number);
@@ -35,120 +68,122 @@ const GridItemContainer = (props: any) => {
   //Update content
   useEffect(() => {
     const fetchContent = async () => {
-      setBlobUrl(null);
-      setTextContent(null);
-      setContentType("loading");
+      dispatch({ type: 'SET_LOADING' });
       //1. Get content
       const response = await fetch("/api/inscription_number/"+props.number);
       //2. Assign local url
       const blob = await response.blob();
       const url = URL.createObjectURL(blob);
-      setBinaryContent(blob);
-      setBlobUrl(url);
       //3. Work out type
       let content_type = response.headers.get("content-type");
-      setRawContentType(content_type);
       switch (content_type) {
         //Image types
         case "image/png":
-          setContentType("image");
+          content_type = "image";
           break;
         case "image/jpeg":
-          setContentType("image");
+          content_type = "image";
           break;
         case "image/jpg":
-          setContentType("image");
+          content_type = "image";
           break;
         case "image/webp":
-          setContentType("image");
+          content_type = "image";
           break;
         case "image/svg+xml":
-          setContentType("svg");
+          content_type = "svg";
           break;
         case "image/gif":
-          setContentType("image");
+          content_type = "image";
           break;
         case "image/avif":
-          setContentType("image");
+          content_type = "image";
           break;
         //Text types
         case "text/plain;charset=utf-8":
-          setContentType("text");
+          content_type = "text";
           break;
         case "application/json":
-          setContentType("text");
+          content_type = "text";
           break;
         case "text/plain":
-          setContentType("text");
+          content_type = "text";
           break;
         case "text/rtf":
-          setContentType("text");
+          content_type = "text";
           break;
         //Html types
         case "text/html;charset=utf-8":
-          setContentType("html");
+          content_type = "html";
           break;
         case "text/html":
-          setContentType("html");
+          content_type = "html";
           break;
         //Video types
         case "video/mp4":
-          setContentType("video");
+          content_type = "video";
           break;
         case "video/webm":
-          setContentType("video");
+          content_type = "video";
           break;
         //Audio types
         case "audio/mpeg":
-          setContentType("audio");
+          content_type = "audio";
           break;
         case "audio/opus":
-          setContentType("audio");
+          content_type = "audio";
           break;
         case "audio/ogg":
-          setContentType("audio");
+          content_type = "audio";
           break;
         case "audio/ogg; codecs=opus":
-          setContentType("audio");
+          content_type = "audio";
           break;
         case "audio/ogg;codecs=opus":
-          setContentType("audio");
+          content_type = "audio";
           break;
         //Pdf types
         case "application/pdf":
-          setContentType("pdf");
+          content_type = "pdf";
           break;
         //Model types
         case "model/gltf-binary":
-          setContentType("unsupported");
+          content_type = "unsupported";
           break;
         case "model/gltf+json":
-          setContentType("model");
-          setModelUrl(url);  // Set the modelUrl for 3D models
+          content_type = "model";
           break;
         default:
-          setContentType("unsupported");
+          content_type = "unsupported";
           break;
       }
+
+      // Process text content and check for recursive SVG
+      let textContent = null;
+      if (content_type === "text" || content_type === "svg" || content_type === "html") {
+        const text = await blob.text();
+        textContent = text;
+        // Check for recursive SVG
+        if (content_type === "svg" && text.includes("/content")) {
+          content_type = "svg-recursive";
+        }
+      }
+
+      // Set all final state in one dispatch
+      dispatch({
+        type: 'SET_CONTENT',
+        payload: {
+          blobUrl: url,
+          textContent,
+          rawContentType: response.headers.get("content-type"),
+          contentType: content_type,
+          modelUrl: content_type === "model" ? url : null
+        }
+      });
     }
 
     fetchContent();
   },[props.number])
-
-  //Update text & check for recursive svg
-  useEffect(()=> {
-    const updateText = async () => {
-      //1. Update text state variable if text type
-      if((contentType==="text" || contentType==="svg" || contentType==="html") && binaryContent) {
-        const text = await binaryContent.text();
-        setTextContent(text);
-        if(contentType==="svg" && text.includes("/content")) {
-          setContentType("svg-recursive")
-        }
-      }
-    }
-    updateText();    
-  },[contentType]);
 
   const shouldApplySpace = props.isCollectionPage
   ? (props.numberVisibility && !props.rune && !props.is_boost && !props.is_child && !props.is_recursive && !(props.content_length > 2000000) && !(props.item_name?.length > 0))
