@@ -18,31 +18,29 @@ const server = Bun.serve({
     '/': new Response('If Bitcoin is to change the culture of money, it needs to be cool. Ordinals was the missing piece. The path to $1m is preordained'),
     // api routes
     '/rendered_content/:id': async (req: any) => {
-      let metadata =  await fetch(apiBaseUrl + "/api/inscription_metadata/" + req.params.id);
-      let metadataJson: any = await metadata.json();
-      return await getRenderedContentResponse(metadataJson.id, metadataJson.content_type, metadataJson.is_recursive, req.headers);  
+      return await getRenderedContentResponse(req.params.id, req.headers);  
     },
     '/rendered_content_number/:number': async (req: any) => {
       let metadata =  await fetch(apiBaseUrl + "/api/inscription_metadata_number/" + req.params.number);
       let metadataJson: any = await metadata.json();
-      return await getRenderedContentResponse(metadataJson.id, metadataJson.content_type, metadataJson.is_recursive, req.headers);     
+      return await getRenderedContentResponse(metadataJson.id, req.headers);     
     },
     '/block_icon/:block': async (req: any) => {
       const row = await db.getBlockIcon(req.params.block);
       if (!row) return new Response('No inscriptions found in block', { status: 404 });
-      return await getRenderedContentResponse(row.id, row.content_type, row.is_recursive, req.headers);     
+      return await getRenderedContentResponse(row.id, req.headers);     
     },
     '/sat_block_icon/:block': async (req: any) => {
       const row = await db.getSatBlockIcon(req.params.block);
       if (!row) return new Response('No inscriptions found in block', { status: 404 });
-      return await getRenderedContentResponse(row.id, row.content_type, row.is_recursive, req.headers);      
+      return await getRenderedContentResponse(row.id, req.headers);      
     },
     '/inscription_card/:id': async (req: any) => {
       let metadata =  await fetch(apiBaseUrl + "/api/inscription_metadata/" + req.params.id);
       let metadataJson: any = await metadata.json();
       let card = await renderInscriptionCard({
         inscriptionMetadata: metadataJson,
-        host: 'blue.vermilion.place'
+        host: 'vermilion.place'
       });
       return new Response(card, {
         headers: { 'Content-Type': 'image/png' },
@@ -329,17 +327,48 @@ const server = Bun.serve({
 await db.setupDatabase();
 bundexer.runBundexer();
 
-async function getRenderedContentResponse(id: any, content_type: any, is_recursive: any, originalHeaders: any) {
-  if (content_type?.startsWith('text/html') || (content_type?.startsWith('image/svg') && is_recursive)) {
-    let row = await db.getRenderedContent(id);
+async function resolveDelegateChain(initialId: any): Promise<{id: any, content_type: any, is_recursive: any}> {
+  let currentId = initialId;
+  let content_type = null;
+  let is_recursive = null;
+
+  // Loop up to 10 times to follow delegation chain
+  for (let i = 0; i < 10; i++) {
+    const metadata = await fetch(apiBaseUrl + "/api/inscription_metadata/" + currentId);
+    if (!metadata.ok) {
+      throw new Error(`Failed to fetch metadata for ${currentId}`);
+    }
+    const metadataJson: any = await metadata.json();
+
+    content_type = metadataJson.content_type;
+    is_recursive = metadataJson.is_recursive;
+
+    // If there's no delegate, we've reached the end of the chain
+    if (!metadataJson.delegate) {
+      break;
+    }
+
+    // Follow the delegation chain
+    currentId = metadataJson.delegate;
+  }
+
+  return { id: currentId, content_type, is_recursive };
+}
+
+async function getRenderedContentResponse(id: any, originalHeaders: any) {
+  // Resolve delegate chain to get the final content details
+  const resolved = await resolveDelegateChain(id);
+
+  if (resolved.content_type?.startsWith('text/html') || (resolved.content_type?.startsWith('image/svg') && resolved.is_recursive)) {
+    let row = await db.getRenderedContent(resolved.id);
     let ss = row?.content;
     if (!ss) {
-      ss = await renderContent(`${apiBaseUrl}/content/${id}`);
-      db.safeInsertRenderedContent({ 
-        id: id,
-        content: ss.buffer, 
-        content_type: 'image/png', 
-        render_status: ss.renderStatus 
+      ss = await renderContent(`${apiBaseUrl}/content/${resolved.id}`);
+      db.safeInsertRenderedContent({
+        id: resolved.id,
+        content: ss.buffer,
+        content_type: 'image/png',
+        render_status: ss.renderStatus
       });
     }
     if (!ss) return new Response('Error rendering content', { status: 404 });
@@ -354,7 +383,7 @@ async function getRenderedContentResponse(id: any, content_type: any, is_recursi
     if (originalHeaders?.has('accept-encoding')) {
       upstreamHeaders.set('accept-encoding', originalHeaders.get('accept-encoding'));
     }
-    let content = await fetch(apiBaseUrl + "/content/" + id, {
+    let content = await fetch(apiBaseUrl + "/content/" + resolved.id, {
       headers: upstreamHeaders,
     });
     if (!content.ok) return new Response('Content fetch failed', { status: content.status });
