@@ -49,7 +49,7 @@ export class SocialDbService extends Effect.Service<SocialDbService>()("EffectPo
         
         // Profile tables
         yield* sql`CREATE TABLE IF NOT EXISTS social.profiles (
-          user_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+          user_id UUID PRIMARY KEY DEFAULT uuidv7(),
           user_handle VARCHAR(17) NOT NULL UNIQUE,
           user_name VARCHAR(30) NOT NULL,
           user_picture VARCHAR(80),
@@ -128,7 +128,7 @@ export class SocialDbService extends Effect.Service<SocialDbService>()("EffectPo
 
         // Playlist tables
         yield* sql`CREATE TABLE IF NOT EXISTS social.playlist_info (
-          playlist_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+          playlist_id UUID PRIMARY KEY DEFAULT uuidv7(),
           user_id UUID NOT NULL,
           playlist_name TEXT NOT NULL,
           playlist_inscription_icon varchar(80),

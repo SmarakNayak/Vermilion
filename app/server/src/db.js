@@ -40,7 +40,7 @@ const db = {
       `;
       await this.sql`
         CREATE TABLE IF NOT EXISTS social.boosts (
-          boost_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+          boost_id UUID PRIMARY KEY DEFAULT uuidv7(),
           -- boost info
           delegate_id varchar(80) NOT NULL,
           boost_quantity INT NOT NULL,
@@ -74,12 +74,12 @@ const db = {
           commit_tx_status VARCHAR(11),
           reveal_tx_status VARCHAR(11),
 
-          timestamp TIMESTAMP DEFAULT NOW()
+          timestamp TIMESTAMPTZ DEFAULT NOW()
         );
       `;
       await this.sql`
         CREATE TABLE IF NOT EXISTS social.broadcasted_reveal_sweeps (
-          broadcast_sweep_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+          broadcast_sweep_id UUID PRIMARY KEY DEFAULT uuidv7(),
           sweep_type VARCHAR(20) NOT NULL,
           boost_id UUID NOT NULL REFERENCES social.boosts(boost_id),
           ordinals_address VARCHAR(64) NOT NULL,
@@ -93,12 +93,12 @@ const db = {
           broadcast_error TEXT,
           sweep_tx_status VARCHAR(11),
 
-          timestamp TIMESTAMP DEFAULT NOW()
+          timestamp TIMESTAMPTZ DEFAULT NOW()
         );
       `;
       await this.sql`
         CREATE TABLE IF NOT EXISTS social.stored_ephemeral_sweeps (
-          ephemeral_sweep_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+          ephemeral_sweep_id UUID PRIMARY KEY DEFAULT uuidv7(),
           boost_id UUID NOT NULL REFERENCES social.boosts(boost_id),
           ordinals_address VARCHAR(64) NOT NULL,
           payment_address VARCHAR(64) NOT NULL,
@@ -112,16 +112,16 @@ const db = {
       `;
       await this.sql`
         CREATE TABLE IF NOT EXISTS social.sign_ins (
-          sign_in_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+          sign_in_id UUID PRIMARY KEY DEFAULT uuidv7(),
           sign_in_status VARCHAR(20) NOT NULL DEFAULT 'pending',
           signature_type VARCHAR(10) DEFAULT 'bip322',
           address VARCHAR(64) NOT NULL,
           sign_in_message TEXT NOT NULL,
           wallet_type VARCHAR(10),
-          timestamp TIMESTAMP DEFAULT NOW(),
+          timestamp TIMESTAMPTZ DEFAULT NOW(),
           signature TEXT,
           verified BOOLEAN DEFAULT FALSE,
-          verified_timestamp TIMESTAMP DEFAULT NULL,
+          verified_timestamp TIMESTAMPTZ DEFAULT NULL,
           verify_error TEXT,
           sec_ch_ua TEXT,
           sec_ch_ua_mobile TEXT,
@@ -132,7 +132,7 @@ const db = {
       `;
       await this.sql`
         CREATE TABLE IF NOT EXISTS social.profiles (
-          user_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+          user_id UUID PRIMARY KEY DEFAULT uuidv7(),
           user_handle VARCHAR(17) NOT NULL UNIQUE,
           user_name VARCHAR(30) NOT NULL,
           user_picture VARCHAR(80),
@@ -140,8 +140,8 @@ const db = {
           user_twitter VARCHAR(15),
           user_discord VARCHAR(37),
           user_website TEXT,
-          user_created_at TIMESTAMP DEFAULT NOW(),
-          user_updated_at TIMESTAMP DEFAULT NOW(),
+          user_created_at TIMESTAMPTZ DEFAULT NOW(),
+          user_updated_at TIMESTAMPTZ DEFAULT NOW(),
           CONSTRAINT valid_handle CHECK (user_handle ~ '^[a-zA-Z0-9_]{2,17}$')
         );
       `;      
