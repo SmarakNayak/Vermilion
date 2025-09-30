@@ -15,7 +15,7 @@ on:
         required: true
         default: 'Hetzner_'
       skip_sub_to_new_primary:
-        description: 'Skip setting up subscription to new primary (only use when schemas are incompatible - you will need to manually set up the sub once schemas are compatible)'
+        description: 'Skip setting up subscription to new primary (only use if schemas are incompatible - you will need to run 7. Initialize Blue Green Replication once schemas match)'
         type: boolean
         default: false
         
