@@ -193,6 +193,7 @@ jobs:
   ## but probable unnecessary
   Wait-For-Drain:
     needs: Switch-Traffic
+    if: ${{ always() && needs.Switch-Traffic.result == 'success' }}
     runs-on: ubuntu-latest
     environment: '${{ github.event.inputs.hetzner_demote_server }}'
     steps:
@@ -225,6 +226,7 @@ jobs:
 
   Demote-Primary: ## demoting primary works by dropping sub on current secondary (server to promote)
     needs: [Check-Inputs, Wait-For-Drain]
+    if: ${{ always() && needs.Wait-For-Drain.result == 'success' }}
     runs-on: ubuntu-latest
     environment: '${{ github.event.inputs.hetzner_promote_server }}'
     steps:
