@@ -245,6 +245,25 @@ jobs:
             PGPASSWORD=${{secrets.MYSQL_PASS}} psql -U ${{ secrets.MYSQL_USER }} -d vermilion -h localhost -c "DROP SUBSCRIPTION IF EXISTS social_sub_to_${{needs.Check-Inputs.outputs.DEMOTE_SERVER_COLOR}};"
             # PGPASSWORD=${{secrets.MYSQL_PASS}} psql -U ${{ secrets.MYSQL_USER }} -d vermilion -h localhost -c "ALTER SUBSCRIPTION social_sub_to_${{needs.Check-Inputs.outputs.DEMOTE_SERVER_COLOR}} DISABLE;"
             echo "primary" > ~/server_status
+    
+  Update-Secondary-Status: ## Updating status of demoted server to secondary
+    needs: Demote-Primary
+    if: ${{ always() && needs.Demote-Primary.result == 'success' }}
+    runs-on: ubuntu-latest
+    environment: '${{ github.event.inputs.hetzner_demote_server }}'
+    steps:
+      - name: Enable Subscription to Current Secondary
+        uses: appleboy/ssh-action@v1.2.2
+        with:
+          host: ${{ vars.SERVER_HOST }}
+          username: ${{ vars.SERVER_USER }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          port: 22
+          capture_stdout: true
+          script: |
+            set -e
+            set -o pipefail
+            echo "secondary" > ~/server_status
 
   Rollback-Promote:
     needs: [Check-Inputs, Promote-Secondary]
