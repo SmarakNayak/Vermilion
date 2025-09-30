@@ -161,7 +161,9 @@ jobs:
             -H "Content-Type: application/json" \
             -d '{
               "patches": [
-                {"id": "24d5dcb0e89e8292263e8a21cade0012", "content": "${{ vars.SERVER_HOST }}"}
+                {"id": "31d213c9e151e6890770ca42805c4cb5", "content": "${{ vars.SERVER_HOST }}"},
+                {"id": "d079e05689c286757625115f50e5e727", "content": "${{ vars.SERVER_HOST }}"},
+                {"id": "626b1b1cbd00edac71a7e9255f22e4d0", "content": "${{ vars.SERVER_HOST }}"}
               ]
             }')
           # Check success field with jq
