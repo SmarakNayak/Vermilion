@@ -98,8 +98,8 @@ jobs:
         run: |
           ssh staging 'sudo cp Vermilion/postgres/postgresql.conf /etc/postgresql/18/main/postgresql.conf;'
           ssh staging 'sudo cp Vermilion/postgres/pg_hba.conf /etc/postgresql/18/main/pg_hba.conf;'
-          #                                 TYPE DB  USER    ADDRESS                          METHOD
-          ssh staging 'sudo bash -c "echo \"\nhost all all ${{ vars.ALTERNATE_SERVER_HOST }}/32 scram-sha-256\" >> /etc/postgresql/18/main/pg_hba.conf";'
+          #                                      TYPE DB  USER    ADDRESS                          METHOD
+          ssh staging 'sudo bash -c "echo -e \"\nhost all all ${{ vars.ALTERNATE_SERVER_HOST }}/32 scram-sha-256\" >> /etc/postgresql/18/main/pg_hba.conf";'
 
       - name: Setup chromium sandbox config
         run: |
