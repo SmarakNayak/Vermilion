@@ -14,6 +14,10 @@ on:
         description: 'Which server to demote? Hetzner_blue or Hetzner_green'
         required: true
         default: 'Hetzner_'
+      skip_sub_to_new_primary:
+        description: 'Skip setting up subscription to new primary (use when schemas are incompatible - run 8b manually later)'
+        type: boolean
+        default: false
         
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
@@ -120,8 +124,9 @@ jobs:
               exit 1
             fi
 
-  Promote-Secondary: ## promoting secondary works by creating sub current primary (server to demote)
+  Promote-Secondary: ## promoting secondary works by creating sub from current primary (server to demote) to current secondary (server to promote)
     needs: [Check-Inputs, Check-Promote, Check-Demote]
+    if: ${{ !inputs.skip_sub_to_new_primary }}
     runs-on: ubuntu-latest
     environment: '${{ github.event.inputs.hetzner_demote_server }}'
     steps:
@@ -147,7 +152,7 @@ jobs:
   
   ## switch traffic to promoted server
   Switch-Traffic:
-    needs: [Check-Inputs, Promote-Secondary]
+    needs: Promote-Secondary
     runs-on: ubuntu-latest
     environment: '${{ github.event.inputs.hetzner_promote_server }}'
     steps:
@@ -186,7 +191,7 @@ jobs:
   ## can also block writes: sudo --login -u postgres psql -d vermilion -t -c "REVOKE INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA social FROM ${{ secrets.MYSQL_USER }};"
   ## but probable unnecessary
   Wait-For-Drain:
-    needs: [Check-Inputs, Switch-Traffic]
+    needs: Switch-Traffic
     runs-on: ubuntu-latest
     environment: '${{ github.event.inputs.hetzner_demote_server }}'
     steps:
@@ -260,7 +265,7 @@ jobs:
             echo "primary" > ~/server_status
   
   Rollback-Switch-Traffic:
-    needs: [Check-Inputs, Switch-Traffic]
+    needs: Switch-Traffic
     if: failure() && (needs.Switch-Traffic.result == 'success' || needs.Switch-Traffic.result == 'failure')
     runs-on: ubuntu-latest
     environment: '${{ github.event.inputs.hetzner_demote_server }}'
