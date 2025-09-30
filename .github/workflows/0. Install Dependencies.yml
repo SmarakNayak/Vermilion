@@ -41,9 +41,9 @@ jobs:
         run: ssh staging 'sudo apt-get -y install nginx'
 
       # to upgrade on ubuntu:
-      # apt-get install postgresql-17
-      # pg_upgradecluster 16 main -v 17 -m upgrade -k
-      # pg_dropcluster 16 main
+      # apt-get install postgresql-18
+      # pg_upgradecluster 17 main -v 18 -m upgrade -k
+      # pg_dropcluster 17 main
       - name: Install postgres
         run: |
           ssh staging 'sudo apt install -y postgresql-common'
