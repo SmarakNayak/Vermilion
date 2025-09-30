@@ -153,6 +153,7 @@ jobs:
   ## switch traffic to promoted server
   Switch-Traffic:
     needs: Promote-Secondary
+    if: ${{ ! failure() && ! cancelled() && (needs.Promote-Secondary.result == 'success' || (needs.Promote-Secondary.result == 'skipped' && inputs.skip_sub_to_new_primary)) }}
     runs-on: ubuntu-latest
     environment: '${{ github.event.inputs.hetzner_promote_server }}'
     steps:
