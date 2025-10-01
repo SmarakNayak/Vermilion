@@ -251,7 +251,7 @@ const ButtonWrapper = styled.div`
 `;
 
 const ProfilePicture = styled.img`
-  width: 100%;
+  //width: 100%; - this was squishing the image
   height: 100%;
   object-fit: cover;
   border-radius: 50%;

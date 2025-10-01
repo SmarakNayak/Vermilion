@@ -46,7 +46,8 @@ const InscriptionModal = ({ isOpen, onClose, onSelect, selectedInscription }) =>
       
       // Filter for image content types only
       const imageInscriptions = data.filter(inscription => 
-        inscription.content_type && inscription.content_type.startsWith('image/')
+        (inscription.content_type && inscription.content_type.startsWith('image/')) ||
+        (inscription.delegate_content_type && inscription.delegate_content_type.startsWith('image/'))
       );
       
       setInscriptions(imageInscriptions);

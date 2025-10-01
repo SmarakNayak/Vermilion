@@ -5,7 +5,7 @@ import { folderAtomFamily, folderInscriptionsAtomFamily, profileFromIdAtomFamily
 import GridHeaderSkeleton from "../components/grid/GridHeaderSkeleton";
 import { HeaderContainer, MainContentStack, RowContainer, SocialStack } from "../components/grid/Layout";
 import InfoText from "../components/common/text/InfoText";
-import { Cause, Exit } from "effect";
+import { Cause, Exit, Option } from "effect";
 import { flatMap, cleanErrorExit } from "../atoms/atomHelpers";
 import MainText from "../components/common/text/MainText";
 import { ItemText, TextLink } from "../components/common/GridItemStyles";
@@ -177,6 +177,11 @@ const Folder = () => {
                 </Tooltip>
               </SocialStack>
             </HeaderContainer>
+            {Option.isSome(folderData.playlist_description) && folderData.playlist_description.value !=='' && (
+              <RowContainer>
+                <InfoText islarge={true}>{folderData.playlist_description.value}</InfoText>
+              </RowContainer>
+            )}
             <GridControls
               numberVisibility={numberVisibility}
               toggleNumberVisibility={toggleNumberVisibility}
