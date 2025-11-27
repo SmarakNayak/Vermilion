@@ -349,6 +349,14 @@ async function renderContent(url, retryCount = 0, fullPage = true) {
       console.log('Puppeteer Protocol error, trying again: ', url);
       return renderContent(url, retryCount + 1, false);
 
+    } else if (error.message.includes('Execution context was destroyed')) {
+      if (retryCount > 1) {
+        console.log(`Execution context destroyed after 2 retries`);
+        return {buffer, renderStatus: "CONTEXT_DESTROYED"};
+      };
+      console.log('Execution context destroyed, trying again: ', url);
+      return renderContent(url, retryCount + 1, false);
+
     } else if (error.message.includes('Content not indexed yet')) {
       throw new Error("Content not indexed yet: " + url, { cause: error });
     } else {
