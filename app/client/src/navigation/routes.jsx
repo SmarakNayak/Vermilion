@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import styled from 'styled-components';
-import { BrowserRouter, Routes, Route, Navigate, useParams } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useParams, useLocation } from 'react-router-dom';
 import { Page } from '../components/layout/Page';
 import TopBar from '../components/navigation/TopBar';
 import ExploreBlocks from '../pages/ExploreBlocks';
@@ -25,6 +25,8 @@ import Attributions from '../pages/Attributions';
 import History from '../pages/History';
 import Settings from '../pages/Settings';
 import Folder from '../pages/Folder';
+import Privacy from '../pages/Privacy';
+import Terms from '../pages/Terms';
 
 import { addCommas, formatAddress } from '../utils/format';
 import PostHogPageView from '../../PostHogPageView';
@@ -94,12 +96,25 @@ const PageWrapper = styled(Page)`
   background-color: #FFF;
 `
 
+const noHeaderRoutes = ['/privacy', '/terms'];
+
+const AppLayout = ({ children }) => {
+  const location = useLocation();
+  const hideHeader = noHeaderRoutes.includes(location.pathname);
+
+  return (
+    <PageWrapper>
+      {!hideHeader && <TopBar />}
+      {children}
+    </PageWrapper>
+  );
+};
+
 const Navigation = () => {
   return (
     <BrowserRouter>
       <PostHogPageView />
-      <PageWrapper>
-        <TopBar />
+      <AppLayout>
         <Routes>
           <Route path="/" element={<TitledComponent title="Trending" Component={Trending} />} />
           <Route path="/explore/inscriptions" element={<TitledComponent title="Inscriptions" Component={ExploreInscriptions} />} />
@@ -206,11 +221,13 @@ const Navigation = () => {
           <Route path="/search/:query" element={<TitledComponent title="Search" Component={Search} />} />
           <Route path="/history" element={<TitledComponent title="Order History" Component={History} />} />
           <Route path="/settings/profile" element={<TitledComponent title="Edit Profile" Component={Settings} />} />
+          <Route path="/privacy" element={<TitledComponent title="Privacy Policy" Component={Privacy} />} />
+          <Route path="/terms" element={<TitledComponent title="Terms and Conditions" Component={Terms} />} />
 
           {/* Add 404 route */}
           <Route path="*" element={<TitledComponent title="404 - Page Not Found" Component={NotFound} />} />
         </Routes>
-      </PageWrapper>
+      </AppLayout>
     </BrowserRouter>
   )
 }

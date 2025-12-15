@@ -1,17 +1,18 @@
 import { build } from "bun";
 import bufferPlugin from "./plugins/bufferPlugin";
 import nodePlugin from "./plugins/nodePlugin";
+import textPlugin from "./plugins/textPlugin";
 
 await build({
   entrypoints: ["./index.html"],
   outdir: "dist",
   //sourcemap: true,
-  publicPath: "/", 
+  publicPath: "/",
   target: "browser",
   minify: true,
   define: {
     "process.env.NODE_ENV": JSON.stringify("production")
   },
   env: "BUN_PUBLIC_*",
-  plugins: [bufferPlugin, nodePlugin]
+  plugins: [bufferPlugin, nodePlugin, textPlugin]
 });

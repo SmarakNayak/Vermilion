@@ -11,6 +11,15 @@ const server = Bun.serve({
     console: true
   },
   routes: {
+    '/assets/*': async req => {
+      const url = new URL(req.url);
+      const filePath = `../public${url.pathname}`;
+      const file = Bun.file(filePath);
+      if (await file.exists()) {
+        return new Response(file);
+      }
+      return new Response("Not Found", { status: 404 });
+    },
     "/*": homepage,
     '/api/*': async req => {
       return proxyRequest(req, 'https://green.vermilion.place');

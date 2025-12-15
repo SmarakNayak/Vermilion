@@ -12,5 +12,8 @@
   "devDependencies": {
     "typescript": "^5",
     "concurrently": "^8.2.2"
+  },
+  "dependencies": {
+    "effect": "^3.19.12"
   }
 }
