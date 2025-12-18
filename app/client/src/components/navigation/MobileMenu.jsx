@@ -20,6 +20,8 @@ import {
   ArchiveIcon,
   TwitterIcon,
   SettingsIcon,
+  PrivacyIcon,
+  TermsIcon
 } from '../common/Icon';
 import { theme } from '../../styles/theme';
 import Brand from './Brand';
@@ -218,6 +220,26 @@ const MobileMenu = ({ isOpen, onClose, onConnectWallet, wallet, onViewProfile, o
             isExternal={true}
             isStandard={true}
             title="X (Twitter)"
+          />
+          <MenuListItem
+            link="/terms" 
+            action={() => {
+              onClose();
+            }} 
+            icon={TermsIcon} 
+            isExternal={true}
+            isStandard={true}
+            title="Terms & Conditions"
+          />
+          <MenuListItem
+            link="/privacy" 
+            action={() => {
+              onClose();
+            }} 
+            icon={PrivacyIcon} 
+            isExternal={true}
+            isStandard={true}
+            title="Privacy Policy"
           />
         </LinkSection>
       </MenuContent>

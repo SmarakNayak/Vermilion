@@ -13,7 +13,7 @@ const server = Bun.serve({
   routes: {
     '/assets/*': async req => {
       const url = new URL(req.url);
-      const filePath = `../public${url.pathname}`;
+      const filePath = `./public${url.pathname}`;
       const file = Bun.file(filePath);
       if (await file.exists()) {
         return new Response(file);

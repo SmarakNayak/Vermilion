@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom'; 
 import { usePostHog } from 'posthog-js/react';
 import styled from 'styled-components';
-import { ArchiveIcon, BurgerMenuIcon, DiscordIcon, DotsHorizontalIcon, LogoutIcon, QuestionIcon, SettingsIcon, SwitchIcon, TwitterIcon } from '../common/Icon';
+import { ArchiveIcon, BurgerMenuIcon, DiscordIcon, DotsHorizontalIcon, LogoutIcon, QuestionIcon, PrivacyIcon, SettingsIcon, SwitchIcon, TermsIcon, TwitterIcon } from '../common/Icon';
 import theme from '../../styles/theme';
 import MobileMenu from './MobileMenu';
 import WalletConnectMenu from './WalletConnectMenu';
@@ -78,6 +78,14 @@ const UserActions = () => {
                   <TwitterIcon size={"1.25rem"} />
                   X (Twitter)
                 </DropdownItem>
+                <DropdownItem href={"/terms"} target="_blank" rel="noopener noreferrer">
+                <TermsIcon size={"1.25rem"} />
+                Terms & Conditions
+              </DropdownItem>
+              <DropdownItem href={"/privacy"} target="_blank" rel="noopener noreferrer">
+                <PrivacyIcon size={"1.25rem"} />
+                Privacy Policy
+              </DropdownItem>
               </DropdownContainer>
             </ConnectButtonWrapper>
           </>
@@ -115,6 +123,14 @@ const UserActions = () => {
               <DropdownItem href={"https://x.com/vrmlndotplace"} target="_blank" rel="noopener noreferrer">
                 <TwitterIcon size={"1.25rem"} />
                 X (Twitter)
+              </DropdownItem>
+              <DropdownItem href={"/terms"} target="_blank" rel="noopener noreferrer">
+                <TermsIcon size={"1.25rem"} />
+                Terms & Conditions
+              </DropdownItem>
+              <DropdownItem href={"/privacy"} target="_blank" rel="noopener noreferrer">
+                <PrivacyIcon size={"1.25rem"} />
+                Privacy Policy
               </DropdownItem>
             </DropdownContainer>
 
@@ -327,7 +343,7 @@ const DropdownContainer = styled.div`
   // border: 1px solid ${theme.colors.background.primary};
   border-radius: ${theme.borderRadius.large};
   box-shadow: ${theme.shadows.soft};
-  min-width: 10rem;
+  min-width: 12.5rem;
   padding: .25rem;
   display: flex;
   flex-direction: column;
